@@ -153,6 +153,43 @@ cargo run --release -p binviz-cli -- info path/to/binary
 a universal binary or an archive member; `--notes <file.json>` loads
 annotations first.
 
+## Agents (MCP server)
+
+`binviz-mcp` lets an LLM agent work with a binary the way you would in the UI.
+It is a [Model Context Protocol](https://modelcontextprotocol.io) server: the
+agent opens a binary once, it stays loaded, and every question after that is
+answered from memory, in milliseconds even for a 1 GB app.
+
+```bash
+cargo build --release -p binviz-mcp
+```
+
+```bash
+claude mcp add binviz -- /path/to/binviz/target/release/binviz-mcp
+```
+
+Any MCP client works the same way (the server speaks JSON-RPC over stdio).
+
+| Tool | |
+|---|---|
+| `open_binary` | Load a file (universal binaries pick arm64 unless told otherwise; `debug_file` attaches a dSYM's DWARF) |
+| `binary_summary` | Format, platform, entry point, build ID, segments, sections, DWARF |
+| `size_report` | Why the binary is as big as it is: bytes by kind and section, the largest functions and data, and the owners of the code — Swift modules, Objective-C classes, C++ namespaces / Rust crates, C prefixes — and source files with DWARF |
+| `search` | The UI's search: names, strings, addresses, byte patterns, "text", file:line |
+| `inspect` | Everything about an address or file offset |
+| `disassemble` | A function, with source lines and your comments |
+| `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
+| `coverage` | How much is mapped out, and the largest unexplored gaps |
+| `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
+
+Notes are saved next to the binary in `<file>.binviz-notes.json`, the format
+the web UI imports and exports (Map → Coverage → Import), so an agent can map
+out a binary and you can look at the result in the UI, or the other way round.
+
+Things to ask: *"Open ~/Downloads/MyApp and tell me why it's so big"*, *"Find
+the code that parses deep links and name what you find"*, *"What haven't we
+looked at yet?"*.
+
 ## The library
 
 ```rust
@@ -194,6 +231,39 @@ println!("{} bytes unexplored in {} gaps", coverage.totals.unexplored, coverage.
 All model types implement `serde::Serialize`. Universal binaries and archives
 are opened with `binviz::Container`.
 
+## Performance
+
+binviz is built for large binaries (a gigabyte or more, millions of
+functions). Measured in the browser (WebAssembly, Edge) and natively:
+
+| File | Open (browser) | Memory (browser) | Search | Coverage |
+|---|---|---|---|---|
+| 1.0 GB iOS-style Mach-O, 2.6M functions and symbols, 5M strings | 1.4 s | 1.5 GB WASM, 11 MB JS | 60–130 ms | 250 ms |
+| 333 MB `msedge.dll`, 1M functions recovered from `.pdata` | 0.5 s | 440 MB WASM | 10–75 ms | 180 ms |
+
+How it stays fast:
+
+- The file is streamed into WebAssembly memory once, in chunks; the page never
+  holds a copy (the hex view reads what it shows straight from the `File`).
+- Symbols are 32-byte records with names in one shared arena; names are
+  demangled on display, or all at once only when a search or sort needs them.
+  Your names are merged on top, so editing notes never rebuilds the table.
+- Strings are 16-byte records pointing into the file; searches scan names,
+  strings and bytes with SIMD (`memchr`, WebAssembly SIMD enabled in
+  `.cargo/config.toml`), anchored on the query's rarest byte.
+- Lists (functions, symbols, strings, table entries) are paged from the
+  worker, and variable-size tables get an entry index built on first use.
+- Search indexes are built in the background when the search box is focused.
+
+To measure a file yourself:
+
+```bash
+cargo run --release -p binviz --example bench -- path/to/binary
+```
+
+`scripts/gen-big-macho.py` generates a synthetic 1 GB iOS-style Mach-O
+(`--strip` for an App Store-like build) for testing at scale.
+
 ## Layout of this repository
 
 ```
@@ -208,9 +278,11 @@ crates/binviz        the library
   src/coverage.rs    reverse-engineering coverage and gap hints
   src/discover.rs    function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS
   src/strings.rs     strings in data sections
+  src/size.rs        where the bytes go: sections, symbols, owners (Swift, ObjC, C++, C)
   src/dwarf/attribution.rs   code and globals per source file / unit
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
 crates/binviz-cli    the command-line tool
+crates/binviz-mcp    the MCP server for agents
 web/                 TypeScript UI; the WASM runs in a Web Worker
 tests/fixtures/      small ELF / Mach-O / PE test binaries and their sources
 scripts/build-fixtures.sh   regenerates the fixtures with rust-lld (no SDKs needed)

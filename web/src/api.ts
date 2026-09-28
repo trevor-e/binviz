@@ -1,7 +1,7 @@
 // Typed client for the WebAssembly session running in a worker.
 import type {
   Annotation, Attribution, AttributedRange, AttributionMode, ContainerInfo, Coverage, DieDetails, DieSummary,
-  Disassembly, DwarfSummary, Export, HitKind, Import, Inspection, LineProgramInfo, LineRange, LineRow, MapStatus,
+  Disassembly, DwarfSummary, Export, FunctionPage, HitKind, Import, Inspection, LineProgramInfo, LineRange, LineRow, MapStatus,
   Opened, PathEntry, RegionInfo, RegionKind, Resolved, SearchResults, Section, Segment, SourceFile, Span,
   StringPage, Summary, SymbolPage, SymbolQuery, Sym, UnitInfo,
 } from './types';
@@ -15,10 +15,16 @@ export class Api {
   /** Number of calls in flight, for the busy indicator. */
   inFlight = 0;
   onBusyChange: (busy: boolean) => void = () => {};
+  /** Reading a file in: fraction done, or -1 once it is being parsed. */
+  onProgress: (fraction: number) => void = () => {};
 
   constructor() {
     this.worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-    this.worker.onmessage = (e: MessageEvent<{ id: number; result?: unknown; error?: string }>) => {
+    this.worker.onmessage = (e: MessageEvent<{ id: number; result?: unknown; error?: string; progress?: number }>) => {
+      if (e.data.progress !== undefined) {
+        this.onProgress(e.data.progress);
+        return;
+      }
       const p = this.pending.get(e.data.id);
       if (!p) return;
       this.pending.delete(e.data.id);
@@ -43,10 +49,11 @@ export class Api {
     });
   }
 
-  open(name: string, bytes: Uint8Array) { return this.call<Opened>('open', name, bytes); }
+  /** Opens a file; the worker copies it into WebAssembly memory in chunks. */
+  open(name: string, blob: Blob) { return this.call<Opened>('openBlob', name, blob); }
   openMember(index: number) { return this.call<Opened>('openMember', index); }
-  attachDebug(name: string, bytes: Uint8Array) { return this.call<Opened>('attachDebug', name, bytes); }
-  bytes() { return this.call<Uint8Array>('bytes'); }
+  memoryBytes() { return this.call<number>('memoryBytes'); }
+  attachDebug(name: string, blob: Blob) { return this.call<Opened>('attachBlob', name, blob); }
   summary() { return this.call<Summary>('summary'); }
   sections() { return this.call<Section[]>('sections'); }
   segments() { return this.call<Segment[]>('segments'); }
@@ -64,7 +71,8 @@ export class Api {
   offsetToAddress(offset: bigint) { return this.call<bigint | undefined>('offsetToAddress', offset); }
   symbols(query: SymbolQuery) { return this.call<SymbolPage>('symbols', query); }
   symbol(index: number) { return this.call<Sym | undefined>('symbol', index); }
-  functions() { return this.call<[bigint, bigint, string][]>('functions'); }
+  functionsPage(filter: string, offset: number, limit: number) { return this.call<FunctionPage>('functionsPage', filter, offset, limit); }
+  functionIndex(filter: string, address: bigint) { return this.call<number | undefined>('functionIndex', filter, address); }
   disassemble(start: bigint, end: bigint, limit: number) { return this.call<Disassembly>('disassemble', start, end, limit); }
   disassembleFunction(address: bigint, limit: number) { return this.call<Disassembly>('disassembleFunction', address, limit); }
   resolve(query: string) { return this.call<Resolved>('resolve', query); }

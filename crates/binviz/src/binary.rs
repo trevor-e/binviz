@@ -11,7 +11,7 @@ use object::{
 use crate::error::{Result, bail};
 use crate::layout::{self, Builder, Ctx, Layout, Machine};
 use crate::model::*;
-use crate::symbols::SymbolTable;
+use crate::symbols::{Binding, Builder as SymbolBuilder, NewSym, SymbolTable};
 use crate::util::{self, Bytes, Endian, hex};
 
 /// A parsed binary together with its bytes. Everything is extracted up front
@@ -31,13 +31,11 @@ pub struct Binary {
     pub(crate) endian: Endian,
     pub(crate) image_base: u64,
     pub(crate) debug: Option<crate::dwarf::DebugInfo>,
-    /// Symbols from the file itself (symbol tables, exports, import slots).
-    pub(crate) base_symbols: Vec<Symbol>,
     /// Function boundaries recovered from unwind tables / function starts.
     pub(crate) discovered: Vec<(u64, u64)>,
     pub(crate) annotations: Vec<Annotation>,
     /// Printable strings found in the loaded sections, built on first use.
-    pub(crate) strings: std::sync::OnceLock<Vec<crate::strings::FoundString>>,
+    pub(crate) strings: std::sync::OnceLock<crate::strings::StringIndex>,
     /// Coverage runs, rebuilt when symbols or annotations change.
     pub(crate) coverage: std::sync::OnceLock<crate::coverage::CoverageRuns>,
 }
@@ -230,10 +228,10 @@ impl Binary {
 
         // Symbols.
         let arm32 = file.architecture() == Architecture::Arm;
-        let mut symbols = Vec::new();
+        let mut symbols = SymbolBuilder::default();
         let mut push_symbols = |iter: &mut dyn Iterator<Item = object::Symbol<'_, '_>>, source: SymbolSource| {
             for s in iter {
-                let name = s.name().unwrap_or("").to_string();
+                let name = s.name().unwrap_or("");
                 let kind = match s.kind() {
                     object::SymbolKind::Text => SymbolKind::Function,
                     object::SymbolKind::Data => SymbolKind::Data,
@@ -249,7 +247,7 @@ impl Binary {
                 let section = section_of(s.section_index());
                 // Section symbols are unnamed in ELF; name them after their section.
                 let name = match (kind, section) {
-                    (SymbolKind::Section, Some(i)) if name.is_empty() => sections[i as usize].name.clone(),
+                    (SymbolKind::Section, Some(i)) if name.is_empty() => sections[i as usize].name.as_str(),
                     _ => name,
                 };
                 let mut address = s.address();
@@ -260,26 +258,24 @@ impl Binary {
                     address = address.wrapping_add(sec.address);
                 }
                 let binding = if s.is_undefined() {
-                    "undefined"
+                    Binding::Undefined
                 } else if s.is_weak() {
-                    "weak"
+                    Binding::Weak
                 } else if s.is_global() || s.scope() == SymbolScope::Dynamic {
-                    "global"
+                    Binding::Global
                 } else {
-                    "local"
+                    Binding::Local
                 };
-                symbols.push(Symbol {
-                    index: 0,
-                    demangled: util::demangle(&name),
+                symbols.push(NewSym {
                     name,
                     address,
                     size: s.size(),
-                    size_inferred: false,
                     kind,
-                    binding: binding.to_string(),
+                    binding,
                     section,
                     source,
                     defined: s.is_definition() || (!s.is_undefined() && section.is_some()),
+                    plain: false,
                 });
             }
         };
@@ -307,27 +303,28 @@ impl Binary {
             fill_iat_addresses(&b, &sections, image_base, is64, &mut imports);
             for imp in &imports {
                 if let Some(addr) = imp.address {
-                    symbols.push(Symbol {
-                        index: 0,
-                        name: format!("__imp_{}", imp.name),
-                        demangled: imp.demangled.as_ref().map(|d| format!("__imp_{d}")),
+                    symbols.push(NewSym {
+                        name: &format!("__imp_{}", imp.name),
                         address: addr,
                         size: if is64 { 8 } else { 4 },
-                        size_inferred: false,
                         kind: SymbolKind::Data,
-                        binding: "global".into(),
+                        binding: Binding::Global,
                         section: sections
                             .iter()
                             .position(|s| addr >= s.address && addr < s.address + s.size)
                             .map(|i| i as u32),
                         source: SymbolSource::Export,
                         defined: true,
+                        plain: false,
                     });
                 }
             }
         }
         let mut exports = Vec::new();
-        if let Ok(list) = file.exports() {
+        // Without an export trie, `object` lists every external symbol as an export:
+        // those are all in the symbol table already.
+        let has_exports = format != Format::MachO || macho_has_export_trie(&b, is64);
+        if has_exports && let Ok(list) = file.exports() {
             for exp in list.flatten() {
                 let (name, ordinal) = match exp.name() {
                     object::NameOrOrdinal::Name(n) => (util::lossy(n), None),
@@ -375,27 +372,25 @@ impl Binary {
                 let is_code = section
                     .and_then(|i| sections.get(i as usize))
                     .is_some_and(|s| s.kind == RegionKind::Code);
-                symbols.push(Symbol {
-                    index: 0,
-                    name: e.name.clone(),
-                    demangled: e.demangled.clone(),
+                symbols.push(NewSym {
+                    name: &e.name,
                     address: e.address,
                     size: 0,
-                    size_inferred: false,
                     kind: if is_code {
                         SymbolKind::Function
                     } else {
                         SymbolKind::Data
                     },
-                    binding: "global".into(),
+                    binding: Binding::Global,
                     section,
                     source: SymbolSource::Export,
                     defined: true,
+                    plain: false,
                 });
             }
         }
         let discovered = crate::discover::discover(&file, format, &b, &sections, &segments, image_base, is64);
-        let base_symbols = symbols;
+        let symbols = symbols.finish_unindexed();
 
         // Summary.
         let kind = kind_name(&file, format, &b);
@@ -413,12 +408,13 @@ impl Binary {
             build_id: None,
             debug_link: None,
             has_dwarf: false,
-            has_symbols: !base_symbols.is_empty(),
+            has_symbols: !symbols.is_empty(),
             synthetic_addresses: relocatable && sections.iter().any(|s| s.loaded),
             section_count: sections.len() as u32,
             segment_count: segments.len() as u32,
-            symbol_count: base_symbols.len() as u32,
+            symbol_count: symbols.len() as u32,
             properties: Vec::new(),
+            fingerprint: String::new(),
         };
         let mut entry = file.entry();
         if format == Format::MachO && entry != 0 {
@@ -449,13 +445,14 @@ impl Binary {
             }
         }
         summary.properties = properties(&file, format, &b, &segments, &imports);
+        summary.fingerprint = fingerprint(bytes, summary.build_id.as_deref());
 
         let mut binary = Binary {
             data: data.clone(),
             summary,
             sections,
             segments,
-            symbols: SymbolTable::new(Vec::new(), &[]),
+            symbols,
             imports,
             exports,
             layout: Layout::empty(),
@@ -465,16 +462,16 @@ impl Binary {
             endian,
             image_base,
             debug: None,
-            base_symbols,
             discovered,
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),
             coverage: std::sync::OnceLock::new(),
         };
-        binary.rebuild_symbols();
-        binary.layout = binary.build_layout(format);
         drop(file);
+        // DWARF first: it may add functions, and the symbol index is built once.
         binary.load_embedded_debug_info();
+        binary.rebuild_static_symbols();
+        binary.layout = binary.build_layout(format);
         Ok(binary)
     }
 
@@ -579,14 +576,29 @@ impl Binary {
     }
 
     /// Shannon entropy (0..=1, normalised from bits per byte) of each slice of the file.
+    /// Large slices are sampled (8 evenly spaced 2 KiB blocks), so the cost
+    /// doesn't grow with the file.
     pub fn entropy_map(&self, buckets: u32) -> Vec<f32> {
+        const BLOCK: usize = 2048;
+        const BLOCKS: usize = 8;
         let len = self.data.len();
         let buckets = (buckets as usize).clamp(1, len.max(1));
         (0..buckets)
             .map(|i| {
                 let s = i * len / buckets;
                 let e = ((i + 1) * len / buckets).max(s + 1).min(len);
-                entropy(&self.data[s..e])
+                let span = &self.data[s..e];
+                if span.len() <= BLOCK * BLOCKS {
+                    return entropy(span);
+                }
+                let mut counts = [0u32; 256];
+                for k in 0..BLOCKS {
+                    let start = k * (span.len() - BLOCK) / (BLOCKS - 1);
+                    for &b in &span[start..start + BLOCK] {
+                        counts[b as usize] += 1;
+                    }
+                }
+                entropy_of(&counts, (BLOCK * BLOCKS) as f32)
             })
             .collect()
     }
@@ -656,6 +668,31 @@ impl Layout {
     }
 }
 
+/// FNV-1a over the length, the build ID, the first and last 64 KiB, and 64
+/// evenly spaced 1 KiB blocks: identifies a file without reading all of it.
+pub(crate) fn fingerprint(data: &[u8], build_id: Option<&str>) -> String {
+    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+    let mut eat = |bytes: &[u8]| {
+        for &b in bytes {
+            h ^= b as u64;
+            h = h.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    };
+    eat(&(data.len() as u64).to_le_bytes());
+    eat(build_id.unwrap_or("").as_bytes());
+    let edge = data.len().min(64 * 1024);
+    eat(&data[..edge]);
+    eat(&data[data.len() - edge..]);
+    const BLOCK: usize = 1024;
+    if data.len() > BLOCK {
+        for k in 0..64 {
+            let start = k * (data.len() - BLOCK) / 63;
+            eat(&data[start..start + BLOCK]);
+        }
+    }
+    format!("{h:016x}-{:x}", data.len())
+}
+
 pub(crate) fn entropy(data: &[u8]) -> f32 {
     if data.is_empty() {
         return 0.0;
@@ -664,7 +701,11 @@ pub(crate) fn entropy(data: &[u8]) -> f32 {
     for &b in data {
         counts[b as usize] += 1;
     }
-    let n = data.len() as f32;
+    entropy_of(&counts, data.len() as f32)
+}
+
+/// Shannon entropy of a byte histogram over `n` bytes, scaled to 0..1.
+fn entropy_of(counts: &[u32; 256], n: f32) -> f32 {
     let h: f32 = counts
         .iter()
         .filter(|&&c| c > 0)
@@ -916,6 +957,30 @@ fn fill_iat_addresses(b: &Bytes, sections: &[Section], image_base: u64, is64: bo
     for imp in imports {
         imp.address = by_key.get(&(imp.library.to_lowercase(), imp.name.clone())).copied();
     }
+}
+
+/// Whether a Mach-O file has an export trie (`LC_DYLD_INFO` or `LC_DYLD_EXPORTS_TRIE`).
+fn macho_has_export_trie(b: &Bytes, is64: bool) -> bool {
+    let ncmds = b.u32(16).unwrap_or(0);
+    let mut off: u64 = if is64 { 32 } else { 28 };
+    for _ in 0..ncmds.min(65536) {
+        let (Some(cmd), Some(size)) = (b.u32(off), b.u32(off + 4)) else {
+            break;
+        };
+        let exports = match cmd {
+            c if c == object::macho::LC_DYLD_INFO.0 || c == object::macho::LC_DYLD_INFO_ONLY.0 => b.u32(off + 44),
+            c if c == object::macho::LC_DYLD_EXPORTS_TRIE.0 => b.u32(off + 12),
+            _ => None,
+        };
+        if exports.is_some_and(|n| n > 0) {
+            return true;
+        }
+        if size < 8 {
+            break;
+        }
+        off += size as u64;
+    }
+    false
 }
 
 fn kind_name(file: &object::File<'_>, format: Format, b: &Bytes) -> String {

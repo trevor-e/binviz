@@ -7,10 +7,18 @@ import { VList } from '../vlist';
 import { View } from './base';
 
 type Row = { kind: 'src'; loc: SourceLoc } | { kind: 'ins'; ins: Instruction; index: number };
+type Func = [bigint, bigint, string];
+
+/** Functions are fetched from the worker a page at a time. */
+const FPAGE = 200;
 
 export class CodeView extends View {
-  private funcs: [bigint, bigint, string][] = [];
+  /** Code sections, listed instead when the binary has no function symbols. */
+  private sectionList: Func[] | null = null;
   private shown: number[] = [];
+  private fpages = new Map<number, Func[]>();
+  private fpending = new Set<number>();
+  private fgen = 0;
   private funcList!: VList;
   private asmList!: VList;
   private rows: Row[] = [];
@@ -28,16 +36,11 @@ export class CodeView extends View {
     });
     // New names change the function list and branch targets; comments show inline.
     store.on('annotations', () => {
-      if (!this.funcList || !store.file) return;
-      const f = store.file;
-      void store.api.functions().then((list) => {
-        if (store.file !== f || list.length === 0) return;
-        this.funcs = list;
-        this.applyFilter(this.filterText);
-        const at = this.current?.function?.address ?? this.current?.start;
-        this.current = undefined;
-        if (at !== undefined) void this.load(store.selection.address ?? at);
-      });
+      if (!this.funcList || !store.file || this.sectionList) return;
+      this.resetFunctions();
+      const at = this.current?.function?.address ?? this.current?.start;
+      this.current = undefined;
+      if (at !== undefined) void this.load(store.selection.address ?? at);
     });
   }
 
@@ -62,30 +65,71 @@ export class CodeView extends View {
         h('div', { class: 'pane grow' }, this.header, this.asmHost),
       ),
     );
-    void store.api.functions().then((list) => {
+    this.sectionList = null;
+    this.filterText = '';
+    void store.api.functionsPage('', 0, FPAGE).then((page) => {
       if (store.file !== f) return;
-      this.funcs = list;
-      if (list.length === 0) {
+      if (page.total === 0) {
         // No function symbols: offer code sections instead.
-        this.funcs = f.sections.filter((s) => s.kind === 'code' && s.size > 0n).map((s) => [s.address, s.size, `section ${s.name}`]);
+        this.sectionList = f.sections.filter((s) => s.kind === 'code' && s.size > 0n).map((s) => [s.address, s.size, `section ${s.name}`]);
+        this.applyFilter('');
+      } else {
+        this.fpages.clear();
+        this.fpending.clear();
+        this.fpages.set(0, page.functions);
+        this.funcList.setCount(page.total);
       }
-      this.applyFilter('');
       this.onSelection();
     });
   }
 
   private applyFilter(q: string) {
     this.filterText = q;
-    const needle = q.trim().toLowerCase();
-    this.shown = [];
-    this.funcs.forEach((f, i) => {
-      if (!needle || f[2].toLowerCase().includes(needle) || hex(f[0]).includes(needle)) this.shown.push(i);
+    if (this.sectionList) {
+      const needle = q.trim().toLowerCase();
+      this.shown = [];
+      this.sectionList.forEach((f, i) => {
+        if (!needle || f[2].toLowerCase().includes(needle) || hex(f[0]).includes(needle)) this.shown.push(i);
+      });
+      this.funcList.setCount(this.shown.length);
+      return;
+    }
+    this.resetFunctions();
+  }
+
+  /** Refetches the (filtered) function list from the first page. */
+  private resetFunctions() {
+    this.fpages.clear();
+    this.fpending.clear();
+    this.fgen++;
+    this.fetchFunctions(0, true);
+  }
+
+  private fetchFunctions(page: number, reset = false) {
+    if (this.fpages.has(page) || this.fpending.has(page)) return;
+    this.fpending.add(page);
+    const gen = this.fgen;
+    void store.api.functionsPage(this.filterText, page * FPAGE, FPAGE).then((res) => {
+      if (gen !== this.fgen) return;
+      this.fpending.delete(page);
+      this.fpages.set(page, res.functions);
+      if (reset) this.funcList.setCount(res.total);
+      else this.funcList.refresh();
     });
-    this.funcList.setCount(this.shown.length);
+  }
+
+  private funcAt(i: number): Func | undefined {
+    if (this.sectionList) return this.sectionList[this.shown[i]];
+    const page = Math.floor(i / FPAGE);
+    const got = this.fpages.get(page)?.[i % FPAGE];
+    if (!got) this.fetchFunctions(page);
+    return got;
   }
 
   private funcRow(i: number): HTMLElement {
-    const [addr, , name] = this.funcs[this.shown[i]];
+    const fn = this.funcAt(i);
+    if (!fn) return h('div', { class: 'list-row muted' }, '…');
+    const [addr, , name] = fn;
     const cur = this.current?.function?.address ?? this.current?.start;
     const note = store.notesAt.get(addr);
     const row = h(
@@ -137,8 +181,11 @@ export class CodeView extends View {
     if (!this.asmHost.contains(this.asmList.el)) this.asmHost.replaceChildren(this.asmList.el);
     this.asmList.setCount(this.rows.length);
     this.funcList.refresh();
-    const fi = this.shown.findIndex((i) => this.funcs[i][0] === (d.function?.address ?? d.start));
-    if (fi >= 0) this.funcList.scrollToIndex(fi, 'center');
+    const at = d.function?.address ?? d.start;
+    const fi = this.sectionList
+      ? this.shown.findIndex((i) => this.sectionList![i][0] === at)
+      : ((await store.api.functionIndex(this.filterText, at)) ?? -1);
+    if (fi >= 0 && this.current === d) this.funcList.scrollToIndex(fi, 'center');
     this.revealInstruction(addr, true);
   }
 

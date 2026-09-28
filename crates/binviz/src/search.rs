@@ -122,7 +122,7 @@ fn parse_pattern(s: &str) -> Option<Vec<Option<u8>>> {
         tokens.iter().map(|t| t.to_string()).collect()
     } else if s.contains('?') {
         let compact: Vec<char> = s.chars().filter(|c| !c.is_whitespace()).collect();
-        if compact.len() % 2 != 0 {
+        if !compact.len().is_multiple_of(2) {
             return None;
         }
         compact.chunks(2).map(|c| c.iter().collect()).collect()
@@ -143,7 +143,11 @@ fn parse_pattern(s: &str) -> Option<Vec<Option<u8>>> {
 /// How well `needle` (lowercase) matches `hay`, ignoring ASCII case: exact >
 /// prefix > after `::` `/` `.` > word start > anywhere, shorter names first.
 pub(crate) fn score(hay: &str, needle: &str) -> Option<i32> {
-    let (h, n) = (hay.as_bytes(), needle.as_bytes());
+    score_bytes(hay.as_bytes(), needle.as_bytes())
+}
+
+/// [`score`] on bytes.
+pub(crate) fn score_bytes(h: &[u8], n: &[u8]) -> Option<i32> {
     if n.is_empty() || n.len() > h.len() {
         return None;
     }
@@ -216,18 +220,23 @@ impl Collector {
         if count == 0 {
             return;
         }
-        self.counts.push(KindCount {
-            kind,
-            count: count as u32,
-        });
-        self.hits.extend(hits.into_iter().take(self.per_kind));
+        match self.counts.iter_mut().find(|k| k.kind == kind) {
+            Some(k) => k.count += count as u32,
+            None => self.counts.push(KindCount {
+                kind,
+                count: count as u32,
+            }),
+        }
+        let room = self.per_kind - self.hits.iter().filter(|h| h.kind == kind).count().min(self.per_kind);
+        self.hits.extend(hits.into_iter().take(room));
     }
 }
 
 impl Binary {
     /// Builds the indexes search uses (strings, DWARF names) ahead of time.
     pub fn prepare_search(&self) {
-        self.found_strings();
+        self.symbols.prepare_names();
+        self.string_index();
         if let Some(d) = &self.debug {
             d.name_index();
         }
@@ -328,7 +337,9 @@ impl Binary {
         }
 
         let needle = q.to_lowercase();
-        if c.wants(HitKind::Symbol) {
+        // One character matches nearly every name and string: not worth scanning them all.
+        let long = needle.len() >= 2;
+        if long && c.wants(HitKind::Symbol) {
             self.search_symbols(&needle, c);
         }
         if c.wants(HitKind::Import) {
@@ -343,13 +354,13 @@ impl Binary {
         if c.wants(HitKind::Source) {
             self.search_sources(&needle, c);
         }
-        if c.wants(HitKind::Dwarf) {
+        if long && c.wants(HitKind::Dwarf) {
             self.search_dies(&needle, c);
         }
         if c.wants(HitKind::Note) {
             self.search_notes(&needle, c);
         }
-        if c.wants(HitKind::String) {
+        if long && c.wants(HitKind::String) {
             self.search_strings(&needle, c);
         }
     }
@@ -438,22 +449,31 @@ impl Binary {
     }
 
     fn search_bytes(&self, pattern: &[Option<u8>], text: Option<(&str, &str)>, c: &mut Collector) {
-        let Some(anchor) = pattern.iter().position(Option::is_some) else {
+        // Anchor on the longest run of literal bytes; the rest is checked per candidate.
+        let mut anchor = (0, 0);
+        let mut run_start = 0;
+        for (i, p) in pattern.iter().enumerate() {
+            if p.is_none() {
+                run_start = i + 1;
+            } else if i + 1 - run_start > anchor.1 {
+                anchor = (run_start, i + 1 - run_start);
+            }
+        }
+        if anchor.1 == 0 {
             return;
-        };
-        let first = pattern[anchor].expect("anchor is a byte");
+        }
+        let literal: Vec<u8> = pattern[anchor.0..anchor.0 + anchor.1]
+            .iter()
+            .map(|p| p.expect("literal"))
+            .collect();
         let data = &self.data[..];
         let len = pattern.len();
         let mut found: Vec<u64> = Vec::new();
         let mut count = 0u32;
-        let mut i = anchor;
-        while i < data.len() && count < MAX_BYTE_MATCHES {
-            let Some(p) = data[i..].iter().position(|&b| b == first) else {
-                break;
+        for at in memchr::memmem::find_iter(data, &literal) {
+            let Some(start) = at.checked_sub(anchor.0) else {
+                continue;
             };
-            let at = i + p;
-            i = at + 1;
-            let start = at - anchor;
             if start + len > data.len() {
                 break;
             }
@@ -462,6 +482,9 @@ impl Binary {
                 count += 1;
                 if found.len() < c.per_kind {
                     found.push(start as u64);
+                }
+                if count >= MAX_BYTE_MATCHES {
+                    break;
                 }
             }
         }
@@ -490,45 +513,80 @@ impl Binary {
     }
 
     fn search_symbols(&self, needle: &str, c: &mut Collector) {
-        let all = self.symbols.all();
+        let table = &self.symbols;
+        if needle.is_empty() || table.is_empty() {
+            return;
+        }
+        table.prepare_names();
+        let n = needle.as_bytes();
+        // Scan every raw name, then every demangled name, each as one buffer.
+        let mut raw = Vec::new();
+        scan_arena(
+            table.name_arena().as_bytes(),
+            n,
+            |p| table.record_at_name_offset(p).map(|r| (r, table.name_span(r))),
+            &mut raw,
+        );
+        let mut dem = Vec::new();
+        scan_arena(
+            table.demangled_arena().as_bytes(),
+            n,
+            |p| {
+                table
+                    .record_at_demangled_offset(p)
+                    .and_then(|r| table.demangled_span(r).map(|s| (r, s)))
+            },
+            &mut dem,
+        );
         let section_names: HashSet<&str> = self.sections.iter().map(|s| s.name.as_str()).collect();
-        let mut matches = Vec::new();
-        for (i, s) in all.iter().enumerate() {
+        // Both lists are in record order: merge them. A match on the demangled
+        // name beats one on the mangled name.
+        let mut matches: Vec<(i32, usize)> = Vec::new();
+        let (mut i, mut j) = (0, 0);
+        while i < raw.len() || j < dem.len() {
+            let (rec, score) = match (raw.get(i), dem.get(j)) {
+                (Some(&(r, rs)), Some(&(d, ds))) if r == d => {
+                    i += 1;
+                    j += 1;
+                    (r, ds.max(rs - 50))
+                }
+                (Some(&(r, rs)), Some(&(d, _))) if r < d => {
+                    i += 1;
+                    (r, if table.demangled_span(r).is_some() { rs - 50 } else { rs })
+                }
+                (Some(&(r, rs)), None) => {
+                    i += 1;
+                    (r, if table.demangled_span(r).is_some() { rs - 50 } else { rs })
+                }
+                (_, Some(&(d, ds))) => {
+                    j += 1;
+                    (d, ds)
+                }
+                (None, None) => break,
+            };
+            let Some(s) = table.get(rec) else { continue };
             // Section, file and debug symbols (and COFF's per-object `.text`...) are noise here.
             if matches!(s.kind, SymbolKind::Section | SymbolKind::File | SymbolKind::Debug)
-                || (s.kind != SymbolKind::Function && section_names.contains(s.name.as_str()))
+                || (s.kind != SymbolKind::Function && section_names.contains(s.name()))
             {
                 continue;
             }
-            let display = s.display_name();
-            let best = match (
-                score(display, needle),
-                (display != s.name).then(|| score(&s.name, needle)).flatten(),
-            ) {
-                (Some(a), Some(b)) => a.max(b - 50),
-                (Some(a), None) => a,
-                (None, Some(b)) => b - 50,
-                (None, None) => continue,
-            };
             let bonus = match s.kind {
                 SymbolKind::Function => 40,
                 SymbolKind::Data => 20,
                 _ => 0,
             } + if s.source == SymbolSource::User { 50 } else { 0 }
                 - if s.defined { 0 } else { 30 };
-            matches.push((best + bonus, i));
+            matches.push((score + bonus, rec as usize));
         }
         let count = matches.len();
         let mut seen = HashSet::new();
         let hits = top(matches, c.per_kind * 2)
             .into_iter()
-            .filter(|&(_, i)| {
-                let s = &all[i];
-                seen.insert((s.address, s.defined, s.display_name().to_string()))
-            })
+            .filter_map(|(score, i)| table.get(i as u32).map(|s| (score, s)))
+            .filter(|(_, s)| seen.insert((s.address, s.defined, s.display_name().into_owned())))
             .take(c.per_kind)
-            .map(|(score, i)| {
-                let s = &all[i];
+            .map(|(score, s)| {
                 let mut parts = vec![format!("{:?}", s.kind).to_lowercase()];
                 if !s.defined {
                     parts.push("undefined".into());
@@ -546,8 +604,8 @@ impl Binary {
                     SymbolSource::Dwarf => parts.push("from DWARF".into()),
                     _ => {}
                 }
-                if s.demangled.is_some() {
-                    parts.push(s.name.clone());
+                if s.demangled().is_some() {
+                    parts.push(s.name().to_string());
                 }
                 let mut hit = SearchHit::new(HitKind::Symbol, s.display_name(), parts.join(" · "), score);
                 hit.symbol = Some(s.index);
@@ -811,18 +869,17 @@ impl Binary {
     }
 
     fn search_strings(&self, needle: &str, c: &mut Collector) {
-        let all = self.found_strings();
-        let mut matches = Vec::new();
-        for (i, s) in all.iter().enumerate() {
-            if let Some(sc) = score(&s.text, needle) {
-                matches.push((sc, i));
-            }
-        }
+        let index = self.string_index();
+        let matches: Vec<(i32, usize)> = self
+            .string_matches(needle)
+            .into_iter()
+            .map(|(i, score)| (score, i as usize))
+            .collect();
         let count = matches.len();
         let hits = top(matches, c.per_kind)
             .into_iter()
             .map(|(score, i)| {
-                let s = &all[i];
+                let s = self.found_string(&index.recs[i]);
                 let mut detail = s
                     .section
                     .and_then(|i| self.sections.get(i as usize))
@@ -841,6 +898,97 @@ impl Binary {
             .collect();
         c.add(HitKind::String, count, hits);
     }
+}
+
+/// Scores the names in `arena` that contain `needle` (lowercase), ignoring
+/// ASCII case, like [`score`]. `owner` maps an offset to the record whose name
+/// holds it and that name's (start, length). Appends (record, best score) in
+/// arena order.
+fn scan_arena(
+    arena: &[u8],
+    needle: &[u8],
+    owner: impl Fn(usize) -> Option<(u32, (usize, usize))>,
+    out: &mut Vec<(u32, i32)>,
+) {
+    let mut pos = 0;
+    // The name the last match was in: (record, start, length).
+    let mut cur: Option<(u32, usize, usize)> = None;
+    while let Some(p) = find_ci(arena, needle, pos) {
+        let known = cur.filter(|&(_, s, l)| s <= p && p < s + l);
+        let Some((rec, start, len)) = known.or_else(|| owner(p).map(|(r, (s, l))| (r, s, l))) else {
+            pos = p + 1;
+            continue;
+        };
+        cur = Some((rec, start, len));
+        let end = start + len;
+        if p + needle.len() > end {
+            // The match runs into the next name.
+            pos = p + 1;
+            continue;
+        }
+        let class = if len == needle.len() {
+            1000
+        } else if p == start {
+            800
+        } else {
+            match arena[p - 1] {
+                b':' | b'/' | b'\\' | b'.' => 700,
+                c if !c.is_ascii_alphanumeric() => 600,
+                c if c.is_ascii_lowercase() && arena[p].is_ascii_uppercase() => 600,
+                _ => 400,
+            }
+        };
+        let score = class - ((len - needle.len()) / 2).min(99) as i32;
+        match out.last_mut() {
+            Some(last) if last.0 == rec => last.1 = last.1.max(score),
+            _ => out.push((rec, score)),
+        }
+        // Nothing later in this name can beat a match at a segment boundary.
+        pos = if class >= 700 { end } else { p + 1 };
+    }
+}
+
+/// How common a byte is in names and strings: higher is rarer. Scans look for
+/// a query's rarest byte first, so they stop at far fewer false candidates.
+fn rarity(b: u8) -> u8 {
+    const COMMON: &[u8] = b"etaoinsrhldcumfpgwybvkxjqz";
+    match b.to_ascii_lowercase() {
+        c @ b'a'..=b'z' => 40 + COMMON.iter().position(|&x| x == c).unwrap_or(0) as u8,
+        b'0'..=b'9' | b'_' => 10,
+        b' ' | b'.' | b'/' | b':' => 20,
+        _ => 100,
+    }
+}
+
+/// The next position at or after `from` where `needle` (lowercase) occurs in
+/// `hay`, ignoring ASCII case. Anchors on the needle's rarest byte.
+pub(crate) fn find_ci(hay: &[u8], needle: &[u8], from: usize) -> Option<usize> {
+    let n = needle.len();
+    if n == 0 || hay.len() < n {
+        return None;
+    }
+    let (a, &anchor) = needle
+        .iter()
+        .enumerate()
+        .max_by_key(|&(i, &b)| (rarity(b), usize::MAX - i))?;
+    let (lo, up) = (anchor, anchor.to_ascii_uppercase());
+    let mut pos = from + a;
+    while pos < hay.len() {
+        let k = if lo == up {
+            memchr::memchr(lo, &hay[pos..])
+        } else {
+            memchr::memchr2(lo, up, &hay[pos..])
+        }?;
+        let p = pos + k - a;
+        if p + n > hay.len() {
+            return None;
+        }
+        if hay[p..p + n].eq_ignore_ascii_case(needle) {
+            return Some(p);
+        }
+        pos += k + 1;
+    }
+    None
 }
 
 /// `path/file.c:42` or `file.c:42:7` → ("path/file.c", 42).

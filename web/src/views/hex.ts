@@ -9,11 +9,17 @@ import { View } from './base';
 
 const ROW = 16;
 const BLOCK = 4096;
+/** Bytes are read from the file in pages this big, as rows come into view. */
+const PAGE = 64 * 1024;
+/** Pages kept in memory (16 MiB). */
+const MAX_PAGES = 256;
 
 export class HexView extends View {
   private list!: VList;
   private spans = new Map<number, Span[]>();
   private loading = new Set<number>();
+  private pages = new Map<number, Uint8Array>();
+  private pageLoading = new Set<number>();
   private showVA = true;
   private minimap!: HTMLCanvasElement;
   private viewport!: HTMLElement;
@@ -32,6 +38,8 @@ export class HexView extends View {
     const f = store.file!;
     this.spans.clear();
     this.loading.clear();
+    this.pages.clear();
+    this.pageLoading.clear();
     this.offWidth = Math.max(8, num(f.summary.fileSize).toString(16).length);
     const hasVA = f.segments.some((s) => s.mapped) || f.sections.some((s) => s.loaded && s.fileOffset !== undefined);
     this.showVA = hasVA;
@@ -116,11 +124,35 @@ export class HexView extends View {
     return undefined;
   }
 
+  /** A page of the file's bytes, or undefined while it is being read. */
+  private pageBytes(page: number): Uint8Array | undefined {
+    const cached = this.pages.get(page);
+    if (cached) return cached;
+    const blob = store.file!.blob;
+    if (!this.pageLoading.has(page)) {
+      this.pageLoading.add(page);
+      const start = page * PAGE;
+      void blob
+        .slice(start, Math.min(blob.size, start + PAGE))
+        .arrayBuffer()
+        .then((buf) => {
+          this.pageLoading.delete(page);
+          if (store.file?.blob !== blob) return;
+          if (this.pages.size >= MAX_PAGES) this.pages.clear();
+          this.pages.set(page, new Uint8Array(buf));
+          this.list.refresh();
+        });
+    }
+    return undefined;
+  }
+
   private row(i: number): HTMLElement {
     const f = store.file!;
-    const bytes = f.bytes;
     const off = i * ROW;
-    const end = Math.min(off + ROW, bytes.length);
+    const end = Math.min(off + ROW, num(f.summary.fileSize));
+    const page = Math.floor(off / PAGE);
+    const bytes = this.pageBytes(page);
+    const base = page * PAGE;
     const spans = this.blockSpans(Math.floor(off / BLOCK)) ?? [];
     let si = 0;
     const sel = store.selection.offset !== undefined ? num(store.selection.offset) : -1;
@@ -138,7 +170,12 @@ export class HexView extends View {
       while (si < spans.length && spans[si].end <= big) si++;
       const sp = spans[si] && spans[si].start <= big ? spans[si] : undefined;
       const cls = sp ? `fam-${familyOf(sp.kind)} t${sp.shade}` : '';
-      const b = bytes[o];
+      if (!bytes) {
+        hexHtml += `<span class="b${gap} pending" data-o="${o}">··</span>`;
+        asciiHtml += `<span class="a pending" data-o="${o}"> </span>`;
+        continue;
+      }
+      const b = bytes[o - base];
       let extra = b === 0 ? ' zero' : '';
       if (o === sel) extra += ' sel';
       if ((hl && big >= hl.start && big < hl.end) || (hov && big >= hov.start && big < hov.end)) extra += ' hl';
@@ -190,7 +227,7 @@ export class HexView extends View {
   private onKey(e: KeyboardEvent) {
     const sel = store.selection.offset;
     if (sel === undefined) return;
-    const size = BigInt(store.file!.bytes.length);
+    const size = store.file!.summary.fileSize;
     const page = BigInt(Math.max(1, this.list.visibleCount() - 2) * ROW);
     const moves: Record<string, bigint> = { ArrowLeft: -1n, ArrowRight: 1n, ArrowUp: -16n, ArrowDown: 16n, PageUp: -page, PageDown: page };
     let next: bigint | undefined;

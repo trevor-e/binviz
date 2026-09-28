@@ -138,9 +138,85 @@ impl Decoder {
                 let n = symbols.in_range(*address, address + (node.end - node.start)).count();
                 Some(n as u32)
             }
-            Decoder::CoffSymbols { .. } => Some(((node.end - node.start) / 18) as u32),
+            Decoder::CoffSymbols { .. } => Some(self.starts(ctx, node).len() as u32),
             _ => None,
         }
+    }
+
+    /// Entries are variable-size and found by walking from the first one.
+    fn walked(&self) -> bool {
+        matches!(
+            self,
+            Decoder::ElfNotes { .. }
+                | Decoder::PeBaseRelocs
+                | Decoder::CoffSymbols { .. }
+                | Decoder::DwarfAbbrev
+                | Decoder::DwarfLine
+                | Decoder::Strings { .. }
+        )
+    }
+
+    /// The entry starting exactly at `pos` (variable-size decoders).
+    fn decode_at(&self, ctx: &Ctx, node: &Node, pos: u64) -> Option<Entry> {
+        match self {
+            Decoder::ElfNotes { align } => elf::note_entry(ctx, pos, node.end, *align),
+            Decoder::PeBaseRelocs => pe::base_reloc_block(ctx, pos, node.end),
+            Decoder::CoffSymbols { strtab } => pe::coff_symbol_entry(ctx, node, *strtab, pos),
+            Decoder::DwarfAbbrev => dwarf::abbrev_entry(ctx, node, pos),
+            Decoder::DwarfLine => dwarf::line_entry(ctx, node, pos),
+            Decoder::Strings { skip } => string_at(ctx, node, *skip, pos),
+            _ => None,
+        }
+    }
+
+    /// Length of the entry at `pos`, without decoding it where that is cheap.
+    fn entry_len(&self, ctx: &Ctx, node: &Node, pos: u64) -> Option<u64> {
+        let b = &ctx.bytes;
+        let len = match self {
+            Decoder::CoffSymbols { .. } => 18 * (1 + b.u8(pos + 17)? as u64),
+            Decoder::PeBaseRelocs => b.u32(pos + 4)? as u64,
+            Decoder::DwarfLine => match b.u32(pos)? {
+                0xffff_ffff => 12 + b.u64(pos + 4)?,
+                n => 4 + n as u64,
+            },
+            Decoder::Strings { skip } => {
+                if pos < node.start + skip {
+                    return Some(node.start + skip - pos);
+                }
+                let data = &b.data[pos as usize..node.end as usize];
+                data.iter().position(|&c| c == 0).map_or(data.len(), |i| i + 1) as u64
+            }
+            _ => {
+                let e = self.decode_at(ctx, node, pos)?;
+                e.end.saturating_sub(pos)
+            }
+        };
+        (len > 0).then_some(len)
+    }
+
+    /// Where each entry of a variable-size region starts, relative to the node (built once).
+    fn starts<'n>(&self, ctx: &Ctx, node: &'n Node) -> &'n [u32] {
+        node.starts.get_or_init(|| {
+            let mut out = Vec::new();
+            let mut pos = node.start;
+            while pos < node.end && pos - node.start <= u32::MAX as u64 {
+                out.push((pos - node.start) as u32);
+                match self.entry_len(ctx, node, pos) {
+                    Some(len) => pos += len,
+                    None => break,
+                }
+            }
+            out.shrink_to_fit();
+            out
+        })
+    }
+
+    /// Index of the entry containing `offset`, for variable-size decoders.
+    fn index_of(&self, ctx: &Ctx, node: &Node, offset: u64) -> Option<usize> {
+        let starts = self.starts(ctx, node);
+        starts
+            .partition_point(|&s| node.start + s as u64 <= offset)
+            .checked_sub(1)
     }
 
     pub fn entry_at(&self, ctx: &Ctx, node: &Node, offset: u64) -> Option<Entry> {
@@ -165,22 +241,17 @@ impl Decoder {
                 }
                 Some(table_entry(ctx, t, index, start))
             }
+            // Strings are found by walking back to the previous NUL: no index needed.
             Decoder::Strings { skip } => string_at(ctx, node, *skip, offset),
             Decoder::Symbols { address } => symbol_at(ctx, node, *address, offset),
-            Decoder::ElfNotes { align } => walk(node, |pos| elf::note_entry(ctx, pos, node.end, *align))
-                .find(|e| e.start <= offset && offset < e.end),
-            Decoder::PeBaseRelocs => {
-                walk(node, |pos| pe::base_reloc_block(ctx, pos, node.end)).find(|e| e.start <= offset && offset < e.end)
-            }
             Decoder::PeHintNames => pe::hint_name_at(ctx, node, offset),
-            Decoder::CoffSymbols { strtab } => pe::coff_symbol_at(ctx, node, *strtab, offset),
             Decoder::DwarfInfo => dwarf::info_entry(ctx, node, offset),
-            Decoder::DwarfAbbrev => {
-                walk(node, |pos| dwarf::abbrev_entry(ctx, node, pos)).find(|e| e.start <= offset && offset < e.end)
+            _ if self.walked() => {
+                let i = self.index_of(ctx, node, offset)?;
+                let e = self.decode_at(ctx, node, node.start + self.starts(ctx, node)[i] as u64)?;
+                (offset < e.end).then_some(e)
             }
-            Decoder::DwarfLine => {
-                walk(node, |pos| dwarf::line_entry(ctx, node, pos)).find(|e| e.start <= offset && offset < e.end)
-            }
+            _ => None,
         }
     }
 
@@ -201,6 +272,15 @@ impl Decoder {
                     .skip(first)
                     .take(count)
                     .filter_map(|s| symbol_at(ctx, node, *address, node.start + (s.address.max(*address) - address)))
+                    .collect()
+            }
+            _ if self.walked() => {
+                let starts = self.starts(ctx, node);
+                starts
+                    .iter()
+                    .skip(first)
+                    .take(count)
+                    .filter_map(|&s| self.decode_at(ctx, node, node.start + s as u64))
                     .collect()
             }
             _ => {
@@ -279,40 +359,29 @@ impl Decoder {
                     pos = end;
                 }
             }
-            _ => {
-                let mut pos = node.start;
-                let mut index = 0;
-                while pos < range.end && pos < node.end && out.len() < MAX_BOUNDS {
-                    let Some(e) = self.entry_at(ctx, node, pos) else { break };
-                    if e.end <= pos {
+            _ if self.walked() => {
+                let starts = self.starts(ctx, node);
+                let first = self.index_of(ctx, node, range.start.max(node.start)).unwrap_or(0);
+                for (i, &s) in starts.iter().enumerate().skip(first) {
+                    let start = node.start + s as u64;
+                    if start >= range.end || out.len() >= MAX_BOUNDS {
                         break;
                     }
-                    if e.end > range.start {
-                        out.push((e.start, e.end, index, e.kind));
-                    }
-                    index += 1;
-                    pos = e.end;
+                    let end = starts.get(i + 1).map_or(node.end, |&n| node.start + n as u64);
+                    let kind = match self {
+                        // Only DWARF entries override the region's kind.
+                        Decoder::DwarfAbbrev | Decoder::DwarfLine => {
+                            self.decode_at(ctx, node, start).and_then(|e| e.kind)
+                        }
+                        _ => None,
+                    };
+                    out.push((start, end, i as u64, kind));
                 }
             }
+            _ => {}
         }
         out
     }
-}
-
-/// Iterates variable-size entries from the start of a node.
-fn walk<'a>(node: &'a Node, mut next: impl FnMut(u64) -> Option<Entry> + 'a) -> impl Iterator<Item = Entry> + 'a {
-    let mut pos = node.start;
-    std::iter::from_fn(move || {
-        if pos >= node.end {
-            return None;
-        }
-        let e = next(pos)?;
-        if e.end <= pos {
-            return None;
-        }
-        pos = e.end;
-        Some(e)
-    })
 }
 
 fn table_entry(ctx: &Ctx, t: &Table, index: u64, offset: u64) -> Entry {
@@ -428,8 +497,8 @@ fn symbol_at(ctx: &Ctx, node: &Node, address: u64, offset: u64) -> Option<Entry>
             } else {
                 ""
             },
-            if sym.demangled.is_some() {
-                format!(", mangled: {}", sym.name)
+            if sym.demangled().is_some() {
+                format!(", mangled: {}", sym.name())
             } else {
                 String::new()
             }

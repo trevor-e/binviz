@@ -203,7 +203,22 @@ pub(crate) fn align_up(v: u64, align: u64) -> u64 {
 }
 
 /// Best-effort demangling of Rust (legacy + v0), Itanium C++ and MSVC names.
+/// Whether `name` could be a mangled Rust, C++ (Itanium) or MSVC name; a cheap
+/// prefix check that lets plain C, Objective-C and recovered names skip the demanglers.
+pub fn looks_mangled(name: &str) -> bool {
+    let n = name.strip_prefix("__imp_").unwrap_or(name);
+    let n = n.trim_start_matches('_');
+    n.starts_with('Z') || n.starts_with('R') || n.starts_with('?')
+}
+
 pub fn demangle(name: &str) -> Option<String> {
+    if !looks_mangled(name) {
+        return None;
+    }
+    // PE import slots: `__imp_<name>`.
+    if let Some(rest) = name.strip_prefix("__imp_") {
+        return demangle(rest).map(|d| format!("__imp_{d}"));
+    }
     // Mach-O and 32-bit Windows prefix C symbols with an underscore.
     let stripped = name.strip_prefix('_').unwrap_or(name);
     for candidate in [name, stripped] {

@@ -31,6 +31,7 @@ dependencies = [
  "cpp_demangle",
  "gimli",
  "iced-x86",
+ "memchr",
  "msvc-demangler",
  "object",
  "rustc-demangle",
@@ -45,6 +46,15 @@ name = "binviz-cli"
 version = "0.1.0"
 dependencies = [
  "binviz",
+ "serde_json",
+]
+
+[[package]]
+name = "binviz-mcp"
+version = "0.1.0"
+dependencies = [
+ "binviz",
+ "serde",
  "serde_json",
 ]
 

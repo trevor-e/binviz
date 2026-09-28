@@ -9,10 +9,8 @@ use crate::binary::Binary;
 use crate::dwarf::{self, DebugInfo};
 use crate::error::{Result, bail};
 use crate::layout::Machine;
-use std::collections::HashSet;
-
-use crate::model::{Annotation, Inspection, RegionKind, Symbol, SymbolKind, SymbolSource};
-use crate::symbols::SymbolTable;
+use crate::model::{Annotation, Inspection, RegionKind, SymbolKind, SymbolSource};
+use crate::symbols::{Binding, NewSym};
 
 /// A location in a binary, either in the file or in the loaded image.
 #[derive(Debug, Clone, Copy, Deserialize)]
@@ -83,7 +81,6 @@ impl Binary {
         if let Ok(Some(debug)) = DebugInfo::load(&file, &data, "embedded", &self.sections) {
             self.summary.has_dwarf = true;
             self.debug = Some(debug);
-            self.rebuild_symbols();
         }
     }
 
@@ -133,17 +130,20 @@ impl Binary {
         };
         self.summary.has_dwarf = true;
         self.debug = Some(debug);
-        self.rebuild_symbols();
+        self.rebuild_static_symbols();
         Ok(())
     }
 
-    /// Rebuilds the symbol table from its sources: the file's own symbols,
-    /// DWARF subprograms (when the file has no function symbols), recovered
-    /// function boundaries (`sub_<address>`) and the user's annotations.
-    pub(crate) fn rebuild_symbols(&mut self) {
-        let mut symbols: Vec<Symbol> = self.base_symbols.clone();
-        let mut named: HashSet<u64> = symbols
+    /// Rebuilds the symbols that don't come from the file's own tables: DWARF
+    /// subprograms (when the file has no function symbols) and recovered
+    /// function boundaries (`sub_<address>`), then the user's names on top.
+    pub(crate) fn rebuild_static_symbols(&mut self) {
+        let file = self.symbols.file_len();
+        // Addresses the file already names.
+        let mut named: Vec<u64> = self
+            .symbols
             .iter()
+            .take(file as usize)
             .filter(|s| {
                 s.defined
                     && matches!(
@@ -153,87 +153,96 @@ impl Binary {
             })
             .map(|s| s.address)
             .collect();
+        named.sort_unstable();
+        named.dedup();
+        let has_functions = self
+            .symbols
+            .iter()
+            .take(file as usize)
+            .any(|s| s.defined && s.kind == SymbolKind::Function);
         let section_of = |a: u64| self.section_at(a).map(|s| s.index);
-        let has_functions = symbols.iter().any(|s| s.defined && s.kind == SymbolKind::Function);
+        let taken = |a: u64, named: &mut Vec<u64>| match named.binary_search(&a) {
+            Ok(_) => true,
+            Err(pos) => {
+                named.insert(pos, a);
+                false
+            }
+        };
+        let mut dwarf: Vec<(String, u64, u64, u32)> = Vec::new();
         if !has_functions && let Some(debug) = &self.debug {
             for (name, address, size) in debug.subprograms() {
                 let Some(section) = section_of(address) else { continue };
-                if !named.insert(address) {
-                    continue;
+                if !taken(address, &mut named) {
+                    dwarf.push((name, address, size, section));
                 }
-                symbols.push(Symbol {
-                    index: 0,
-                    demangled: crate::util::demangle(&name),
-                    name,
-                    address,
-                    size,
-                    size_inferred: false,
-                    kind: SymbolKind::Function,
-                    binding: "global".into(),
-                    section: Some(section),
-                    source: SymbolSource::Dwarf,
-                    defined: true,
-                });
             }
         }
-        for &(address, size) in &self.discovered {
-            if !named.insert(address) {
-                continue;
-            }
-            symbols.push(Symbol {
-                index: 0,
-                name: format!("sub_{address:x}"),
-                demangled: None,
+        // Recovered functions go where nothing is named: `named` is sorted, so check by search.
+        let recovered: Vec<(u64, u64, Option<u32>)> = self
+            .discovered
+            .iter()
+            .filter(|&&(address, _)| named.binary_search(&address).is_err())
+            .map(|&(address, size)| (address, size, section_of(address)))
+            .collect();
+        let extra = dwarf
+            .iter()
+            .map(|(name, address, size, section)| NewSym {
+                name,
+                address: *address,
+                size: *size,
+                kind: SymbolKind::Function,
+                binding: Binding::Global,
+                section: Some(*section),
+                source: SymbolSource::Dwarf,
+                defined: true,
+                plain: true,
+            })
+            .chain(recovered.iter().map(|&(address, size, section)| NewSym {
+                // An empty recovered name is written as `sub_<address>`.
+                name: "",
                 address,
                 size,
-                size_inferred: false,
                 kind: SymbolKind::Function,
-                binding: "local".into(),
-                section: section_of(address),
+                binding: Binding::Local,
+                section,
                 source: SymbolSource::Discovered,
                 defined: true,
-            });
-        }
-        for a in &self.annotations {
-            if a.name.is_empty() {
-                continue;
-            }
-            let section = self.section_at(a.address);
-            let code = section.is_some_and(|s| s.kind == RegionKind::Code);
-            // Renaming a known function keeps its exact extent.
-            let size = if a.size > 0 {
-                a.size
-            } else {
-                let known = self
-                    .discovered
-                    .binary_search_by_key(&a.address, |&(start, _)| start)
-                    .ok()
-                    .map(|i| self.discovered[i].1);
-                known
-                    .filter(|&n| n > 0)
-                    .or_else(|| {
-                        self.base_symbols
-                            .iter()
-                            .find(|s| s.defined && s.address == a.address && s.size > 0 && !s.size_inferred)
-                            .map(|s| s.size)
-                    })
-                    .unwrap_or(0)
-            };
-            symbols.push(Symbol {
-                index: 0,
-                demangled: crate::util::demangle(&a.name),
-                name: a.name.clone(),
-                address: a.address,
-                size,
-                size_inferred: false,
-                kind: if code { SymbolKind::Function } else { SymbolKind::Data },
-                binding: "global".into(),
-                section: section.map(|s| s.index),
-                source: SymbolSource::User,
-                defined: true,
-            });
-        }
-        self.symbols = SymbolTable::new(symbols, &self.sections);
+                plain: true,
+            }));
+        let sections = std::mem::take(&mut self.sections);
+        self.symbols.set_static(extra, &sections);
+        self.sections = sections;
+        self.rebuild_user_symbols();
+    }
+
+    /// Puts the user's named annotations into the symbol table.
+    pub(crate) fn rebuild_user_symbols(&mut self) {
+        let user: Vec<(&str, u64, u64, Option<u32>, bool)> = self
+            .annotations
+            .iter()
+            .filter(|a| !a.name.is_empty())
+            .map(|a| {
+                let section = self.section_at(a.address);
+                let code = section.is_some_and(|s| s.kind == RegionKind::Code);
+                (a.name.as_str(), a.address, a.size, section.map(|s| s.index), code)
+            })
+            .collect();
+        let syms = user.iter().map(|&(name, address, size, section, code)| NewSym {
+            name,
+            address,
+            size,
+            kind: if code { SymbolKind::Function } else { SymbolKind::Data },
+            binding: Binding::Global,
+            section,
+            source: SymbolSource::User,
+            defined: true,
+            plain: false,
+        });
+        // The table borrows nothing from these; collect first to satisfy the borrow checker.
+        let syms: Vec<NewSym<'_>> = syms.collect();
+        let sections = &self.sections;
+        let table = &mut self.symbols;
+        table.set_user(syms, sections);
         self.summary.symbol_count = self.symbols.len() as u32;
         self.summary.has_symbols = !self.symbols.is_empty();
         self.coverage = std::sync::OnceLock::new();
@@ -244,7 +253,7 @@ impl Binary {
         annotations.sort_by_key(|a| (a.address, a.size));
         annotations.dedup_by(|a, b| a.address == b.address && a.size == b.size);
         self.annotations = annotations;
-        self.rebuild_symbols();
+        self.rebuild_user_symbols();
     }
 
     pub fn annotations(&self) -> &[Annotation] {

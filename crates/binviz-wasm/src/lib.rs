@@ -60,6 +60,8 @@ pub struct Session {
     name: String,
     container: Option<Container>,
     binary: Option<Binary>,
+    /// A buffer being filled by JavaScript (see `beginInput`).
+    input: Option<std::sync::Arc<[std::mem::MaybeUninit<u8>]>>,
 }
 
 #[wasm_bindgen]
@@ -72,17 +74,88 @@ impl Session {
     /// Opens a file. Returns `{kind: "binary", summary}` or, for universal
     /// binaries and archives, `{kind: "container", info}` (then call `openMember`).
     pub fn open(&mut self, name: String, bytes: Vec<u8>) -> Result<JsValue, JsError> {
+        self.open_data(name, bytes.into())
+    }
+
+    /// Allocates `len` bytes inside WebAssembly memory for the next file and
+    /// returns their address, so JavaScript can copy the file straight in (in
+    /// chunks) instead of passing one big array. Drops the open file first, to
+    /// make room. Finish with `openInput` or `attachInput`.
+    #[wasm_bindgen(js_name = beginInput)]
+    pub fn begin_input(&mut self, len: usize) -> *mut u8 {
+        self.binary = None;
+        self.container = None;
+        self.input = None;
+        let mut buf = std::sync::Arc::<[u8]>::new_uninit_slice(len);
+        let ptr = std::sync::Arc::get_mut(&mut buf).expect("new buffer").as_mut_ptr() as *mut u8;
+        self.input = Some(buf);
+        ptr
+    }
+
+    /// Allocates a buffer for a companion debug file, keeping the open binary.
+    #[wasm_bindgen(js_name = beginDebugInput)]
+    pub fn begin_debug_input(&mut self, len: usize) -> *mut u8 {
+        let mut buf = std::sync::Arc::<[u8]>::new_uninit_slice(len);
+        let ptr = std::sync::Arc::get_mut(&mut buf).expect("new buffer").as_mut_ptr() as *mut u8;
+        self.input = Some(buf);
+        ptr
+    }
+
+    fn take_input(&mut self) -> Result<std::sync::Arc<[u8]>, JsError> {
+        let buf = self.input.take().ok_or_else(|| JsError::new("no input buffer"))?;
+        // SAFETY: JavaScript filled every byte of the buffer before calling us.
+        Ok(unsafe { buf.assume_init() })
+    }
+
+    /// Opens the file copied in after `beginInput`.
+    #[wasm_bindgen(js_name = openInput)]
+    pub fn open_input(&mut self, name: String) -> Result<JsValue, JsError> {
+        let data = self.take_input()?;
+        self.open_data(name, data)
+    }
+
+    /// Attaches the debug file copied in after `beginDebugInput`.
+    #[wasm_bindgen(js_name = attachInput)]
+    pub fn attach_input(&mut self, name: String) -> Result<JsValue, JsError> {
+        let data = self.take_input()?;
+        let b = self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"))?;
+        b.attach_debug_file(&name, data).map_err(err)?;
+        self.opened()
+    }
+
+    fn open_data(&mut self, name: String, data: std::sync::Arc<[u8]>) -> Result<JsValue, JsError> {
         self.binary = None;
         self.container = None;
         self.name = name;
-        if Container::is_container(&bytes) {
-            let c = Container::parse(bytes).map_err(err)?;
+        if Container::is_container(&data) {
+            let c = Container::parse(data).map_err(err)?;
             self.container = Some(c);
             let info = self.container.as_ref().map(|c| c.info()).expect("just set");
             return to_js(&Opened::Container { name: &self.name, info });
         }
-        self.binary = Some(Binary::parse(bytes).map_err(err)?);
+        self.binary = Some(Binary::parse(data).map_err(err)?);
         self.opened()
+    }
+
+    /// Size of the WebAssembly memory, in bytes (it only ever grows).
+    #[wasm_bindgen(js_name = memoryBytes)]
+    pub fn memory_bytes(&self) -> f64 {
+        #[cfg(target_arch = "wasm32")]
+        {
+            (core::arch::wasm32::memory_size(0) * 65536) as f64
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            0.0
+        }
+    }
+
+    /// `count` bytes of the open file from `offset` (for small reads).
+    pub fn read(&self, offset: u64, count: u32) -> Result<Vec<u8>, JsError> {
+        let data = self.bin()?.data();
+        let start = (offset as usize).min(data.len());
+        let end = start.saturating_add(count as usize).min(data.len());
+        Ok(data[start..end].to_vec())
     }
 
     #[wasm_bindgen(js_name = openMember)]
@@ -218,16 +291,29 @@ impl Session {
     }
 
     pub fn symbol(&self, index: u32) -> Result<JsValue, JsError> {
-        to_js(&self.bin()?.symbols().get(index))
+        to_js(&self.bin()?.symbols().get(index).map(|s| s.to_symbol()))
+    }
+
+    /// A page of the functions whose name or address contains `filter`, in
+    /// address order: `{total, offset, functions: [address, size, name][]}`.
+    #[wasm_bindgen(js_name = functionsPage)]
+    pub fn functions_page(&self, filter: String, offset: u32, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.symbols().function_page(&filter, offset, limit))
+    }
+
+    /// Where the function containing `address` is in that list (undefined if none).
+    #[wasm_bindgen(js_name = functionIndex)]
+    pub fn function_index(&self, filter: String, address: u64) -> Result<Option<u32>, JsError> {
+        Ok(self.bin()?.symbols().function_position(&filter, address))
     }
 
     /// Function symbols in address order: `[address, size, name]` triples.
     pub fn functions(&self) -> Result<JsValue, JsError> {
-        let list: Vec<(u64, u64, &str)> = self
+        let list: Vec<(u64, u64, String)> = self
             .bin()?
             .symbols()
             .functions()
-            .map(|s| (s.address, s.size, s.display_name()))
+            .map(|s| (s.address, s.size, s.display_name().into_owned()))
             .collect();
         to_js(&list)
     }

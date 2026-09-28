@@ -220,6 +220,32 @@ pub(crate) fn tail_padding(bytes: &[u8], code: bool, arch: Architecture) -> usiz
     bytes.len() - end
 }
 
+/// Merges overlapping or touching intervals of the same status: millions of
+/// back-to-back functions or strings become a handful of intervals. Each
+/// source adds its intervals in address order, so grouping them by status
+/// keeps them sorted and the big lists never need sorting.
+fn coalesce(intervals: &mut Vec<(u64, u64, MapStatus)>) {
+    let mut by_status: [Vec<(u64, u64)>; STATUSES] = Default::default();
+    for &(s, e, st) in intervals.iter() {
+        by_status[st as usize].push((s, e));
+    }
+    let mut out: Vec<(u64, u64, MapStatus)> = Vec::new();
+    for (k, list) in by_status.iter_mut().enumerate() {
+        if !list.is_sorted() {
+            list.sort_unstable();
+        }
+        let first = out.len();
+        for &(s, e) in list.iter() {
+            let merging = out.len() > first;
+            match out.last_mut() {
+                Some(last) if merging && s <= last.1 => last.1 = last.1.max(e),
+                _ => out.push((s, e, MapStatus::ALL[k])),
+            }
+        }
+    }
+    *intervals = out;
+}
+
 /// Paints intervals by priority and returns the covered runs, merged, with
 /// `None` for uncovered stretches.
 fn sweep(lo: u64, hi: u64, intervals: &[(u64, u64, MapStatus)]) -> Vec<(u64, u64, Option<MapStatus>)> {
@@ -295,7 +321,7 @@ impl Binary {
             let mut intervals: Vec<(u64, u64, MapStatus)> = Vec::new();
             for s in self.symbols.in_range(lo, hi) {
                 if s.size == 0
-                    || s.name.starts_with('$')
+                    || s.name().starts_with('$')
                     || !matches!(s.kind, SymbolKind::Function | SymbolKind::Data | SymbolKind::Unknown)
                 {
                     continue;
@@ -316,8 +342,11 @@ impl Binary {
                 }
                 intervals.push((s.address, end, status));
             }
-            for a in &self.annotations {
+            for a in self.annotations.iter().filter(|a| a.address < hi) {
                 let (s, e) = self.annotation_extent(a);
+                if e <= lo {
+                    continue;
+                }
                 let status = if a.reviewed {
                     MapStatus::Reviewed
                 } else {
@@ -327,13 +356,20 @@ impl Binary {
             }
             // Strings found by scanning count as recovered data.
             if !code && let Some(off) = sec.file_offset {
-                let strings = self.found_strings();
+                let strings = &self.string_index().recs;
                 let first = strings.partition_point(|s| s.offset < off);
                 for s in strings[first..].iter().take_while(|s| s.offset < off + sec.file_size) {
-                    if s.section == Some(sec.index)
-                        && let Some(a) = s.address
-                    {
-                        intervals.push((a, a + s.size as u64, MapStatus::Recovered));
+                    if s.section == sec.index {
+                        let a = sec.address + (s.offset - off);
+                        // Count the terminator too, so back-to-back strings make one run.
+                        let term = if s.wide() { 2 } else { 1 };
+                        let end = s.end() as usize;
+                        let nul = self
+                            .data
+                            .get(end..end + term)
+                            .is_some_and(|t| t.iter().all(|&b| b == 0));
+                        let len = s.len() as u64 + if nul { term as u64 } else { 0 };
+                        intervals.push((a, a + len, MapStatus::Recovered));
                     }
                 }
             }
@@ -343,6 +379,7 @@ impl Binary {
                     intervals.push((sec.address + s, sec.address + e, MapStatus::Structure));
                 }
             }
+            coalesce(&mut intervals);
             let mut runs: Vec<Run> = Vec::new();
             let mut push = |start: u64, end: u64, status: MapStatus| {
                 if start >= end {
@@ -369,6 +406,7 @@ impl Binary {
                     None => push(s, e, MapStatus::Unexplored),
                 }
             }
+            runs.shrink_to_fit();
             sections.push((sec.index, runs));
         }
         CoverageRuns { sections }

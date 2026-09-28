@@ -1,10 +1,16 @@
 //! Printable strings in the loaded data sections, like `strings(1)`: ASCII
 //! runs and UTF-16LE runs (common in Windows binaries and resources).
+//!
+//! The index is compact — 16 bytes per string, pointing into the file — so the
+//! millions of strings of a large app cost tens of megabytes; text is read from
+//! the file when shown, and searches scan the section bytes directly.
+
+use std::sync::Mutex;
 
 use serde::Serialize;
 
 use crate::binary::Binary;
-use crate::model::RegionKind;
+use crate::model::{Format, RegionKind};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,8 +33,40 @@ pub struct StringPage {
     pub strings: Vec<FoundString>,
 }
 
+/// A string in the file: where it is, how long, and whether it is UTF-16.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct StrRec {
+    pub offset: u64,
+    /// Length in bytes; the top bit marks UTF-16LE.
+    len_wide: u32,
+    pub section: u32,
+}
+
+impl StrRec {
+    pub fn len(&self) -> u32 {
+        self.len_wide & 0x7fff_ffff
+    }
+
+    pub fn wide(&self) -> bool {
+        self.len_wide >> 31 != 0
+    }
+
+    pub fn end(&self) -> u64 {
+        self.offset + self.len() as u64
+    }
+}
+
+pub(crate) struct StringIndex {
+    /// Sorted by offset.
+    pub recs: Vec<StrRec>,
+    /// File ranges that were scanned (the data sections).
+    ranges: Vec<(u64, u64)>,
+    /// The last filter's matches, in file order, so paging doesn't rescan.
+    filtered: Mutex<Option<(String, Vec<u32>)>>,
+}
+
 const MIN_CHARS: usize = 4;
-const MAX_STRINGS: usize = 500_000;
+const MAX_STRINGS: usize = 50_000_000;
 const MAX_TEXT: usize = 400;
 
 fn printable(b: u8) -> bool {
@@ -36,34 +74,136 @@ fn printable(b: u8) -> bool {
 }
 
 impl Binary {
-    /// All strings found (computed once).
-    pub(crate) fn found_strings(&self) -> &[FoundString] {
+    /// The string index (built once).
+    pub(crate) fn string_index(&self) -> &StringIndex {
         self.strings.get_or_init(|| self.scan_strings())
     }
 
-    /// A page of strings containing `filter` (case-insensitive).
-    pub fn strings(&self, filter: &str, offset: u32, limit: u32) -> StringPage {
-        let needle = filter.to_lowercase();
-        let all = self.found_strings();
-        let matches: Vec<&FoundString> = all
-            .iter()
-            .filter(|s| needle.is_empty() || s.text.to_lowercase().contains(&needle))
-            .collect();
-        let limit = if limit == 0 { 200 } else { limit };
-        StringPage {
-            total: matches.len() as u32,
-            offset,
-            strings: matches
-                .into_iter()
-                .skip(offset as usize)
-                .take(limit as usize)
-                .cloned()
-                .collect(),
+    /// Text of a string, read from the file (at most `MAX_TEXT` characters).
+    pub(crate) fn string_text(&self, r: &StrRec) -> String {
+        let bytes = &self.data[r.offset as usize..r.end() as usize];
+        if r.wide() {
+            bytes
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .take(MAX_TEXT)
+                .map(|c| c[0] as char)
+                .collect()
+        } else {
+            // Printable ASCII: always valid UTF-8.
+            String::from_utf8_lossy(&bytes[..bytes.len().min(MAX_TEXT)]).into_owned()
         }
     }
 
-    fn scan_strings(&self) -> Vec<FoundString> {
-        let mut out = Vec::new();
+    pub(crate) fn string_address(&self, r: &StrRec) -> Option<u64> {
+        let s = self.sections.get(r.section as usize)?;
+        let off = s.file_offset?;
+        s.loaded.then(|| s.address + (r.offset - off))
+    }
+
+    pub(crate) fn found_string(&self, r: &StrRec) -> FoundString {
+        FoundString {
+            offset: r.offset,
+            address: self.string_address(r),
+            size: r.len(),
+            wide: r.wide(),
+            text: self.string_text(r),
+            section: Some(r.section),
+        }
+    }
+
+    /// A page of strings containing `filter` (ASCII case-insensitive), in file order.
+    pub fn strings(&self, filter: &str, offset: u32, limit: u32) -> StringPage {
+        let index = self.string_index();
+        let limit = if limit == 0 { 200 } else { limit } as usize;
+        let page = |ids: &mut dyn Iterator<Item = u32>| -> Vec<FoundString> {
+            ids.skip(offset as usize)
+                .take(limit)
+                .map(|i| self.found_string(&index.recs[i as usize]))
+                .collect()
+        };
+        let needle = filter.to_ascii_lowercase();
+        if needle.is_empty() {
+            return StringPage {
+                total: index.recs.len() as u32,
+                offset,
+                strings: page(&mut (0..index.recs.len() as u32)),
+            };
+        }
+        let mut cache = index.filtered.lock().unwrap();
+        if cache.as_ref().is_none_or(|(k, _)| *k != needle) {
+            let mut ids: Vec<u32> = self.string_matches(&needle).into_iter().map(|(i, _)| i).collect();
+            ids.sort_unstable();
+            *cache = Some((needle, ids));
+        }
+        let ids = &cache.as_ref().expect("just filled").1;
+        StringPage {
+            total: ids.len() as u32,
+            offset,
+            strings: page(&mut ids.iter().copied()),
+        }
+    }
+
+    /// Every string containing `needle` (lowercase), with a match score like
+    /// symbol names get: exact > prefix > at a word boundary > anywhere.
+    pub(crate) fn string_matches(&self, needle: &str) -> Vec<(u32, i32)> {
+        let index = self.string_index();
+        let n = needle.as_bytes();
+        let mut out: Vec<(u32, i32)> = Vec::new();
+        if n.is_empty() {
+            return out;
+        }
+        let recs = &index.recs;
+        // ASCII strings: scan the section bytes.
+        for &(lo, hi) in &index.ranges {
+            let data = &self.data[lo as usize..hi as usize];
+            let mut pos = 0;
+            let mut cur: Option<usize> = None;
+            while let Some(p) = crate::search::find_ci(data, n, pos) {
+                let at = lo + p as u64;
+                let owner = cur.filter(|&i| recs[i].offset <= at && at < recs[i].end()).or_else(|| {
+                    let i = recs.partition_point(|r| r.offset <= at).checked_sub(1)?;
+                    (at < recs[i].end() && !recs[i].wide()).then_some(i)
+                });
+                let Some(i) = owner else {
+                    pos = p + 1;
+                    continue;
+                };
+                cur = Some(i);
+                let r = recs[i];
+                if at + n.len() as u64 > r.end() {
+                    pos = p + 1;
+                    continue;
+                }
+                let start = (r.offset - lo) as usize;
+                let class = match_class(data, start, start + r.len() as usize, p, n.len());
+                let score = class - ((r.len() as usize - n.len()) / 2).min(99) as i32;
+                match out.last_mut() {
+                    Some(last) if last.0 == i as u32 => last.1 = last.1.max(score),
+                    _ => out.push((i as u32, score)),
+                }
+                pos = if class >= 700 { start + r.len() as usize } else { p + 1 };
+            }
+        }
+        // UTF-16 strings: check each (they are few).
+        for (i, r) in recs.iter().enumerate().filter(|(_, r)| r.wide()) {
+            let text: Vec<u8> = self.data[r.offset as usize..r.end() as usize]
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|c| c[0])
+                .collect();
+            if let Some(score) = crate::search::score_bytes(&text, n) {
+                out.push((i as u32, score));
+            }
+        }
+        out
+    }
+
+    fn scan_strings(&self) -> StringIndex {
+        let mut recs = Vec::new();
+        let mut ranges = Vec::new();
         for s in &self.sections {
             // Code sections produce mostly noise; tables and debug info are browsed elsewhere.
             let wanted = matches!(
@@ -75,8 +215,17 @@ impl Binary {
                 continue;
             }
             let end = (off + s.file_size).min(self.data.len() as u64);
+            ranges.push((off, end));
             let bytes = &self.data[off as usize..end as usize];
-            let address = |i: usize| s.loaded.then_some(s.address + i as u64);
+            let mut push = |start: usize, len: usize, wide: bool| {
+                if recs.len() < MAX_STRINGS {
+                    recs.push(StrRec {
+                        offset: off + start as u64,
+                        len_wide: (len.min(0x7fff_ffff) as u32) | if wide { 1 << 31 } else { 0 },
+                        section: s.index,
+                    });
+                }
+            };
             // ASCII runs.
             let mut i = 0;
             while i < bytes.len() {
@@ -89,19 +238,14 @@ impl Binary {
                     i += 1;
                 }
                 if i - start >= MIN_CHARS {
-                    let text = String::from_utf8_lossy(&bytes[start..i.min(start + MAX_TEXT)]).into_owned();
-                    out.push(FoundString {
-                        offset: off + start as u64,
-                        address: address(start),
-                        size: (i - start) as u32,
-                        wide: false,
-                        text,
-                        section: Some(s.index),
-                    });
+                    push(start, i - start, false);
                 }
             }
-            // UTF-16LE runs: printable low byte, zero high byte.
-            for parity in 0..2 {
+            // UTF-16LE runs: printable low byte, zero high byte. They live in PE
+            // resources and data, and in Mach-O `__ustring`; elsewhere the pass
+            // would double the scan for nothing.
+            let wide = matches!(self.summary.format, Format::Pe | Format::Coff) || s.name == "__ustring";
+            for parity in 0..if wide { 2 } else { 0 } {
                 let mut i = parity;
                 while i + 1 < bytes.len() {
                     if !(printable(bytes[i]) && bytes[i + 1] == 0) {
@@ -109,31 +253,39 @@ impl Binary {
                         continue;
                     }
                     let start = i;
-                    let mut text = String::new();
                     while i + 1 < bytes.len() && printable(bytes[i]) && bytes[i + 1] == 0 {
-                        if text.len() < MAX_TEXT {
-                            text.push(bytes[i] as char);
-                        }
                         i += 2;
                     }
                     if (i - start) / 2 >= MIN_CHARS {
-                        out.push(FoundString {
-                            offset: off + start as u64,
-                            address: address(start),
-                            size: (i - start) as u32,
-                            wide: true,
-                            text,
-                            section: Some(s.index),
-                        });
+                        push(start, i - start, true);
                     }
                 }
             }
-            if out.len() >= MAX_STRINGS {
-                out.truncate(MAX_STRINGS);
-                break;
-            }
         }
-        out.sort_by_key(|s| s.offset);
-        out
+        recs.sort_unstable_by_key(|r| r.offset);
+        recs.shrink_to_fit();
+        ranges.sort_unstable();
+        StringIndex {
+            recs,
+            ranges,
+            filtered: Mutex::new(None),
+        }
+    }
+}
+
+/// How good a match at `p` inside `hay[start..end]` is: exact > prefix > after
+/// `::` `/` `.` > word start > anywhere.
+pub(crate) fn match_class(hay: &[u8], start: usize, end: usize, p: usize, n: usize) -> i32 {
+    if end - start == n {
+        1000
+    } else if p == start {
+        800
+    } else {
+        match hay[p - 1] {
+            b':' | b'/' | b'\\' | b'.' => 700,
+            c if !c.is_ascii_alphanumeric() => 600,
+            c if c.is_ascii_lowercase() && hay[p].is_ascii_uppercase() => 600,
+            _ => 400,
+        }
     }
 }

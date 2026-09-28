@@ -11,7 +11,7 @@ interface Stored {
   reviewed?: boolean;
 }
 
-export function serializeAnnotations(list: Annotation[], file: string, sha256: string): string {
+export function serializeAnnotations(list: Annotation[], file: string, fingerprint: string): string {
   const annotations: Stored[] = list.map((a) => ({
     address: '0x' + a.address.toString(16),
     ...(a.size > 0n ? { size: '0x' + a.size.toString(16) } : {}),
@@ -19,7 +19,7 @@ export function serializeAnnotations(list: Annotation[], file: string, sha256: s
     ...(a.comment ? { comment: a.comment } : {}),
     ...(a.reviewed ? { reviewed: true } : {}),
   }));
-  return JSON.stringify({ format: 'binviz-annotations', version: 1, file, sha256, annotations }, null, 2);
+  return JSON.stringify({ format: 'binviz-annotations', version: 1, file, fingerprint, annotations }, null, 2);
 }
 
 /** `0x401000`, `401000h`, `ram:00401000`, `0000000000401000`, or a JSON number. */

@@ -12,14 +12,13 @@ export type MapTab = 'files' | 'units' | 'coverage';
 export interface Loaded {
   name: string;
   summary: Summary;
-  bytes: Uint8Array;
+  /** The file's bytes, read on demand (a File stays on disk). */
+  blob: Blob;
   sections: Section[];
   segments: Segment[];
   dwarf: DwarfSummary | null;
   sourceFiles: SourceFile[];
   composition: [RegionKind, bigint][];
-  /** SHA-256 of the bytes (hex), the key annotations are saved under. */
-  sha256: string;
 }
 
 export interface Selection {
@@ -63,7 +62,7 @@ export interface Intent {
 class Store {
   readonly api = new Api();
   file: Loaded | null = null;
-  container: { name: string; info: ContainerInfo; bytes: Uint8Array } | null = null;
+  container: { name: string; info: ContainerInfo; blob: Blob } | null = null;
   selection: Selection = {};
   view: ViewName = 'overview';
   intent: Intent = {};
@@ -96,19 +95,20 @@ class Store {
     this.emit('error', e instanceof Error ? e.message : String(e));
   }
 
-  async open(name: string, bytes: Uint8Array) {
-    this.emit('status', `Parsing ${name}…`);
+  async open(name: string, blob: Blob) {
+    this.emit('status', `Opening ${name}…`);
     try {
-      const opened = await this.api.open(name, bytes.slice());
+      // Drop our references to the old file first so its memory can go.
+      this.file = null;
+      this.container = null;
+      const opened = await this.api.open(name, blob);
       if (opened.kind === 'container') {
-        this.file = null;
-        this.container = { name, info: opened.info, bytes };
+        this.container = { name, info: opened.info, blob };
         this.emit('container');
         this.emit('status', '');
         return;
       }
-      this.container = null;
-      await this.loaded(opened.name, opened.summary);
+      await this.loaded(opened.name, opened.summary, blob);
     } catch (e) {
       this.emit('status', '');
       this.error(e);
@@ -116,28 +116,30 @@ class Store {
   }
 
   async openMember(index: number) {
+    const c = this.container;
+    const member = c?.info.members.find((m) => m.index === index);
+    if (!c || !member) return;
     try {
       const opened = await this.api.openMember(index);
-      if (opened.kind === 'binary') await this.loaded(opened.name, opened.summary);
+      const blob = c.blob.slice(Number(member.offset), Number(member.offset + member.size));
+      if (opened.kind === 'binary') await this.loaded(opened.name, opened.summary, blob);
     } catch (e) {
       this.error(e);
     }
   }
 
-  private async loaded(name: string, summary: Summary) {
-    const [bytes, sections, segments, dwarf, sourceFiles, composition] = await Promise.all([
-      this.api.bytes(),
+  private async loaded(name: string, summary: Summary, blob: Blob) {
+    const [sections, segments, dwarf, sourceFiles, composition] = await Promise.all([
       this.api.sections(),
       this.api.segments(),
       this.api.dwarfSummary(),
       this.api.sourceFiles(),
       this.api.composition(),
     ]);
-    const sha256 = await digest(bytes);
-    this.file = { name, summary, bytes, sections, segments, dwarf, sourceFiles, composition, sha256 };
+    this.file = { name, summary, blob, sections, segments, dwarf, sourceFiles, composition };
     this.annotations = [];
     this.notesAt.clear();
-    const saved = loadNotes(sha256);
+    const saved = loadNotes(summary.fingerprint);
     if (saved.length > 0) {
       try {
         this.file.summary = await this.api.setAnnotations(saved);
@@ -159,10 +161,10 @@ class Store {
     else void this.select({ offset: 0n }, { history: true });
   }
 
-  async attachDebug(name: string, bytes: Uint8Array) {
+  async attachDebug(name: string, blob: Blob) {
     if (!this.file) return;
     try {
-      const opened = await this.api.attachDebug(name, bytes);
+      const opened = await this.api.attachDebug(name, blob);
       if (opened.kind !== 'binary') return;
       const [dwarf, sourceFiles] = await Promise.all([this.api.dwarfSummary(), this.api.sourceFiles()]);
       this.file = { ...this.file, summary: opened.summary, dwarf, sourceFiles };
@@ -188,7 +190,7 @@ class Store {
       const summary = await this.api.setAnnotations(list);
       this.file = { ...this.file, summary };
       this.indexNotes(list);
-      saveNotes(this.file.sha256, this.file.name, this.annotations);
+      saveNotes(this.file.summary.fingerprint, this.file.name, this.annotations);
       this.emit('annotations');
       await this.reselect();
     } catch (e) {
@@ -207,7 +209,7 @@ class Store {
   }
 
   exportAnnotations(): string {
-    return serializeAnnotations(this.annotations, this.file?.name ?? '', this.file?.sha256 ?? '');
+    return serializeAnnotations(this.annotations, this.file?.name ?? '', this.file?.summary.fingerprint ?? '');
   }
 
   /** Merges annotations from a binviz export or a symbol list (CSV, nm, IDA/Ghidra exports). */
@@ -398,19 +400,7 @@ class Store {
 
 export const store = new Store();
 
-async function digest(bytes: Uint8Array): Promise<string> {
-  try {
-    const buf = await crypto.subtle.digest('SHA-256', bytes as unknown as ArrayBuffer);
-    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
-  } catch {
-    // No WebCrypto (insecure context): fall back to a cheap fingerprint.
-    let h = 2166136261;
-    for (let i = 0; i < bytes.length; i += Math.max(1, Math.floor(bytes.length / 65536))) h = Math.imul(h ^ bytes[i], 16777619);
-    return `fnv-${bytes.length}-${(h >>> 0).toString(16)}`;
-  }
-}
-
-const NOTES_KEY = (sha: string) => `binviz-notes:${sha}`;
+const NOTES_KEY = (fingerprint: string) => `binviz-notes:${fingerprint}`;
 
 function loadNotes(sha: string): Annotation[] {
   try {

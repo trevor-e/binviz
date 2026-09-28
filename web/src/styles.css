@@ -378,6 +378,24 @@ a:hover,
   overflow: hidden;
 }
 
+.progress {
+  position: absolute;
+  right: 12px;
+  bottom: 4px;
+  font: 11px var(--mono);
+  color: var(--text-2);
+  pointer-events: none;
+}
+
+.progress[hidden] {
+  display: none;
+}
+
+.hex-row .b.pending,
+.hex-row .a.pending {
+  color: var(--muted);
+}
+
 .busy::after {
   content: '';
   position: absolute;

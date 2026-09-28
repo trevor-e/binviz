@@ -94,6 +94,9 @@ const sourcesInput = h('input', { type: 'file', multiple: true, webkitdirectory:
 const fileInfo = h('div', { class: 'fileinfo' });
 const busy = h('div', { class: 'busy' });
 busy.hidden = true;
+/** Shows how far along reading a large file is. */
+const progress = h('div', { class: 'progress', role: 'status' });
+progress.hidden = true;
 
 const button = (label: string, title: string, iconName: Parameters<typeof icon>[0], onClick: () => void, extra = '') => {
   const b = h('button', { class: `btn ${extra}`, title, type: 'button' }, icon(iconName), label ? h('span', null, label) : null);
@@ -122,6 +125,7 @@ const topbar = h(
   palette.el,
   h('div', { class: 'actions' }, openBtn, debugBtn, sourcesBtn, themeBtn, inspectorBtn),
   busy,
+  progress,
   fileInput,
   debugInput,
   sourcesInput,
@@ -232,14 +236,22 @@ store.on('error', (msg) => toast(msg, 'error'));
 store.on('status', (msg) => {
   if (msg) toast(msg, 'info', 2500);
 });
-store.api.onBusyChange = (b) => (busy.hidden = !b);
+store.api.onBusyChange = (b) => {
+  busy.hidden = !b;
+  if (!b) progress.hidden = true;
+};
+store.api.onProgress = (f) => {
+  progress.hidden = false;
+  progress.textContent = f < 0 ? 'Parsing…' : `Reading ${Math.round(f * 100)}%`;
+};
 renderChrome();
 renderView();
 
 // --- Opening files -------------------------------------------------------------
 
 async function openFile(file: File) {
-  await store.open(file.name, new Uint8Array(await file.arrayBuffer()));
+  // The File stays on disk: the worker reads it in chunks, the hex view reads what it shows.
+  await store.open(file.name, file);
 }
 
 /** Opens a bundled sample together with its source files, so the source ↔ code mapping shows right away. */
@@ -248,7 +260,7 @@ async function openSample(file: string) {
   if (!sample) throw new Error(`unknown sample ${file}`);
   const res = await fetch(`samples/${file}`);
   if (!res.ok) throw new Error(`sample ${file} not found (run npm run wasm to copy the fixtures)`);
-  await store.open(file, new Uint8Array(await res.arrayBuffer()));
+  await store.open(file, await res.blob());
   const sources: { path: string; file: File }[] = [];
   for (const src of sample.sources) {
     const r = await fetch(`samples/src/${src}`);
@@ -307,7 +319,7 @@ debugInput.addEventListener('change', async () => {
   const f = debugInput.files?.[0];
   debugInput.value = '';
   if (!f) return;
-  await store.attachDebug(f.name, new Uint8Array(await f.arrayBuffer()));
+  await store.attachDebug(f.name, f);
   if (store.file?.dwarf) toast(`Loaded DWARF from ${f.name}: ${store.file.dwarf.unitCount} units`);
 });
 

@@ -1,0 +1,4 @@
+# WebAssembly SIMD (every current browser has it) lets memchr/memmem scan
+# names, strings and file bytes several times faster.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]

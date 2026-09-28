@@ -91,8 +91,8 @@ export class SearchPalette {
   /** Builds the string and DWARF name indexes in the background on first use. */
   private prepare() {
     const f = store.file;
-    if (!f || this.prepared === f.sha256) return;
-    this.prepared = f.sha256;
+    if (!f || this.prepared === f.summary.fingerprint) return;
+    this.prepared = f.summary.fingerprint;
     void store.api.prepareSearch().catch(() => {});
   }
 

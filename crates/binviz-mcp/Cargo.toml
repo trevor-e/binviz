@@ -1,0 +1,14 @@
+[package]
+name = "binviz-mcp"
+description = "binviz as an MCP server: load a binary once, then let agents explore it"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+binviz.workspace = true
+serde.workspace = true
+serde_json.workspace = true

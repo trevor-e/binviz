@@ -1386,45 +1386,40 @@ fn coff_symbol_name(ctx: &Ctx, symtab: u64, strtab: Option<(u64, u64)>, index: u
     Some(util::demangle(&name).unwrap_or(name))
 }
 
-pub(crate) fn coff_symbol_at(ctx: &Ctx, node: &Node, strtab: Option<(u64, u64)>, offset: u64) -> Option<Entry> {
-    // Walk records from the start: a symbol is followed by NumberOfAuxSymbols aux records.
-    let mut pos = node.start;
-    let mut index = 0u64;
-    while pos + 18 <= node.end {
-        let naux = ctx.bytes.u8(pos + 17)? as u64;
-        let end = (pos + 18 * (1 + naux)).min(node.end);
-        if offset < end {
-            let mut f = fields::decode(ctx, pos, COFF_SYMBOL);
-            let name = coff_symbol_name(ctx, node.start, strtab, index).unwrap_or_default();
-            if let Some(field) = f.iter_mut().find(|f| f.name == "Name") {
-                field.value = util::quote(name.as_bytes());
-            }
-            if let Some(field) = f.iter_mut().find(|f| f.name == "SectionNumber") {
-                field.value = sym_section(ctx, field.raw);
-            }
-            if naux > 0 {
-                f.push(FieldValue {
-                    start: pos + 18,
-                    end,
-                    name: "AuxRecords",
-                    raw: naux,
-                    value: format!("{naux} auxiliary record(s)"),
-                });
-            }
-            let class = sym_class(fields::get(&f, "StorageClass")).unwrap_or("?");
-            return Some(Entry {
-                start: pos,
-                end,
-                name: format!("Symbol {index}: {name}"),
-                value: Some(format!("{class} value {}", hex(fields::get(&f, "Value")))),
-                fields: f,
-                ..Entry::default()
-            });
-        }
-        pos = end;
-        index += 1 + naux;
+/// The symbol record starting at `pos`, with its auxiliary records.
+pub(crate) fn coff_symbol_entry(ctx: &Ctx, node: &Node, strtab: Option<(u64, u64)>, pos: u64) -> Option<Entry> {
+    if pos + 18 > node.end {
+        return None;
     }
-    None
+    let index = (pos - node.start) / 18;
+    let naux = ctx.bytes.u8(pos + 17)? as u64;
+    let end = (pos + 18 * (1 + naux)).min(node.end);
+    let mut f = fields::decode(ctx, pos, COFF_SYMBOL);
+    let name = coff_symbol_name(ctx, node.start, strtab, index).unwrap_or_default();
+    if let Some(field) = f.iter_mut().find(|f| f.name == "Name") {
+        field.value = util::quote(name.as_bytes());
+    }
+    if let Some(field) = f.iter_mut().find(|f| f.name == "SectionNumber") {
+        field.value = sym_section(ctx, field.raw);
+    }
+    if naux > 0 {
+        f.push(FieldValue {
+            start: pos + 18,
+            end,
+            name: "AuxRecords",
+            raw: naux,
+            value: format!("{naux} auxiliary record(s)"),
+        });
+    }
+    let class = sym_class(fields::get(&f, "StorageClass")).unwrap_or("?");
+    Some(Entry {
+        start: pos,
+        end,
+        name: format!("Symbol {index}: {name}"),
+        value: Some(format!("{class} value {}", hex(fields::get(&f, "Value")))),
+        fields: f,
+        ..Entry::default()
+    })
 }
 
 pub(crate) fn base_reloc_block(ctx: &Ctx, pos: u64, end: u64) -> Option<Entry> {

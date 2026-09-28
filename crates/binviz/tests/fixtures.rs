@@ -155,7 +155,7 @@ fn elf_basics() {
     let start = bin.symbols().by_name("_start").unwrap();
     assert_eq!(start.address, entry);
     let run = bin.symbols().by_name("run").expect("suffix lookup");
-    assert_eq!(run.demangled.as_deref(), Some("tiny::run"));
+    assert_eq!(run.demangled().as_deref(), Some("tiny::run"));
     let hit = bin.symbols().lookup(run.address + 4).unwrap();
     assert_eq!(hit.index, run.index);
     assert_eq!(hit.offset, 4);
@@ -483,7 +483,7 @@ fn stripped_binaries_recover_functions() {
     let full = open("shapes-pe.exe");
     let main = full.symbols().by_name("main").unwrap();
     let sub = bin.symbols().at(main.address).expect("main recovered");
-    assert_eq!(sub.name, format!("sub_{:x}", main.address));
+    assert_eq!(sub.name(), format!("sub_{:x}", main.address));
     let cov = bin.coverage(10);
     let text = cov.sections.iter().find(|s| s.name == ".text").unwrap();
     assert!(text.bytes.recovered * 10 > text.size * 9, "{:?}", text.bytes);
@@ -526,7 +526,8 @@ fn coverage_accounts_for_every_byte() {
 #[test]
 fn annotations_name_functions_and_mark_progress() {
     let mut bin = open("shapes-pe.stripped.exe");
-    let main = open("shapes-pe.exe").symbols().by_name("main").unwrap().clone();
+    let full = open("shapes-pe.exe");
+    let main = full.symbols().by_name("main").unwrap().to_symbol();
     let before = bin.coverage(0);
     bin.set_annotations(vec![
         Annotation {
@@ -549,9 +550,8 @@ fn annotations_name_functions_and_mark_progress() {
     assert_eq!((sym.address, sym.source), (main.address, SymbolSource::User));
     let recovered = bin
         .symbols()
-        .all()
         .iter()
-        .find(|s| s.name == format!("sub_{:x}", main.address))
+        .find(|s| s.name() == format!("sub_{:x}", main.address))
         .unwrap();
     assert_eq!(sym.size, recovered.size);
     assert!(!sym.size_inferred);

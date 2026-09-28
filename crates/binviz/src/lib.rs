@@ -35,6 +35,7 @@ mod inspect;
 mod layout;
 pub mod model;
 pub mod search;
+pub mod size;
 mod strings;
 mod symbols;
 mod util;
@@ -49,6 +50,29 @@ pub use error::{Error, Result};
 pub use inspect::Target;
 pub use model::*;
 pub use search::{HitKind, SearchHit, SearchResults};
+pub use size::{GroupKind, SizeReport};
 pub use strings::{FoundString, StringPage};
-pub use symbols::{SymbolPage, SymbolQuery, SymbolTable};
+pub use symbols::{Binding, FunctionPage, Sym, SymbolPage, SymbolQuery, SymbolTable};
 pub use util::demangle;
+
+/// Reads a file straight into shared storage: a large binary is never held
+/// twice while it is parsed.
+pub fn read_file(path: impl AsRef<std::path::Path>) -> std::io::Result<std::sync::Arc<[u8]>> {
+    use std::io::Read;
+    let mut file = std::fs::File::open(path)?;
+    let len = usize::try_from(file.metadata()?.len()).map_err(|_| std::io::Error::other("file too large"))?;
+    let mut buf = std::sync::Arc::<[u8]>::new_uninit_slice(len);
+    let slots = std::sync::Arc::get_mut(&mut buf).expect("new buffer");
+    let mut chunk = vec![0u8; len.clamp(1, 1 << 20)];
+    let mut filled = 0;
+    while filled < len {
+        let want = chunk.len().min(len - filled);
+        file.read_exact(&mut chunk[..want])?;
+        for (dst, &src) in slots[filled..filled + want].iter_mut().zip(&chunk[..want]) {
+            dst.write(src);
+        }
+        filled += want;
+    }
+    // SAFETY: every byte was written above.
+    Ok(unsafe { buf.assume_init() })
+}

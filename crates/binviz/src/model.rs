@@ -95,6 +95,9 @@ pub struct Summary {
     pub symbol_count: u32,
     /// Format-specific key/value facts for display.
     pub properties: Vec<Property>,
+    /// A cheap identity for the file's contents (size, build ID, and hashed
+    /// samples), for keying saved notes and caches without hashing every byte.
+    pub fingerprint: String,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -129,6 +129,9 @@ pub(crate) struct Node {
     pub fill_gaps: bool,
     /// A filler node for bytes no structure covers.
     pub gap: bool,
+    /// Start offsets (relative to `start`) of the entries of a variable-size
+    /// decoder, built the first time something looks past the first entry.
+    pub starts: std::sync::OnceLock<Vec<u32>>,
     floating: bool,
 }
 
@@ -148,6 +151,7 @@ impl Node {
             is_field: false,
             fill_gaps: false,
             gap: false,
+            starts: std::sync::OnceLock::new(),
             floating: false,
         }
     }

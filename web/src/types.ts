@@ -27,6 +27,8 @@ export interface Summary {
   segmentCount: number;
   symbolCount: number;
   properties: Property[];
+  /** Identifies the file's contents; saved notes are keyed by it. */
+  fingerprint: string;
 }
 
 export interface Section {
@@ -76,6 +78,8 @@ export interface Sym {
 }
 
 export interface SymbolPage { total: number; offset: number; symbols: Sym[] }
+
+export interface FunctionPage { total: number; offset: number; functions: [bigint, bigint, string][] }
 
 export interface SymbolQuery {
   filter?: string;

@@ -5,3 +5,5 @@ node_modules
 /web/src/pkg
 *.rcgu.o
 /web/public/samples
+# Notes an agent or the CLI saved next to a binary
+*.binviz-notes.json

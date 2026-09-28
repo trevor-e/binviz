@@ -36,6 +36,7 @@ pub(crate) fn discover(
     out.retain(|&(a, _)| in_code(a));
     out.sort_unstable();
     out.dedup_by_key(|&mut (a, _)| a);
+    out.shrink_to_fit();
     out
 }
 
