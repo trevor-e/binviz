@@ -2,7 +2,9 @@
 //! source lookups (including inlined frames, via `addr2line`).
 
 pub mod attribution;
+mod check;
 pub(crate) mod die;
+mod explore;
 mod expr;
 mod lines;
 
@@ -16,7 +18,9 @@ use serde::Serialize;
 use crate::error::Result;
 use crate::model::{Frame, Section};
 use crate::util;
-pub use die::{AttrInfo, DieDetails, DieSummary, Link};
+pub use check::{DwarfCheck, DwarfProblem, Severity, UnitProblems};
+pub use die::{AttrInfo, CodeLine, DieDetails, DieSummary, Link, MemberLayout};
+pub use explore::{DiePage, ScopeInfo, ScopeVar, TagCount};
 pub use lines::{FileLines, LineFileEntry, LineProgramInfo, LineRange, LineRow, SourceFile};
 use lines::{FileTable, RowIndex};
 
@@ -87,6 +91,10 @@ pub struct DebugInfo {
     names: OnceLock<Vec<die::NamedDie>>,
     /// Global variables with static addresses, built on demand.
     globals: OnceLock<Vec<attribution::GlobalVar>>,
+    /// Units that couldn't be read at all.
+    load_problems: Vec<check::DwarfProblem>,
+    /// The last flat DIE listing, so paging through it doesn't walk the unit again.
+    listing: std::sync::Mutex<Option<explore::Listing>>,
 }
 
 impl DebugInfo {
@@ -149,17 +157,55 @@ impl DebugInfo {
 
         let mut units = Vec::new();
         let mut headers = Vec::new();
+        let mut load_problems = Vec::new();
+        // A bad header ends the walk: the length that leads to the next one can't be trusted.
+        let mut next = 0u64;
         let mut iter = dwarf.units();
-        while let Ok(Some(h)) = iter.next() {
-            headers.push(h);
+        loop {
+            match iter.next() {
+                Ok(Some(h)) => {
+                    next = h.offset().0 as u64 + h.length_including_self() as u64;
+                    headers.push(h);
+                }
+                Ok(None) => break,
+                Err(e) => {
+                    load_problems.push(check::load_problem(
+                        ".debug_info",
+                        next,
+                        format!("can't read the unit header at {next:#x}: {e}; the units after it are skipped"),
+                    ));
+                    break;
+                }
+            }
         }
+        next = 0;
         let mut type_iter = dwarf.type_units();
-        while let Ok(Some(h)) = type_iter.next() {
-            headers.push(h);
+        loop {
+            match type_iter.next() {
+                Ok(Some(h)) => {
+                    next = h.offset().0 as u64 + h.length_including_self() as u64;
+                    headers.push(h);
+                }
+                Ok(None) => break,
+                Err(e) => {
+                    load_problems.push(check::load_problem(
+                        ".debug_types",
+                        next,
+                        format!("can't read the type unit header at {next:#x}: {e}; the units after it are skipped"),
+                    ));
+                    break;
+                }
+            }
         }
         for h in headers {
-            if let Ok(u) = dwarf.unit(h) {
-                units.push(u);
+            let (section, offset) = (h.section().name(), h.offset().0 as u64);
+            match dwarf.unit(h) {
+                Ok(u) => units.push(u),
+                Err(e) => load_problems.push(check::load_problem(
+                    section,
+                    offset,
+                    format!("can't read the unit at {offset:#x} (its abbreviations or line program header): {e}"),
+                )),
             }
         }
         let infos = units
@@ -188,6 +234,8 @@ impl DebugInfo {
             die_starts,
             names: OnceLock::new(),
             globals: OnceLock::new(),
+            load_problems,
+            listing: std::sync::Mutex::new(None),
         }))
     }
 

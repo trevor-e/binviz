@@ -29,6 +29,7 @@ version = "0.1.0"
 dependencies = [
  "addr2line",
  "cpp_demangle",
+ "flate2",
  "gimli",
  "iced-x86",
  "memchr",

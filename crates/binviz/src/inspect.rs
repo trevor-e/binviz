@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use object::{Object, ObjectSection};
+use object::{Object, ObjectSection, ObjectSymbol};
 use serde::Deserialize;
 
 use crate::binary::Binary;
@@ -122,21 +122,44 @@ impl Binary {
         {
             bail!("{name} does not match this binary (build ID/UUID differs)");
         }
-        if !dwarf::has_dwarf(&file) {
-            bail!("{name} contains no DWARF sections");
-        }
-        let Some(debug) = DebugInfo::load(&file, &data, name, &self.sections)? else {
-            bail!("{name} contains no DWARF units");
+        let debug = if dwarf::has_dwarf(&file) {
+            DebugInfo::load(&file, &data, name, &self.sections)?
+        } else {
+            None
         };
-        self.summary.has_dwarf = true;
-        self.debug = Some(debug);
+        // The debug file's symbol table names what stripping removed (a dSYM
+        // keeps every symbol the linker wrote, data included).
+        let mut syms = DebugSymbols::default();
+        for s in file.symbols() {
+            let kind = match s.kind() {
+                object::SymbolKind::Text => SymbolKind::Function,
+                object::SymbolKind::Data => SymbolKind::Data,
+                object::SymbolKind::Unknown => SymbolKind::Unknown,
+                _ => continue,
+            };
+            let Ok(n) = s.name() else { continue };
+            if n.is_empty() || s.section_index().is_none() || s.is_undefined() || s.address() == 0 {
+                continue;
+            }
+            syms.push(n, s.address(), s.size(), kind);
+        }
+        if debug.is_none() && syms.recs.is_empty() {
+            bail!("{name} contains neither DWARF nor symbols");
+        }
+        self.debug_symbols = syms;
+        if let Some(debug) = debug {
+            self.summary.has_dwarf = true;
+            self.debug = Some(debug);
+        }
         self.rebuild_static_symbols();
         Ok(())
     }
 
-    /// Rebuilds the symbols that don't come from the file's own tables: DWARF
-    /// subprograms (when the file has no function symbols) and recovered
-    /// function boundaries (`sub_<address>`), then the user's names on top.
+    /// Rebuilds the symbols that don't come from the file's own tables: an
+    /// attached debug file's symbols, DWARF subprograms (when the file has no
+    /// function symbols) and recovered function boundaries (`sub_<address>`),
+    /// each only where nothing before it names the address; then the user's
+    /// names on top.
     pub(crate) fn rebuild_static_symbols(&mut self) {
         let file = self.symbols.file_len();
         // Addresses the file already names.
@@ -161,22 +184,38 @@ impl Binary {
             .take(file as usize)
             .any(|s| s.defined && s.kind == SymbolKind::Function);
         let section_of = |a: u64| self.section_at(a).map(|s| s.index);
-        let taken = |a: u64, named: &mut Vec<u64>| match named.binary_search(&a) {
-            Ok(_) => true,
-            Err(pos) => {
-                named.insert(pos, a);
-                false
-            }
+        // Each layer only fills addresses the layers before it leave unnamed.
+        // (`named` stays sorted: new addresses are merged in per layer, not one by one.)
+        let merge = |named: &mut Vec<u64>, more: &mut Vec<u64>| {
+            more.sort_unstable();
+            more.dedup();
+            named.extend_from_slice(more);
+            named.sort_unstable();
+            named.dedup();
         };
+        let ds = &self.debug_symbols;
+        let from_debug_file: Vec<(usize, u32)> = (0..ds.recs.len())
+            .filter(|&i| named.binary_search(&ds.recs[i].address).is_err())
+            .filter_map(|i| Some((i, section_of(ds.recs[i].address)?)))
+            .collect();
+        merge(
+            &mut named,
+            &mut from_debug_file.iter().map(|&(i, _)| ds.recs[i].address).collect(),
+        );
         let mut dwarf: Vec<(String, u64, u64, u32)> = Vec::new();
         if !has_functions && let Some(debug) = &self.debug {
             for (name, address, size) in debug.subprograms() {
-                let Some(section) = section_of(address) else { continue };
-                if !taken(address, &mut named) {
+                if named.binary_search(&address).is_err()
+                    && let Some(section) = section_of(address)
+                {
                     dwarf.push((name, address, size, section));
                 }
             }
+            // One per address (a function can have several subprogram DIEs).
+            dwarf.sort_by_key(|d| d.1);
+            dwarf.dedup_by_key(|d| d.1);
         }
+        merge(&mut named, &mut dwarf.iter().map(|d| d.1).collect());
         // Recovered functions go where nothing is named: `named` is sorted, so check by search.
         let recovered: Vec<(u64, u64, Option<u32>)> = self
             .discovered
@@ -184,9 +223,22 @@ impl Binary {
             .filter(|&&(address, _)| named.binary_search(&address).is_err())
             .map(|&(address, size)| (address, size, section_of(address)))
             .collect();
-        let extra = dwarf
-            .iter()
-            .map(|(name, address, size, section)| NewSym {
+        let debug_file = from_debug_file.iter().map(|&(i, section)| {
+            let r = &ds.recs[i];
+            NewSym {
+                name: ds.name(r),
+                address: r.address,
+                size: r.size,
+                kind: r.kind,
+                binding: Binding::Global,
+                section: Some(section),
+                source: SymbolSource::DebugFile,
+                defined: true,
+                plain: false,
+            }
+        });
+        let extra = debug_file
+            .chain(dwarf.iter().map(|(name, address, size, section)| NewSym {
                 name,
                 address: *address,
                 size: *size,
@@ -196,7 +248,7 @@ impl Binary {
                 source: SymbolSource::Dwarf,
                 defined: true,
                 plain: true,
-            })
+            }))
             .chain(recovered.iter().map(|&(address, size, section)| NewSym {
                 // An empty recovered name is written as `sub_<address>`.
                 name: "",
@@ -209,9 +261,10 @@ impl Binary {
                 defined: true,
                 plain: true,
             }));
-        let sections = std::mem::take(&mut self.sections);
-        self.symbols.set_static(extra, &sections);
-        self.sections = sections;
+        let extra: Vec<NewSym<'_>> = extra.collect();
+        let sections = &self.sections;
+        let symbols = &mut self.symbols;
+        symbols.set_static(extra, sections);
         // Function boundaries shape the references found in code.
         self.xrefs = std::sync::OnceLock::new();
         self.rebuild_user_symbols();
@@ -304,5 +357,38 @@ impl Binary {
             .filter_map(|s| s.name().ok().map(str::to_string))
             .filter(|n| n.starts_with(".debug") || n.starts_with("__debug") || n.starts_with(".zdebug"))
             .collect()
+    }
+}
+
+/// A debug file's symbol table, kept compactly: names in one arena.
+#[derive(Default)]
+pub(crate) struct DebugSymbols {
+    names: String,
+    pub(crate) recs: Vec<DebugSymbol>,
+}
+
+pub(crate) struct DebugSymbol {
+    pub(crate) address: u64,
+    pub(crate) size: u64,
+    name: u32,
+    len: u32,
+    pub(crate) kind: SymbolKind,
+}
+
+impl DebugSymbols {
+    fn push(&mut self, name: &str, address: u64, size: u64, kind: SymbolKind) {
+        let at = self.names.len() as u32;
+        self.names.push_str(name);
+        self.recs.push(DebugSymbol {
+            address,
+            size,
+            name: at,
+            len: name.len() as u32,
+            kind,
+        });
+    }
+
+    fn name(&self, r: &DebugSymbol) -> &str {
+        &self.names[r.name as usize..(r.name + r.len) as usize]
     }
 }

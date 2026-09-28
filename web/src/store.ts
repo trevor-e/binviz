@@ -3,23 +3,48 @@
 import { Api } from './api';
 import { parseAnnotations, serializeAnnotations } from './notes';
 import type {
-  Annotation, ContainerInfo, DwarfSummary, Inspection, RefCounts, RegionKind, Section, Segment, SourceFile, Summary,
+  Annotation, ContainerInfo, DwarfSummary, Inspection, Opened, PackageInfo, PackageSource, RefCounts, RegionKind, Section,
+  Segment, SizeReport, SourceFile, Summary,
 } from './types';
+import { basename } from './util';
 
-export type ViewName = 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map';
+export type ViewName = 'folder' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map';
 export type MapTab = 'files' | 'units' | 'coverage';
 
 export interface Loaded {
   name: string;
   summary: Summary;
-  /** The file's bytes, read on demand (a File stays on disk). */
-  blob: Blob;
+  /** The file's bytes, read on demand (a File stays on disk); null when only the worker has them. */
+  blob: Blob | null;
   sections: Section[];
   segments: Segment[];
   dwarf: DwarfSummary | null;
   sourceFiles: SourceFile[];
   composition: [RegionKind, bigint][];
 }
+
+/** A folder or zip of binaries (an .ipa, a build…): its binaries, one of which is open. */
+export interface OpenPackage {
+  info: PackageInfo;
+  /** The binary the other views show. */
+  current: number;
+  /** Every binary's size report, once the folder has been analyzed. */
+  reports: Map<number, SizeReport> | null;
+  analyzing: boolean;
+  /** Where its files came from (debug files dropped later join them). */
+  sources: PackageSource[];
+}
+
+/** Folders with at most this many binaries, and less than this in binaries and debug files, are analyzed as soon as they open. */
+const AUTO_ANALYZE_COUNT = 50;
+const AUTO_ANALYZE_BYTES = 256 * 1024 * 1024;
+
+/** Bytes read to analyze every binary of a folder: each binary and its debug file. */
+export function analysisBytes(info: PackageInfo): number {
+  return info.binaries.reduce((a, b) => a + Number(b.size) + (b.debug !== undefined && b.debug !== null ? Number(info.debugFiles[b.debug]?.size ?? 0n) : 0), 0);
+}
+
+const buildIdKey = (id: string) => id.replace(/-/g, '').toLowerCase();
 
 export interface Selection {
   offset?: bigint;
@@ -48,6 +73,7 @@ type Events = {
   intent: [];
   annotations: [];
   xrefs: [];
+  package: [];
   error: [string];
   status: [string];
 };
@@ -64,6 +90,7 @@ class Store {
   readonly api = new Api();
   file: Loaded | null = null;
   container: { name: string; info: ContainerInfo; blob: Blob } | null = null;
+  package: OpenPackage | null = null;
   selection: Selection = {};
   view: ViewName = 'overview';
   intent: Intent = {};
@@ -106,6 +133,7 @@ class Store {
       // Drop our references to the old file first so its memory can go.
       this.file = null;
       this.container = null;
+      this.dropPackage();
       const opened = await this.api.open(name, blob);
       if (opened.kind === 'container') {
         this.container = { name, info: opened.info, blob };
@@ -133,7 +161,133 @@ class Store {
     }
   }
 
-  private async loaded(name: string, summary: Summary, blob: Blob) {
+  private dropPackage() {
+    if (!this.package) return;
+    this.package = null;
+    if (this.view === 'folder') this.view = 'overview';
+    this.emit('package');
+  }
+
+  /**
+   * Opens folders and zips (several at once combine; zips inside open too):
+   * every binary found, each paired with its debug file by UUID or build ID.
+   * When all that is found is debug files, they go with what is open: they
+   * join the open folder, or the one matching the open binary is attached.
+   * Returns false when nothing in them is a binary.
+   */
+  async openFolder(sources: PackageSource[]): Promise<boolean> {
+    const name = sources.map((s) => s.name).join(' + ');
+    this.emit('status', `Looking through ${name}…`);
+    try {
+      const info = await this.api.scanFolder(sources);
+      if (info.binaries.length === 0) {
+        this.emit('status', '');
+        return false;
+      }
+      const debugOnly = info.binaries.every((b) => b.kind === 'debug');
+      if (debugOnly && this.package) {
+        const p = this.package;
+        const merged = [...p.sources, ...sources];
+        await this.api.scanFolder(merged);
+        await this.openScanned(merged, { path: p.info.binaries[p.current]?.path, view: this.view });
+      } else if (debugOnly && this.file) {
+        await this.attachMatching(info);
+      } else {
+        await this.openScanned(sources);
+      }
+    } catch (e) {
+      this.emit('status', '');
+      this.error(e);
+    }
+    return true;
+  }
+
+  /** Opens what the worker last scanned; `keep` reopens a binary (by path) in a view. */
+  private async openScanned(sources: PackageSource[], keep?: { path?: string; view: ViewName }) {
+    this.file = null;
+    this.container = null;
+    this.dropPackage();
+    const { info, opened } = await this.api.openScanned();
+    this.package = { info, current: 0, reports: null, analyzing: false, sources };
+    this.view = 'folder';
+    this.emit('package');
+    if (opened?.kind === 'binary') {
+      await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[0].file));
+    } else {
+      this.emit('status', '');
+      this.emit('file');
+      this.emit('view');
+    }
+    const again = keep?.path !== undefined ? info.binaries.findIndex((b) => b.path === keep.path) : -1;
+    if (again > 0) await this.selectBinary(again);
+    if (keep) this.setView(keep.view);
+    // Small folders are combined right away; big ones when asked.
+    const n = info.binaries.length;
+    if (n > 0 && n <= AUTO_ANALYZE_COUNT && analysisBytes(info) < AUTO_ANALYZE_BYTES) void this.analyzePackage();
+  }
+
+  /** Attaches the one of the scanned debug files that matches the open binary. */
+  private async attachMatching(info: PackageInfo) {
+    const f = this.file!;
+    const want = f.summary.buildId ? buildIdKey(f.summary.buildId) : '';
+    const match =
+      info.binaries.find((b) => want && b.ids.some((x) => x.id && buildIdKey(x.id) === want)) ??
+      (info.binaries.length === 1 ? info.binaries[0] : undefined);
+    if (!match) {
+      throw new Error(`None of the ${info.binaries.length} debug files matches ${basename(f.name)}${f.summary.buildId ? ` (${f.summary.buildId})` : ''}`);
+    }
+    await this.attached(await this.api.attachScanned(match.file, match.path));
+    this.emit('status', `Attached ${match.path}`);
+  }
+
+  /** Opens another binary of the folder (loading it and its debug file the first time). */
+  async selectBinary(index: number, view?: ViewName) {
+    const p = this.package;
+    if (!p) return;
+    if (index !== p.current || !this.file) {
+      try {
+        const { info, opened } = await this.api.selectPackageBinary(index);
+        if (this.package !== p) return;
+        p.info = info;
+        p.current = index;
+        this.emit('package');
+        if (opened.kind === 'binary') await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[index].file));
+      } catch (e) {
+        this.error(e);
+        return;
+      }
+    }
+    if (view) this.setView(view);
+  }
+
+  /** Size reports for every binary of the folder, each with its debug file attached. */
+  async analyzePackage(top = 500) {
+    const p = this.package;
+    if (!p || p.analyzing) return;
+    p.analyzing = true;
+    this.emit('package');
+    try {
+      const { info, reports } = await this.api.analyzePackage(top);
+      if (this.package !== p) return;
+      p.info = info;
+      p.reports = new Map(reports.map((r) => [r.index, r.report]));
+    } catch (e) {
+      this.error(e);
+    } finally {
+      p.analyzing = false;
+      if (this.package === p) this.emit('package');
+    }
+  }
+
+  /** Bytes `[start, end)` of the open file, from its Blob or (with none) from the worker. */
+  async readBytes(start: number, end: number): Promise<Uint8Array> {
+    const f = this.file;
+    if (!f) return new Uint8Array();
+    if (f.blob) return new Uint8Array(await f.blob.slice(start, Math.min(f.blob.size, end)).arrayBuffer());
+    return this.api.read(BigInt(start), Math.max(0, Math.min(end, Number(f.summary.fileSize)) - start));
+  }
+
+  private async loaded(name: string, summary: Summary, blob: Blob | null) {
     const [sections, segments, dwarf, sourceFiles, composition] = await Promise.all([
       this.api.sections(),
       this.api.segments(),
@@ -213,20 +367,24 @@ class Store {
   async attachDebug(name: string, blob: Blob) {
     if (!this.file) return;
     try {
-      const opened = await this.api.attachDebug(name, blob);
-      if (opened.kind !== 'binary') return;
-      const [dwarf, sourceFiles] = await Promise.all([this.api.dwarfSummary(), this.api.sourceFiles()]);
-      this.file = { ...this.file, summary: opened.summary, dwarf, sourceFiles };
-      // DWARF may add function boundaries: references are found again.
-      const had = this.xrefs === 'ready';
-      this.resetXrefs();
-      this.emit('file');
-      if (had) void this.ensureXrefs();
-      this.emit('sources');
-      await this.reselect();
+      await this.attached(await this.api.attachDebug(name, blob));
     } catch (e) {
       this.error(e);
     }
+  }
+
+  /** Refreshes what depends on debug info after a debug file was attached. */
+  private async attached(opened: Opened) {
+    if (!this.file || opened.kind !== 'binary') return;
+    const [dwarf, sourceFiles] = await Promise.all([this.api.dwarfSummary(), this.api.sourceFiles()]);
+    this.file = { ...this.file, summary: opened.summary, dwarf, sourceFiles };
+    // DWARF may add function boundaries: references are found again.
+    const had = this.xrefs === 'ready';
+    this.resetXrefs();
+    this.emit('file');
+    if (had) void this.ensureXrefs();
+    this.emit('sources');
+    await this.reselect();
   }
 
   // --- Annotations ------------------------------------------------------------

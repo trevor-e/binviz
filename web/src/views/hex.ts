@@ -128,20 +128,20 @@ export class HexView extends View {
   private pageBytes(page: number): Uint8Array | undefined {
     const cached = this.pages.get(page);
     if (cached) return cached;
-    const blob = store.file!.blob;
+    const f = store.file!;
     if (!this.pageLoading.has(page)) {
       this.pageLoading.add(page);
       const start = page * PAGE;
-      void blob
-        .slice(start, Math.min(blob.size, start + PAGE))
-        .arrayBuffer()
-        .then((buf) => {
-          this.pageLoading.delete(page);
-          if (store.file?.blob !== blob) return;
-          if (this.pages.size >= MAX_PAGES) this.pages.clear();
-          this.pages.set(page, new Uint8Array(buf));
-          this.list.refresh();
-        });
+      void store.readBytes(start, start + PAGE).then((bytes) => {
+        this.pageLoading.delete(page);
+        if (store.file?.name !== f.name || store.file.summary.fingerprint !== f.summary.fingerprint) return;
+        if (this.pages.size >= MAX_PAGES) this.pages.clear();
+        this.pages.set(page, bytes);
+        this.list.refresh();
+      }, (e) => {
+        this.pageLoading.delete(page);
+        store.error(e);
+      });
     }
     return undefined;
   }

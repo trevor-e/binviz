@@ -18,9 +18,21 @@ fields, and maps machine code back to source through **DWARF** debug info.
 - **DWARF, readable.** Compilation units, DIE trees with rendered types
   (`const vector<geo::Shape*> &`), location lists (`DW_OP_reg23 (xmm6)`),
   demangled linkage names, line tables, and source ↔ address mapping in both
-  directions. Separate debug files (`.dSYM` DWARF, `objcopy --only-keep-debug`
-  output) can be attached. Relocatable objects (`.o`) get synthetic addresses and
-  relocated DWARF so they work too.
+  directions. Each DIE comes with the source behind it: where it is declared,
+  where an inlined call was made, and which lines its code was generated from.
+  Structures show their layout with holes and padding (like `pahole`); a
+  unit's DIEs can be listed by tag; any `.debug_info` offset from
+  `llvm-dwarfdump` output or an error message leads to its DIE; and at any
+  address you get the variables in scope and where each one's value is.
+  Separate debug files (`.dSYM` DWARF, `objcopy --only-keep-debug` output) can
+  be attached. Relocatable objects (`.o`) get synthetic addresses and relocated
+  DWARF so they work too.
+- **A checker for broken debug info.** Reads every unit, DIE, attribute and
+  line program and lists what can't be read (unit headers, abbreviations,
+  strings, range and location lists, line programs) or doesn't add up
+  (references to no DIE, ranges that end before they start, files the line
+  table doesn't define), each at its unit, DIE and section offset. Units that
+  can't be read are reported rather than silently skipped.
 - **Disassembly** for x86/x86-64 (iced-x86) and AArch64/ARM (yaxpeax-arm), with
   branch targets resolved to symbols, the strings and globals an instruction
   uses named inline (AArch64 `adrp` pairs included), and source lines
@@ -44,6 +56,17 @@ fields, and maps machine code back to source through **DWARF** debug info.
   functions, comment instructions and mark code as reviewed; a coverage map
   shows what is named, recovered, reviewed or still unexplored, and lists the
   largest gaps with a guess at what they hold.
+- **Folders of binaries.** Open a folder or a zip, and every binary in it is
+  found by its header (Mach-O, ELF or PE, zips inside opened too), so an
+  `.ipa`, an `.app` or `.xcarchive`, an APK or a build folder are all just
+  folders. Each binary is paired with its separate debug file (a dSYM, an ELF
+  `.debug` file) by UUID or build ID, or the debug link an ELF file names,
+  whatever the names, so stripped binaries get their names and DWARF back.
+  Debug files dropped later (the zip of dSYMs App Store Connect gives you, say)
+  join what is open. The folder's size is broken down by content (asset
+  catalogs, images, localizations, fonts…) with the largest and duplicated
+  files, and the code of all its binaries is summed by owner: Swift modules,
+  Objective-C classes, C++ namespaces, C prefixes.
 
 Everything runs locally; in the browser the file never leaves your machine.
 
@@ -59,6 +82,7 @@ inlined frames.
 
 | View | What it shows |
 |---|---|
+| Folder | For a folder or zip: its binaries paired with their debug files, what its files are, the largest and duplicated ones, and the code of every binary summed by owner. Pick a binary (here or in the top bar) to explore it in the other views |
 | Overview | Format facts, exact byte composition, a file map (by region or entropy), and a diagram of how the file's bytes land in the address space |
 | Layout | The region tree, expandable down to single fields and table entries |
 | Hex | Every byte tinted by the structure that owns it; hover for the full path, minimap to navigate |
@@ -66,14 +90,14 @@ inlined frames.
 | Call graph | Callers and callees of the selected function, a few levels each way, with the complete lists below; find a path of calls from another function (`main`, an entry point) |
 | Symbols | Symbols, imports, exports and strings; filter, sort, jump |
 | Sections | Segments and sections |
-| DWARF | Units, the DIE tree, attributes with clickable references, line tables |
+| DWARF | Units, the DIE tree or a unit's DIEs by tag, each DIE with its attributes (click a form for its bytes), declaration and call-site source, the lines its code came from and a structure's layout; line tables; Problems, a check of the whole DWARF |
 | Sources | Every source file in the line tables; lines that produced code are marked, click one to see its addresses |
 | Map | Code and data per source file or compilation unit, drawn onto each section; reverse-engineering coverage with the largest unexplored gaps |
 
 The inspector on the right always shows everything known about the current
 selection: its place in the file, what refers to it (callers, reads and
 writes, pointers in data), and your notes about it. Views are on keys `1`–`9`
-and `0`; `Alt+←/→` walks the history.
+and `0` (`f` for Folder); `Alt+←/→` walks the history.
 
 ### Search
 
@@ -154,6 +178,8 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `disasm <file> <addr\|symbol> [n]` | Disassembly with source lines |
 | `symbols <file> [filter]` | Symbols |
 | `dwarf <file>` · `die <file> <unit> [offset]` · `lines <file> <unit>` | DWARF units, DIEs, line tables |
+| `dwarf-list <file> <unit> [tags] [name]` · `dwarf-find <file> <query> [all]` · `dwarf-offset <file> <offset>` | A unit's DIEs by tag, DIEs by name, the DIE at a `.debug_info` offset |
+| `dwarf-at <file> <addr\|symbol>` · `dwarf-check <file>` | Scopes and variables at an address; everything wrong with the DWARF |
 | `sources <file>` · `file-lines <file> <id>` | Source files and their address ranges |
 | `search <file> <query> [kind]` | The same search as the UI |
 | `strings <file> [filter]` | Strings in the data sections |
@@ -167,6 +193,13 @@ cargo run --release -p binviz-cli -- info path/to/binary
 `--debug <file>` attaches a separate debug file; `--member <n>` picks a slice of
 a universal binary or an archive member; `--notes <file.json>` loads
 annotations first.
+
+A folder or a zip (an `.ipa`, an `.app`, a build) works in place of a file:
+`info` lists every binary in it with its debug file, what the other files are,
+and the code of all the binaries summed by owner; `search` searches them all;
+`json` describes the folder; any other command works on the first binary (an
+app's own executable) or the one `--member` names, with its debug file
+attached.
 
 ## Agents (MCP server)
 
@@ -187,15 +220,19 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 
 | Tool | |
 |---|---|
-| `open_binary` | Load a file (universal binaries pick arm64 unless told otherwise; `debug_file` attaches a dSYM's DWARF) |
+| `open_binary` | Load a file (universal binaries pick arm64 unless told otherwise; `debug_file` attaches a dSYM's DWARF), or a folder or zip: every binary in it opens, paired with its debug file |
+| `folder_summary` | An opened folder: its binaries and debug files, what its size is made of, the largest and duplicated files; `analyze` sums the code of every binary by owner |
 | `binary_summary` | Format, platform, entry point, build ID, segments, sections, DWARF |
 | `size_report` | Why the binary is as big as it is: bytes by kind and section, the largest functions and data, and the owners of the code — Swift modules, Objective-C classes, C++ namespaces / Rust crates, C prefixes — and source files with DWARF |
-| `search` | The UI's search: names, strings, addresses, byte patterns, "text", file:line |
+| `search` | The UI's search: names, strings, addresses, byte patterns, "text", file:line; `binary: "all"` searches every binary of a folder |
 | `inspect` | Everything about an address or file offset |
 | `disassemble` | A function, with source lines and your comments |
 | `function_info` | A function at a glance: callers, callees, the strings it uses, the globals it reads and writes |
 | `callers` · `callees` · `call_graph` · `call_path` | Follow calls: who calls what, the tree around a function, how one function reaches another |
 | `xrefs` | Every reference to an address, symbol or string: calls, reads, writes, address-taken, pointers in data |
+| `dwarf_units` · `dwarf_search` · `dwarf_dies` · `dwarf_die` | Browse the DWARF: units, DIEs by name or tag, one DIE with its attributes, source, code lines and layout |
+| `dwarf_at` | At an address: the source line, the inlined call stack, and the variables in scope with where each value lives |
+| `dwarf_check` | Everything in the DWARF that can't be read or doesn't add up — start here with a customer's broken build |
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
@@ -319,7 +356,12 @@ crates/binviz        the library
   src/pointers.rs    pointers stored in data: chained fixups, ELF relocations, plain addresses
   src/stubs.rs       names for import stubs, PLT entries, GOT and IAT slots
   src/size.rs        where the bytes go: sections, symbols, owners (Swift, ObjC, C++, C)
+  src/package.rs     folders of binaries: headers, debug files paired by build ID, contents by kind
+  src/zip.rs         zip archives: the central directory, stored and deflated entries
+  src/plist.rs       property lists, binary and XML
   src/dwarf/attribution.rs   code and globals per source file / unit
+  src/dwarf/explore.rs       DIEs by tag, by offset and by name; variables in scope
+  src/dwarf/check.rs         the DWARF checker
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
 crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents

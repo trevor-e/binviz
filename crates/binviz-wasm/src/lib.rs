@@ -62,6 +62,85 @@ pub struct Session {
     binary: Option<Binary>,
     /// A buffer being filled by JavaScript (see `beginInput`).
     input: Option<std::sync::Arc<[std::mem::MaybeUninit<u8>]>>,
+    /// A folder of binaries being browsed (its current binary is `binary`).
+    package: Option<PackageState>,
+}
+
+struct PackageState {
+    info: binviz::package::PackageInfo,
+    /// Binaries loaded but not current, by binary index.
+    loaded: std::collections::HashMap<u32, Binary>,
+    current: Option<u32>,
+}
+
+// --- Zip archives (read by the worker from a Blob) ---------------------------
+
+/// The central directory's location, from an archive's last bytes.
+#[wasm_bindgen(js_name = zipFindDirectory)]
+pub fn zip_find_directory(tail: &[u8]) -> Result<JsValue, JsError> {
+    to_js(&binviz::zip::find_directory(tail).map_err(err)?)
+}
+
+/// The directory's location from a zip64 end record.
+#[wasm_bindgen(js_name = zipZip64Directory)]
+pub fn zip_zip64_directory(record: &[u8]) -> Result<JsValue, JsError> {
+    to_js(&binviz::zip::zip64_directory(record).map_err(err)?)
+}
+
+/// The entries of a central directory.
+#[wasm_bindgen(js_name = zipParseDirectory)]
+pub fn zip_parse_directory(cd: &[u8]) -> Result<JsValue, JsError> {
+    to_js(&binviz::zip::parse_directory(cd).map_err(err)?)
+}
+
+// --- Folders of binaries: discovery (see `binviz::package`) --------------------
+
+/// What to read of a folder's files (`[{path, size, compressedSize?, crc32?}]`):
+/// `{headers, plists}`, file indices.
+#[wasm_bindgen(js_name = packagePlan)]
+pub fn package_plan(files: JsValue) -> Result<JsValue, JsError> {
+    let files: Vec<binviz::package::PackageFile> = serde_wasm_bindgen::from_value(files).map_err(err)?;
+    to_js(&binviz::package::plan(&files))
+}
+
+/// What a file's first bytes say it is, if it is a binary.
+#[wasm_bindgen(js_name = packageHeader)]
+pub fn package_header(prefix: &[u8]) -> Result<JsValue, JsError> {
+    match binviz::package::header(prefix) {
+        Some(h) => to_js(&h),
+        None => Ok(JsValue::NULL),
+    }
+}
+
+/// The bundle facts in an `Info.plist`.
+#[wasm_bindgen(js_name = packageBundle)]
+pub fn package_bundle(bytes: &[u8]) -> Result<JsValue, JsError> {
+    match binviz::package::bundle_info(bytes) {
+        Some(b) => to_js(&b),
+        None => Ok(JsValue::NULL),
+    }
+}
+
+/// Finds the binaries among `files`, given `headers` and `bundles` as
+/// `[[fileIndex, value], …]`, and pairs them with their debug files.
+#[wasm_bindgen(js_name = packageDiscover)]
+pub fn package_discover(
+    name: String,
+    container: String,
+    files: JsValue,
+    headers: JsValue,
+    bundles: JsValue,
+) -> Result<JsValue, JsError> {
+    let files: Vec<binviz::package::PackageFile> = serde_wasm_bindgen::from_value(files).map_err(err)?;
+    let headers: Vec<(u32, binviz::package::Header)> = serde_wasm_bindgen::from_value(headers).map_err(err)?;
+    let bundles: Vec<(u32, binviz::package::BundleInfo)> = serde_wasm_bindgen::from_value(bundles).map_err(err)?;
+    to_js(&binviz::package::discover(
+        &name,
+        &container,
+        &files,
+        &headers.into_iter().collect(),
+        &bundles.into_iter().collect(),
+    ))
 }
 
 #[wasm_bindgen]
@@ -85,6 +164,7 @@ impl Session {
     pub fn begin_input(&mut self, len: usize) -> *mut u8 {
         self.binary = None;
         self.container = None;
+        self.package = None;
         self.input = None;
         let mut buf = std::sync::Arc::<[u8]>::new_uninit_slice(len);
         let ptr = std::sync::Arc::get_mut(&mut buf).expect("new buffer").as_mut_ptr() as *mut u8;
@@ -126,6 +206,7 @@ impl Session {
     fn open_data(&mut self, name: String, data: std::sync::Arc<[u8]>) -> Result<JsValue, JsError> {
         self.binary = None;
         self.container = None;
+        self.package = None;
         self.name = name;
         if Container::is_container(&data) {
             let c = Container::parse(data).map_err(err)?;
@@ -135,6 +216,135 @@ impl Session {
         }
         self.binary = Some(Binary::parse(data).map_err(err)?);
         self.opened()
+    }
+
+    // --- Folders of binaries -----------------------------------------------------
+
+    /// Starts browsing a folder of binaries (an info from `packageDiscover`),
+    /// dropping what was open. Load its binaries with `packageLoad`.
+    #[wasm_bindgen(js_name = packageOpen)]
+    pub fn package_open(&mut self, info: JsValue) -> Result<(), JsError> {
+        let info: binviz::package::PackageInfo = serde_wasm_bindgen::from_value(info).map_err(err)?;
+        self.binary = None;
+        self.container = None;
+        self.input = None;
+        self.package = Some(PackageState {
+            info,
+            loaded: Default::default(),
+            current: None,
+        });
+        Ok(())
+    }
+
+    fn pkg(&mut self) -> Result<&mut PackageState, JsError> {
+        self.package.as_mut().ok_or_else(|| JsError::new("no folder open"))
+    }
+
+    #[wasm_bindgen(js_name = packageInfo)]
+    pub fn package_info(&self) -> Result<JsValue, JsError> {
+        match &self.package {
+            Some(p) => to_js(&p.info),
+            None => Ok(JsValue::NULL),
+        }
+    }
+
+    /// Parses binary `index` from the bytes copied in after `beginDebugInput`,
+    /// and makes it current (or keeps it aside with `current: false`).
+    #[wasm_bindgen(js_name = packageLoad)]
+    pub fn package_load(&mut self, index: u32, current: bool) -> Result<JsValue, JsError> {
+        let data = self.take_input()?;
+        let (bin, arch) = binviz::package::load_binary(data.clone()).map_err(err)?;
+        let p = self.package.as_mut().ok_or_else(|| JsError::new("no folder open"))?;
+        let path = p
+            .info
+            .binaries
+            .get(index as usize)
+            .ok_or_else(|| JsError::new("no such binary"))?
+            .path
+            .clone();
+        let label = format!(
+            "{} › {path}{}",
+            p.info.name,
+            arch.map(|a| format!(" [{a}]")).unwrap_or_default()
+        );
+        // Every slice's UUID, and a debug file the binary's debug link names.
+        binviz::package::update_loaded(&mut p.info, index, &data, &bin);
+        if !current {
+            let summary = to_js(bin.summary());
+            p.loaded.insert(index, bin);
+            return summary;
+        }
+        if let (Some(prev), Some(old)) = (p.current, self.binary.take()) {
+            p.loaded.insert(prev, old);
+        }
+        p.current = Some(index);
+        self.binary = Some(bin);
+        self.name = label;
+        self.opened()
+    }
+
+    /// Makes an already loaded binary current; `undefined` if it isn't loaded.
+    #[wasm_bindgen(js_name = packageSelect)]
+    pub fn package_select(&mut self, index: u32) -> Result<JsValue, JsError> {
+        let p = self.package.as_mut().ok_or_else(|| JsError::new("no folder open"))?;
+        if p.current == Some(index) {
+            return self.opened();
+        }
+        let Some(bin) = p.loaded.remove(&index) else {
+            return Ok(JsValue::UNDEFINED);
+        };
+        if let (Some(prev), Some(old)) = (p.current, self.binary.take()) {
+            p.loaded.insert(prev, old);
+        }
+        p.current = Some(index);
+        let path = p
+            .info
+            .binaries
+            .get(index as usize)
+            .map(|b| b.path.clone())
+            .unwrap_or_default();
+        self.name = format!("{} › {path}", p.info.name);
+        self.binary = Some(bin);
+        self.opened()
+    }
+
+    /// Frees a loaded binary that isn't current.
+    #[wasm_bindgen(js_name = packageUnload)]
+    pub fn package_unload(&mut self, index: u32) -> Result<(), JsError> {
+        self.pkg()?.loaded.remove(&index);
+        Ok(())
+    }
+
+    fn package_binary(&mut self, index: u32) -> Result<&mut Binary, JsError> {
+        let p = self.package.as_mut().ok_or_else(|| JsError::new("no folder open"))?;
+        if p.current == Some(index) {
+            return self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"));
+        }
+        p.loaded
+            .get_mut(&index)
+            .ok_or_else(|| JsError::new("that binary isn't loaded"))
+    }
+
+    /// Attaches the debug file copied in after `beginDebugInput` to binary `index`.
+    #[wasm_bindgen(js_name = packageAttach)]
+    pub fn package_attach(&mut self, index: u32, name: String) -> Result<JsValue, JsError> {
+        let data = self.take_input()?;
+        let b = self.package_binary(index)?;
+        b.attach_debug_file(&name, data).map_err(err)?;
+        to_js(b.summary())
+    }
+
+    /// The size report of binary `index` (loaded or current).
+    #[wasm_bindgen(js_name = packageSizeReport)]
+    pub fn package_size_report(&mut self, index: u32, top: u32) -> Result<JsValue, JsError> {
+        let b = self.package_binary(index)?;
+        to_js(&b.size_report(top as usize))
+    }
+
+    /// Where the open binary's bytes go: sections, owners, largest symbols.
+    #[wasm_bindgen(js_name = sizeReport)]
+    pub fn size_report(&self, top: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.size_report(top as usize))
     }
 
     /// Size of the WebAssembly memory, in bytes (it only ever grows).
@@ -566,9 +776,58 @@ impl Session {
         to_js(&self.debug()?.function_die_at(address))
     }
 
+    /// Named DIEs (functions, variables, types, members) by qualified name, best first.
     #[wasm_bindgen(js_name = dieSearch)]
     pub fn die_search(&self, query: String, limit: u32) -> Result<JsValue, JsError> {
         to_js(&self.debug()?.search(&query, limit as usize))
+    }
+
+    /// Every DIE whose name contains `query`, locals and parameters included (slower).
+    #[wasm_bindgen(js_name = dieSearchAll)]
+    pub fn die_search_all(&self, query: String, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.search_all(&query, limit as usize))
+    }
+
+    /// A page of a unit's DIEs whose tag matches `filter` and name contains `name`.
+    #[wasm_bindgen(js_name = listDies)]
+    pub fn list_dies(
+        &self,
+        unit: u32,
+        filter: String,
+        name: String,
+        offset: u32,
+        limit: u32,
+    ) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.list_dies(unit, &filter, &name, offset, limit))
+    }
+
+    #[wasm_bindgen(js_name = tagCounts)]
+    pub fn tag_counts(&self, unit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.tag_counts(unit))
+    }
+
+    /// The DIE at (or containing) a `.debug_info` offset: `[unit, offset]`.
+    #[wasm_bindgen(js_name = dieAtOffset)]
+    pub fn die_at_offset(&self, offset: u64) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.die_at_offset(offset))
+    }
+
+    /// Scopes and variables in scope at an address.
+    #[wasm_bindgen(js_name = scopeAt)]
+    pub fn scope_at(&self, address: u64) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.scope_at(address))
+    }
+
+    /// Everything in the DWARF that can't be read or doesn't add up.
+    #[wasm_bindgen(js_name = dwarfCheck)]
+    pub fn dwarf_check(&self) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.check())
+    }
+
+    /// Units that couldn't be read at all (found while loading).
+    #[wasm_bindgen(js_name = dwarfLoadProblems)]
+    pub fn dwarf_load_problems(&self) -> Result<JsValue, JsError> {
+        to_js(self.debug()?.load_problems())
     }
 
     #[wasm_bindgen(js_name = lineProgram)]

@@ -233,6 +233,11 @@ impl FileTable {
         self.by_path.get(path).copied()
     }
 
+    /// How many file indices a unit's line table defines (index 0 included).
+    pub fn unit_files_len(&self, unit: u32) -> usize {
+        self.unit_files.get(unit as usize).map_or(0, Vec::len)
+    }
+
     pub fn unit_file(&self, unit: u32, index: u64) -> Option<u32> {
         let id = *self.unit_files.get(unit as usize)?.get(index as usize)?;
         (id != NO_FILE).then_some(id)

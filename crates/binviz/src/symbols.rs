@@ -217,9 +217,10 @@ fn lookup_rank(r: &Rec) -> (u8, u8, u8, u8, u8) {
         SymbolSource::Symtab => 1,
         SymbolSource::Dynsym => 2,
         SymbolSource::Export => 3,
-        SymbolSource::Dwarf => 4,
-        SymbolSource::Import => 5,
-        SymbolSource::Discovered => 6,
+        SymbolSource::DebugFile => 4,
+        SymbolSource::Dwarf => 5,
+        SymbolSource::Import => 6,
+        SymbolSource::Discovered => 7,
     };
     (user, kind, sized, binding, source)
 }

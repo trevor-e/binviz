@@ -173,6 +173,9 @@ pub enum SymbolSource {
     /// (`_printf`) and pointers (`_printf@got`), ELF PLT entries (`printf@plt`)
     /// and GOT slots, PE import thunks and address table slots (`__imp_printf`).
     Import,
+    /// The symbol table of a separate debug file (a dSYM, an ELF `.debug`
+    /// file), naming what a stripped binary no longer does.
+    DebugFile,
     /// The user's own annotations.
     User,
 }

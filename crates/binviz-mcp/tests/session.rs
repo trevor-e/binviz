@@ -156,6 +156,27 @@ fn an_agent_session() {
     let refs = s.ok("xrefs", json!({ "at": "g_counter", "kind": "read" }));
     assert!(refs.contains("from main+"), "{refs}");
 
+    // DWARF.
+    let units = s.ok("dwarf_units", json!({}));
+    assert!(units.contains("[0]") && units.contains("shapes.cpp"), "{units}");
+    let found = s.ok("dwarf_search", json!({ "query": "Rect" }));
+    assert!(found.contains("class_type geo::Rect"), "{found}");
+    let die = s.ok("dwarf_die", json!({ "die": "geo::Rect" }));
+    assert!(die.contains("Layout:") && die.contains("Point min"), "{die}");
+    assert!(die.contains("Declared at") && die.contains("class Rect"), "{die}");
+    let listed = s.ok(
+        "dwarf_dies",
+        json!({ "unit": 0, "tags": "variables", "name": "g_counter" }),
+    );
+    assert!(listed.contains("variable g_counter"), "{listed}");
+    let at = s.ok("dwarf_at", json!({ "at": "total_area" }));
+    assert!(at.contains("parameter shapes") && at.contains("DW_OP_reg"), "{at}");
+    let check = s.ok("dwarf_check", json!({}));
+    assert!(check.contains("0 error(s), 0 warning(s)"), "{check}");
+    let offset = die.split("<0x").nth(1).and_then(|r| r.split('>').next()).unwrap();
+    let by_offset = s.ok("dwarf_die", json!({ "die": format!("0x{offset}") }));
+    assert!(by_offset.starts_with("DW_TAG_class_type Rect"), "{by_offset}");
+
     // Map something out; the name becomes a symbol and is saved.
     let sub = s.ok(
         "annotate",
@@ -211,4 +232,71 @@ fn universal_binaries_pick_a_slice() {
         opened.contains("using [0] arm64") && opened.contains("Mach-O"),
         "{opened}"
     );
+}
+
+#[test]
+fn a_folder_opens_every_binary() {
+    // An .app folder with a framework and an extension, and a matching "dSYM".
+    let dir = std::env::temp_dir().join(format!("binviz-mcp-app-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let bin = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin");
+    let put = |rel: &str, data: &[u8]| {
+        let p = dir.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, data).unwrap();
+    };
+    let plist = |exe: &str, id: &str| {
+        format!(
+            "<plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>{exe}</string>\
+             <key>CFBundleIdentifier</key><string>{id}</string></dict></plist>"
+        )
+    };
+    let main = std::fs::read(bin.join("imports-macho-a64.chained")).unwrap();
+    put("Shop.app/ShopApp", &main);
+    put("Shop.app/Info.plist", plist("ShopApp", "com.example.shop").as_bytes());
+    put(
+        "Shop.app/Frameworks/Tiny.framework/Tiny",
+        &std::fs::read(bin.join("libtiny.dylib")).unwrap(),
+    );
+    put(
+        "Shop.app/PlugIns/Widget.appex/Widget",
+        &std::fs::read(bin.join("tiny-macho-a64")).unwrap(),
+    );
+    put("Shop.app/Assets.car", &[1; 5000]);
+    let mut dsym = main.clone();
+    dsym[12..16].copy_from_slice(&10u32.to_le_bytes()); // MH_DSYM
+    put("Shop.app.dSYM/Contents/Resources/DWARF/ShopApp", &dsym);
+
+    let mut s = Session::start();
+    let opened = s.ok("open_binary", json!({ "path": dir.to_str().unwrap() }));
+    assert!(opened.contains("Binaries (3"), "{opened}");
+    assert!(
+        opened.contains("`ShopApp`") && opened.contains("`Tiny`") && opened.contains("`Widget`"),
+        "{opened}"
+    );
+    assert!(
+        opened.contains("com.example.shop") && opened.contains("debug file Shop.app.dSYM"),
+        "{opened}"
+    );
+    // The app binary is current; using it attaches its dSYM.
+    let summary = s.ok("binary_summary", json!({}));
+    assert!(
+        summary.contains("ShopApp") && summary.contains("debug file attached"),
+        "{summary}"
+    );
+    // Another binary by id.
+    let tiny = s.ok("binary_summary", json!({ "binary": "Tiny" }));
+    assert!(tiny.contains("Tiny.framework/Tiny"), "{tiny}");
+    // Every binary at once.
+    let found = s.ok("search", json!({ "query": "fib", "binary": "all" }));
+    assert!(found.contains("## `Tiny`") && found.contains("## `Widget`"), "{found}");
+    let app = s.ok("folder_summary", json!({ "analyze": true }));
+    assert!(
+        app.contains("Asset catalogs") && app.contains("Largest owners"),
+        "{app}"
+    );
+    let listed = s.request("tools/call", json!({ "name": "list_binaries", "arguments": {} }));
+    let text = listed["result"]["content"][0]["text"].as_str().unwrap_or_default();
+    assert_eq!(text.lines().count(), 3, "{text}");
+    let _ = std::fs::remove_dir_all(&dir);
 }

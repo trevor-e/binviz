@@ -11,6 +11,7 @@
 //! Notes are saved next to the binary (`<file>.binviz-notes.json`) in the same
 //! format the web UI imports and exports, so an agent's work shows up there.
 
+mod folders;
 mod notes;
 mod tools;
 

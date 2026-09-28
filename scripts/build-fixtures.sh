@@ -44,6 +44,8 @@ if [ -x "$objcopy" ] || [ -x "$objcopy.exe" ]; then
     "$objcopy" --only-keep-debug "$out/tiny-elf-x64" "$out/tiny-elf-x64.debug"
     "$objcopy" --strip-debug --add-gnu-debuglink="$out/tiny-elf-x64.debug" \
         "$out/tiny-elf-x64" "$out/tiny-elf-x64.stripped"
+    # No symbols at all: names come back only from the debug file.
+    "$objcopy" --strip-all "$out/tiny-elf-x64" "$out/tiny-elf-x64.stripped-all"
 fi
 
 echo "tiny: PE x86-64 (windows-gnu, DWARF)"
@@ -74,6 +76,10 @@ rustc "$src/imports.rs" "${imports_flags[@]}" --target aarch64-apple-darwin -o "
 "$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -fixup_chains -e _main \
     -o "$out/imports-macho-a64.chained" "$tmp/imports-macho.o" "$src/libSystem.tbd"
 rm -rf "$tmp"
+if [ -x "$objcopy" ] || [ -x "$objcopy.exe" ]; then
+    # The app binary of the sample package; the unstripped copy stands in for its dSYM.
+    "$objcopy" --strip-all "$out/imports-macho-a64.chained" "$out/imports-macho-a64.chained.stripped"
+fi
 
 if command -v g++ >/dev/null 2>&1; then
     echo "C++: PE x86-64 (MinGW g++, DWARF 5)"

@@ -32,6 +32,12 @@ export abstract class View {
     this.onSelection();
   }
 
+  /** Renders again (now, if shown). */
+  protected invalidate() {
+    this.dirty = true;
+    if (this.visible) this.show();
+  }
+
   /** Builds the view for the current file. */
   protected abstract render(): void;
 

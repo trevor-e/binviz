@@ -738,3 +738,430 @@ fn imports_and_pointers_in_data() {
         assert_eq!(bin.pointer_at(messages.address), Some(hello), "{name}");
     }
 }
+
+#[test]
+fn dwarf_problems_are_found_and_placed() {
+    let clean = open("shapes-pe.exe");
+    let d = clean.debug_info().unwrap();
+    let c = d.check();
+    assert_eq!((c.errors, c.warnings), (0, 0), "{:?}", c.problems);
+    assert!(c.dies > 2000 && c.line_rows > 500);
+
+    // Pick a type reference and a string in unit 0 to break.
+    let mut type_ref = None;
+    let mut name = None;
+    for s in d.list_dies(0, "", "", 0, 100_000).dies {
+        let det = d.die(0, s.offset).unwrap();
+        for a in &det.attributes {
+            if type_ref.is_none() && a.name == "DW_AT_type" && a.form == "DW_FORM_ref4" {
+                type_ref = Some((s.offset, a.byte_start));
+            } else if name.is_none()
+                && type_ref.is_some_and(|(o, _)| o != s.offset)
+                && a.name == "DW_AT_name"
+                && a.form == "DW_FORM_strp"
+            {
+                name = Some((s.offset, a.byte_start));
+            }
+        }
+    }
+    let (type_die, type_at) = type_ref.expect("a DW_FORM_ref4 type");
+    let (name_die, name_at) = name.expect("a DW_FORM_strp name");
+    let last = d.units().last().unwrap().clone();
+    assert_eq!(last.version, 5);
+
+    let info = clean
+        .sections()
+        .iter()
+        .find(|s| s.name == ".debug_info")
+        .and_then(|s| s.file_offset)
+        .unwrap();
+    let mut data = fixture("shapes-pe.exe");
+    let mut put = |at: u64, v: u32| {
+        let i = (info + at) as usize;
+        data[i..i + 4].copy_from_slice(&v.to_le_bytes());
+    };
+    put(type_at, 0x00ff_fff0);
+    put(name_at, 0xffff_fff0);
+    // DWARF 5 unit header: length (4), version (2), unit type (1), address size (1), abbreviation offset.
+    put(last.offset + 8, 0xffff_ff00);
+
+    let bin = Binary::parse(data).unwrap();
+    let d = bin.debug_info().unwrap();
+    assert_eq!(d.units().len(), 4, "the unit with no abbreviations can't be read");
+    assert_eq!(d.load_problems().len(), 1);
+    let c = d.check();
+    let found = |area: &str, die: Option<u64>| {
+        c.problems
+            .iter()
+            .any(|p| p.area == area && (die.is_none() || (p.unit == Some(0) && p.die == die)))
+    };
+    assert!(found("reference", Some(type_die)), "{:#?}", c.problems);
+    assert!(found("string", Some(name_die)), "{:#?}", c.problems);
+    let unit = c
+        .problems
+        .iter()
+        .find(|p| p.area == "unit")
+        .expect("the unreadable unit");
+    assert_eq!(unit.offset, Some(last.offset));
+    assert!(c.errors >= 3);
+    // The rest still reads: DIEs, the layout of every byte, and the other units.
+    assert!(d.die(0, name_die).is_some());
+    let size = bin.data().len() as u64;
+    assert_eq!(bin.spans(0, size).last().map(|s| s.end), Some(size));
+}
+
+#[test]
+fn dies_by_kind_offset_scope_and_layout() {
+    let bin = open("shapes-pe.exe");
+    let d = bin.debug_info().unwrap();
+    // A unit's classes, with their namespaces.
+    let rect = d.list_dies(0, "types", "Rect", 0, 10);
+    let class = rect
+        .dies
+        .iter()
+        .find(|x| x.tag == "DW_TAG_class_type")
+        .expect("class Rect");
+    assert_eq!(class.scope.as_deref(), Some("geo"));
+    // Its layout: the vtable pointer (from the base class), then two points.
+    let det = d.die(0, class.offset).unwrap();
+    let layout: Vec<(String, Option<u64>)> = det
+        .layout
+        .iter()
+        .map(|m| (m.name.clone().unwrap_or_else(|| m.type_name.clone()), m.offset))
+        .collect();
+    assert_eq!(
+        layout,
+        [
+            ("Shape".to_string(), Some(0)),
+            ("min".into(), Some(8)),
+            ("max".into(), Some(24))
+        ]
+    );
+    assert_eq!((det.byte_size, det.tail_padding), (Some(40), Some(0)));
+    // From a .debug_info offset (as llvm-dwarfdump prints them) back to the DIE.
+    assert_eq!(d.die_at_offset(class.section_offset + 1), Some((0, class.offset)));
+    // Search ranks the functions named "area" first, with their classes.
+    let hits = d.search("area", 10);
+    assert_eq!(hits[0].name.as_deref(), Some("area"));
+    assert_eq!(hits[0].scope.as_deref(), Some("geo::Rect"));
+    assert!(hits.iter().any(|h| h.name.as_deref() == Some("total_area")));
+    // An inlined constructor knows where it was inlined, and which lines its code came from.
+    let inlined = d.list_dies(0, "inlined_subroutine", "Circle", 0, 10);
+    let circle = inlined.dies.first().expect("an inlined Circle");
+    assert_eq!(circle.scope.as_deref(), Some("main"));
+    let det = d.die(0, circle.offset).unwrap();
+    let main_line = source_line("shapes.cpp", "geo::Circle c(");
+    assert_eq!(det.call_site.as_ref().map(|c| c.line), Some(main_line));
+    assert!(
+        det.code_lines
+            .iter()
+            .any(|l| l.path.ends_with("shapes.cpp") && l.bytes > 0)
+    );
+    // At total_area's entry, its parameter is in a register.
+    let total = bin.symbols().by_name("total_area").unwrap().address;
+    let scope = d.scope_at(total).unwrap();
+    assert_eq!(scope.scopes[0].name.as_deref(), Some("total_area"));
+    let shapes = scope.variables.iter().find(|v| v.name == "shapes").unwrap();
+    assert_eq!(shapes.kind, "parameter");
+    assert!(shapes.location.contains("DW_OP_reg"), "{}", shapes.location);
+    assert!(shapes.type_name.as_deref().unwrap_or("").contains("vector"));
+}
+
+#[test]
+fn stripped_binaries_take_names_from_their_debug_file() {
+    let mut bin = open("tiny-elf-x64.stripped-all");
+    assert!(bin.symbols().by_name("tiny::fib").is_none());
+    bin.attach_debug_file("tiny-elf-x64.debug", fixture("tiny-elf-x64.debug"))
+        .unwrap();
+    // Functions and data, from the debug file's symbol table.
+    let fib = bin.symbols().by_name("tiny::fib").expect("tiny::fib named");
+    assert_eq!(fib.source, SymbolSource::DebugFile);
+    let points = bin.symbols().by_name("tiny::POINTS").expect("data named too");
+    assert_eq!(points.kind, binviz::SymbolKind::Data);
+}
+
+/// A small app from the fixtures, as a folder: an app, a framework, an extension,
+/// resources (one image twice), and a "dSYM" whose UUID matches the app.
+fn package_files() -> Vec<(String, Vec<u8>)> {
+    let plist = |exe: &str, id: &str| {
+        format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>\
+             <key>CFBundleExecutable</key><string>{exe}</string>\
+             <key>CFBundleIdentifier</key><string>{id}</string>\
+             <key>CFBundleShortVersionString</key><string>4.2</string>\
+             <key>MinimumOSVersion</key><string>15.0</string></dict></plist>"
+        )
+        .into_bytes()
+    };
+    // A stripped app; its unstripped copy, marked MH_DSYM, stands in for its dSYM (same UUID).
+    let main = fixture("imports-macho-a64.chained.stripped");
+    let mut dsym = fixture("imports-macho-a64.chained");
+    dsym[12..16].copy_from_slice(&10u32.to_le_bytes()); // MH_DSYM
+    let icon: Vec<u8> = (0..3000u32).map(|i| (i * 7 % 251) as u8).collect();
+    vec![
+        ("Shop.app/ShopApp".into(), main),
+        ("Shop.app/Info.plist".into(), plist("ShopApp", "com.example.shop")),
+        (
+            "Shop.app/Frameworks/Tiny.framework/Tiny".into(),
+            fixture("libtiny.dylib"),
+        ),
+        (
+            "Shop.app/Frameworks/Tiny.framework/Info.plist".into(),
+            plist("Tiny", "com.example.tiny"),
+        ),
+        ("Shop.app/PlugIns/Widget.appex/Widget".into(), fixture("tiny-macho-a64")),
+        (
+            "Shop.app/PlugIns/Widget.appex/Info.plist".into(),
+            plist("Widget", "com.example.widget"),
+        ),
+        ("Shop.app/Assets.car".into(), vec![7; 20_000]),
+        ("Shop.app/icon.png".into(), icon.clone()),
+        ("Shop.app/Bundle.bundle/icon-copy.png".into(), icon),
+        (
+            "Shop.app/en.lproj/Localizable.strings".into(),
+            b"\"a\" = \"b\";\n".repeat(80),
+        ),
+        ("Shop.app.dSYM/Contents/Resources/DWARF/ShopApp".into(), dsym),
+    ]
+}
+
+fn crc32(data: &[u8]) -> u32 {
+    let mut crc = !0u32;
+    for &b in data {
+        crc ^= b as u32;
+        for _ in 0..8 {
+            crc = if crc & 1 != 0 {
+                (crc >> 1) ^ 0xEDB8_8320
+            } else {
+                crc >> 1
+            };
+        }
+    }
+    !crc
+}
+
+/// A stored (uncompressed) zip of `files`, each under `prefix`.
+fn zip_of(files: &[(String, Vec<u8>)], prefix: &str) -> Vec<u8> {
+    let mut out = Vec::new();
+    let mut cd = Vec::new();
+    for (name, data) in files {
+        let name = format!("{prefix}{name}");
+        let (offset, crc, len) = (out.len() as u32, crc32(data), data.len() as u32);
+        let header = |sig: u32, central: bool, buf: &mut Vec<u8>| {
+            buf.extend_from_slice(&sig.to_le_bytes());
+            if central {
+                buf.extend_from_slice(&[20, 3]);
+            }
+            buf.extend_from_slice(&[20, 0, 0, 8, 0, 0, 0, 0, 0, 0]);
+            buf.extend_from_slice(&crc.to_le_bytes());
+            buf.extend_from_slice(&len.to_le_bytes());
+            buf.extend_from_slice(&len.to_le_bytes());
+            buf.extend_from_slice(&(name.len() as u16).to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            if central {
+                buf.extend_from_slice(&[0; 6]);
+                buf.extend_from_slice(&(0o100644u32 << 16).to_le_bytes());
+                buf.extend_from_slice(&offset.to_le_bytes());
+            }
+            buf.extend_from_slice(name.as_bytes());
+        };
+        header(0x0403_4b50, false, &mut out);
+        out.extend_from_slice(data);
+        header(0x0201_4b50, true, &mut cd);
+    }
+    let cd_offset = out.len() as u32;
+    let n = files.len() as u16;
+    out.extend_from_slice(&cd);
+    out.extend_from_slice(&0x0605_4b50u32.to_le_bytes());
+    out.extend_from_slice(&[0, 0, 0, 0]);
+    out.extend_from_slice(&n.to_le_bytes());
+    out.extend_from_slice(&n.to_le_bytes());
+    out.extend_from_slice(&(cd.len() as u32).to_le_bytes());
+    out.extend_from_slice(&cd_offset.to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out
+}
+
+fn check_package(info: &binviz::package::PackageInfo, zipped: bool) {
+    use binviz::package::{BinaryKind, FileCategory};
+    let found: Vec<(&str, BinaryKind)> = info.binaries.iter().map(|b| (b.name.as_str(), b.kind)).collect();
+    // Executables first, the app's own leading; its extension is an executable too.
+    assert_eq!(
+        found,
+        [
+            ("ShopApp", BinaryKind::Executable),
+            ("Widget", BinaryKind::Executable),
+            ("Tiny", BinaryKind::Library)
+        ],
+        "{}",
+        info.kind
+    );
+    let app = info.binaries[0].bundle.as_ref().expect("the app's Info.plist");
+    assert_eq!(app.bundle_id.as_deref(), Some("com.example.shop"));
+    assert_eq!(app.min_os.as_deref(), Some("15.0"));
+    // The dSYM pairs with the app by UUID, not by name.
+    assert_eq!(info.binaries[0].debug, Some(0));
+    assert_eq!(info.debug_files[0].binary, Some(0));
+    assert!(info.binaries[1].debug.is_none() && info.binaries[2].debug.is_none());
+    let size = |c: FileCategory| info.categories.iter().find(|x| x.category == c).map(|x| x.size);
+    assert_eq!(size(FileCategory::AssetCatalogs), Some(20_000));
+    assert_eq!(size(FileCategory::Images), Some(6000));
+    assert!(size(FileCategory::Localization).is_some());
+    assert_eq!(info.debug_size, info.debug_files[0].size);
+    // Only a zip's directory has checksums to find duplicates by.
+    if zipped {
+        assert_eq!(info.duplicate_bytes, 3000);
+        assert_eq!(info.duplicates[0].paths.len(), 2);
+    }
+}
+
+#[test]
+fn binaries_in_folders_and_zips() {
+    use binviz::package::{BinaryKind, DiskPackage, load_binary};
+    let files = package_files();
+    let dir = std::env::temp_dir().join(format!("binviz-package-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let write = |name: &str, data: &[u8]| {
+        let path = dir.join(name);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, data).unwrap();
+        path
+    };
+    for (name, data) in &files {
+        write(&format!("app/{name}"), data);
+    }
+    // A folder holding the .app and its dSYM.
+    let mut pkg = DiskPackage::open(&dir.join("app")).unwrap();
+    assert_eq!(pkg.info.kind, "folder");
+    check_package(&pkg.info, false);
+    // The app binary loads, and its dSYM attaches (this one has symbols, no
+    // DWARF): the names stripped from the app come back.
+    let main = pkg.info.binaries[0].clone();
+    let (mut bin, _) = load_binary(pkg.read_shared(main.file).unwrap()).unwrap();
+    assert!(bin.symbols().by_name("imports::MESSAGES").is_none());
+    let dsym = pkg.info.debug_files[0].clone();
+    bin.attach_debug_file(&dsym.path, pkg.read_shared(dsym.file).unwrap())
+        .unwrap();
+    let messages = bin.symbols().by_name("imports::MESSAGES").expect("named by the dSYM");
+    assert_eq!(messages.source, SymbolSource::DebugFile);
+
+    // The same files zipped.
+    let pkg = DiskPackage::open(&write("Shop.zip", &zip_of(&files, ""))).unwrap();
+    assert_eq!(pkg.info.kind, "zip");
+    check_package(&pkg.info, true);
+    assert!(pkg.info.compressed_size.is_some());
+
+    // An .ipa is a zip with the app under Payload/, and no dSYM.
+    let app: Vec<(String, Vec<u8>)> = files
+        .iter()
+        .filter(|(n, _)| n.starts_with("Shop.app/"))
+        .cloned()
+        .collect();
+    let ipa = zip_of(&app, "Payload/");
+    let pkg = DiskPackage::open(&write("Shop.ipa", &ipa)).unwrap();
+    assert_eq!(pkg.info.binaries.len(), 3);
+    assert_eq!(pkg.info.binaries[0].path, "Payload/Shop.app/ShopApp");
+    assert!(pkg.info.debug_files.is_empty());
+
+    // Zips inside a folder, and inside a zip, open like folders: an .ipa next
+    // to a zip of its dSYMs pairs up.
+    let dsyms: Vec<(String, Vec<u8>)> = files.iter().filter(|(n, _)| n.contains(".dSYM/")).cloned().collect();
+    let dsyms_zip = zip_of(&dsyms, "");
+    write("upload/Shop.ipa", &ipa);
+    write("upload/dSYMs.zip", &dsyms_zip);
+    let upload = zip_of(
+        &[
+            ("Shop.ipa".into(), ipa.clone()),
+            ("dSYMs.zip".into(), dsyms_zip.clone()),
+        ],
+        "",
+    );
+    for pkg in [
+        DiskPackage::open(&dir.join("upload")).unwrap(),
+        DiskPackage::open(&write("upload.zip", &upload)).unwrap(),
+    ] {
+        assert_eq!(pkg.info.binaries.len(), 3, "{}", pkg.info.kind);
+        assert_eq!(pkg.info.binaries[0].path, "Shop.ipa/Payload/Shop.app/ShopApp");
+        assert_eq!(pkg.info.binaries[0].debug, Some(0));
+        assert!(pkg.info.debug_files[0].path.starts_with("dSYMs.zip/Shop.app.dSYM/"));
+    }
+
+    // A zip of nothing but dSYMs: they are the binaries to explore.
+    let pkg = DiskPackage::open(&write("dSYMs.zip", &dsyms_zip)).unwrap();
+    assert_eq!(pkg.info.binaries.len(), 1);
+    assert_eq!(pkg.info.binaries[0].kind, BinaryKind::Debug);
+    assert_eq!(pkg.info.binaries[0].name, "ShopApp");
+    assert!(pkg.info.debug_files.is_empty());
+    assert_eq!(pkg.info.size, 0, "debug files aren't counted in the size");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn headers_say_what_each_fixture_is() {
+    use binviz::package::{BinaryKind, header};
+    let cases = [
+        ("tiny-elf-x64", "ELF", BinaryKind::Executable, "x86_64"),
+        ("tiny-elf-x64.stripped", "ELF", BinaryKind::Executable, "x86_64"),
+        ("tiny-elf-x64.debug", "ELF", BinaryKind::Debug, "x86_64"),
+        ("tiny-elf-x64.o", "ELF", BinaryKind::Object, "x86_64"),
+        ("tiny-elf-a64", "ELF", BinaryKind::Executable, "arm64"),
+        // Position-independent, with no interpreter: DF_1_PIE says it's an executable.
+        ("imports-elf-x64", "ELF", BinaryKind::Executable, "x86_64"),
+        ("tiny-macho-a64", "Mach-O", BinaryKind::Executable, "arm64"),
+        ("tiny-macho-a64.o", "Mach-O", BinaryKind::Object, "arm64"),
+        ("libtiny.dylib", "Mach-O", BinaryKind::Library, "arm64"),
+        ("tiny-pe-x64.exe", "PE", BinaryKind::Executable, "x86_64"),
+        ("shapes-pe.exe", "PE", BinaryKind::Executable, "x86_64"),
+    ];
+    for (name, format, kind, arch) in cases {
+        let bytes = fixture(name);
+        let h = header(&bytes[..bytes.len().min(64 * 1024)]).unwrap_or_else(|| panic!("{name}: not recognised"));
+        assert_eq!(
+            (h.format.as_str(), h.kind, h.ids[0].arch.as_str()),
+            (format, kind, arch),
+            "{name}"
+        );
+    }
+    // Mach-O files carry their UUID in the header.
+    let bin = open("tiny-macho-a64");
+    let h = header(&fixture("tiny-macho-a64")).unwrap();
+    assert_eq!(Some(&h.ids[0].id), bin.summary().build_id.as_ref());
+    // Not binaries: text, and a Java class (the universal binary magic, with a version for a count).
+    assert!(header(b"hello, this is text and long enough to be anything else").is_none());
+    assert!(header(&[0xCA, 0xFE, 0xBA, 0xBE, 0, 0, 0, 0x34, 0, 0, 0, 0]).is_none());
+}
+
+#[test]
+fn elf_debug_files_pair_through_the_debug_link() {
+    use binviz::package::{DiskPackage, load_binary, update_loaded};
+    let dir = std::env::temp_dir().join(format!("binviz-elf-folder-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("usr/bin")).unwrap();
+    std::fs::create_dir_all(dir.join("usr/lib/debug")).unwrap();
+    std::fs::write(dir.join("usr/bin/tiny"), fixture("tiny-elf-x64.stripped")).unwrap();
+    std::fs::write(
+        dir.join("usr/lib/debug/tiny-elf-x64.debug"),
+        fixture("tiny-elf-x64.debug"),
+    )
+    .unwrap();
+    std::fs::write(dir.join("usr/bin/tiny.exe"), fixture("tiny-pe-x64.exe")).unwrap();
+    let mut pkg = DiskPackage::open(&dir).unwrap();
+    // Executables at one depth: the largest first.
+    let names: Vec<&str> = pkg.info.binaries.iter().map(|b| b.name.as_str()).collect();
+    assert_eq!(names, ["tiny.exe", "tiny"]);
+    assert_eq!(pkg.info.debug_files.len(), 1);
+    // No build IDs: nothing pairs until the binary is read and its .gnu_debuglink named.
+    assert!(pkg.info.binaries[1].debug.is_none());
+    let data = pkg.read_shared(pkg.info.binaries[1].file).unwrap();
+    let (mut bin, _) = load_binary(data.clone()).unwrap();
+    let mut info = pkg.info.clone();
+    update_loaded(&mut info, 1, &data, &bin);
+    assert_eq!(info.binaries[1].debug, Some(0));
+    assert_eq!(info.debug_files[0].binary, Some(1));
+    assert!(!bin.summary().has_dwarf);
+    let debug = &info.debug_files[0];
+    bin.attach_debug_file(&debug.path, pkg.read_shared(debug.file).unwrap())
+        .unwrap();
+    assert!(bin.summary().has_dwarf);
+    let _ = std::fs::remove_dir_all(&dir);
+}

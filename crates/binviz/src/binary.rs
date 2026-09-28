@@ -33,6 +33,8 @@ pub struct Binary {
     pub(crate) debug: Option<crate::dwarf::DebugInfo>,
     /// Function boundaries recovered from unwind tables / function starts.
     pub(crate) discovered: Vec<(u64, u64)>,
+    /// The symbol table of an attached debug file (a dSYM's), for stripped binaries.
+    pub(crate) debug_symbols: crate::inspect::DebugSymbols,
     pub(crate) annotations: Vec<Annotation>,
     /// Printable strings found in the loaded sections, built on first use.
     pub(crate) strings: std::sync::OnceLock<crate::strings::StringIndex>,
@@ -492,6 +494,7 @@ impl Binary {
             image_base,
             debug: None,
             discovered,
+            debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),
             coverage: std::sync::OnceLock::new(),

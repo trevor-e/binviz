@@ -63,7 +63,7 @@ export interface Segment {
 
 export type SymbolKind = 'function' | 'data' | 'section' | 'file' | 'label' | 'tls' | 'debug' | 'unknown';
 
-export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import';
+export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import' | 'debug-file';
 
 export interface Sym {
   index: number;
@@ -237,6 +237,8 @@ export interface DieSummary {
   detail?: string;
   lowPc?: bigint;
   highPc?: bigint;
+  /** Enclosing named scopes (`geo::Rect`), in listings and search results. */
+  scope?: string;
 }
 
 export type Link =
@@ -244,7 +246,31 @@ export type Link =
   | { type: 'address'; address: bigint }
   | { type: 'source'; file: number; line: number };
 
-export interface AttrInfo { name: string; form: string; value: string; link?: Link }
+export interface AttrInfo {
+  name: string;
+  form: string;
+  value: string;
+  link?: Link;
+  /** Section offsets of the encoded value. */
+  byteStart: bigint;
+  byteEnd: bigint;
+}
+
+export interface CodeLine { file: number; path: string; line: number; bytes: bigint; first: bigint; rows: number }
+
+export interface MemberLayout {
+  kind: 'member' | 'base' | 'static';
+  name?: string;
+  typeName: string;
+  offset?: bigint;
+  size?: bigint;
+  bitOffset?: bigint;
+  bitSize?: bigint;
+  hole: bigint;
+  artificial: boolean;
+  unit: number;
+  die: bigint;
+}
 
 export interface DieDetails {
   die: DieSummary;
@@ -256,7 +282,41 @@ export interface DieDetails {
   byteStart: bigint;
   byteEnd: bigint;
   section: string;
+  childCount: number;
+  callSite?: SourceLoc;
+  codeLines: CodeLine[];
+  layout: MemberLayout[];
+  byteSize?: bigint;
+  tailPadding?: bigint;
 }
+
+export interface DiePage { total: number; offset: number; dies: DieSummary[] }
+export interface TagCount { tag: string; count: number }
+
+export type Severity = 'error' | 'warning';
+export interface DwarfProblem {
+  severity: Severity;
+  area: string;
+  message: string;
+  unit?: number;
+  die?: bigint;
+  tag?: string;
+  section: string;
+  offset?: bigint;
+}
+export interface DwarfCheck {
+  units: number;
+  dies: bigint;
+  lineRows: bigint;
+  errors: number;
+  warnings: number;
+  byUnit: { unit: number; errors: number; warnings: number }[];
+  problems: DwarfProblem[];
+  truncated: boolean;
+}
+
+export interface ScopeVar { name: string; kind: string; typeName?: string; location: string; decl?: SourceLoc; unit: number; die: bigint; scope: number }
+export interface ScopeInfo { address: bigint; unit: number; scopes: DieSummary[]; variables: ScopeVar[] }
 
 export interface SourceFile {
   id: number;
@@ -401,4 +461,78 @@ export interface FunctionSummary {
   strings: StringUse[];
   data: Reference[];
   referencedBy: RefCounts;
+}
+
+// --- Folders of binaries and size reports -------------------------------------
+
+/** What a binary is, from its header. */
+export type BinaryKind = 'executable' | 'library' | 'plugin' | 'other' | 'object' | 'debug';
+/** An architecture and its build ID (a Mach-O UUID, an ELF build ID; empty when unknown). */
+export interface BuildId { arch: string; id: string }
+export interface BinaryHeader { format: string; kind: BinaryKind; ids: BuildId[] }
+export interface BundleInfo {
+  path: string;
+  name?: string;
+  bundleId?: string;
+  version?: string;
+  build?: string;
+  minOs?: string;
+  platforms: string[];
+  executable?: string;
+}
+export interface PackageBinary {
+  index: number;
+  file: number;
+  path: string;
+  name: string;
+  /** "Mach-O", "ELF" or "PE". */
+  format: string;
+  kind: BinaryKind;
+  bundle?: BundleInfo;
+  size: bigint;
+  compressedSize?: bigint;
+  ids: BuildId[];
+  /** Index into the debug files. */
+  debug?: number;
+}
+export interface DebugFile { index: number; file: number; path: string; size: bigint; compressedSize?: bigint; ids: BuildId[]; binary?: number }
+export type FileCategory =
+  | 'binaries' | 'asset-catalogs' | 'images' | 'interface' | 'localization' | 'fonts' | 'media' | 'ml-models'
+  | 'web' | 'data' | 'developer-files' | 'code-signature' | 'debug-symbols' | 'other';
+export interface CategorySize { category: FileCategory; files: number; size: bigint; compressedSize?: bigint }
+export interface FileRef { file: number; path: string; size: bigint; compressedSize?: bigint; category: FileCategory }
+export interface DuplicateGroup { size: bigint; paths: string[]; wasted: bigint }
+export interface PackageInfo {
+  /** "folder" or "zip". */
+  kind: string;
+  name: string;
+  binaries: PackageBinary[];
+  debugFiles: DebugFile[];
+  files: number;
+  /** Every file but debug files. */
+  size: bigint;
+  compressedSize?: bigint;
+  debugSize: bigint;
+  categories: CategorySize[];
+  largest: FileRef[];
+  duplicates: DuplicateGroup[];
+  duplicateBytes: bigint;
+}
+/** Where a folder's files come from (sent to the worker): a zip, or files dropped or picked. */
+export type PackageSource = { kind: 'zip'; name: string; blob: Blob } | { kind: 'folder'; name: string; files: { path: string; file: File }[] };
+
+export type GroupKind = 'swift-module' | 'objc-class' | 'namespace' | 'c-prefix' | 'unnamed' | 'other';
+export interface SizeGroup { kind: GroupKind; name: string; functions: number; codeBytes: bigint; dataSymbols: number; dataBytes: bigint }
+export interface SizedSymbol { name: string; address: bigint; size: bigint; approximate: boolean }
+export interface SizeReport {
+  fileSize: bigint;
+  byKind: [RegionKind, bigint][];
+  byGroupKind: [GroupKind, bigint][];
+  groups: SizeGroup[];
+  groupCount: number;
+  largestFunctions: SizedSymbol[];
+  largestData: SizedSymbol[];
+  symbolizedBytes: bigint;
+  strings: number;
+  stringBytes: bigint;
 }

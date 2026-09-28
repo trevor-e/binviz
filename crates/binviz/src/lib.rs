@@ -34,6 +34,8 @@ mod error;
 mod inspect;
 mod layout;
 pub mod model;
+pub mod package;
+pub mod plist;
 mod pointers;
 pub mod search;
 pub mod size;
@@ -42,6 +44,7 @@ mod stubs;
 mod symbols;
 mod util;
 pub mod xrefs;
+pub mod zip;
 
 pub use binary::Binary;
 pub use container::{Container, ContainerInfo, Member};

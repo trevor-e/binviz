@@ -19,6 +19,7 @@ cpp_demangle.workspace = true
 msvc-demangler.workspace = true
 serde.workspace = true
 memchr.workspace = true
+flate2.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true

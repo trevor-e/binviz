@@ -1,7 +1,8 @@
 // Typed client for the WebAssembly session running in a worker.
 import type {
   Annotation, Attribution, AttributedRange, AttributionMode, CallEdge, CallGraph, ContainerInfo, Coverage, DieDetails,
-  DieSummary, Disassembly, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection,
+  DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary,
+  BinaryHeader, HitKind, Import, Inspection, PackageInfo, PackageSource, ScopeInfo, SizeReport, TagCount,
   LineProgramInfo, LineRange, LineRow, MapStatus, Opened, PathEntry, PathStep, RefCounts, Reference, RefPage,
   RegionInfo, RegionKind, Resolved, SearchResults, Section, Segment, SourceFile, Span, StringPage, Summary,
   SymbolPage, SymbolQuery, Sym, UnitInfo,
@@ -18,14 +19,24 @@ export class Api {
   onBusyChange: (busy: boolean) => void = () => {};
   /** Reading a file in: fraction done, or -1 once it is being parsed. */
   onProgress: (fraction: number) => void = () => {};
+  /** What a long operation is doing (reading a package's binaries…). */
+  onStatus: (text: string) => void = () => {};
+  /** Something the user should know that didn't stop an operation (a dSYM that didn't attach…). */
+  onNotice: (text: string) => void = () => {};
 
   constructor() {
     this.worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-    this.worker.onmessage = (e: MessageEvent<{ id: number; result?: unknown; error?: string; progress?: number }>) => {
+    this.worker.onmessage = (e: MessageEvent<{ id?: number; result?: unknown; error?: string; progress?: number; status?: string }>) => {
       if (e.data.progress !== undefined) {
         this.onProgress(e.data.progress);
         return;
       }
+      if (e.data.status !== undefined) {
+        if (e.data.id === undefined) this.onNotice(e.data.status);
+        else this.onStatus(e.data.status);
+        return;
+      }
+      if (e.data.id === undefined) return;
       const p = this.pending.get(e.data.id);
       if (!p) return;
       this.pending.delete(e.data.id);
@@ -55,6 +66,23 @@ export class Api {
   openMember(index: number) { return this.call<Opened>('openMember', index); }
   memoryBytes() { return this.call<number>('memoryBytes'); }
   attachDebug(name: string, blob: Blob) { return this.call<Opened>('attachBlob', name, blob); }
+  /** A little of the open binary's bytes (for binaries with no Blob of their own). */
+  read(offset: bigint, count: number) { return this.call<Uint8Array>('read', offset, count); }
+  sizeReport(top: number) { return this.call<SizeReport>('sizeReport', top); }
+
+  /** Looks through folders and zips (and zips inside them) for binaries; nothing is opened yet. */
+  scanFolder(sources: PackageSource[]) { return this.call<PackageInfo>('scanFolder', sources); }
+  /** Opens what the last scan found: the first binary is loaded, with its debug file. */
+  openScanned() { return this.call<{ info: PackageInfo; opened: Opened | null }>('openScanned'); }
+  /** Attaches a file the last scan found to the open binary, as its debug file. */
+  attachScanned(file: number, name: string) { return this.call<Opened>('attachScanned', file, name); }
+  /** What a file's header says it is (null: not a binary). */
+  sniff(blob: Blob) { return this.call<BinaryHeader | null>('sniff', blob); }
+  /** Makes another binary of the folder current, loading it (and its debug file) if needed. */
+  selectPackageBinary(index: number) { return this.call<{ info: PackageInfo; opened: Opened }>('selectPackageBinary', index); }
+  /** Every binary's size report, with its debug file attached. */
+  analyzePackage(top: number) { return this.call<{ info: PackageInfo; reports: { index: number; report: SizeReport }[] }>('analyzePackage', top); }
+  packageFileBlob(file: number) { return this.call<Blob | null>('packageFileBlob', file); }
   summary() { return this.call<Summary>('summary'); }
   sections() { return this.call<Section[]>('sections'); }
   segments() { return this.call<Segment[]>('segments'); }
@@ -110,6 +138,13 @@ export class Api {
   dieAt(address: bigint) { return this.call<[number, bigint] | undefined>('dieAt', address); }
   functionDieAt(address: bigint) { return this.call<[number, bigint] | undefined>('functionDieAt', address); }
   dieSearch(query: string, limit: number) { return this.call<DieSummary[]>('dieSearch', query, limit); }
+  dieSearchAll(query: string, limit: number) { return this.call<DieSummary[]>('dieSearchAll', query, limit); }
+  listDies(unit: number, filter: string, name: string, offset: number, limit: number) { return this.call<DiePage>('listDies', unit, filter, name, offset, limit); }
+  tagCounts(unit: number) { return this.call<TagCount[]>('tagCounts', unit); }
+  dieAtOffset(offset: bigint) { return this.call<[number, bigint] | undefined>('dieAtOffset', offset); }
+  scopeAt(address: bigint) { return this.call<ScopeInfo | undefined>('scopeAt', address); }
+  dwarfCheck() { return this.call<DwarfCheck>('dwarfCheck'); }
+  dwarfLoadProblems() { return this.call<DwarfProblem[]>('dwarfLoadProblems'); }
   lineProgram(unit: number) { return this.call<LineProgramInfo | undefined>('lineProgram', unit); }
   lineRows(unit: number, first: number, count: number) { return this.call<LineRow[]>('lineRows', unit, first, count); }
   sourceFiles() { return this.call<SourceFile[]>('sourceFiles'); }

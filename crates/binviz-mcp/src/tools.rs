@@ -10,25 +10,33 @@ use serde_json::{Value, json};
 use crate::notes;
 
 pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O and PE binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
-Start with open_binary (a path; universal binaries pick arm64 unless you pass member). Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
+Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file) by UUID or build ID; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
 To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
+For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
 
 const MAX_OUTPUT: usize = 60_000;
 
-struct Open {
-    id: String,
-    path: PathBuf,
-    label: String,
-    bin: Binary,
-    notes: Option<PathBuf>,
+pub(crate) struct Open {
+    pub id: String,
+    pub path: PathBuf,
+    pub label: String,
+    pub bin: Binary,
+    pub notes: Option<PathBuf>,
+    /// The folder or zip it came from (an index into `Server::packages`).
+    pub package: Option<usize>,
+    /// Its debug file in the folder (file index, path), attached on first use.
+    pub pending_debug: Option<(u32, String)>,
+    /// What happened when the debug file was attached.
+    pub debug_note: Option<String>,
 }
 
 #[derive(Default)]
 pub struct Server {
-    open: Vec<Open>,
-    current: Option<usize>,
+    pub(crate) open: Vec<Open>,
+    pub(crate) current: Option<usize>,
+    pub(crate) packages: Vec<crate::folders::OpenPackage>,
 }
 
 // --- Tool definitions --------------------------------------------------------
@@ -57,9 +65,9 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "open_binary",
             "Open a binary",
-            "Loads an ELF, Mach-O or PE file (also universal/fat binaries and .a archives) and keeps it in memory for the other tools. Loads notes from <path>.binviz-notes.json if present. Returns an id and a summary.",
+            "Loads an ELF, Mach-O or PE file (also universal/fat binaries and .a archives) and keeps it in memory for the other tools, or a folder or zip of binaries (an .ipa, an .xcarchive, a build folder; zips inside open too): every binary inside opens under its own id, and its debug file there (a dSYM, a .debug file, paired by UUID or build ID) attaches on first use. Loads notes from <path>.binviz-notes.json (<folder>.<id>.binviz-notes.json) if present. Returns ids and a summary.",
             json!({
-                "path": { "type": "string", "description": "Path to the binary." },
+                "path": { "type": "string", "description": "Path to the binary, or to a folder or zip of binaries." },
                 "member": { "type": "string", "description": "For universal binaries or archives: the slice/member index or architecture (e.g. arm64, x86_64). Universal binaries default to arm64." },
                 "debug_file": { "type": "string", "description": "Separate DWARF to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, or an unstripped copy." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
@@ -84,6 +92,18 @@ pub fn definitions() -> Vec<Value> {
             false,
         ),
         tool(
+            "folder_summary",
+            "Summarize a folder of binaries",
+            "For an opened folder or zip: the app it holds (bundle id, version, minimum OS, from its Info.plist), every binary with its kind, format, architectures and debug file, sizes by kind of content (binaries, asset catalogs, images, localization…), the largest files, duplicate files and the bytes they waste. With analyze: true, also the code and data of every binary broken down by owner (Swift modules, Objective-C classes, C++ namespaces, C prefixes) and summed across binaries, with debug files attached so stripped binaries have names.",
+            json!({
+                "package": { "type": "string", "description": "Which folder or zip (its id or file name). Defaults to the current binary's." },
+                "analyze": { "type": "boolean" },
+                "top": { "type": "integer", "description": "Entries per list (default 25, max 500)." },
+            }),
+            &[],
+            true,
+        ),
+        tool(
             "binary_summary",
             "Summarize a binary",
             "Format, architecture, entry point, build ID/UUID, platform facts, segments and sections, symbol counts, and DWARF (units, source files, producers) if present.",
@@ -102,7 +122,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "search",
             "Search",
-            "One search over addresses, file offsets (@0x…), symbols (raw and demangled), imports/exports, sections, source files and file:line, DWARF names, notes, strings, byte patterns with ?? wildcards (48 8b ?? 05) and \"exact text\". Best matches first, grouped by kind.",
+            "One search over addresses, file offsets (@0x…), symbols (raw and demangled), imports/exports, sections, source files and file:line, DWARF names, notes, strings, byte patterns with ?? wildcards (48 8b ?? 05) and \"exact text\". Best matches first, grouped by kind. With binary: \"all\", searches every binary of the folder (or every open binary).",
             json!({
                 "query": { "type": "string" },
                 "kind": { "type": "string", "enum": ["address", "offset", "symbol", "import", "export", "section", "source", "dwarf", "note", "string", "bytes"], "description": "Only this kind of result." },
@@ -202,6 +222,71 @@ pub fn definitions() -> Vec<Value> {
             true,
         ),
         tool(
+            "dwarf_units",
+            "DWARF compilation units",
+            "The compilation units in the DWARF: source file, language, producer (compiler and flags), DWARF version, size, and how much code each covers.",
+            json!({
+                "filter": { "type": "string", "description": "Only units whose name, producer or language contains this." },
+                "offset": { "type": "integer" },
+                "limit": { "type": "integer", "description": "Default 100, max 5000." },
+            }),
+            &[],
+            true,
+        ),
+        tool(
+            "dwarf_search",
+            "Find DIEs by name",
+            "Named DIEs by (qualified) name: functions with code, global variables, types, members, enumerators, best matches first. With everything: true, every DIE with a matching name, locals and parameters included (slower).",
+            json!({
+                "query": { "type": "string" },
+                "everything": { "type": "boolean" },
+                "limit": { "type": "integer", "description": "Default 50, max 1000." },
+            }),
+            &["query"],
+            true,
+        ),
+        tool(
+            "dwarf_dies",
+            "List a unit's DIEs",
+            "A compilation unit's DIEs, flattened, filtered by tag and name, each with its enclosing scopes. Without tags, also counts the unit's DIEs by tag.",
+            json!({
+                "unit": { "type": "integer" },
+                "tags": { "type": "string", "description": "Comma-separated tags (DW_TAG_member or member) or kinds: functions, variables, types, scopes." },
+                "name": { "type": "string", "description": "Only DIEs whose name contains this." },
+                "offset": { "type": "integer" },
+                "limit": { "type": "integer", "description": "Default 100, max 2000." },
+            }),
+            &["unit"],
+            true,
+        ),
+        tool(
+            "dwarf_die",
+            "Show a DIE",
+            "One DIE in full: its parents, every attribute (name, form, decoded value), type, declaration (with the source line when the file exists on this machine), inlined call site, the source lines its code came from, a structure's layout with holes and padding, and its children.",
+            json!({
+                "die": { "type": "string", "description": "A .debug_info offset (0x1a2b or <0x1a2b>), unit:offset (3:0x44), or a name to search for." },
+                "children": { "type": "integer", "description": "How many children to list (default 50, max 1000)." },
+            }),
+            &["die"],
+            true,
+        ),
+        tool(
+            "dwarf_at",
+            "DWARF at an address",
+            "What the debug info says about an address: the source line, the inlined call stack, and the scopes around it (function, inlined calls, blocks) with the parameters and variables they declare and where each one's value lives at that address (register, frame offset, constant, or optimized out).",
+            json!({ "at": address("An address in code") }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "dwarf_check",
+            "Check the DWARF",
+            "Reads every unit, DIE, attribute and line program and lists what can't be read (bad headers, abbreviations, strings, range and location lists, line programs) or doesn't add up (references to no DIE, ranges ending before they start, files the line table doesn't define), with the unit, DIE and section offset of each.",
+            json!({ "limit": { "type": "integer", "description": "Problems to list (default 100, max 2000)." } }),
+            &[],
+            true,
+        ),
+        tool(
             "list_symbols",
             "List symbols",
             "Pages through the symbol table: filter by name, kind (function, data, …), sort by address, name or size.",
@@ -282,7 +367,7 @@ pub fn definitions() -> Vec<Value> {
 
 // --- Formatting ------------------------------------------------------------------
 
-fn human(n: u64) -> String {
+pub(crate) fn human(n: u64) -> String {
     const UNITS: [&str; 4] = ["KB", "MB", "GB", "TB"];
     if n < 1024 {
         return format!("{n} B");
@@ -296,7 +381,7 @@ fn human(n: u64) -> String {
     format!("{x:.1} {}", UNITS[u])
 }
 
-fn count(n: impl Into<u64>) -> String {
+pub(crate) fn count(n: impl Into<u64>) -> String {
     let s = n.into().to_string();
     let mut out = String::new();
     for (i, c) in s.chars().enumerate() {
@@ -308,7 +393,7 @@ fn count(n: impl Into<u64>) -> String {
     out
 }
 
-fn pct(part: u64, whole: u64) -> String {
+pub(crate) fn pct(part: u64, whole: u64) -> String {
     if whole == 0 {
         return "0%".into();
     }
@@ -324,7 +409,7 @@ fn pct(part: u64, whole: u64) -> String {
     }
 }
 
-fn clip(s: &str, max: usize) -> String {
+pub(crate) fn clip(s: &str, max: usize) -> String {
     if s.chars().count() <= max {
         s.to_string()
     } else {
@@ -344,11 +429,11 @@ fn finish(mut s: String) -> String {
     s
 }
 
-fn int(args: &Value, key: &str, default: u64, max: u64) -> u64 {
+pub(crate) fn int(args: &Value, key: &str, default: u64, max: u64) -> u64 {
     args.get(key).and_then(Value::as_u64).unwrap_or(default).min(max)
 }
 
-fn string<'a>(args: &'a Value, key: &str) -> Option<&'a str> {
+pub(crate) fn string<'a>(args: &'a Value, key: &str) -> Option<&'a str> {
     args.get(key).and_then(Value::as_str).filter(|s| !s.trim().is_empty())
 }
 
@@ -399,6 +484,8 @@ impl Server {
             "open_binary" => self.open_binary(args),
             "list_binaries" => Ok(self.list_binaries()),
             "close_binary" => self.close_binary(args),
+            "folder_summary" => self.folder_summary(args).map(finish),
+            "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
                 let o = self.get(args)?;
                 let text = match name {
@@ -420,6 +507,12 @@ impl Server {
                     "callees" => call_list(o, args, false)?,
                     "call_graph" => call_graph(o, args)?,
                     "call_path" => call_path(o, args)?,
+                    "dwarf_units" => dwarf_units(o, args)?,
+                    "dwarf_search" => dwarf_search(o, args)?,
+                    "dwarf_dies" => dwarf_dies(o, args)?,
+                    "dwarf_die" => dwarf_die(o, args)?,
+                    "dwarf_at" => dwarf_at(o, args)?,
+                    "dwarf_check" => dwarf_check(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -439,6 +532,7 @@ impl Server {
                 .ok_or_else(|| format!("no open binary {want:?}; open: {}", self.ids()))?,
             None => self.current.unwrap_or(self.open.len() - 1),
         };
+        self.attach_pending(i);
         Ok(&mut self.open[i])
     }
 
@@ -448,6 +542,9 @@ impl Server {
 
     fn open_binary(&mut self, args: &Value) -> Result<String, String> {
         let path = PathBuf::from(string(args, "path").ok_or("path is required")?);
+        if string(args, "member").is_none() && binviz::package::is_package_path(&path) {
+            return self.open_package(&path, args).map(finish);
+        }
         let started = Instant::now();
         let data = binviz::read_file(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         let file_name = path
@@ -511,6 +608,9 @@ impl Server {
             label,
             bin,
             notes: None,
+            package: None,
+            pending_debug: None,
+            debug_note: None,
         };
         if let Some(debug) = string(args, "debug_file") {
             let data = binviz::read_file(debug).map_err(|e| format!("{debug}: {e}"))?;
@@ -522,25 +622,11 @@ impl Server {
         let notes_path = string(args, "notes_file")
             .map(PathBuf::from)
             .unwrap_or_else(|| sidecar(&path, open.label.split(" [").nth(1).map(|s| s.trim_end_matches(']'))));
-        if notes_path.exists() {
-            match notes::load(&notes_path) {
-                Ok((list, fingerprint)) => {
-                    let n = list.len();
-                    open.bin.set_annotations(list);
-                    let _ = write!(note, "Loaded {n} notes from {}", notes_path.display());
-                    if fingerprint.is_some_and(|f| f != open.bin.summary().fingerprint) {
-                        note.push_str(
-                            " (they were saved for a different build of this file: check they still line up)",
-                        );
-                    }
-                    note.push('\n');
-                }
-                Err(e) => {
-                    let _ = writeln!(note, "Could not read notes: {e}");
-                }
+        match load_notes(&mut open, &notes_path) {
+            Some(loaded) => note.push_str(&loaded),
+            None => {
+                let _ = writeln!(note, "Notes will be saved to {}", notes_path.display());
             }
-        } else {
-            let _ = writeln!(note, "Notes will be saved to {}", notes_path.display());
         }
         open.notes = Some(notes_path);
         // A short, unique id: the file name, numbered if needed.
@@ -584,17 +670,27 @@ impl Server {
         let mut out = String::new();
         for (i, o) in self.open.iter().enumerate() {
             let s = o.bin.summary();
+            let package = o
+                .package
+                .and_then(|p| self.packages.get(p))
+                .map(|p| format!(" [in {}]", p.id))
+                .unwrap_or_default();
             let _ = writeln!(
                 out,
-                "{} `{}` {} — {} {} {}, {} symbols{}",
+                "{} `{}`{package} {} — {} {} {}, {} symbols{}{}",
                 if Some(i) == self.current { "*" } else { " " },
                 o.id,
-                o.path.display(),
+                o.label,
                 s.format_name,
                 s.arch,
                 human(s.file_size),
                 count(s.symbol_count),
-                if s.has_dwarf { ", DWARF" } else { "" }
+                if s.has_dwarf { ", DWARF" } else { "" },
+                if o.pending_debug.is_some() {
+                    ", debug file attaches on first use"
+                } else {
+                    ""
+                }
             );
         }
         out
@@ -603,6 +699,13 @@ impl Server {
     fn close_binary(&mut self, args: &Value) -> Result<String, String> {
         let id = self.get(args)?.id.clone();
         let i = self.open.iter().position(|o| o.id == id).expect("found above");
+        if let Some(p) = self.open[i].package {
+            for slot in &mut self.packages[p].ids {
+                if slot.as_deref() == Some(id.as_str()) {
+                    *slot = None;
+                }
+            }
+        }
         self.open.remove(i);
         self.current = if self.open.is_empty() {
             None
@@ -613,8 +716,28 @@ impl Server {
     }
 }
 
+/// Loads notes into a binary; what it loaded, or `None` if there are none yet.
+pub(crate) fn load_notes(open: &mut Open, notes_path: &Path) -> Option<String> {
+    if !notes_path.exists() {
+        return None;
+    }
+    Some(match notes::load(notes_path) {
+        Ok((list, fingerprint)) => {
+            let n = list.len();
+            open.bin.set_annotations(list);
+            let mut note = format!("Loaded {n} notes from {}", notes_path.display());
+            if fingerprint.is_some_and(|f| f != open.bin.summary().fingerprint) {
+                note.push_str(" (they were saved for a different build of this file: check they still line up)");
+            }
+            note.push('\n');
+            note
+        }
+        Err(e) => format!("Could not read notes: {e}\n"),
+    })
+}
+
 /// `<path>.binviz-notes.json`, or `<path>.<arch>.binviz-notes.json` for a slice.
-fn sidecar(path: &Path, member: Option<&str>) -> PathBuf {
+pub(crate) fn sidecar(path: &Path, member: Option<&str>) -> PathBuf {
     let mut name = path.file_name().map(|n| n.to_os_string()).unwrap_or_default();
     if let Some(m) = member {
         name.push(format!(".{m}"));
@@ -675,6 +798,9 @@ fn summary(o: &Open) -> String {
             count(b.imports().len() as u64),
             count(b.exports().len() as u64)
         );
+    }
+    if let Some(n) = &o.debug_note {
+        let _ = writeln!(out, "{n}");
     }
     let notes = b.annotations();
     if !notes.is_empty() {
@@ -865,7 +991,7 @@ fn size_report(o: &Open, args: &Value) -> String {
     out
 }
 
-fn search(o: &Open, args: &Value) -> Result<String, String> {
+pub(crate) fn search(o: &Open, args: &Value) -> Result<String, String> {
     let query = string(args, "query").ok_or("query is required")?;
     let limit = int(args, "limit", 10, 500) as u32;
     let only = match string(args, "kind") {
@@ -1846,6 +1972,445 @@ fn call_path(o: &Open, args: &Value) -> Result<String, String> {
                  (virtual calls, callbacks, function pointers): try xrefs on it to find pointers to it."
             );
         }
+    }
+    Ok(out)
+}
+
+// --- DWARF ---------------------------------------------------------------------------
+
+fn debug_of(o: &Open) -> Result<&binviz::DebugInfo, String> {
+    o.bin.debug_info().ok_or_else(|| {
+        let mach = o.bin.summary().format == binviz::Format::MachO;
+        format!(
+            "{} has no DWARF debug info{}",
+            o.label,
+            if mach {
+                "; for Mach-O it usually lives in a .dSYM: open_binary with debug_file pointing at …/Contents/Resources/DWARF/<name>"
+            } else {
+                ""
+            }
+        )
+    })
+}
+
+fn die_line(d: &binviz::dwarf::DieSummary) -> String {
+    format!(
+        "<{:#x}> {} {}{}{}",
+        d.section_offset,
+        d.tag.trim_start_matches("DW_TAG_"),
+        d.scope.as_deref().map(|s| format!("{s}::")).unwrap_or_default(),
+        d.name.as_deref().unwrap_or(""),
+        d.detail
+            .as_deref()
+            .map(|x| format!("  ({})", clip(x, 120)))
+            .unwrap_or_default()
+    )
+}
+
+/// The text of a source line, if the file exists on this machine.
+fn source_text(path: &str, line: u32) -> Option<String> {
+    if line == 0 {
+        return None;
+    }
+    let text = std::fs::read_to_string(path).ok()?;
+    text.lines().nth(line as usize - 1).map(|l| l.trim().to_string())
+}
+
+fn dwarf_units(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let filter = string(args, "filter").map(str::to_lowercase);
+    let units: Vec<&binviz::dwarf::UnitInfo> = d
+        .units()
+        .iter()
+        .filter(|u| {
+            filter.as_ref().is_none_or(|f| {
+                [&u.name, &u.producer, &u.language]
+                    .iter()
+                    .any(|v| v.as_deref().is_some_and(|v| v.to_lowercase().contains(f)))
+            })
+        })
+        .collect();
+    let offset = int(args, "offset", 0, u32::MAX as u64) as usize;
+    let limit = int(args, "limit", 100, 5000) as usize;
+    let summary = d.summary();
+    let mut out = format!(
+        "{} units ({}), DWARF {:?}, from {}{}:\n",
+        count(d.units().len() as u64),
+        if filter.is_some() {
+            format!("{} match", units.len())
+        } else {
+            "all".into()
+        },
+        summary.versions,
+        summary.source,
+        if d.load_problems().is_empty() {
+            String::new()
+        } else {
+            format!(
+                "; {} unit(s) could not be read (see dwarf_check)",
+                d.load_problems().len()
+            )
+        }
+    );
+    for u in units.iter().skip(offset).take(limit) {
+        let _ = writeln!(
+            out,
+            "  [{}] {} — {} v{}, {}{}{}",
+            u.index,
+            u.name.as_deref().unwrap_or("(no name)"),
+            u.language.as_deref().unwrap_or(&u.kind),
+            u.version,
+            human(u.size),
+            if u.code_size > 0 {
+                format!(", {} of code", human(u.code_size))
+            } else {
+                String::new()
+            },
+            u.producer
+                .as_deref()
+                .map(|p| format!("; {}", clip(p, 100)))
+                .unwrap_or_default()
+        );
+    }
+    if units.len() > offset + limit {
+        let _ = writeln!(
+            out,
+            "  … {} more (offset {})",
+            units.len() - offset - limit,
+            offset + limit
+        );
+    }
+    Ok(out)
+}
+
+fn dwarf_search(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let query = string(args, "query").ok_or("query is required")?;
+    let limit = int(args, "limit", 50, 1000) as usize;
+    let everything = args.get("everything").and_then(Value::as_bool).unwrap_or(false);
+    let hits = if everything {
+        d.search_all(query, limit)
+    } else {
+        d.search(query, limit)
+    };
+    if hits.is_empty() {
+        return Ok(format!(
+            "No DIE named like {query:?}{}",
+            if everything {
+                "."
+            } else {
+                "; try everything: true to include locals and parameters."
+            }
+        ));
+    }
+    let mut out = format!("{} DIE(s):\n", hits.len());
+    for h in &hits {
+        let _ = writeln!(out, "  [{}] {}", h.unit, die_line(h));
+    }
+    Ok(out)
+}
+
+fn dwarf_dies(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let unit = args.get("unit").and_then(Value::as_u64).ok_or("unit is required")? as u32;
+    if unit as usize >= d.units().len() {
+        return Err(format!("no unit {unit}; there are {}", d.units().len()));
+    }
+    let tags = string(args, "tags").unwrap_or("");
+    let name = string(args, "name").unwrap_or("");
+    let offset = int(args, "offset", 0, u32::MAX as u64) as u32;
+    let limit = int(args, "limit", 100, 2000) as u32;
+    let page = d.list_dies(unit, tags, name, offset, limit);
+    let u = &d.units()[unit as usize];
+    let mut out = format!(
+        "Unit {unit} ({}): {} DIE(s){}{}\n",
+        u.name.as_deref().unwrap_or("?"),
+        count(page.total),
+        if tags.is_empty() {
+            String::new()
+        } else {
+            format!(" tagged {tags}")
+        },
+        if name.is_empty() {
+            String::new()
+        } else {
+            format!(" named like {name:?}")
+        }
+    );
+    for x in &page.dies {
+        let _ = writeln!(out, "  {}", die_line(x));
+    }
+    if page.total > offset + page.dies.len() as u32 {
+        let _ = writeln!(
+            out,
+            "  … {} more (offset {})",
+            page.total - offset - page.dies.len() as u32,
+            offset + page.dies.len() as u32
+        );
+    }
+    if tags.is_empty() && name.is_empty() {
+        let _ = writeln!(out, "\nBy tag:");
+        for t in d.tag_counts(unit).iter().take(40) {
+            let _ = writeln!(out, "  {:>8}  {}", count(t.count), t.tag);
+        }
+    }
+    Ok(out)
+}
+
+/// `0x1a2b` / `<0x1a2b>` (.debug_info offset), `3:0x44` (unit:offset), or a name.
+fn find_die(d: &binviz::DebugInfo, text: &str) -> Result<(u32, u64), String> {
+    let t = text.trim().trim_start_matches('<').trim_end_matches('>');
+    if let Some((u, off)) = t.split_once(':')
+        && let (Ok(u), Some(off)) = (u.trim().parse::<u32>(), binviz::search::parse_number(off.trim()))
+    {
+        return d
+            .die(u, off)
+            .map(|_| (u, off))
+            .ok_or_else(|| format!("no DIE at unit {u} offset {off:#x}"));
+    }
+    if t.starts_with("0x") || t.starts_with("0X") {
+        let off = binviz::search::parse_number(t).ok_or_else(|| format!("not an offset: {t}"))?;
+        return d
+            .die_at_offset(off)
+            .ok_or_else(|| format!("no unit in .debug_info covers {off:#x}"));
+    }
+    let hits = d.search(t, 1);
+    let hit = hits.first().ok_or_else(|| format!("no DIE named like {t:?}"))?;
+    Ok((hit.unit, hit.offset))
+}
+
+fn dwarf_die(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let (unit, offset) = find_die(d, string(args, "die").ok_or("die is required")?)?;
+    let det = d.die(unit, offset).ok_or("that DIE can't be read")?;
+    let mut out = String::new();
+    let u = &d.units()[unit as usize];
+    let _ = writeln!(
+        out,
+        "{} {}  <{:#x}> (unit {unit} offset {offset:#x}, {} bytes at {} {:#x}..{:#x})",
+        det.die.tag,
+        det.die.name.as_deref().unwrap_or(""),
+        det.die.section_offset,
+        det.byte_end - det.byte_start,
+        det.section,
+        det.byte_start,
+        det.byte_end
+    );
+    let _ = writeln!(out, "In unit {unit}: {}", u.name.as_deref().unwrap_or("?"));
+    if !det.parents.is_empty() {
+        let path: Vec<String> = det
+            .parents
+            .iter()
+            .map(|p| {
+                format!(
+                    "{} {}",
+                    p.tag.trim_start_matches("DW_TAG_"),
+                    p.name.as_deref().unwrap_or("")
+                )
+            })
+            .collect();
+        let _ = writeln!(out, "Inside: {}", path.join(" › "));
+    }
+    if let Some(t) = &det.type_name {
+        let _ = writeln!(out, "Type: {t}");
+    }
+    if let Some(s) = det.byte_size {
+        let _ = writeln!(out, "Size: {s} bytes");
+    }
+    if let Some(l) = &det.decl {
+        let text = source_text(&l.path, l.line)
+            .map(|t| format!("\n    {}", clip(&t, 200)))
+            .unwrap_or_default();
+        let _ = writeln!(out, "Declared at {}:{}{text}", l.path, l.line);
+    }
+    if let Some(l) = &det.call_site {
+        let text = source_text(&l.path, l.line)
+            .map(|t| format!("\n    {}", clip(&t, 200)))
+            .unwrap_or_default();
+        let _ = writeln!(out, "Inlined at {}:{}:{}{text}", l.path, l.line, l.column);
+    }
+    if !det.ranges.is_empty() {
+        let r: Vec<String> = det
+            .ranges
+            .iter()
+            .take(8)
+            .map(|[a, b]| format!("{a:#x}..{b:#x}"))
+            .collect();
+        let _ = writeln!(
+            out,
+            "Code: {}{}",
+            r.join(", "),
+            if det.ranges.len() > 8 {
+                format!(" … {} more", det.ranges.len() - 8)
+            } else {
+                String::new()
+            }
+        );
+    }
+    if !det.code_lines.is_empty() {
+        let _ = writeln!(out, "\nSource lines of its code ({}):", det.code_lines.len());
+        for l in det.code_lines.iter().take(60) {
+            let file = l.path.rsplit(['/', '\\']).next().unwrap_or(&l.path);
+            let _ = writeln!(
+                out,
+                "  {file}:{:<5} {:>6} bytes from {:#x}{}",
+                l.line,
+                l.bytes,
+                l.first,
+                source_text(&l.path, l.line)
+                    .map(|t| format!("   {}", clip(&t, 100)))
+                    .unwrap_or_default()
+            );
+        }
+    }
+    if !det.layout.is_empty() {
+        let _ = writeln!(out, "\nLayout:");
+        for m in &det.layout {
+            let at = match (m.bit_offset, m.bit_size) {
+                (Some(b), Some(w)) => format!("{:#x}:{}", b / 8, b % 8) + &format!(" ({w} bits)"),
+                _ => m.offset.map_or("-".into(), |o| format!("{o:#x}")),
+            };
+            let _ = writeln!(
+                out,
+                "  {at:>12} {:>6}  {:<8} {} {}{}{}",
+                m.size.map_or(String::new(), |s| s.to_string()),
+                m.kind,
+                m.type_name,
+                m.name.as_deref().unwrap_or(""),
+                if m.artificial { " (compiler-generated)" } else { "" },
+                if m.hole > 0 {
+                    format!("   ← {} byte hole before", m.hole)
+                } else {
+                    String::new()
+                }
+            );
+        }
+        if let Some(t) = det.tail_padding.filter(|&t| t > 0) {
+            let _ = writeln!(out, "  {t} byte(s) of padding at the end");
+        }
+    }
+    let _ = writeln!(out, "\nAttributes:");
+    for a in &det.attributes {
+        let _ = writeln!(
+            out,
+            "  {:<28} {:<22} {}",
+            a.name,
+            a.form,
+            clip(&a.value.replace('\n', "\n      "), 400)
+        );
+    }
+    let max = int(args, "children", 50, 1000) as usize;
+    if det.child_count > 0 {
+        let kids = d.die_children(unit, Some(offset));
+        let _ = writeln!(out, "\nChildren ({}):", det.child_count);
+        for k in kids.iter().take(max) {
+            let _ = writeln!(out, "  {}", die_line(k));
+        }
+        if kids.len() > max {
+            let _ = writeln!(out, "  … {} more", kids.len() - max);
+        }
+    }
+    Ok(out)
+}
+
+fn dwarf_at(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let address = address_of(&o.bin, string(args, "at").ok_or("at is required")?)?;
+    let mut out = String::new();
+    match d.location(address) {
+        Some(l) => {
+            let text = source_text(&l.path, l.line)
+                .map(|t| format!("\n    {}", clip(&t, 200)))
+                .unwrap_or_default();
+            let _ = writeln!(out, "{address:#x} is {}:{}:{}{text}", l.path, l.line, l.column);
+        }
+        None => {
+            let _ = writeln!(out, "{address:#x}: no line table row covers it");
+        }
+    }
+    let frames = d.frames(address);
+    if frames.len() > 1 {
+        let _ = writeln!(out, "\nInlined call stack (innermost first):");
+        for f in &frames {
+            let _ = writeln!(
+                out,
+                "  {} at {}:{}",
+                f.demangled.as_deref().or(f.function.as_deref()).unwrap_or("??"),
+                f.file.as_deref().unwrap_or("?"),
+                f.line.unwrap_or(0)
+            );
+        }
+    }
+    match d.scope_at(address) {
+        None => {
+            let _ = writeln!(out, "\nNo DWARF function covers this address.");
+        }
+        Some(scope) => {
+            let _ = writeln!(out, "\nScopes, outermost first, and what they declare:");
+            for (i, sc) in scope.scopes.iter().enumerate() {
+                let _ = writeln!(out, "{}{}", "  ".repeat(i + 1), die_line(sc));
+                for v in scope.variables.iter().filter(|v| v.scope == i as u32) {
+                    let _ = writeln!(
+                        out,
+                        "{}  {} {}: {} — {}",
+                        "  ".repeat(i + 1),
+                        v.kind,
+                        v.name,
+                        v.type_name.as_deref().unwrap_or("?"),
+                        v.location
+                    );
+                }
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn dwarf_check(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let started = Instant::now();
+    let c = d.check();
+    let limit = int(args, "limit", 100, 2000) as usize;
+    let mut out = format!(
+        "Checked {} units, {} DIEs and {} line table rows in {:.1} s: {} error(s), {} warning(s).\n",
+        count(c.units),
+        count(c.dies),
+        count(c.line_rows),
+        started.elapsed().as_secs_f64(),
+        count(c.errors),
+        count(c.warnings)
+    );
+    if c.problems.is_empty() {
+        out.push_str("No problems: everything reads and every reference resolves.\n");
+        return Ok(out);
+    }
+    for p in c.problems.iter().take(limit) {
+        let place = match (p.unit, p.die) {
+            (Some(u), Some(die)) => format!(
+                "unit {u} {}<{:#x}>",
+                p.tag
+                    .as_deref()
+                    .map(|t| format!("{} ", t.trim_start_matches("DW_TAG_")))
+                    .unwrap_or_default(),
+                p.offset.unwrap_or(die)
+            ),
+            (Some(u), None) => format!("unit {u}, {} {:#x}", p.section, p.offset.unwrap_or(0)),
+            _ => format!("{} {:#x}", p.section, p.offset.unwrap_or(0)),
+        };
+        let _ = writeln!(
+            out,
+            "  {} [{}] {place}: {}",
+            if p.severity == binviz::dwarf::Severity::Error {
+                "ERROR  "
+            } else {
+                "warning"
+            },
+            p.area,
+            p.message
+        );
+    }
+    if c.problems.len() > limit || c.truncated {
+        let _ = writeln!(out, "  … more (raise limit)");
     }
     Ok(out)
 }

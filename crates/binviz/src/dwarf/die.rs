@@ -1,6 +1,8 @@
 //! Browsing DIE trees and rendering attributes.
 
-use gimli::{AttributeValue, Reader, UnitOffset};
+use std::collections::HashMap;
+
+use gimli::{AttributeValue, Reader, Section as _, UnitOffset};
 use serde::Serialize;
 
 use super::{DebugInfo, R, expr};
@@ -22,6 +24,46 @@ pub struct DieSummary {
     pub detail: Option<String>,
     pub low_pc: Option<u64>,
     pub high_pc: Option<u64>,
+    /// Enclosing named scopes (`geo::Rect`), in listings and search results.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<String>,
+}
+
+/// A source line that produced some of a DIE's code.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodeLine {
+    pub file: u32,
+    pub path: String,
+    pub line: u32,
+    /// Bytes of code from this line within the DIE's ranges.
+    pub bytes: u64,
+    /// The first address generated for it.
+    pub first: u64,
+    /// Line table rows (separate address ranges) for it.
+    pub rows: u32,
+}
+
+/// One member (or base) of a structure, class or union, where it sits.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MemberLayout {
+    /// "member", "base" (inheritance), or "static" (no storage in the object).
+    pub kind: String,
+    pub name: Option<String>,
+    pub type_name: String,
+    /// Byte offset in the object.
+    pub offset: Option<u64>,
+    pub size: Option<u64>,
+    /// Bit fields: the first bit (from the start of the object) and the width.
+    pub bit_offset: Option<u64>,
+    pub bit_size: Option<u64>,
+    /// Padding bytes before this member.
+    pub hole: u64,
+    /// Added by the compiler (a vtable pointer, say).
+    pub artificial: bool,
+    pub unit: u32,
+    pub die: u64,
 }
 
 /// Something an attribute value points at.
@@ -40,6 +82,10 @@ pub struct AttrInfo {
     pub form: String,
     pub value: String,
     pub link: Option<Link>,
+    /// Section offsets of the attribute's encoded value (empty for
+    /// `DW_FORM_implicit_const`, whose value lives in the abbreviation).
+    pub byte_start: u64,
+    pub byte_end: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -56,11 +102,21 @@ pub struct DieDetails {
     pub byte_start: u64,
     pub byte_end: u64,
     pub section: String,
+    pub child_count: u32,
+    /// Where an inlined call was made (`DW_AT_call_file` / `DW_AT_call_line`).
+    pub call_site: Option<SourceLoc>,
+    /// The source lines the DIE's code was generated from, in address order.
+    pub code_lines: Vec<CodeLine>,
+    /// Structures, classes and unions: members and bases by offset.
+    pub layout: Vec<MemberLayout>,
+    pub byte_size: Option<u64>,
+    /// Bytes at the end of a structure that no member uses.
+    pub tail_padding: Option<u64>,
 }
 
 type Die = gimli::DebuggingInformationEntry<R>;
 
-fn tag_name(tag: gimli::DwTag) -> String {
+pub(crate) fn tag_name(tag: gimli::DwTag) -> String {
     tag.static_string()
         .map_or_else(|| format!("DW_TAG_{:#x}", tag.0), str::to_string)
 }
@@ -125,7 +181,7 @@ impl DebugInfo {
         }
     }
 
-    fn summary_of(&self, unit_idx: u32, unit: &gimli::UnitRef<'_, R>, die: &Die) -> DieSummary {
+    pub(crate) fn summary_of(&self, unit_idx: u32, unit: &gimli::UnitRef<'_, R>, die: &Die) -> DieSummary {
         let section_offset = die.offset().to_unit_section_offset(&unit.header).0 as u64;
         let (low, high) = pc_range(unit, die);
         let tag = die.tag();
@@ -175,6 +231,7 @@ impl DebugInfo {
             detail,
             low_pc: low,
             high_pc: high,
+            scope: None,
         }
     }
 
@@ -254,10 +311,31 @@ impl DebugInfo {
         let byte_end = next.to_unit_section_offset(&unit.header).0 as u64;
 
         let low_pc = pc_range(&unit, &die).0;
+        // Where each attribute's value is encoded, in abbreviation order (the same as `attrs`).
+        let mut spans = Vec::new();
+        if let Ok(mut raw) = unit.entries_raw(Some(off))
+            && let Ok(Some(abbrev)) = raw.read_abbreviation()
+        {
+            for spec in abbrev.attributes() {
+                let start = raw.next_offset();
+                if raw.read_attribute(*spec).is_err() {
+                    break;
+                }
+                spans.push((
+                    start.to_unit_section_offset(&unit.header).0 as u64,
+                    raw.next_offset().to_unit_section_offset(&unit.header).0 as u64,
+                ));
+            }
+        }
         let attributes = die
             .attrs()
             .iter()
-            .map(|a| self.format_attr(unit_idx, &unit, a, low_pc))
+            .enumerate()
+            .map(|(i, a)| {
+                let mut info = self.format_attr(unit_idx, &unit, a, low_pc);
+                (info.byte_start, info.byte_end) = spans.get(i).copied().unwrap_or((byte_end, byte_end));
+                info
+            })
             .collect();
         let mut ranges = Vec::new();
         if let Ok(mut iter) = unit.die_ranges(&die) {
@@ -272,21 +350,49 @@ impl DebugInfo {
             .attr_value(gimli::DW_AT_type)
             .and_then(|v| self.resolve_ref(unit_idx, v))
             .map(|(u, o)| self.type_name(u, o, 0));
-        let decl = match (
-            die.attr_value(gimli::DW_AT_decl_file),
-            die.attr_value(gimli::DW_AT_decl_line),
-        ) {
-            (Some(AttributeValue::FileIndex(f)), line) => self.files.unit_file(unit_idx, f).map(|file| SourceLoc {
-                file,
-                path: self.files.files[file as usize].path.clone(),
-                line: line.and_then(|l| l.udata_value()).unwrap_or(0) as u32,
-                column: die
-                    .attr_value(gimli::DW_AT_decl_column)
-                    .and_then(|c| c.udata_value())
-                    .unwrap_or(0) as u32,
-            }),
-            _ => None,
+        let decl = self.source_loc(
+            unit_idx,
+            &die,
+            gimli::DW_AT_decl_file,
+            gimli::DW_AT_decl_line,
+            gimli::DW_AT_decl_column,
+        );
+        let call_site = self.source_loc(
+            unit_idx,
+            &die,
+            gimli::DW_AT_call_file,
+            gimli::DW_AT_call_line,
+            gimli::DW_AT_call_column,
+        );
+        let unit_level = matches!(
+            die.tag(),
+            gimli::DW_TAG_compile_unit | gimli::DW_TAG_partial_unit | gimli::DW_TAG_type_unit
+        );
+        let code_lines = if unit_level {
+            Vec::new()
+        } else {
+            self.code_lines(&ranges)
         };
+        let byte_size = die.attr_value(gimli::DW_AT_byte_size).and_then(|v| v.udata_value());
+        let (layout, tail_padding) = match die.tag() {
+            gimli::DW_TAG_structure_type | gimli::DW_TAG_class_type | gimli::DW_TAG_union_type => {
+                self.layout(unit_idx, &unit, off, die.tag() == gimli::DW_TAG_union_type, byte_size)
+            }
+            _ => (Vec::new(), None),
+        };
+        let mut child_count = 0;
+        if die.has_children()
+            && let Ok(mut cursor) = unit.entries_at_offset(off)
+            && matches!(cursor.next_entry(), Ok(true))
+            && cursor.next_entry().is_ok()
+        {
+            while cursor.current().is_some() {
+                child_count += 1;
+                if !matches!(cursor.next_sibling(), Ok(Some(_))) {
+                    break;
+                }
+            }
+        }
         Some(DieDetails {
             die: summary,
             attributes,
@@ -297,7 +403,176 @@ impl DebugInfo {
             byte_start,
             byte_end,
             section: unit.header.section().name().to_string(),
+            child_count,
+            call_site,
+            code_lines,
+            layout,
+            byte_size,
+            tail_padding,
         })
+    }
+
+    /// A source position from a file / line / column attribute triple.
+    fn source_loc(
+        &self,
+        unit_idx: u32,
+        die: &Die,
+        file: gimli::DwAt,
+        line: gimli::DwAt,
+        column: gimli::DwAt,
+    ) -> Option<SourceLoc> {
+        let Some(AttributeValue::FileIndex(f)) = die.attr_value(file) else {
+            return None;
+        };
+        let id = self.files.unit_file(unit_idx, f)?;
+        Some(SourceLoc {
+            file: id,
+            path: self.files.files[id as usize].path.clone(),
+            line: die.attr_value(line).and_then(|l| l.udata_value()).unwrap_or(0) as u32,
+            column: die.attr_value(column).and_then(|c| c.udata_value()).unwrap_or(0) as u32,
+        })
+    }
+
+    /// The source lines behind address ranges, in address order.
+    fn code_lines(&self, ranges: &[[u64; 2]]) -> Vec<CodeLine> {
+        let mut sorted = ranges.to_vec();
+        sorted.sort_unstable();
+        let mut out: Vec<CodeLine> = Vec::new();
+        let mut at: HashMap<(u32, u32), usize> = HashMap::new();
+        for [lo, hi] in sorted {
+            for (s, e, loc) in self.locations_in(lo, hi) {
+                let (s, e) = (s.max(lo), e.min(hi));
+                if e <= s {
+                    continue;
+                }
+                let i = *at.entry((loc.file, loc.line)).or_insert_with(|| {
+                    out.push(CodeLine {
+                        file: loc.file,
+                        path: loc.path.clone(),
+                        line: loc.line,
+                        bytes: 0,
+                        first: s,
+                        rows: 0,
+                    });
+                    out.len() - 1
+                });
+                let l = &mut out[i];
+                l.bytes += e - s;
+                l.rows += 1;
+                l.first = l.first.min(s);
+                if out.len() >= 400 {
+                    return out;
+                }
+            }
+        }
+        out
+    }
+
+    /// Members and bases of an aggregate by offset, with the padding between
+    /// them (like `pahole`), and the padding at the end.
+    fn layout(
+        &self,
+        unit_idx: u32,
+        unit: &gimli::UnitRef<'_, R>,
+        offset: UnitOffset,
+        union: bool,
+        byte_size: Option<u64>,
+    ) -> (Vec<MemberLayout>, Option<u64>) {
+        let mut out = Vec::new();
+        let Ok(mut cursor) = unit.entries_at_offset(offset) else {
+            return (out, None);
+        };
+        if !matches!(cursor.next_entry(), Ok(true)) || !cursor.current().is_some_and(|d| d.has_children()) {
+            return (out, None);
+        }
+        let little = self.dwarf.debug_info.reader().endian() == gimli::RunTimeEndian::Little;
+        if cursor.next_entry().is_err() {
+            return (out, None);
+        }
+        while let Some(child) = cursor.current() {
+            let tag = child.tag();
+            let is_static = tag == gimli::DW_TAG_variable
+                || (tag == gimli::DW_TAG_member
+                    && (child.attr_value(gimli::DW_AT_external).is_some()
+                        || child.attr_value(gimli::DW_AT_declaration).is_some()));
+            let kind = match tag {
+                gimli::DW_TAG_inheritance => Some("base"),
+                gimli::DW_TAG_member | gimli::DW_TAG_variable if is_static => Some("static"),
+                gimli::DW_TAG_member => Some("member"),
+                _ => None,
+            };
+            if let Some(kind) = kind {
+                let ty = child
+                    .attr_value(gimli::DW_AT_type)
+                    .and_then(|v| self.resolve_ref(unit_idx, v));
+                let type_name = ty.map_or_else(|| "?".to_string(), |(u, o)| self.type_name(u, o, 0));
+                let size = ty.and_then(|(u, o)| self.type_size(u, o, 0));
+                let offset = if is_static {
+                    None
+                } else {
+                    member_offset(unit, child).or(union.then_some(0))
+                };
+                let bit_size = child.attr_value(gimli::DW_AT_bit_size).and_then(|v| v.udata_value());
+                let bit_offset = bit_size.and_then(|bits| {
+                    child
+                        .attr_value(gimli::DW_AT_data_bit_offset)
+                        .and_then(|v| v.udata_value())
+                        .or_else(|| {
+                            // DWARF 2/3: bits from the most significant end of the storage unit.
+                            let from_top = child.attr_value(gimli::DW_AT_bit_offset)?.udata_value()?;
+                            let storage = child
+                                .attr_value(gimli::DW_AT_byte_size)
+                                .and_then(|v| v.udata_value())
+                                .or(size)?;
+                            let base = offset.unwrap_or(0) * 8;
+                            Some(if little {
+                                base + (storage * 8).checked_sub(from_top + bits)?
+                            } else {
+                                base + from_top
+                            })
+                        })
+                });
+                out.push(MemberLayout {
+                    kind: kind.into(),
+                    name: die_name(unit, child, false),
+                    type_name,
+                    offset: offset.or(bit_offset.map(|b| b / 8)),
+                    size: if bit_size.is_some() { None } else { size },
+                    bit_offset,
+                    bit_size,
+                    hole: 0,
+                    artificial: child.attr_value(gimli::DW_AT_artificial).is_some(),
+                    unit: unit_idx,
+                    die: child.offset().0 as u64,
+                });
+            }
+            if out.len() >= 10_000 || !matches!(cursor.next_sibling(), Ok(Some(_))) {
+                break;
+            }
+        }
+        if union {
+            return (out, None);
+        }
+        // Holes: walk members in bit order, tracking where the last one ended.
+        let mut order: Vec<usize> = (0..out.len()).filter(|&i| out[i].kind != "static").collect();
+        order.sort_by_key(|&i| out[i].bit_offset.or(out[i].offset.map(|o| o * 8)).unwrap_or(u64::MAX));
+        let mut end_bits = 0u64;
+        for i in order {
+            let m = &out[i];
+            let Some(start) = m.bit_offset.or(m.offset.map(|o| o * 8)) else {
+                continue;
+            };
+            let bits = m.bit_size.or(m.size.map(|s| s * 8)).unwrap_or(0);
+            if start > end_bits && m.bit_size.is_none() {
+                out[i].hole = (start - end_bits) / 8;
+            }
+            end_bits = end_bits.max(start + bits);
+        }
+        // An empty structure's one byte isn't padding.
+        let tail = byte_size
+            .filter(|_| end_bits > 0)
+            .map(|size| (size * 8).saturating_sub(end_bits.div_ceil(8) * 8) / 8);
+        (out, tail)
     }
 
     pub(crate) fn format_attr(
@@ -479,6 +754,8 @@ impl DebugInfo {
             form,
             value,
             link,
+            byte_start: 0,
+            byte_end: 0,
         }
     }
 
@@ -506,8 +783,32 @@ impl DebugInfo {
             gimli::DW_TAG_pointer_type => name.unwrap_or_else(|| format!("{} *", inner())),
             gimli::DW_TAG_reference_type => name.unwrap_or_else(|| format!("{} &", inner())),
             gimli::DW_TAG_rvalue_reference_type => name.unwrap_or_else(|| format!("{} &&", inner())),
-            gimli::DW_TAG_const_type => format!("const {}", inner()),
-            gimli::DW_TAG_volatile_type => format!("volatile {}", inner()),
+            // A qualified pointer reads `T * const`; anything else `const T`.
+            gimli::DW_TAG_const_type | gimli::DW_TAG_volatile_type => {
+                let q = if die.tag() == gimli::DW_TAG_const_type {
+                    "const"
+                } else {
+                    "volatile"
+                };
+                let pointer = die
+                    .attr_value(gimli::DW_AT_type)
+                    .and_then(|v| self.resolve_ref(unit_idx, v))
+                    .and_then(|(u, o)| self.unit(u)?.entry(o).ok())
+                    .is_some_and(|t| {
+                        matches!(
+                            t.tag(),
+                            gimli::DW_TAG_pointer_type
+                                | gimli::DW_TAG_reference_type
+                                | gimli::DW_TAG_rvalue_reference_type
+                                | gimli::DW_TAG_ptr_to_member_type
+                        )
+                    });
+                if pointer {
+                    format!("{} {q}", inner())
+                } else {
+                    format!("{q} {}", inner())
+                }
+            }
             gimli::DW_TAG_restrict_type => format!("{} restrict", inner()),
             gimli::DW_TAG_atomic_type => format!("_Atomic {}", inner()),
             gimli::DW_TAG_ptr_to_member_type => format!("{} ::*", inner()),
@@ -655,33 +956,9 @@ impl DebugInfo {
         }
         best
     }
-
-    /// Case-insensitive name search over all DIEs.
-    pub fn search(&self, query: &str, limit: usize) -> Vec<DieSummary> {
-        let needle = query.to_lowercase();
-        let mut out = Vec::new();
-        for i in 0..self.units.len() {
-            let unit = self.units[i].unit_ref(&self.dwarf);
-            let mut cursor = unit.entries();
-            while let Ok(Some(die)) = cursor.next_dfs() {
-                let Some(v) = die.attr_value(gimli::DW_AT_name) else {
-                    continue;
-                };
-                let Ok(s) = unit.attr_string(v) else { continue };
-                let s = to_string(s);
-                if s.to_lowercase().contains(&needle) {
-                    out.push(self.summary_of(i as u32, &unit, die));
-                    if out.len() >= limit {
-                        return out;
-                    }
-                }
-            }
-        }
-        out
-    }
 }
 
-fn is_type_tag(tag: gimli::DwTag) -> bool {
+pub(crate) fn is_type_tag(tag: gimli::DwTag) -> bool {
     matches!(
         tag,
         gimli::DW_TAG_base_type
@@ -704,8 +981,25 @@ fn is_type_tag(tag: gimli::DwTag) -> bool {
     )
 }
 
+/// `DW_AT_data_member_location` as a byte offset: a constant, or (DWARF 2) an
+/// expression that just adds one.
+fn member_offset(unit: &gimli::UnitRef<'_, R>, die: &Die) -> Option<u64> {
+    match die.attr_value(gimli::DW_AT_data_member_location)? {
+        AttributeValue::Exprloc(e) => {
+            let mut ops = e.operations(unit.encoding());
+            match ops.next().ok()?? {
+                gimli::Operation::PlusConstant { value } => Some(value),
+                gimli::Operation::UnsignedConstant { value } => Some(value),
+                _ => None,
+            }
+        }
+        AttributeValue::Sdata(v) => u64::try_from(v).ok(),
+        v => v.udata_value(),
+    }
+}
+
 /// (low_pc, high_pc) of a DIE that has a contiguous range.
-fn pc_range(unit: &gimli::UnitRef<'_, R>, die: &Die) -> (Option<u64>, Option<u64>) {
+pub(crate) fn pc_range(unit: &gimli::UnitRef<'_, R>, die: &Die) -> (Option<u64>, Option<u64>) {
     let low = die
         .attr_value(gimli::DW_AT_low_pc)
         .and_then(|v| unit.attr_address(v).ok().flatten());

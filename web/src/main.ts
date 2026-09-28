@@ -4,6 +4,8 @@ import { SearchPalette } from './palette';
 import { store, type MapTab, type ViewName } from './store';
 import { toast } from './ui';
 import { basename, formatSize, h, icon } from './util';
+import type { PackageSource } from './types';
+import { FolderView, KIND_GROUPS } from './views/folder';
 import type { View } from './views/base';
 import { CallsView } from './views/calls';
 import { CodeView } from './views/code';
@@ -17,7 +19,7 @@ import { SourcesView } from './views/sources';
 import { SymbolsView } from './views/symbols';
 
 /** Bundled samples (copied from tests/fixtures by scripts/build-wasm.mjs) and their sources. */
-const SAMPLES: { file: string; label: string; sources: string[] }[] = [
+const SAMPLES: { file: string; label: string; sources: string[]; folder?: boolean }[] = [
   { file: 'tiny-elf-x64', label: 'ELF · x86-64', sources: ['tiny.rs'] },
   { file: 'tiny-elf-a64', label: 'ELF · AArch64', sources: ['tiny.rs'] },
   { file: 'tiny-macho-a64', label: 'Mach-O · arm64', sources: ['tiny.rs'] },
@@ -25,9 +27,11 @@ const SAMPLES: { file: string; label: string; sources: string[] }[] = [
   { file: 'tiny-pe-x64.exe', label: 'PE · x86-64', sources: ['tiny.rs'] },
   { file: 'shapes-pe.exe', label: 'PE · C++ with DWARF 5', sources: ['shapes.cpp'] },
   { file: 'shapes-pe.stripped.exe', label: 'PE · stripped (reverse engineering)', sources: [] },
+  { file: 'Shop.xcarchive.zip', label: 'Zipped iOS app archive (3 binaries + dSYM)', sources: [], folder: true },
 ];
 
 const NAV: { view: ViewName; label: string; key: string }[] = [
+  { view: 'folder', label: 'Folder', key: 'f' },
   { view: 'overview', label: 'Overview', key: '1' },
   { view: 'layout', label: 'Layout', key: '2' },
   { view: 'hex', label: 'Hex', key: '3' },
@@ -76,6 +80,7 @@ function localStorageSet(key: string, value: string) {
 
 const app = document.getElementById('app')!;
 const views: Record<ViewName, View> = {
+  folder: new FolderView(),
   overview: new OverviewView(),
   layout: new LayoutView(),
   hex: new HexView(),
@@ -93,6 +98,7 @@ const palette = new SearchPalette();
 const fileInput = h('input', { type: 'file', style: 'display:none' });
 const debugInput = h('input', { type: 'file', style: 'display:none' });
 const sourcesInput = h('input', { type: 'file', multiple: true, webkitdirectory: true, style: 'display:none' });
+const packageInput = h('input', { type: 'file', multiple: true, webkitdirectory: true, style: 'display:none' });
 
 const fileInfo = h('div', { class: 'fileinfo' });
 const busy = h('div', { class: 'busy' });
@@ -132,6 +138,7 @@ const topbar = h(
   fileInput,
   debugInput,
   sourcesInput,
+  packageInput,
 );
 
 const navButtons = new Map<ViewName, HTMLButtonElement>();
@@ -152,25 +159,30 @@ main.appendChild(landing);
 for (const v of Object.values(views)) main.appendChild(v.el);
 
 app.replaceChildren(topbar, sidebar, main, inspector.el);
-document.body.appendChild(h('div', { class: 'drop-overlay' }, 'Drop a binary to open it, or a folder to load sources'));
+document.body.appendChild(h('div', { class: 'drop-overlay' }, 'Drop a binary, or a folder or zip of them'));
 
 // --- Rendering state ----------------------------------------------------------
 
 function renderChrome() {
   const f = store.file;
-  app.classList.toggle('empty', !f);
-  landing.style.display = f ? 'none' : 'grid';
+  const pkg = store.package;
+  app.classList.toggle('empty', !f && !pkg);
+  landing.style.display = f || pkg ? 'none' : 'grid';
   debugBtn.toggleAttribute('disabled', !f);
   sourcesBtn.toggleAttribute('disabled', !f?.dwarf);
   palette.input.disabled = !f;
+  for (const [name, b] of navButtons) {
+    if (name === 'folder') b.hidden = !pkg;
+    else b.toggleAttribute('disabled', !f);
+  }
   if (!f) {
-    fileInfo.replaceChildren();
-    renderLanding();
+    fileInfo.replaceChildren(...(pkg ? [h('span', { class: 'name', title: pkg.info.name }, basename(pkg.info.name))] : []));
+    if (!pkg) renderLanding();
     return;
   }
   const s = f.summary;
   fileInfo.replaceChildren(
-    h('span', { class: 'name', title: f.name }, basename(f.name)),
+    ...(pkg ? [h('span', { class: 'name pkg', title: pkg.info.name }, basename(pkg.info.name)), h('span', { class: 'muted' }, '›'), binarySwitcher()] : [h('span', { class: 'name', title: f.name }, basename(f.name))]),
     h('span', { class: 'chip' }, s.formatName),
     h('span', { class: 'chip' }, s.arch),
     h('span', { class: 'chip' }, s.kind),
@@ -179,9 +191,29 @@ function renderChrome() {
   );
 }
 
+/** Picks which of the package's binaries the views show, grouped by what they are. */
+function binarySwitcher(): HTMLElement {
+  const p = store.package!;
+  const select = h('select', { class: 'binary-switch', title: 'The binary the views show', 'aria-label': 'Binary' });
+  const groups = new Map<string, HTMLOptGroupElement>();
+  for (const b of p.info.binaries) {
+    const label = KIND_GROUPS[b.kind];
+    let group = groups.get(label);
+    if (!group) {
+      group = h('optgroup', { label });
+      groups.set(label, group);
+      select.appendChild(group);
+    }
+    group.appendChild(h('option', { value: String(b.index) }, b.name));
+  }
+  select.value = String(p.current);
+  select.addEventListener('change', () => void store.selectBinary(Number(select.value)));
+  return select;
+}
+
 function renderView() {
-  for (const [name, v] of Object.entries(views) as [ViewName, View][]) {
-    const active = name === store.view && !!store.file;
+  for (const v of Object.values(views)) {
+    const active = v.visible;
     v.el.classList.toggle('active', active);
     if (active) v.show();
   }
@@ -204,6 +236,8 @@ function renderLanding() {
   }
   const choose = h('button', { class: 'btn primary', type: 'button' }, 'Choose a file');
   choose.addEventListener('click', () => fileInput.click());
+  const chooseFolder = h('button', { class: 'btn', type: 'button', title: 'Every binary in it opens, with its debug file (an .app, an .xcarchive, a build folder…)' }, 'Choose a folder');
+  chooseFolder.addEventListener('click', () => packageInput.click());
   const samples = h('div', { class: 'samples' });
   for (const s of SAMPLES) {
     const b = h('button', { class: 'btn small', type: 'button', title: s.file }, s.label);
@@ -216,7 +250,13 @@ function renderLanding() {
       { class: 'landing-card' },
       h('h1', null, 'See what every byte of a binary is'),
       h('p', { class: 'lead' }, 'ELF, Mach-O and PE: headers down to single fields, sections and segments, symbols, disassembly, and DWARF mapped back to source.'),
-      h('div', { class: 'dropzone' }, h('div', { class: 'big' }, 'Drop a binary here'), h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, .dSYM DWARF files, universal binaries and archives'), choose),
+      h(
+        'div',
+        { class: 'dropzone' },
+        h('div', { class: 'big' }, 'Drop a binary, or a folder or zip of them'),
+        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, debug files (.dSYM, .debug), universal binaries and archives; a folder or zip (an .ipa, an .app, a build) opens every binary in it, each paired with its debug file'),
+        h('div', { class: 'dropzone-actions' }, choose, chooseFolder),
+      ),
       h('div', { class: 'secondary', style: 'margin-top:22px' }, 'Or try a sample:'),
       samples,
       h('p', { class: 'privacy' }, 'Everything runs locally in your browser via WebAssembly. Files never leave your machine.'),
@@ -229,6 +269,10 @@ store.on('file', () => {
   renderView();
 });
 store.on('container', () => renderChrome());
+store.on('package', () => {
+  renderChrome();
+  renderView();
+});
 store.on('view', () => renderView());
 store.on('selection', () => {
   back.toggleAttribute('disabled', !store.canGoBack());
@@ -239,22 +283,63 @@ store.on('error', (msg) => toast(msg, 'error'));
 store.on('status', (msg) => {
   if (msg) toast(msg, 'info', 2500);
 });
+/** What a package operation is doing, shown with its progress. */
+let phase = '';
 store.api.onBusyChange = (b) => {
   busy.hidden = !b;
-  if (!b) progress.hidden = true;
+  if (!b) {
+    progress.hidden = true;
+    phase = '';
+  }
 };
 store.api.onProgress = (f) => {
   progress.hidden = false;
-  progress.textContent = f < 0 ? 'Parsing…' : `Reading ${Math.round(f * 100)}%`;
+  progress.textContent = f < 0 ? 'Parsing…' : `${phase || 'Reading'} ${Math.round(f * 100)}%`;
 };
+store.api.onStatus = (text) => {
+  phase = text.replace(/…$/, '');
+  progress.hidden = false;
+  progress.textContent = text;
+};
+store.api.onNotice = (text) => toast(text, 'error');
 renderChrome();
 renderView();
 
 // --- Opening files -------------------------------------------------------------
 
 async function openFile(file: File) {
+  // A zip is a folder: every binary in it opens.
+  if (await isZip(file)) {
+    await openFolder([{ kind: 'zip', name: file.name, blob: file }]);
+    return;
+  }
+  // A debug file goes with what is open (the folder's binary it pairs with, or the open binary).
+  if (store.file) {
+    const header = await store.api.sniff(file);
+    if (header?.kind === 'debug') {
+      if (store.package) await openFolder([{ kind: 'folder', name: file.name, files: [{ path: file.name, file }] }]);
+      else await store.attachDebug(file.name, file);
+      return;
+    }
+  }
   // The File stays on disk: the worker reads it in chunks, the hex view reads what it shows.
   await store.open(file.name, file);
+}
+
+/**
+ * Opens every binary in folders and zips. With none in them, a folder dropped
+ * next to an open binary is its source code instead (`files`).
+ */
+async function openFolder(sources: PackageSource[], files: { path: string; file: File }[] = []) {
+  if (await store.openFolder(sources)) return;
+  const name = sources.map((s) => s.name).join(' + ');
+  if (files.length > 0 && store.file?.dwarf) await loadSources(files.filter((f) => !SKIP_DIRS.test(f.path) && f.file.size < 8 * 1024 * 1024));
+  else toast(`No binaries in ${name}`, 'error');
+}
+
+async function isZip(blob: Blob): Promise<boolean> {
+  const b = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+  return b.length === 4 && b[0] === 0x50 && b[1] === 0x4b && ((b[2] === 3 && b[3] === 4) || (b[2] === 5 && b[3] === 6));
 }
 
 /** Opens a bundled sample together with its source files, so the source ↔ code mapping shows right away. */
@@ -263,6 +348,10 @@ async function openSample(file: string) {
   if (!sample) throw new Error(`unknown sample ${file}`);
   const res = await fetch(`samples/${file}`);
   if (!res.ok) throw new Error(`sample ${file} not found (run npm run wasm to copy the fixtures)`);
+  if (sample.folder) {
+    await store.openFolder([{ kind: 'zip', name: file, blob: await res.blob() }]);
+    return;
+  }
   await store.open(file, await res.blob());
   const sources: { path: string; file: File }[] = [];
   for (const src of sample.sources) {
@@ -284,7 +373,7 @@ async function applyHash() {
     applyTheme();
   }
   const sample = params.get('sample');
-  if (sample && store.file?.name !== sample) await openSample(sample);
+  if (sample && store.file?.name !== sample && store.package?.info.name !== sample) await openSample(sample);
   const view = NAV.find((n) => n.view === params.get('view'))?.view;
   const tab = params.get('tab');
   if (view === 'map' && store.file && (tab === 'files' || tab === 'units' || tab === 'coverage')) {
@@ -326,6 +415,15 @@ debugInput.addEventListener('change', async () => {
   if (store.file?.dwarf) toast(`Loaded DWARF from ${f.name}: ${store.file.dwarf.unitCount} units`);
 });
 
+packageInput.addEventListener('change', async () => {
+  const files = [...(packageInput.files ?? [])].map((file) => ({ path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name, file }));
+  packageInput.value = '';
+  if (files.length === 0) return;
+  const name = files[0].path.split('/')[0] || 'folder';
+  const kept = files.filter((f) => !IGNORED.test(f.path));
+  await openFolder([{ kind: 'folder', name, files: kept }], kept);
+});
+
 sourcesInput.addEventListener('change', async () => {
   const files = [...(sourcesInput.files ?? [])].filter(isSourceFile).map((file) => ({ path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name, file }));
   sourcesInput.value = '';
@@ -350,7 +448,8 @@ function isSourceFile(f: File): boolean {
 window.addEventListener('binviz:attach-debug', () => debugInput.click());
 window.addEventListener('binviz:load-sources', () => sourcesInput.click());
 
-// Drag and drop: a file opens as a binary; a folder loads sources.
+// Drag and drop: one file opens as a binary (a debug file goes with what is
+// open); folders, zips and several files open as a folder of binaries.
 let dragDepth = 0;
 window.addEventListener('dragenter', (e) => {
   if (!e.dataTransfer?.types.includes('Files')) return;
@@ -366,30 +465,55 @@ window.addEventListener('drop', async (e) => {
   e.preventDefault();
   dragDepth = 0;
   document.body.classList.remove('dragging');
+  // Both lists are only readable until the handler first awaits.
   const items = [...(e.dataTransfer?.items ?? [])];
   const entries = items.map((i) => i.webkitGetAsEntry?.()).filter((x): x is FileSystemEntry => !!x);
-  if (entries.some((en) => en.isDirectory)) {
-    const files: { path: string; file: File }[] = [];
-    for (const en of entries) await walk(en, files);
-    await loadSources(files);
-    return;
+  const dropped = [...(e.dataTransfer?.files ?? [])];
+  try {
+    await openDropped(entries, dropped);
+  } catch (err) {
+    toast(err instanceof Error ? err.message : String(err), 'error');
   }
-  const file = e.dataTransfer?.files?.[0];
-  if (file) await openFile(file);
 });
 
-async function walk(entry: FileSystemEntry, out: { path: string; file: File }[]) {
-  if (out.length > 20000 || SKIP_DIRS.test(entry.fullPath)) return;
+/** Version control, dependencies and Finder litter: never walked into. */
+const IGNORED = /(^|\/)(__MACOSX|\.git|node_modules|\.DS_Store)(\/|$)/;
+
+async function openDropped(entries: FileSystemEntry[], dropped: File[]) {
+  if (!entries.some((en) => en.isDirectory) && dropped.length <= 1) {
+    if (dropped[0]) await openFile(dropped[0]);
+    return;
+  }
+  // Zips stay zips; everything else (folders walked in full) is one folder.
+  const sources: PackageSource[] = [];
+  const files: { path: string; file: File }[] = [];
+  for (const en of entries) {
+    if (en.isDirectory) await walkAll(en, files);
+    else {
+      const f = dropped.find((x) => x.name === en.name);
+      if (f && (await isZip(f))) sources.push({ kind: 'zip', name: f.name, blob: f });
+      else if (f) files.push({ path: f.name, file: f });
+    }
+  }
+  if (entries.length === 0) for (const f of dropped) files.push({ path: f.name, file: f });
+  const folders = entries.filter((en) => en.isDirectory).map((en) => en.name);
+  if (files.length > 0) sources.unshift({ kind: 'folder', name: folders.join(' + ') || files[0].path, files });
+  await openFolder(sources, files);
+}
+
+/** Every file under `entry` (up to 500 000 of them). */
+async function walkAll(entry: FileSystemEntry, out: { path: string; file: File }[]) {
+  const path = entry.fullPath.replace(/^\//, '');
+  if (IGNORED.test(path) || out.length >= 500_000) return;
   if (entry.isFile) {
-    const file = await new Promise<File>((res, rej) => (entry as FileSystemFileEntry).file(res, rej));
-    if (file.size < 8 * 1024 * 1024) out.push({ path: entry.fullPath.replace(/^\//, ''), file });
+    out.push({ path, file: await new Promise<File>((res, rej) => (entry as FileSystemFileEntry).file(res, rej)) });
     return;
   }
   const reader = (entry as FileSystemDirectoryEntry).createReader();
   for (;;) {
     const batch = await new Promise<FileSystemEntry[]>((res, rej) => reader.readEntries(res, rej));
     if (batch.length === 0) break;
-    for (const child of batch) await walk(child, out);
+    for (const child of batch) await walkAll(child, out);
   }
 }
 
@@ -434,7 +558,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const nav = NAV.find((n) => n.key === e.key);
-  if (nav && store.file) store.setView(nav.view);
+  if (nav && (nav.view === 'folder' ? store.package : store.file)) store.setView(nav.view);
 });
 
 // A handle for poking at the app from the devtools console during development.

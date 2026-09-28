@@ -46,7 +46,7 @@ export class Inspector {
       this.el.replaceChildren(head, h('div', { class: 'insp-section muted' }, 'Click a byte, instruction, symbol or line to see what it is.'));
       return;
     }
-    const sections = [this.location(ins), this.path(ins), this.placement(ins), this.references(ins), this.notes(ins), this.source(ins), this.instruction(ins), this.actions(ins)];
+    const sections = [this.location(ins), this.path(ins), this.placement(ins), this.references(ins), this.notes(ins), this.source(ins), this.scopeVars(ins), this.instruction(ins), this.actions(ins)];
     this.el.replaceChildren(head, ...sections.filter((s): s is HTMLElement => s !== null));
   }
 
@@ -348,6 +348,41 @@ export class Inspector {
       }
       section.appendChild(list);
     }
+    return section;
+  }
+
+  /** Parameters and variables in scope at a code address, and where each one's value is (DWARF). */
+  private scopeVars(ins: Inspection): HTMLElement | null {
+    const address = ins.address;
+    if (address === undefined || !ins.instruction || !store.file?.dwarf) return null;
+    const section = h('div', { class: 'insp-section' }, h('h3', null, 'Variables in scope'));
+    const body = h('div', { class: 'scope-vars' }, h('div', { class: 'muted' }, 'Looking…'));
+    section.appendChild(body);
+    void store.api.scopeAt(address).then((s) => {
+      if (store.selection.inspection !== ins) return;
+      if (!s || s.variables.length === 0) {
+        section.remove();
+        return;
+      }
+      const rows: HTMLElement[] = [];
+      s.scopes.forEach((sc, i) => {
+        const vars = s.variables.filter((v) => v.scope === i);
+        if (vars.length === 0) return;
+        rows.push(h('div', { class: 'scope-name' }, `${sc.tag.replace('DW_TAG_', '').replace('_', ' ')} ${sc.name ?? ''}`));
+        for (const v of vars) {
+          const gone = /optimized out|not available/.test(v.location);
+          const row = h(
+            'div',
+            { class: 'scope-var link-row', title: `${v.kind} ${v.name}: ${v.typeName ?? '?'}\n${v.location}\n\nClick for its DIE` },
+            h('span', { class: 'vn' }, v.name),
+            h('span', { class: `vl${gone ? ' gone' : ''}` }, gone ? 'optimized out here' : v.location),
+          );
+          row.addEventListener('click', () => store.openDie(v.unit, v.die));
+          rows.push(row);
+        }
+      });
+      body.replaceChildren(...rows);
+    });
     return section;
   }
 

@@ -20,6 +20,7 @@
   --sel-ring: #0b0b0b;
   --hover-wash: rgba(11, 11, 11, 0.05);
   --critical: #d03b3b;
+  --warning: #b36b00;
   --tint-a: 16%;
   --tint-b: 30%;
 
@@ -66,6 +67,7 @@
     --sel-ring: #ffffff;
     --hover-wash: rgba(255, 255, 255, 0.06);
     --critical: #e66767;
+    --warning: #e0a030;
     --tint-a: 22%;
     --tint-b: 38%;
     --f-code: #3987e5;
@@ -106,6 +108,7 @@
   --sel-ring: #ffffff;
   --hover-wash: rgba(255, 255, 255, 0.06);
   --critical: #e66767;
+  --warning: #e0a030;
   --tint-a: 22%;
   --tint-b: 38%;
   --f-code: #3987e5;
@@ -2408,6 +2411,390 @@ th.right {
   flex: none;
 }
 
+/* ---------------------------------------------------------------------------
+   DWARF: listings, details, problems
+--------------------------------------------------------------------------- */
+.unit-row {
+  height: 40px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+}
+
+.die-scope {
+  font: 12px var(--mono);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  min-width: 2ch;
+}
+
+.die-scope + .die-name {
+  margin-left: -6px;
+}
+
+.tree-row .die-off {
+  font: 11px var(--mono);
+  color: var(--muted);
+  flex: none;
+  margin-left: 8px;
+}
+
+.die-h {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin: 14px 0 4px;
+}
+
+.die-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.die-snippet {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.die-snippet-head {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.die-snippet .code-snippet {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.attrs th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.attrs td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.attrs.layout td,
+.attrs.code-lines td {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.attrs.layout tr.hole td {
+  color: var(--warning);
+  font-size: 11.5px;
+  font-style: italic;
+  padding: 2px 8px;
+}
+
+.attrs td.af.link {
+  color: var(--link);
+}
+
+.tab-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #fff;
+}
+
+.tab-count.error {
+  background: var(--critical);
+}
+
+.tab-count.warning {
+  background: var(--warning);
+}
+
+.tab-count.ok {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.sev-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+.sev-dot.error {
+  background: var(--critical);
+}
+
+.sev-dot.warning {
+  background: var(--warning);
+}
+
+.problem-row {
+  height: 44px;
+  box-sizing: border-box;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--grid);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.problem-row:hover {
+  background: var(--hover-wash);
+}
+
+.problem-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.problem-msg {
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sev {
+  font: 600 10.5px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sev.error {
+  color: var(--critical);
+}
+
+.sev.warning {
+  color: var(--warning);
+}
+
+/* Inspector: variables in scope */
+.scope-vars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+}
+
+.scope-name {
+  font: 11.5px var(--mono);
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.scope-var {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.scope-var.link-row {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0 4px;
+  margin: 0 -4px;
+}
+
+.scope-var.link-row:hover {
+  background: var(--hover-wash);
+}
+
+.scope-var .vn {
+  font-family: var(--mono);
+  flex: none;
+}
+
+.scope-var .vl {
+  font: 11.5px var(--mono);
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scope-var .vl.gone {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------------------
+   Folders of binaries
+--------------------------------------------------------------------------- */
+.fileinfo .name.pkg {
+  min-width: 9ch;
+  max-width: 28ch;
+  flex: 0 1 auto;
+}
+
+.fileinfo .chip,
+.binary-switch {
+  flex: none;
+}
+
+.binary-switch {
+  height: 26px;
+  max-width: 240px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropzone-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pkg-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.pkg-path {
+  color: var(--muted);
+  font-size: 11.5px;
+  max-width: 46ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pkg-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The path column takes what the others leave, and truncates. */
+td.pkg-file {
+  width: 100%;
+  max-width: 0;
+}
+
+.pkg-owner {
+  max-width: 36ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+td.pkg-spread {
+  white-space: normal;
+  min-width: 18ch;
+}
+
+/* A thin magnitude bar in a table cell: one hue, the data end rounded. */
+td.bar-cell {
+  width: 22%;
+  min-width: 60px;
+}
+
+.size-bar {
+  height: 6px;
+  display: flex;
+}
+
+.size-bar span {
+  background: var(--f-code);
+  border-radius: 0 3px 3px 0;
+  min-width: 2px;
+}
+
+/* Status: a mark and a word, never colour alone. */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.status.good::before {
+  background: #0ca30c;
+}
+
+.status.warn::before {
+  background: var(--warning);
+}
+
+.status.none {
+  color: var(--muted);
+}
+
+.status.none::before {
+  border: 1px solid var(--muted);
+  box-sizing: border-box;
+}
+
+.pkg-dups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pkg-dup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.pkg-dup:last-child {
+  border-bottom: 0;
+}
+
+.pkg-dup .pkg-file {
+  max-width: none;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+
+.card > .btn.small {
+  margin-top: 10px;
+}
+
 /* Code and data must show exactly what is there: no `->` → `→` ligatures.
    Kept last because the `font` shorthand above resets these properties. */
 .mono,
@@ -2425,6 +2812,8 @@ th.right {
 .tooltip *,
 .cg-node *,
 .ref-row *,
+.scope-var *,
+.problem-row *,
 .hit-label,
 .c-name,
 .note-name {
