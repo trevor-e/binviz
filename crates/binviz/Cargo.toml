@@ -1,0 +1,23 @@
+[package]
+name = "binviz"
+description = "Explain every byte and every address of ELF, Mach-O and PE binaries, including DWARF debug info"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+object.workspace = true
+gimli.workspace = true
+addr2line.workspace = true
+iced-x86.workspace = true
+yaxpeax-arch.workspace = true
+yaxpeax-arm.workspace = true
+rustc-demangle.workspace = true
+cpp_demangle.workspace = true
+msvc-demangler.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

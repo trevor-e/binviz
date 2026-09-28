@@ -1,0 +1,462 @@
+//! WebAssembly bindings for binviz.
+//!
+//! A [`Session`] holds one opened file. Results are plain JS objects; every
+//! `u64` (addresses, offsets, sizes) arrives as a `BigInt` so large addresses
+//! survive intact, while counts and indices are ordinary numbers.
+
+use binviz::{Annotation, AttributionMode, Binary, Container, HitKind, SymbolQuery, Target};
+use serde::Serialize;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    console_error_panic_hook::set_once();
+}
+
+fn to_js<T: Serialize + ?Sized>(value: &T) -> Result<JsValue, JsError> {
+    let serializer = serde_wasm_bindgen::Serializer::new()
+        .serialize_large_number_types_as_bigints(true)
+        .serialize_maps_as_objects(true);
+    value.serialize(&serializer).map_err(|e| JsError::new(&e.to_string()))
+}
+
+fn err(e: impl std::fmt::Display) -> JsError {
+    JsError::new(&e.to_string())
+}
+
+fn attribution_mode(mode: &str) -> AttributionMode {
+    if mode == "unit" {
+        AttributionMode::Unit
+    } else {
+        AttributionMode::File
+    }
+}
+
+#[derive(Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum Opened<'a> {
+    Binary {
+        name: &'a str,
+        summary: &'a binviz::Summary,
+    },
+    Container {
+        name: &'a str,
+        info: &'a binviz::ContainerInfo,
+    },
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Resolved {
+    /// "address" or "offset".
+    kind: &'static str,
+    value: u64,
+    label: String,
+}
+
+#[wasm_bindgen]
+#[derive(Default)]
+pub struct Session {
+    name: String,
+    container: Option<Container>,
+    binary: Option<Binary>,
+}
+
+#[wasm_bindgen]
+impl Session {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Session {
+        Session::default()
+    }
+
+    /// Opens a file. Returns `{kind: "binary", summary}` or, for universal
+    /// binaries and archives, `{kind: "container", info}` (then call `openMember`).
+    pub fn open(&mut self, name: String, bytes: Vec<u8>) -> Result<JsValue, JsError> {
+        self.binary = None;
+        self.container = None;
+        self.name = name;
+        if Container::is_container(&bytes) {
+            let c = Container::parse(bytes).map_err(err)?;
+            self.container = Some(c);
+            let info = self.container.as_ref().map(|c| c.info()).expect("just set");
+            return to_js(&Opened::Container { name: &self.name, info });
+        }
+        self.binary = Some(Binary::parse(bytes).map_err(err)?);
+        self.opened()
+    }
+
+    #[wasm_bindgen(js_name = openMember)]
+    pub fn open_member(&mut self, index: u32) -> Result<JsValue, JsError> {
+        let c = self
+            .container
+            .as_ref()
+            .ok_or_else(|| JsError::new("no container open"))?;
+        let member = c
+            .members()
+            .get(index as usize)
+            .map(|m| m.name.clone())
+            .unwrap_or_default();
+        self.binary = Some(c.open(index).map_err(err)?);
+        self.name = format!("{} [{member}]", self.name.split(" [").next().unwrap_or(""));
+        self.opened()
+    }
+
+    fn opened(&self) -> Result<JsValue, JsError> {
+        let b = self.bin()?;
+        to_js(&Opened::Binary {
+            name: &self.name,
+            summary: b.summary(),
+        })
+    }
+
+    fn bin(&self) -> Result<&Binary, JsError> {
+        self.binary.as_ref().ok_or_else(|| JsError::new("no binary open"))
+    }
+
+    fn debug(&self) -> Result<&binviz::DebugInfo, JsError> {
+        self.bin()?
+            .debug_info()
+            .ok_or_else(|| JsError::new("no DWARF debug info"))
+    }
+
+    /// Loads DWARF from a companion file (dSYM DWARF file, `.debug`, unstripped copy).
+    #[wasm_bindgen(js_name = attachDebug)]
+    pub fn attach_debug(&mut self, name: String, bytes: Vec<u8>) -> Result<JsValue, JsError> {
+        let b = self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"))?;
+        b.attach_debug_file(&name, bytes).map_err(err)?;
+        self.opened()
+    }
+
+    /// The bytes of the open binary (a member's bytes for containers).
+    pub fn bytes(&self) -> Result<Vec<u8>, JsError> {
+        Ok(self.bin()?.data().to_vec())
+    }
+
+    pub fn summary(&self) -> Result<JsValue, JsError> {
+        to_js(self.bin()?.summary())
+    }
+
+    pub fn sections(&self) -> Result<JsValue, JsError> {
+        to_js(self.bin()?.sections())
+    }
+
+    pub fn segments(&self) -> Result<JsValue, JsError> {
+        to_js(self.bin()?.segments())
+    }
+
+    pub fn imports(&self) -> Result<JsValue, JsError> {
+        to_js(self.bin()?.imports())
+    }
+
+    pub fn exports(&self) -> Result<JsValue, JsError> {
+        to_js(self.bin()?.exports())
+    }
+
+    /// Layout regions under `parent` (top level when undefined).
+    pub fn regions(&self, parent: Option<u32>) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.regions(parent))
+    }
+
+    pub fn region(&self, id: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.region(id))
+    }
+
+    #[wasm_bindgen(js_name = regionEntries)]
+    pub fn region_entries(&self, id: u32, first: u32, count: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.region_entries(id, first, count))
+    }
+
+    /// Coloured spans for the hex view.
+    pub fn spans(&self, start: u64, end: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.spans(start, end))
+    }
+
+    /// Dominant region kind per bucket, for the file overview map.
+    #[wasm_bindgen(js_name = fileMap)]
+    pub fn file_map(&self, buckets: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.file_map(buckets))
+    }
+
+    /// `[kind, bytes]` pairs covering the whole file.
+    pub fn composition(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.composition())
+    }
+
+    #[wasm_bindgen(js_name = entropyMap)]
+    pub fn entropy_map(&self, buckets: u32) -> Result<Vec<f32>, JsError> {
+        Ok(self.bin()?.entropy_map(buckets))
+    }
+
+    #[wasm_bindgen(js_name = inspectOffset)]
+    pub fn inspect_offset(&self, offset: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.inspect(Target::Offset(offset)))
+    }
+
+    #[wasm_bindgen(js_name = inspectAddress)]
+    pub fn inspect_address(&self, address: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.inspect(Target::Address(address)))
+    }
+
+    #[wasm_bindgen(js_name = addressToOffset)]
+    pub fn address_to_offset(&self, address: u64) -> Result<Option<u64>, JsError> {
+        Ok(self.bin()?.address_to_offset(address))
+    }
+
+    #[wasm_bindgen(js_name = offsetToAddress)]
+    pub fn offset_to_address(&self, offset: u64) -> Result<Option<u64>, JsError> {
+        Ok(self.bin()?.offset_to_address(offset))
+    }
+
+    /// `query` is `{filter, kind, sort, descending, definedOnly, offset, limit}`.
+    pub fn symbols(&self, query: JsValue) -> Result<JsValue, JsError> {
+        let q: SymbolQuery = if query.is_undefined() || query.is_null() {
+            SymbolQuery::default()
+        } else {
+            serde_wasm_bindgen::from_value(query).map_err(err)?
+        };
+        to_js(&self.bin()?.symbols().query(&q))
+    }
+
+    pub fn symbol(&self, index: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.symbols().get(index))
+    }
+
+    /// Function symbols in address order: `[address, size, name]` triples.
+    pub fn functions(&self) -> Result<JsValue, JsError> {
+        let list: Vec<(u64, u64, &str)> = self
+            .bin()?
+            .symbols()
+            .functions()
+            .map(|s| (s.address, s.size, s.display_name()))
+            .collect();
+        to_js(&list)
+    }
+
+    pub fn disassemble(&self, start: u64, end: u64, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.disassemble(start, end, limit as usize))
+    }
+
+    #[wasm_bindgen(js_name = disassembleFunction)]
+    pub fn disassemble_function(&self, address: u64, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.disassemble_function(address, limit as usize))
+    }
+
+    /// Resolves a "go to" query: `0x401000` (address), `@0x200` (file
+    /// offset), a symbol name, or `file.rs:42` (source line).
+    pub fn resolve(&self, query: String) -> Result<JsValue, JsError> {
+        let b = self.bin()?;
+        let q = query.trim();
+        let parse = |s: &str| -> Option<u64> {
+            let s = s.trim();
+            match s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
+                Some(h) => u64::from_str_radix(h, 16).ok(),
+                None if s.chars().all(|c| c.is_ascii_hexdigit()) && s.chars().any(|c| c.is_ascii_digit()) => {
+                    u64::from_str_radix(s, 16).ok()
+                }
+                None => None,
+            }
+        };
+        let resolved = if let Some(off) = q.strip_prefix('@').and_then(parse) {
+            Resolved {
+                kind: "offset",
+                value: off,
+                label: format!("file offset {off:#x}"),
+            }
+        } else if let Some(addr) = parse(q) {
+            if b.segment_at(addr).is_some() || b.section_at(addr).is_some() {
+                Resolved {
+                    kind: "address",
+                    value: addr,
+                    label: format!("address {addr:#x}"),
+                }
+            } else if addr < b.data().len() as u64 {
+                Resolved {
+                    kind: "offset",
+                    value: addr,
+                    label: format!("file offset {addr:#x} (not a mapped address)"),
+                }
+            } else {
+                return Err(JsError::new(&format!(
+                    "{addr:#x} is neither a mapped address nor a file offset"
+                )));
+            }
+        } else if let Some(sym) = b.symbols().by_name(q) {
+            Resolved {
+                kind: "address",
+                value: sym.address,
+                label: sym.display_name().to_string(),
+            }
+        } else if let Some((file, line)) = q.rsplit_once(':').and_then(|(f, l)| Some((f, l.parse::<u32>().ok()?))) {
+            let debug = self.debug()?;
+            let needle = file.replace('\\', "/");
+            let found = debug
+                .source_files()
+                .iter()
+                .filter(|f| f.path.replace('\\', "/").ends_with(&needle))
+                .find_map(|f| {
+                    let lines = debug.file_lines(f.id);
+                    lines
+                        .iter()
+                        .filter(|l| l.line >= line)
+                        .min_by_key(|l| (l.line, !l.is_stmt, l.start))
+                        .map(|l| (f.path.clone(), l.clone()))
+                });
+            match found {
+                Some((path, l)) => Resolved {
+                    kind: "address",
+                    value: l.start,
+                    label: format!("{path}:{}", l.line),
+                },
+                None => return Err(JsError::new(&format!("no code for {q}"))),
+            }
+        } else {
+            return Err(JsError::new(&format!("nothing matches {q:?}")));
+        };
+        to_js(&resolved)
+    }
+
+    // --- Search ------------------------------------------------------------
+
+    /// Searches addresses, offsets, names, byte patterns, strings and source
+    /// lines at once. `only` restricts to one hit kind ("symbol", "string"...).
+    pub fn search(&self, query: String, per_kind: u32, only: Option<String>) -> Result<JsValue, JsError> {
+        let only = match only.as_deref() {
+            None | Some("") => None,
+            Some(k) => Some(serde_wasm_bindgen::from_value::<HitKind>(JsValue::from_str(k)).map_err(err)?),
+        };
+        to_js(&self.bin()?.search(&query, per_kind, only))
+    }
+
+    /// Builds the search indexes (strings, DWARF names) ahead of the first query.
+    #[wasm_bindgen(js_name = prepareSearch)]
+    pub fn prepare_search(&self) -> Result<(), JsError> {
+        self.bin()?.prepare_search();
+        Ok(())
+    }
+
+    /// A page of the printable strings containing `filter`.
+    pub fn strings(&self, filter: String, offset: u32, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.strings(&filter, offset, limit))
+    }
+
+    // --- Attribution and coverage ------------------------------------------
+
+    /// Code and data per source file (`mode` "file") or compilation unit ("unit").
+    pub fn attribution(&self, mode: String) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.attribution(attribution_mode(&mode)))
+    }
+
+    #[wasm_bindgen(js_name = attributedRanges)]
+    pub fn attributed_ranges(&self, mode: String, id: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.attributed_ranges(attribution_mode(&mode), id))
+    }
+
+    /// Reverse-engineering coverage of the code and data sections.
+    pub fn coverage(&self, max_gaps: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.coverage(max_gaps))
+    }
+
+    #[wasm_bindgen(js_name = coverageStrip)]
+    pub fn coverage_strip(&self, section: u32, buckets: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.coverage_strip(section, buckets))
+    }
+
+    #[wasm_bindgen(js_name = coverageMap)]
+    pub fn coverage_map(&self, buckets: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.coverage_map(buckets))
+    }
+
+    /// Replaces the user's annotations (`[{address, size, name, comment, reviewed}]`)
+    /// and returns the updated summary.
+    #[wasm_bindgen(js_name = setAnnotations)]
+    pub fn set_annotations(&mut self, list: JsValue) -> Result<JsValue, JsError> {
+        let list: Vec<Annotation> = serde_wasm_bindgen::from_value(list).map_err(err)?;
+        let b = self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"))?;
+        b.set_annotations(list);
+        to_js(b.summary())
+    }
+
+    pub fn annotations(&self) -> Result<JsValue, JsError> {
+        to_js(self.bin()?.annotations())
+    }
+
+    // --- DWARF -------------------------------------------------------------
+
+    #[wasm_bindgen(js_name = dwarfSummary)]
+    pub fn dwarf_summary(&self) -> Result<JsValue, JsError> {
+        match self.bin()?.debug_info() {
+            Some(d) => to_js(&d.summary()),
+            None => Ok(JsValue::NULL),
+        }
+    }
+
+    #[wasm_bindgen(js_name = dwarfUnits)]
+    pub fn dwarf_units(&self) -> Result<JsValue, JsError> {
+        to_js(self.debug()?.units())
+    }
+
+    #[wasm_bindgen(js_name = unitRoot)]
+    pub fn unit_root(&self, unit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.unit_root(unit))
+    }
+
+    #[wasm_bindgen(js_name = dieChildren)]
+    pub fn die_children(&self, unit: u32, offset: Option<u64>) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.die_children(unit, offset))
+    }
+
+    pub fn die(&self, unit: u32, offset: u64) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.die(unit, offset))
+    }
+
+    /// Innermost scope DIE (function / inlined call / block) at an address.
+    #[wasm_bindgen(js_name = dieAt)]
+    pub fn die_at(&self, address: u64) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.die_at(address))
+    }
+
+    /// The function's DW_TAG_subprogram at an address (ignoring inlined callees).
+    #[wasm_bindgen(js_name = functionDieAt)]
+    pub fn function_die_at(&self, address: u64) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.function_die_at(address))
+    }
+
+    #[wasm_bindgen(js_name = dieSearch)]
+    pub fn die_search(&self, query: String, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.search(&query, limit as usize))
+    }
+
+    #[wasm_bindgen(js_name = lineProgram)]
+    pub fn line_program(&self, unit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.line_program(unit))
+    }
+
+    #[wasm_bindgen(js_name = lineRows)]
+    pub fn line_rows(&self, unit: u32, first: u32, count: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.line_rows(unit, first, count))
+    }
+
+    #[wasm_bindgen(js_name = sourceFiles)]
+    pub fn source_files(&self) -> Result<JsValue, JsError> {
+        match self.bin()?.debug_info() {
+            Some(d) => to_js(d.source_files()),
+            None => to_js::<[u8]>(&[]),
+        }
+    }
+
+    #[wasm_bindgen(js_name = fileLines)]
+    pub fn file_lines(&self, file: u32) -> Result<JsValue, JsError> {
+        to_js(&self.debug()?.file_lines(file))
+    }
+
+    /// Lines-with-code count for every source file (indexed by file id).
+    #[wasm_bindgen(js_name = fileLineCounts)]
+    pub fn file_line_counts(&self) -> Result<Vec<u32>, JsError> {
+        Ok(self.debug()?.file_line_counts())
+    }
+
+    #[wasm_bindgen(js_name = embeddedSource)]
+    pub fn embedded_source(&self, file: u32) -> Result<Option<String>, JsError> {
+        Ok(self.debug()?.embedded_source(file))
+    }
+}

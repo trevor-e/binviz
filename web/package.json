@@ -1,0 +1,19 @@
+{
+  "name": "binviz-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser front end for binviz: see what every byte and address of a binary is",
+  "scripts": {
+    "wasm": "node scripts/build-wasm.mjs",
+    "wasm:debug": "node scripts/build-wasm.mjs --debug",
+    "dev": "node scripts/build-wasm.mjs && vite",
+    "build": "node scripts/build-wasm.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  }
+}

@@ -1,0 +1,20 @@
+[package]
+name = "binviz-wasm"
+description = "WebAssembly bindings for binviz"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+binviz.workspace = true
+wasm-bindgen.workspace = true
+serde-wasm-bindgen.workspace = true
+serde.workspace = true
+js-sys.workspace = true
+console_error_panic_hook.workspace = true

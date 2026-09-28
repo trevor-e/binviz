@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "binviz-web",
+      "runtimeExecutable": "C:\\Users\\elkin\\tools\\node\\node.exe",
+      "runtimeArgs": ["web/node_modules/vite/bin/vite.js", "web", "--port", "5199", "--strictPort"],
+      "port": 5199
+    },
+    {
+      "name": "binviz-dist",
+      "runtimeExecutable": "C:\\Users\\elkin\\tools\\node\\node.exe",
+      "runtimeArgs": ["web/node_modules/vite/bin/vite.js", "preview", "web", "--port", "5198", "--strictPort"],
+      "port": 5198
+    }
+  ]
+}
