@@ -192,6 +192,17 @@ pub fn data_offset(entry: &ZipEntry, local_header: &[u8]) -> Result<u64, String>
     Ok(entry.header_offset + 30 + name + extra)
 }
 
+/// Inflates up to `max` bytes from a Zstandard-compressed zip entry.
+pub fn decompress_zstandard(data: &[u8], max: u64) -> Result<Vec<u8>, String> {
+    let mut out = Vec::new();
+    ruzstd::decoding::StreamingDecoder::new(data)
+        .map_err(|e| e.to_string())?
+        .take(max)
+        .read_to_end(&mut out)
+        .map_err(|e| e.to_string())?;
+    Ok(out)
+}
+
 trait ReadSeek: Read + Seek + Send {}
 impl<T: Read + Seek + Send> ReadSeek for T {}
 
@@ -382,5 +393,6 @@ mod tests {
 
         assert_eq!(zip.read_prefix(&entry, 9).unwrap(), b"Zstandard");
         assert_eq!(zip.read(&entry).unwrap(), data);
+        assert_eq!(decompress_zstandard(&compressed, 9).unwrap(), b"Zstandard");
     }
 }

@@ -93,6 +93,12 @@ pub fn zip_parse_directory(cd: &[u8]) -> Result<JsValue, JsError> {
     to_js(&binviz::zip::parse_directory(cd).map_err(err)?)
 }
 
+/// Inflates up to `max` bytes from a Zstandard-compressed zip entry.
+#[wasm_bindgen(js_name = zipDecompressZstandard)]
+pub fn zip_decompress_zstandard(data: &[u8], max: u64) -> Result<Vec<u8>, JsError> {
+    binviz::zip::decompress_zstandard(data, max).map_err(err)
+}
+
 // --- Folders of binaries: discovery (see `binviz::package`) --------------------
 
 /// What to read of a folder's files (`[{path, size, compressedSize?, crc32?}]`):

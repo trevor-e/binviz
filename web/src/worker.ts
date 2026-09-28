@@ -3,10 +3,11 @@
 // with {id, progress} / {id, status} updates while files are being read in.
 //
 // Folders and zips of binaries are read here too: zip entries are inflated
-// with the browser's DecompressionStream (zips inside open like folders), and
-// binaries are streamed straight into WebAssembly memory, one at a time.
+// in the worker (zips inside open like folders), and binaries are streamed
+// straight into WebAssembly memory, one at a time.
 import init, {
-  Session, packageBundle, packageDiscover, packageHeader, packagePlan, zipFindDirectory, zipParseDirectory, zipZip64Directory,
+  Session, packageBundle, packageDiscover, packageHeader, packagePlan, zipDecompressZstandard, zipFindDirectory,
+  zipParseDirectory, zipZip64Directory,
 } from './pkg/binviz_wasm.js';
 import type { BinaryHeader, BundleInfo, PackageInfo, PackageSource } from './types';
 
@@ -50,7 +51,7 @@ interface Entry {
   size: number;
   compressedSize?: number;
   crc32?: number;
-  stream(): Promise<ReadableStream<Uint8Array>>;
+  stream(max?: number): Promise<ReadableStream<Uint8Array>>;
   /** Its bytes as a Blob, when they are stored as they are (not compressed). */
   blob(): Promise<Blob | null>;
 }
@@ -92,11 +93,19 @@ async function zipEntries(blob: Blob, prefix: string): Promise<Entry[]> {
       size: Number(e.size),
       compressedSize: Number(e.compressedSize),
       crc32: e.crc32,
-      async stream() {
+      async stream(max = Number(e.size)) {
         const start = await dataStart(e);
-        const raw = blob.slice(start, start + Number(e.compressedSize)).stream();
+        const compressed = blob.slice(start, start + Number(e.compressedSize));
+        const raw = compressed.stream();
         if (e.method === 0) return raw;
         if (e.method === 8) return raw.pipeThrough(new DecompressionStream('deflate-raw')) as ReadableStream<Uint8Array>;
+        if (e.method === 93) {
+          const bytes = zipDecompressZstandard(
+            new Uint8Array(await compressed.arrayBuffer()),
+            BigInt(Math.min(Number(e.size), max)),
+          );
+          return new Blob([bytes.buffer as ArrayBuffer]).stream();
+        }
         throw new Error(`${e.name}: unsupported compression method ${e.method}`);
       },
       async blob() {
@@ -120,7 +129,7 @@ function folderEntries(files: { path: string; file: File }[]): Entry[] {
 async function readBytes(e: Entry, max = Infinity): Promise<Uint8Array> {
   const whole = await e.blob();
   if (whole) return new Uint8Array(await whole.slice(0, Math.min(whole.size, max)).arrayBuffer());
-  const reader = (await e.stream()).getReader();
+  const reader = (await e.stream(max)).getReader();
   const parts: Uint8Array[] = [];
   let n = 0;
   while (n < max) {
