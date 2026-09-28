@@ -36,6 +36,7 @@ dependencies = [
  "msvc-demangler",
  "object",
  "rustc-demangle",
+ "ruzstd",
  "serde",
  "serde_json",
  "yaxpeax-arch",

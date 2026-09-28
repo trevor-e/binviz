@@ -16,7 +16,7 @@ use serde::Serialize;
 #[serde(rename_all = "camelCase")]
 pub struct ZipEntry {
     pub name: String,
-    /// 0 = stored, 8 = deflated.
+    /// 0 = stored, 8 = deflated, 93 = Zstandard.
     pub method: u16,
     pub compressed_size: u64,
     pub size: u64,
@@ -252,6 +252,10 @@ impl ZipFile {
         let res = match entry.method {
             0 => raw.take(want).read_to_end(&mut out),
             8 => flate2::read::DeflateDecoder::new(raw).take(want).read_to_end(&mut out),
+            93 => ruzstd::decoding::StreamingDecoder::new(raw)
+                .map_err(|e| format!("{}: {e}", entry.name))?
+                .take(want)
+                .read_to_end(&mut out),
             m => return Err(format!("{}: unsupported compression method {m}", entry.name)),
         };
         res.map_err(|e| format!("{}: {e}", entry.name))?;
@@ -269,6 +273,48 @@ fn read_at(file: &mut dyn ReadSeek, offset: u64, len: usize) -> std::io::Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn archive_entry(name: &str, method: u16, data: &[u8], compressed: &[u8]) -> Vec<u8> {
+        let mut out = Vec::new();
+        out.extend_from_slice(&0x0403_4b50u32.to_le_bytes());
+        out.extend_from_slice(&20u16.to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out.extend_from_slice(&method.to_le_bytes());
+        out.extend_from_slice(&[0; 4]);
+        out.extend_from_slice(&0u32.to_le_bytes());
+        out.extend_from_slice(&(compressed.len() as u32).to_le_bytes());
+        out.extend_from_slice(&(data.len() as u32).to_le_bytes());
+        out.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out.extend_from_slice(name.as_bytes());
+        out.extend_from_slice(compressed);
+
+        let cd_offset = out.len() as u32;
+        out.extend_from_slice(&0x0201_4b50u32.to_le_bytes());
+        out.extend_from_slice(&20u16.to_le_bytes());
+        out.extend_from_slice(&20u16.to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out.extend_from_slice(&method.to_le_bytes());
+        out.extend_from_slice(&[0; 4]);
+        out.extend_from_slice(&0u32.to_le_bytes());
+        out.extend_from_slice(&(compressed.len() as u32).to_le_bytes());
+        out.extend_from_slice(&(data.len() as u32).to_le_bytes());
+        out.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        out.extend_from_slice(&[0; 8]);
+        out.extend_from_slice(&0u32.to_le_bytes());
+        out.extend_from_slice(&0u32.to_le_bytes());
+        out.extend_from_slice(name.as_bytes());
+        let cd_size = out.len() as u32 - cd_offset;
+
+        out.extend_from_slice(&0x0605_4b50u32.to_le_bytes());
+        out.extend_from_slice(&[0; 4]);
+        out.extend_from_slice(&1u16.to_le_bytes());
+        out.extend_from_slice(&1u16.to_le_bytes());
+        out.extend_from_slice(&cd_size.to_le_bytes());
+        out.extend_from_slice(&cd_offset.to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out
+    }
 
     /// A stored-only archive built by hand: two files and a directory.
     fn archive() -> Vec<u8> {
@@ -323,5 +369,18 @@ mod tests {
         let e = &entries[2];
         let start = data_offset(e, &zip[e.header_offset as usize..]).unwrap() as usize;
         assert_eq!(&zip[start..start + e.size as usize], b"<plist/>");
+    }
+
+    #[test]
+    fn reads_zstandard_entry() {
+        let data = b"Zstandard-compressed ZIP entry";
+        let compressed =
+            ruzstd::encoding::compress_to_vec(data.as_slice(), ruzstd::encoding::CompressionLevel::Fastest);
+        let zip = archive_entry("file.bin", 93, data, &compressed);
+        let mut zip = ZipFile::from_bytes(zip).unwrap();
+        let entry = zip.entries[0].clone();
+
+        assert_eq!(zip.read_prefix(&entry, 9).unwrap(), b"Zstandard");
+        assert_eq!(zip.read(&entry).unwrap(), data);
     }
 }
