@@ -4,11 +4,11 @@ import { Api } from './api';
 import { parseAnnotations, serializeAnnotations } from './notes';
 import type {
   Annotation, ContainerInfo, DwarfSummary, Inspection, Opened, PackageInfo, PackageSource, RefCounts, RegionKind, Section,
-  Segment, SizeReport, SourceFile, Summary,
+  Segment, SizeReport, SourceFile, Summary, Symbolicated, BaselineSource, Comparison,
 } from './types';
 import { basename } from './util';
 
-export type ViewName = 'folder' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map';
+export type ViewName = 'folder' | 'crash' | 'diff' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map' | 'text' | 'tiles';
 export type MapTab = 'files' | 'units' | 'coverage';
 
 export interface Loaded {
@@ -66,6 +66,8 @@ interface HistoryEntry {
 
 type Events = {
   file: [];
+  /** The table file text is read with changed. */
+  table: [];
   container: [];
   selection: [];
   view: [];
@@ -74,6 +76,8 @@ type Events = {
   annotations: [];
   xrefs: [];
   package: [];
+  crash: [];
+  diff: [];
   error: [string];
   status: [string];
 };
@@ -91,6 +95,10 @@ class Store {
   file: Loaded | null = null;
   container: { name: string; info: ContainerInfo; blob: Blob } | null = null;
   package: OpenPackage | null = null;
+  /** Sizes compared with an earlier build (`stale` once what is open changed). */
+  diff: { baseline: string; kind: 'binary' | 'folder'; result: Comparison | null; stale: boolean; busy: boolean } | null = null;
+  /** A crash report being looked at, symbolicated with what is open. */
+  crash: { name: string; text: string; result: Symbolicated | null } | null = null;
   selection: Selection = {};
   view: ViewName = 'overview';
   intent: Intent = {};
@@ -123,6 +131,24 @@ class Store {
     for (const fn of this.listeners.get(event) ?? []) fn(...args);
   }
 
+  /** The table file the text of games is read with (see the Text view), and each byte's text by it. */
+  table: { text: string; entries: number; chars: string[] } | null = null;
+
+  /** Reads text with this table file (`.tbl` lines) from now on. */
+  async setTable(text: string) {
+    const entries = await this.api.tableSet(text);
+    const chars = await this.api.tableChars();
+    this.table = { text, entries, chars };
+    this.emit('table');
+    return entries;
+  }
+
+  async clearTable() {
+    await this.api.tableClear();
+    this.table = null;
+    this.emit('table');
+  }
+
   error(e: unknown) {
     this.emit('error', e instanceof Error ? e.message : String(e));
   }
@@ -142,10 +168,89 @@ class Store {
         return;
       }
       await this.loaded(opened.name, opened.summary, blob);
+      void this.resymbolicate();
+      this.diffChanged();
     } catch (e) {
       this.emit('status', '');
       this.error(e);
     }
+  }
+
+  /** Reads an earlier build to compare sizes with, and compares. */
+  async compareWith(name: string, source: BaselineSource) {
+    const d = { baseline: name, kind: 'binary' as 'binary' | 'folder', result: null, stale: true, busy: true };
+    this.diff = d;
+    this.setView('diff');
+    this.emit('diff');
+    try {
+      d.kind = await this.api.compareWith(source);
+      d.busy = false;
+      await this.refreshDiff();
+    } catch (e) {
+      if (this.diff === d) this.diff = null;
+      this.emit('diff');
+      this.error(e);
+    }
+  }
+
+  /** Compares again, with what is open now. */
+  async refreshDiff() {
+    const d = this.diff;
+    if (!d || d.busy || !(this.file || this.package)) return;
+    d.stale = false;
+    d.busy = true;
+    this.emit('diff');
+    try {
+      const result = await this.api.sizeDiff(60);
+      if (this.diff !== d) return;
+      d.result = result;
+    } catch (e) {
+      this.error(e);
+    } finally {
+      d.busy = false;
+      if (this.diff === d) this.emit('diff');
+    }
+  }
+
+  stopComparing() {
+    this.diff = null;
+    void this.api.clearBaseline();
+    this.emit('diff');
+  }
+
+  private diffChanged() {
+    if (!this.diff) return;
+    this.diff.stale = true;
+    if (this.view === 'diff') void this.refreshDiff();
+  }
+
+  /** Opens a crash report (its text), symbolicated with what is open, and again whenever that changes. */
+  async openCrash(name: string, text: string) {
+    this.crash = { name, text, result: null };
+    this.setView('crash');
+    this.emit('crash');
+    this.emit('view');
+    await this.resymbolicate();
+  }
+
+  private async resymbolicate() {
+    const c = this.crash;
+    if (!c) return;
+    try {
+      const result = await this.api.symbolicateCrash(c.text);
+      if (this.crash !== c) return;
+      c.result = result;
+      this.emit('crash');
+    } catch (e) {
+      this.error(e);
+    }
+  }
+
+  /** Shows a frame's code, switching to its binary in a folder. */
+  async goToFrame(binary: number | undefined, address: bigint | undefined) {
+    if (binary === undefined || address === undefined) return;
+    if (this.package && binary !== this.package.current) await this.selectBinary(binary);
+    await this.select({ address }, { view: 'code' });
   }
 
   async openMember(index: number) {
@@ -209,7 +314,8 @@ class Store {
     this.dropPackage();
     const { info, opened } = await this.api.openScanned();
     this.package = { info, current: 0, reports: null, analyzing: false, sources };
-    this.view = 'folder';
+    // Opened to symbolicate a crash report: stay on it.
+    if (!(this.crash && this.view === 'crash')) this.view = 'folder';
     this.emit('package');
     if (opened?.kind === 'binary') {
       await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[0].file));
@@ -221,6 +327,8 @@ class Store {
     const again = keep?.path !== undefined ? info.binaries.findIndex((b) => b.path === keep.path) : -1;
     if (again > 0) await this.selectBinary(again);
     if (keep) this.setView(keep.view);
+    void this.resymbolicate();
+    this.diffChanged();
     // Small folders are combined right away; big ones when asked.
     const n = info.binaries.length;
     if (n > 0 && n <= AUTO_ANALYZE_COUNT && analysisBytes(info) < AUTO_ANALYZE_BYTES) void this.analyzePackage();
@@ -252,6 +360,8 @@ class Store {
         p.current = index;
         this.emit('package');
         if (opened.kind === 'binary') await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[index].file));
+        // A binary compared with a binary: now another one.
+        if (this.diff?.result?.kind === 'binary') this.diffChanged();
       } catch (e) {
         this.error(e);
         return;
@@ -373,11 +483,33 @@ class Store {
     }
   }
 
+  /**
+   * Links the open binary's debug map from the object files of a folder the
+   * user chose (a Mach-O binary linked without dsymutil keeps its DWARF there).
+   */
+  async linkDebugMap(files: { path: string; file: File }[]) {
+    if (!this.file) return;
+    try {
+      const { report, summary } = await this.api.linkDebugMap(files);
+      const missing = report.missing.length + report.failed.length;
+      this.emit('status', `DWARF from ${report.linked} of ${report.objects} object files${missing ? ` (${missing} missing or unusable)` : ''}`);
+      await this.debugChanged(summary);
+    } catch (e) {
+      this.error(e);
+    }
+  }
+
   /** Refreshes what depends on debug info after a debug file was attached. */
   private async attached(opened: Opened) {
     if (!this.file || opened.kind !== 'binary') return;
+    await this.debugChanged(opened.summary);
+  }
+
+  /** Refreshes what depends on debug info once the binary has more of it. */
+  private async debugChanged(summary: Summary) {
+    if (!this.file) return;
     const [dwarf, sourceFiles] = await Promise.all([this.api.dwarfSummary(), this.api.sourceFiles()]);
-    this.file = { ...this.file, summary: opened.summary, dwarf, sourceFiles };
+    this.file = { ...this.file, summary, dwarf, sourceFiles };
     // DWARF may add function boundaries: references are found again.
     const had = this.xrefs === 'ready';
     this.resetXrefs();
@@ -385,6 +517,7 @@ class Store {
     if (had) void this.ensureXrefs();
     this.emit('sources');
     await this.reselect();
+    void this.resymbolicate();
   }
 
   // --- Annotations ------------------------------------------------------------

@@ -44,6 +44,10 @@ pub struct Binary {
     pub(crate) xrefs: std::sync::OnceLock<crate::xrefs::XrefIndex>,
     /// How pointers in data are stored (plain, chained fixups, relocations).
     pub(crate) pointers: std::sync::OnceLock<crate::pointers::Scheme>,
+    /// Objective-C metadata, read on first use.
+    pub(crate) objc: std::sync::OnceLock<crate::objc::ObjcInfo>,
+    /// For a game ROM: its console, memory map and the code found in it.
+    pub(crate) rom: Option<crate::rom::Rom>,
 }
 
 fn arch_name(a: Architecture) -> String {
@@ -90,7 +94,12 @@ impl Binary {
             }
             Ok(object::FileKind::Archive) => bail!("this is an archive; pick a member first"),
             Ok(object::FileKind::DyldCache) => bail!("dyld shared caches are not supported"),
-            Err(_) => bail!("not a recognized object file (expected ELF, Mach-O, PE or COFF)"),
+            Err(_) => {
+                return match crate::rom::detect(bytes) {
+                    Some(rom) => Binary::from_rom(data.clone(), rom),
+                    None => Ok(Binary::raw(data.clone())),
+                };
+            }
             _ => {}
         }
         let file = object::File::parse(bytes)?;
@@ -500,6 +509,8 @@ impl Binary {
             coverage: std::sync::OnceLock::new(),
             xrefs: std::sync::OnceLock::new(),
             pointers: std::sync::OnceLock::new(),
+            objc: std::sync::OnceLock::new(),
+            rom: None,
         };
         drop(file);
         // DWARF first: it may add functions, and the symbol index is built once.
@@ -509,8 +520,86 @@ impl Binary {
         Ok(binary)
     }
 
-    fn build_layout(&self, format: Format) -> Layout {
+    /// Bytes in no format binviz recognizes: one region, for looking at them
+    /// byte by byte, as tiles or as text.
+    pub fn raw(data: impl Into<Arc<[u8]>>) -> Binary {
+        let data: Arc<[u8]> = data.into();
+        let len = data.len() as u64;
+        let sections = vec![Section {
+            index: 0,
+            name: "Data".into(),
+            segment_name: None,
+            kind: RegionKind::Unknown,
+            address: 0,
+            size: len,
+            file_offset: Some(0),
+            file_size: len,
+            align: 1,
+            flags: String::new(),
+            perms: String::new(),
+            compressed: false,
+            segment: None,
+            loaded: false,
+        }];
+        let summary = Summary {
+            format: Format::Unknown,
+            format_name: "raw data".into(),
+            kind: "Unrecognized file".into(),
+            arch: "unknown".into(),
+            bits: 0,
+            little_endian: true,
+            file_size: len,
+            entry: None,
+            image_base: None,
+            build_id: None,
+            debug_link: None,
+            has_dwarf: false,
+            has_symbols: false,
+            synthetic_addresses: false,
+            section_count: 1,
+            segment_count: 0,
+            symbol_count: 0,
+            properties: vec![Property {
+                key: "Format".into(),
+                value: "not one binviz recognizes: shown as raw bytes (the hex view, tiles and text still work)".into(),
+            }],
+            fingerprint: fingerprint(&data, None),
+        };
+        let mut binary = Binary {
+            data: data.clone(),
+            summary,
+            sections,
+            segments: Vec::new(),
+            symbols: SymbolBuilder::default().finish(&[]),
+            imports: Vec::new(),
+            exports: Vec::new(),
+            layout: Layout::empty(),
+            machine: Machine::Other,
+            arch: Architecture::Unknown,
+            is64: false,
+            endian: Endian::Little,
+            image_base: 0,
+            debug: None,
+            discovered: Vec::new(),
+            debug_symbols: Default::default(),
+            annotations: Vec::new(),
+            strings: std::sync::OnceLock::new(),
+            coverage: std::sync::OnceLock::new(),
+            xrefs: std::sync::OnceLock::new(),
+            pointers: std::sync::OnceLock::new(),
+            objc: std::sync::OnceLock::new(),
+            rom: None,
+        };
+        binary.layout = binary.build_layout(Format::Unknown);
+        binary
+    }
+
+    pub(crate) fn build_layout(&self, format: Format) -> Layout {
         let mut b = Builder::new(self.ctx());
+        if let Some(rom) = &self.rom {
+            rom.build_layout(&mut b);
+            return b.finish();
+        }
         match format {
             Format::Elf => layout::elf::build(&mut b),
             Format::MachO => layout::macho::build(&mut b),
@@ -1087,6 +1176,7 @@ fn format_name(format: Format, is64: bool, b: &Bytes) -> String {
         Format::Coff => "COFF object".into(),
         Format::Xcoff => "XCOFF".into(),
         Format::Wasm => "WebAssembly".into(),
+        Format::Rom => "ROM".into(),
         Format::Unknown => "Unknown".into(),
     }
 }
@@ -1180,8 +1270,9 @@ fn properties(
                     &mut p,
                     "Debug map",
                     format!(
-                        "{} object files referenced by stabs (DWARF lives there or in a dSYM)",
-                        map.objects().len()
+                        "{} object file{} named by stabs (its DWARF is there, unless in a dSYM)",
+                        map.objects().len(),
+                        if map.objects().len() == 1 { "" } else { "s" }
                     ),
                 );
             }

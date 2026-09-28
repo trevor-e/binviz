@@ -1,12 +1,5 @@
 // Typed client for the WebAssembly session running in a worker.
-import type {
-  Annotation, Attribution, AttributedRange, AttributionMode, CallEdge, CallGraph, ContainerInfo, Coverage, DieDetails,
-  DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary,
-  BinaryHeader, HitKind, Import, Inspection, PackageInfo, PackageSource, ScopeInfo, SizeReport, TagCount,
-  LineProgramInfo, LineRange, LineRow, MapStatus, Opened, PathEntry, PathStep, RefCounts, Reference, RefPage,
-  RegionInfo, RegionKind, Resolved, SearchResults, Section, Segment, SourceFile, Span, StringPage, Summary,
-  SymbolPage, SymbolQuery, Sym, UnitInfo,
-} from './types';
+import type { Annotation, AttributedRange, Attribution, AttributionMode, BaselineSource, BinaryHeader, CallEdge, CallGraph, Comparison, ContainerInfo, Coverage, CrashReport, DebugMapObject, DebugMapReport, DieDetails, DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection, LineProgramInfo, LineRange, LineRow, MapStatus, ObjcCounts, ObjcEntry, ObjcInterface, ObjcKind, Opened, PackageInfo, PackageSource, PathEntry, PathStep, RefCounts, Reference, RefPage, RegionInfo, RegionKind, RelativeSearch, Resolved, ScopeInfo, SearchResults, Section, Segment, SelectorUses, SizeReport, SourceFile, Span, StringPage, Summary, Sym, Symbolicated, SymbolPage, SymbolQuery, TableText, TagCount, UnitInfo } from './types';
 
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
 
@@ -66,6 +59,10 @@ export class Api {
   openMember(index: number) { return this.call<Opened>('openMember', index); }
   memoryBytes() { return this.call<number>('memoryBytes'); }
   attachDebug(name: string, blob: Blob) { return this.call<Opened>('attachBlob', name, blob); }
+  /** The object files the open binary's debug map names. */
+  debugMap() { return this.call<DebugMapObject[]>('debugMap'); }
+  /** Links the open binary's debug map from the object files in a chosen folder. */
+  linkDebugMap(files: { path: string; file: File }[]) { return this.call<{ report: DebugMapReport; summary: Summary }>('linkDebugMap', files); }
   /** A little of the open binary's bytes (for binaries with no Blob of their own). */
   read(offset: bigint, count: number) { return this.call<Uint8Array>('read', offset, count); }
   sizeReport(top: number) { return this.call<SizeReport>('sizeReport', top); }
@@ -76,6 +73,15 @@ export class Api {
   openScanned() { return this.call<{ info: PackageInfo; opened: Opened | null }>('openScanned'); }
   /** Attaches a file the last scan found to the open binary, as its debug file. */
   attachScanned(file: number, name: string) { return this.call<Opened>('attachScanned', file, name); }
+  /** Reads an earlier build (a binary, or folders and zips) to compare sizes with; says which kind it was. */
+  compareWith(source: BaselineSource) { return this.call<'binary' | 'folder'>('compareWith', source); }
+  /** What changed in size from that build to what is open. */
+  sizeDiff(top: number) { return this.call<Comparison>('sizeDiff', top); }
+  clearBaseline() { return this.call<void>('baselineClear'); }
+  /** A crash report read from text (Apple .crash or .ips, Android tombstone, stack trace), or null. */
+  crashParse(text: string) { return this.call<CrashReport | null>('crashParse', text); }
+  /** Symbolicates a crash report with what is open (a folder's binaries it needs are loaded first). */
+  symbolicateCrash(text: string) { return this.call<Symbolicated>('symbolicateCrash', text); }
   /** What a file's header says it is (null: not a binary). */
   sniff(blob: Blob) { return this.call<BinaryHeader | null>('sniff', blob); }
   /** Makes another binary of the folder current, loading it (and its debug file) if needed. */
@@ -129,6 +135,22 @@ export class Api {
   callGraph(center: bigint, up: number, down: number, fanout: number) { return this.call<CallGraph>('callGraph', center, up, down, fanout); }
   callPath(from: bigint, to: bigint, maxDepth: number) { return this.call<PathStep[] | undefined>('callPath', from, to, maxDepth); }
   functionSummary(address: bigint, limit: number) { return this.call<FunctionSummary | undefined>('functionSummary', address, limit); }
+
+  relativeSearch(word: string, width: number, limit: number) { return this.call<RelativeSearch>('relativeSearch', word, width, limit); }
+  tableFromAlphabet(first: number, letter: string, width: number) { return this.call<string>('tableFromAlphabet', first, letter, width); }
+  /** Reads text with this table file from now on; returns its entry count. */
+  tableSet(text: string) { return this.call<number>('tableSet', text); }
+  tableClear() { return this.call<void>('tableClear'); }
+  tableChars() { return this.call<string[]>('tableChars'); }
+  tableDecode(offset: bigint, len: number) { return this.call<TableText>('tableDecode', offset, len); }
+  tableFind(text: string, limit: number) { return this.call<TableText[]>('tableFind', text, limit); }
+  tableStrings(min: number, limit: number) { return this.call<TableText[]>('tableStrings', min, limit); }
+
+  objcCounts() { return this.call<ObjcCounts>('objcCounts'); }
+  objcEntries() { return this.call<ObjcEntry[]>('objcEntries'); }
+  objcInterface(kind: ObjcKind, name: string) { return this.call<ObjcInterface | null>('objcInterface', kind, name); }
+  /** Where a selector is implemented and who sends it (builds the reference index). */
+  objcSelector(selector: string) { return this.call<SelectorUses | null>('objcSelector', selector); }
 
   dwarfSummary() { return this.call<DwarfSummary | null>('dwarfSummary'); }
   dwarfUnits() { return this.call<UnitInfo[]>('dwarfUnits'); }

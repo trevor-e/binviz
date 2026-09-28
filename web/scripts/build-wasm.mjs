@@ -42,7 +42,7 @@ run(tool('wasm-bindgen'), [
 // Sample binaries for the landing page.
 const samples = join(web, 'public', 'samples');
 mkdirSync(samples, { recursive: true });
-for (const f of ['tiny-elf-x64', 'tiny-elf-a64', 'tiny-macho-a64', 'tiny-macho-a64.o', 'tiny-pe-x64.exe', 'shapes-pe.exe', 'shapes-pe.stripped.exe']) {
+for (const f of ['tiny-elf-x64', 'tiny-elf-a64', 'tiny-macho-a64', 'tiny-macho-a64.o', 'tiny-pe-x64.exe', 'shapes-pe.exe', 'shapes-pe.stripped.exe', 'objc-macho-a64.chained.stripped', 'tiny.nes', 'tiny.gba']) {
   const src = join(root, 'tests', 'fixtures', 'bin', f);
   if (existsSync(src)) copyFileSync(src, join(samples, f));
 }

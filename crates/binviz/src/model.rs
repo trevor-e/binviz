@@ -56,6 +56,8 @@ pub enum Format {
     Coff,
     Xcoff,
     Wasm,
+    /// A game ROM (see [`crate::rom`]).
+    Rom,
     Unknown,
 }
 
@@ -169,6 +171,9 @@ pub enum SymbolSource {
     /// Function boundaries recovered from unwind tables or function-start lists
     /// (named `sub_<address>`).
     Discovered,
+    /// Objective-C metadata: method implementations (`-[Greeter hello]`),
+    /// the metadata itself and selector references (`@selector(hello)`).
+    Objc,
     /// Import stubs and slots, named after what they import: Mach-O stubs
     /// (`_printf`) and pointers (`_printf@got`), ELF PLT entries (`printf@plt`)
     /// and GOT slots, PE import thunks and address table slots (`__imp_printf`).

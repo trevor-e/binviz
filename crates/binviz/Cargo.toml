@@ -21,6 +21,4 @@ serde.workspace = true
 memchr.workspace = true
 flate2.workspace = true
 ruzstd.workspace = true
-
-[dev-dependencies]
 serde_json.workspace = true

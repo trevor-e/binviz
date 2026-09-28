@@ -1,4 +1,5 @@
-//! Disassembly: iced-x86 for x86/x86-64, yaxpeax-arm for AArch64 and ARM.
+//! Disassembly: iced-x86 for x86/x86-64, yaxpeax-arm for AArch64 and ARM,
+//! and binviz's own decoders for game consoles' CPUs (see [`crate::cpu`]).
 
 use iced_x86::{FlowControl, Formatter};
 use object::Architecture;
@@ -28,6 +29,8 @@ enum Isa {
     X86(u32),
     A64,
     Arm,
+    /// A game ROM's CPU.
+    Rom,
     None,
 }
 
@@ -46,9 +49,21 @@ pub fn is_supported(arch: Architecture) -> bool {
 }
 
 impl Binary {
+    fn isa(&self) -> Isa {
+        if self.rom.as_ref().is_some_and(|r| crate::cpu::supported(r.cpu)) {
+            return Isa::Rom;
+        }
+        isa(self.arch)
+    }
+
+    /// Whether this binary's code can be disassembled.
+    pub fn can_disassemble(&self) -> bool {
+        self.isa() != Isa::None
+    }
+
     /// Disassembles `start..end` (at most `limit` instructions).
     pub fn disassemble(&self, start: u64, end: u64, limit: usize) -> Disassembly {
-        let isa = isa(self.arch);
+        let isa = self.isa();
         let mut out = Disassembly {
             start,
             end,
@@ -245,6 +260,46 @@ impl Binary {
                     pos += len;
                 }
             }
+            Isa::Rom => {
+                let rom = self.rom.as_ref().expect("a ROM");
+                let mut state = self.rom_state_at(start);
+                // Decoding sees past the range: literal pools follow their functions.
+                let tail = self.code_bytes(start).unwrap_or(bytes);
+                let mut pos = 0;
+                while pos < bytes.len() {
+                    if out.instructions.len() >= limit {
+                        out.truncated = true;
+                        break;
+                    }
+                    let address = start + pos as u64;
+                    let Some(insn) = crate::cpu::decode(rom.cpu, &tail[pos..], rom.map.cpu(address), &mut state) else {
+                        break;
+                    };
+                    let len = (insn.len as usize).clamp(1, bytes.len() - pos);
+                    let code = insn
+                        .flow
+                        .target()
+                        .and_then(|t| rom.map.resolve(address, crate::cpu::code_target(rom.cpu, t).0));
+                    let data = insn.data.and_then(|(t, _)| rom.map.resolve(address, t));
+                    out.instructions.push(Instruction {
+                        address,
+                        offset: Some(offset + pos as u64),
+                        len: len as u32,
+                        bytes: util::hex_bytes(&bytes[pos..pos + len]),
+                        flow: insn.flow.kind(),
+                        target: code.or(data),
+                        target_symbol: match (code, data) {
+                            (Some(t), _) => self.symbol_name(t),
+                            (None, Some(t)) => self.name_for(t),
+                            _ => None,
+                        },
+                        mnemonic: insn.mnemonic,
+                        operands: insn.operands,
+                        source: source_for(address),
+                    });
+                    pos += len;
+                }
+            }
             Isa::None => {}
         }
         out.end = out.instructions.last().map_or(start, |i| i.address + i.len as u64);
@@ -280,7 +335,7 @@ impl Binary {
 
     /// The instruction covering `address`, if it is in code.
     pub fn instruction_at(&self, address: u64) -> Option<Instruction> {
-        if !is_supported(self.arch) {
+        if !self.can_disassemble() {
             return None;
         }
         let sec = self.section_at(address)?;
@@ -301,8 +356,10 @@ impl Binary {
     /// A likely instruction boundary at or before `address`: a line table row
     /// start or, for fixed-width ISAs, the aligned address.
     fn instruction_boundary_before(&self, address: u64) -> u64 {
-        match isa(self.arch) {
+        match self.isa() {
             Isa::A64 | Isa::Arm => address & !3,
+            // Where the function it is in starts (the analysis found those).
+            Isa::Rom => self.symbols.function_containing(address).map_or(address, |f| f.address),
             _ => {
                 let from_lines = self.debug.as_ref().and_then(|d| {
                     let rows = d.locations_in(address.saturating_sub(0x1000), address + 1);

@@ -13,6 +13,10 @@ pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O and PE binaries down
 Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file) by UUID or build ID; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
 To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
 For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. \
+For Objective-C (Mach-O apps and frameworks): objc lists the classes, categories and protocols; given a name it declares one as its header would (ivars, properties, methods with their types and implementations), or for a selector lists the methods implementing it and the functions that send it. The metadata also names a stripped binary's methods (-[Class selector]), its metadata and its selector references (@selector(name)), so those names work everywhere. \
+For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, Game Boy Advance, Mega Drive / Genesis, Nintendo 64, PlayStation PS-X EXE): open_binary recognizes them by their headers (files of no known format open as raw bytes); banks get addresses of their own (bank 3's $C000 is 0x3c000), the hardware registers are named (PPUCTRL, LCDC, INIDISP, DISPCNT, VDP_CTRL, VI_STATUS, GP1), and the code is found by following it from the reset and interrupt vectors, so disassemble, function_info, xrefs (who writes PPUCTRL?) and call_graph work as for any binary. For their text: relative_search finds a word in the game's own encoding, and table_text reads, searches and dumps text with a table file. \
+To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
+For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone or a stack trace, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
 
@@ -30,6 +34,8 @@ pub(crate) struct Open {
     pub pending_debug: Option<(u32, String)>,
     /// What happened when the debug file was attached.
     pub debug_note: Option<String>,
+    /// Whether the DWARF its debug map names has been looked for (Mach-O built without dsymutil).
+    pub debug_map_tried: bool,
 }
 
 #[derive(Default)]
@@ -47,7 +53,7 @@ fn binary_param() -> Value {
 
 fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&str], read_only: bool) -> Value {
     let mut props = props;
-    if name != "open_binary" && name != "list_binaries" {
+    if !matches!(name, "open_binary" | "list_binaries" | "symbolicate" | "size_diff") {
         props["binary"] = binary_param();
     }
     json!({
@@ -69,7 +75,7 @@ pub fn definitions() -> Vec<Value> {
             json!({
                 "path": { "type": "string", "description": "Path to the binary, or to a folder or zip of binaries." },
                 "member": { "type": "string", "description": "For universal binaries or archives: the slice/member index or architecture (e.g. arm64, x86_64). Universal binaries default to arm64." },
-                "debug_file": { "type": "string", "description": "Separate DWARF to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, or an unstripped copy." },
+                "debug_file": { "type": "string", "description": "Separate DWARF to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
             }),
             &["path"],
@@ -90,6 +96,29 @@ pub fn definitions() -> Vec<Value> {
             json!({}),
             &[],
             false,
+        ),
+        tool(
+            "size_diff",
+            "Compare the sizes of two builds",
+            "What changed in size between two builds on disk: two binaries (kinds of bytes, sections, owners — Swift modules, Objective-C classes, C++ namespaces, C prefixes — and the symbols that came, went or changed size), or two folders or zips such as two .ipa files (files added, removed and changed, kinds of content, each binary, and owners across all binaries). Paths inside the two folders are lined up even when their top folders differ.",
+            json!({
+                "old": { "type": "string", "description": "The earlier build: a binary, or a folder or zip." },
+                "new": { "type": "string", "description": "The later build, of the same kind." },
+                "top": { "type": "integer", "description": "Entries per list (default 30, max 500)." },
+            }),
+            &["old", "new"],
+            true,
+        ),
+        tool(
+            "symbolicate",
+            "Symbolicate a crash report",
+            "Turns a crash report (an Apple .crash or .ips, an Android tombstone, or a stack trace that gives images and offsets) into the function, source line and inlined calls of every frame, with the open binaries: each of the report's images is found by UUID or build ID, and binaries of another build are called out. Open the app first — its folder or zip with the dSYMs gives every binary at once.",
+            json!({
+                "report": { "type": "string", "description": "The crash report's text." },
+                "report_file": { "type": "string", "description": "Or the path of a file holding it." },
+            }),
+            &[],
+            true,
         ),
         tool(
             "folder_summary",
@@ -219,6 +248,45 @@ pub fn definitions() -> Vec<Value> {
                 "max_depth": { "type": "integer", "description": "Longest chain to consider (default 10, max 20)." },
             }),
             &["from", "to"],
+            true,
+        ),
+        tool(
+            "objc",
+            "Objective-C classes and selectors",
+            "The Objective-C metadata of a Mach-O image, which stripping keeps: without name, every class (with its superclass), category and protocol; with the name of one of them, its declaration as a header would have it (like class-dump: ivars with offsets, properties, methods with argument types and the address of each implementation); with a selector (hello, tableView:cellForRowAtIndexPath:), the methods implementing it and the functions that send it (through objc_msgSend or an objc_msgSend$ stub). Swift classes visible to Objective-C are included.",
+            json!({
+                "name": { "type": "string", "description": "A class (NSObject, MyApp.ViewController), a category (NSObject (Extras)), a protocol, or a selector." },
+                "filter": { "type": "string", "description": "Without name: only classes, categories and protocols whose name contains this (case-insensitive)." },
+                "limit": { "type": "integer", "description": "Without name: how many to list (default 300, max 5000)." },
+            }),
+            &[],
+            true,
+        ),
+        tool(
+            "relative_search",
+            "Find text in an unknown encoding",
+            "Relative search, the classic ROM hacking tool: old games store text in encodings of their own (A = $80, say, the alphabet in order but starting anywhere). Given a word the game shows (SWORD, CONTINUE), finds it by the spacing of its letters in every encoding where it occurs, with the text around each hit read that way, and gives the table (A-Z) each encoding implies, to use with table_text. Works on any open file's bytes.",
+            json!({
+                "word": { "type": "string", "description": "A word of three letters or more, in one case, without spaces or punctuation: text the game displays." },
+                "width": { "type": "integer", "description": "Bytes per character: 1 (default) or 2 (little-endian)." },
+            }),
+            &["word"],
+            true,
+        ),
+        tool(
+            "table_text",
+            "Read text with a table file",
+            "Reads the open file's text through a table file (.tbl: one `hex=text` line per entry, like 80=A or 8A20=the ; `/FF=<end>` for what ends a string; `*FE` for a line break), as relative_search suggests or a ROM hacking community publishes: every string (the default), the text at an offset, or where some text is.",
+            json!({
+                "table": { "type": "string", "description": "The table's lines." },
+                "table_file": { "type": "string", "description": "Or the path of a .tbl file." },
+                "at": { "type": "string", "description": "Read at this file offset (0x-prefixed hex, or decimal)." },
+                "length": { "type": "integer", "description": "Bytes to read at `at` (default 256)." },
+                "find": { "type": "string", "description": "Where this text is (with [XX] for a raw byte)." },
+                "min": { "type": "integer", "description": "When dumping: entries a string needs, at least (default 4)." },
+                "limit": { "type": "integer", "description": "At most this many strings or places (default 300, max 5000)." },
+            }),
+            &[],
             true,
         ),
         tool(
@@ -485,6 +553,8 @@ impl Server {
             "list_binaries" => Ok(self.list_binaries()),
             "close_binary" => self.close_binary(args),
             "folder_summary" => self.folder_summary(args).map(finish),
+            "symbolicate" => self.symbolicate(args).map(finish),
+            "size_diff" => self.size_diff(args).map(finish),
             "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
                 let o = self.get(args)?;
@@ -507,6 +577,9 @@ impl Server {
                     "callees" => call_list(o, args, false)?,
                     "call_graph" => call_graph(o, args)?,
                     "call_path" => call_path(o, args)?,
+                    "objc" => objc(o, args)?,
+                    "relative_search" => relative_search(o, args)?,
+                    "table_text" => table_text(o, args)?,
                     "dwarf_units" => dwarf_units(o, args)?,
                     "dwarf_search" => dwarf_search(o, args)?,
                     "dwarf_dies" => dwarf_dies(o, args)?,
@@ -611,13 +684,32 @@ impl Server {
             package: None,
             pending_debug: None,
             debug_note: None,
+            debug_map_tried: true,
         };
+        let mut folders = Vec::new();
         if let Some(debug) = string(args, "debug_file") {
-            let data = binviz::read_file(debug).map_err(|e| format!("{debug}: {e}"))?;
-            open.bin
-                .attach_debug_file(debug, data)
-                .map_err(|e| format!("{debug}: {e}"))?;
+            if Path::new(debug).is_dir() {
+                folders.push(PathBuf::from(debug));
+            } else {
+                let data = binviz::read_file(debug).map_err(|e| format!("{debug}: {e}"))?;
+                open.bin
+                    .attach_debug_file(debug, data)
+                    .map_err(|e| format!("{debug}: {e}"))?;
+            }
         }
+        // Built without dsymutil, a Mach-O binary's DWARF is in the objects its debug map names.
+        if open.bin.debug_info().is_none() && !open.bin.debug_map().is_empty() {
+            if let Some(dir) = path.parent() {
+                folders.push(dir.to_path_buf());
+            }
+            let _ = writeln!(
+                note,
+                "{}",
+                debug_map_note(open.bin.attach_debug_map_from_disk(&folders))
+            );
+        }
+        // Swift names read better through `swift-demangle`, where it is installed.
+        open.bin.demangle_swift_with_tool();
         // Notes: <path>.binviz-notes.json unless told otherwise.
         let notes_path = string(args, "notes_file")
             .map(PathBuf::from)
@@ -748,6 +840,148 @@ pub(crate) fn sidecar(path: &Path, member: Option<&str>) -> PathBuf {
 
 // --- Tools -------------------------------------------------------------------------
 
+fn relative_search(o: &Open, args: &Value) -> Result<String, String> {
+    let word = string(args, "word").ok_or("word is required")?;
+    let width = int(args, "width", 1, 2) as u32;
+    let found = binviz::tables::relative_search(o.bin.data(), word, width, 30)?;
+    let mut out = found.to_text();
+    if let Some(e) = found.encodings.first() {
+        let _ = writeln!(
+            out,
+            "\nThe table the first implies (add the other characters you see, then pass it to table_text):\n{}",
+            binviz::tables::Table::from_alphabet(e.first, e.letter, found.width).to_tbl()
+        );
+    }
+    Ok(out)
+}
+
+fn table_text(o: &Open, args: &Value) -> Result<String, String> {
+    let text = match (string(args, "table"), string(args, "table_file")) {
+        (Some(t), _) => t.to_string(),
+        (None, Some(path)) => std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?,
+        (None, None) => return Err("table (its lines) or table_file (a .tbl path) is required".into()),
+    };
+    let table = binviz::tables::Table::parse(&text)?;
+    let data = o.bin.data();
+    let limit = int(args, "limit", 300, 5000) as usize;
+    let show = |s: &str| s.replace('\n', "⏎");
+    let mut out = String::new();
+    if let Some(at) = string(args, "at") {
+        let offset = parse_number(at).ok_or_else(|| format!("{at:?} is not an offset"))? as usize;
+        let len = int(args, "length", 256, 1 << 20) as usize;
+        let bytes = data
+            .get(offset..(offset + len).min(data.len()))
+            .ok_or_else(|| format!("{offset:#x} is past the end of the file"))?;
+        let _ = writeln!(out, "{}", table.decode(bytes, false).text);
+    } else if let Some(find) = string(args, "find") {
+        let hits = table.find(data, find, limit)?;
+        let _ = writeln!(out, "{} places:", hits.len());
+        for at in hits {
+            let bytes = &data[at as usize..(at as usize + 96).min(data.len())];
+            let _ = writeln!(out, "  {at:#08x}  {}", show(&table.decode(bytes, true).text));
+        }
+    } else {
+        let min = int(args, "min", 4, 1000) as usize;
+        let found = table.strings(data, min, limit);
+        let _ = writeln!(out, "{} strings of {min} entries or more:", found.len());
+        for s in found {
+            let _ = writeln!(out, "  {:#08x}  {}", s.offset, show(&s.text));
+        }
+    }
+    Ok(out)
+}
+
+/// `0x1f`, `1f` (hex) or `31`.
+fn parse_number(s: &str) -> Option<u64> {
+    let s = s.trim();
+    match s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
+        Some(h) => u64::from_str_radix(h, 16).ok(),
+        None => s.parse().ok(),
+    }
+}
+
+fn objc(o: &Open, args: &Value) -> Result<String, String> {
+    let b = &o.bin;
+    let info = b.objc();
+    if info.is_empty() {
+        return Ok(format!("{}: no Objective-C metadata", o.label));
+    }
+    if let Some(name) = string(args, "name") {
+        if let Some(i) = info.interface(name) {
+            return Ok(i.to_text());
+        }
+        if let Some(uses) = b.objc_selector(name) {
+            return Ok(uses.to_text());
+        }
+        let similar: Vec<String> = info
+            .entries()
+            .into_iter()
+            .filter(|e| e.name.to_lowercase().contains(&name.to_lowercase()))
+            .take(20)
+            .map(|e| e.name)
+            .collect();
+        return Err(if similar.is_empty() {
+            format!("no class, category, protocol or selector named {name}")
+        } else {
+            format!("no {name}; similar: {}", similar.join(", "))
+        });
+    }
+    let limit = int(args, "limit", 300, 5000) as usize;
+    let text = info.to_text(usize::MAX);
+    let Some(filter) = string(args, "filter").map(str::to_lowercase) else {
+        return Ok(clip_lines(&text, limit + 1));
+    };
+    // The counts, then the matching lines under their headings.
+    let mut out = String::new();
+    let mut heading = "";
+    let mut shown = 0;
+    for (i, line) in text.lines().enumerate() {
+        if i == 0 {
+            let _ = writeln!(out, "{line}");
+        } else if !line.starts_with(' ') {
+            heading = line;
+        } else if line.to_lowercase().contains(&filter) && shown < limit {
+            if !heading.is_empty() {
+                let _ = writeln!(out, "{heading}");
+                heading = "";
+            }
+            let _ = writeln!(out, "{line}");
+            shown += 1;
+        }
+    }
+    if shown == 0 {
+        let _ = writeln!(out, "nothing matches {filter:?}");
+    }
+    Ok(out)
+}
+
+/// The first `n` lines of `text`, and how many more there are.
+fn clip_lines(text: &str, n: usize) -> String {
+    let total = text.lines().count();
+    let mut out: String = text.lines().take(n).map(|l| format!("{l}\n")).collect();
+    if total > n {
+        let _ = writeln!(out, "… {} more lines (use filter or limit)", total - n);
+    }
+    out
+}
+
+/// How linking a debug map's DWARF went, for a note.
+pub(crate) fn debug_map_note(result: binviz::Result<binviz::dwarf::debugmap::DebugMapReport>) -> String {
+    match result {
+        Ok(r) => {
+            let mut text = r.to_text();
+            for m in r.missing.iter().take(5) {
+                text.push_str(&format!("\n  not found: {m}"));
+            }
+            for f in r.failed.iter().take(5) {
+                text.push_str(&format!("\n  not used: {f}"));
+            }
+            text
+        }
+        Err(e) => format!("debug map: {e} (pass the objects' folder as debug_file)"),
+    }
+}
+
 fn summary(o: &Open) -> String {
     let b = &o.bin;
     let s = b.summary();
@@ -791,6 +1025,10 @@ fn summary(o: &Open) -> String {
         count(s.symbol_count),
         count(b.symbols().functions().count() as u64)
     );
+    let objc = b.objc();
+    if !objc.is_empty() {
+        let _ = writeln!(out, "Objective-C: {} (see objc)", objc.counts().to_text());
+    }
     if !b.imports().is_empty() || !b.exports().is_empty() {
         let _ = writeln!(
             out,
@@ -832,7 +1070,7 @@ fn summary(o: &Open) -> String {
                 out,
                 "No DWARF debug info{}.",
                 if s.format == binviz::Format::MachO {
-                    " (for Mach-O it usually lives in a .dSYM: pass its DWARF file as debug_file)"
+                    " (for Mach-O it usually lives in a .dSYM: pass its DWARF file as debug_file; without one, in the object files the debug map names: pass their folder)"
                 } else {
                     ""
                 }
@@ -1985,7 +2223,7 @@ fn debug_of(o: &Open) -> Result<&binviz::DebugInfo, String> {
             "{} has no DWARF debug info{}",
             o.label,
             if mach {
-                "; for Mach-O it usually lives in a .dSYM: open_binary with debug_file pointing at …/Contents/Resources/DWARF/<name>"
+                "; for Mach-O it usually lives in a .dSYM: open_binary with debug_file pointing at …/Contents/Resources/DWARF/<name>, or for a build without one, at the folder of the object files its debug map names"
             } else {
                 ""
             }

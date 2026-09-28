@@ -600,17 +600,49 @@ impl Binary {
 
     /// Whether references can be found in this binary's code.
     pub fn xrefs_supported(&self) -> bool {
-        matches!(
-            self.arch,
-            Architecture::Aarch64
-                | Architecture::Aarch64_Ilp32
-                | Architecture::X86_64
-                | Architecture::I386
-                | Architecture::X86_64_X32
-        )
+        self.rom.is_some()
+            || matches!(
+                self.arch,
+                Architecture::Aarch64
+                    | Architecture::Aarch64_Ilp32
+                    | Architecture::X86_64
+                    | Architecture::I386
+                    | Architecture::X86_64_X32
+            )
     }
 
     fn scan_code(&self, bytes: &[u8], addr: u64, cx: &Scan, emit: &mut dyn FnMut(u64, u64, RefKind)) {
+        if let Some(rom) = &self.rom {
+            let mut state = self.rom_state_at(addr);
+            let tail = self.code_bytes(addr).unwrap_or(bytes);
+            let mut pos = 0;
+            while pos < bytes.len() {
+                let pc = addr + pos as u64;
+                let Some(insn) = crate::cpu::decode(rom.cpu, &tail[pos..], rom.map.cpu(pc), &mut state) else {
+                    break;
+                };
+                if let Some((t, kind)) = insn.data
+                    && let Some(a) = rom.map.resolve(pc, t)
+                {
+                    emit(pc, a, kind);
+                }
+                if let Some(t) = insn
+                    .flow
+                    .target()
+                    .and_then(|t| rom.map.resolve(pc, crate::cpu::code_target(rom.cpu, t).0))
+                {
+                    match insn.flow {
+                        crate::cpu::Flow::Call(_) => emit(pc, t, RefKind::Call),
+                        crate::cpu::Flow::Jump(_) | crate::cpu::Flow::Branch(_) if cx.tail_call(pc, t) => {
+                            emit(pc, t, RefKind::Jump)
+                        }
+                        _ => {}
+                    }
+                }
+                pos += (insn.len as usize).max(1);
+            }
+            return;
+        }
         match self.arch {
             Architecture::Aarch64 | Architecture::Aarch64_Ilp32 => scan_a64(bytes, addr, cx, emit),
             Architecture::X86_64 => scan_x86(64, bytes, addr, cx, emit),
@@ -634,12 +666,19 @@ impl Binary {
                 lists[kind as usize].push((target - base) << 32 | (source - base));
             }
         };
-        for sec in self.sections.iter().filter(|s| s.loaded && s.kind == RegionKind::Code) {
-            if let Some(bytes) = section_bytes(&self.data, sec) {
-                self.scan_code(bytes, sec.address, &cx, &mut emit);
+        if let Some(rom) = &self.rom {
+            // A ROM mixes code with data: only what following the code found.
+            for &(source, target, kind) in &rom.analysis.refs {
+                emit(source, target, kind);
             }
+        } else {
+            for sec in self.sections.iter().filter(|s| s.loaded && s.kind == RegionKind::Code) {
+                if let Some(bytes) = section_bytes(&self.data, sec) {
+                    self.scan_code(bytes, sec.address, &cx, &mut emit);
+                }
+            }
+            self.scan_pointers(self.scheme(), &mut |at, t| emit(at, t, RefKind::Pointer));
         }
-        self.scan_pointers(self.scheme(), &mut |at, t| emit(at, t, RefKind::Pointer));
         for list in &mut lists {
             list.sort_unstable();
             list.dedup();
@@ -879,18 +918,28 @@ impl Binary {
     /// are listed on their own.
     pub fn callers(&self, address: u64) -> Vec<CallEdge> {
         let (lo, hi) = self.extent(address);
+        self.referrers(&[(lo, hi, RefKind::Call), (lo, hi, RefKind::Jump)], &|_| false)
+    }
+
+    /// The functions referring to any of `targets` (`lo..hi`, and how),
+    /// most sites first; sites for which `skip` holds are left out.
+    /// References from outside any known function are listed on their own.
+    pub(crate) fn referrers(&self, targets: &[(u64, u64, RefKind)], skip: &dyn Fn(u64) -> bool) -> Vec<CallEdge> {
         let index = self.xref_index();
-        let mut by_caller: HashMap<u64, (u32, u64)> = HashMap::new();
-        for kind in [RefKind::Call, RefKind::Jump] {
+        let mut by_function: HashMap<u64, (u32, u64)> = HashMap::new();
+        for &(lo, hi, kind) in targets {
             for &v in index.range(kind, lo, hi) {
                 let site = index.source(v);
-                let caller = self.symbols.function_containing(site).map_or(site, |f| f.address);
-                let e = by_caller.entry(caller).or_insert((0, site));
+                if skip(site) {
+                    continue;
+                }
+                let function = self.symbols.function_containing(site).map_or(site, |f| f.address);
+                let e = by_function.entry(function).or_insert((0, site));
                 e.0 += 1;
                 e.1 = e.1.min(site);
             }
         }
-        self.edges(by_caller)
+        self.edges(by_function)
     }
 
     /// What the function containing `address` calls or tail-calls, most call

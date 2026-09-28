@@ -64,6 +64,36 @@ pub struct Session {
     input: Option<std::sync::Arc<[std::mem::MaybeUninit<u8>]>>,
     /// A folder of binaries being browsed (its current binary is `binary`).
     package: Option<PackageState>,
+    /// The build to compare sizes with, reduced to a snapshot.
+    baseline: Option<Baseline>,
+    /// A binary of the earlier build being read for its snapshot.
+    baseline_bin: Option<Binary>,
+    /// The open folder's snapshot, being built to compare with a folder baseline.
+    current_snapshot: Option<binviz::diff::FolderSnapshot>,
+    /// Object files gathered to link a debug map's DWARF, by file name (see `debugMapAdd`).
+    debug_objects: std::collections::HashMap<String, Vec<u8>>,
+    /// The table file text is read with (see `tableSet`).
+    table: Option<binviz::tables::Table>,
+}
+
+enum Baseline {
+    Binary(binviz::diff::SizeSnapshot),
+    Folder(binviz::diff::FolderSnapshot),
+}
+
+/// A folder's files as snapshot entries, with their kinds of content.
+fn file_bytes(files: JsValue, info: &binviz::package::PackageInfo) -> Result<Vec<binviz::diff::FileBytes>, JsError> {
+    let files: Vec<binviz::package::PackageFile> = serde_wasm_bindgen::from_value(files).map_err(err)?;
+    let kinds = binviz::package::file_categories(&files, info);
+    Ok(files
+        .into_iter()
+        .zip(kinds)
+        .map(|(f, category)| binviz::diff::FileBytes {
+            path: f.path,
+            bytes: f.size,
+            category,
+        })
+        .collect())
 }
 
 struct PackageState {
@@ -97,6 +127,18 @@ pub fn zip_parse_directory(cd: &[u8]) -> Result<JsValue, JsError> {
 #[wasm_bindgen(js_name = zipDecompressZstandard)]
 pub fn zip_decompress_zstandard(data: &[u8], max: u64) -> Result<Vec<u8>, JsError> {
     binviz::zip::decompress_zstandard(data, max).map_err(err)
+}
+
+// --- Crash reports ----------------------------------------------------------------
+
+/// A crash report read from text (Apple .crash or .ips, an Android
+/// tombstone, a stack trace), or null if the text is none of those.
+#[wasm_bindgen(js_name = crashParse)]
+pub fn crash_parse(text: &str) -> Result<JsValue, JsError> {
+    match binviz::crash::parse(text) {
+        Some(r) => to_js(&r),
+        None => Ok(JsValue::NULL),
+    }
 }
 
 // --- Folders of binaries: discovery (see `binviz::package`) --------------------
@@ -147,6 +189,18 @@ pub fn package_discover(
         &headers.into_iter().collect(),
         &bundles.into_iter().collect(),
     ))
+}
+
+/// A folder's binaries as candidates for a crash report's images.
+fn crash_candidates(info: &binviz::package::PackageInfo) -> Vec<binviz::crash::Candidate<'_>> {
+    info.binaries
+        .iter()
+        .map(|b| binviz::crash::Candidate {
+            binary: b.index,
+            name: &b.name,
+            ids: b.ids.iter().map(|x| x.id.as_str()).collect(),
+        })
+        .collect()
 }
 
 #[wasm_bindgen]
@@ -340,11 +394,235 @@ impl Session {
         to_js(b.summary())
     }
 
+    /// The object files binary `index`'s debug map names, when it has no
+    /// DWARF yet (a Mach-O binary linked without dsymutil); else none.
+    #[wasm_bindgen(js_name = packageDebugMapNeeded)]
+    pub fn package_debug_map_needed(&mut self, index: u32) -> Result<JsValue, JsError> {
+        let b = self.package_binary(index)?;
+        if b.debug_info().is_some() {
+            return to_js(&Vec::<binviz::dwarf::debugmap::DebugMapObject>::new());
+        }
+        to_js(&b.debug_map())
+    }
+
+    /// Links binary `index`'s debug map from the objects added with `debugMapAdd`.
+    #[wasm_bindgen(js_name = packageDebugMapLink)]
+    pub fn package_debug_map_link(&mut self, index: u32) -> Result<JsValue, JsError> {
+        let objects = std::mem::take(&mut self.debug_objects);
+        let b = self.package_binary(index)?;
+        let report = b
+            .attach_debug_map(&mut |o| Ok(objects.get(o.file_name()).cloned()))
+            .map_err(err)?;
+        to_js(&report)
+    }
+
     /// The size report of binary `index` (loaded or current).
     #[wasm_bindgen(js_name = packageSizeReport)]
     pub fn package_size_report(&mut self, index: u32, top: u32) -> Result<JsValue, JsError> {
         let b = self.package_binary(index)?;
         to_js(&b.size_report(top as usize))
+    }
+
+    /// The folder's binaries (by index) a crash report's frames are in: load
+    /// them (with their debug files) before `symbolicate`.
+    #[wasm_bindgen(js_name = crashNeeds)]
+    pub fn crash_needs(&self, text: &str) -> Result<Vec<u32>, JsError> {
+        let report = binviz::crash::parse(text).ok_or_else(|| JsError::new("not a crash report"))?;
+        let Some(p) = &self.package else {
+            return Ok(Vec::new());
+        };
+        let binviz::crash::Matches { pairs, .. } = binviz::crash::match_images(&report, &crash_candidates(&p.info));
+        let mut need: Vec<u32> = pairs.into_iter().map(|(_, b)| b).collect();
+        need.sort_unstable();
+        need.dedup();
+        Ok(need)
+    }
+
+    /// Symbolicates a crash report with the open binary, or the open folder's
+    /// loaded binaries (see `crashNeeds`); with neither, it comes back as the
+    /// report says it.
+    pub fn symbolicate(&self, text: &str) -> Result<JsValue, JsError> {
+        use binviz::crash::{Candidate, Found, Matches, match_images, parse, symbolicate};
+        let report = parse(text).ok_or_else(|| JsError::new("not a crash report"))?;
+        let mut found = Vec::new();
+        let mut notes = Vec::new();
+        if let Some(p) = &self.package {
+            let Matches { pairs, notes: n } = match_images(&report, &crash_candidates(&p.info));
+            notes = n;
+            for (image, b) in pairs {
+                let bin = if p.current == Some(b) {
+                    self.binary.as_ref()
+                } else {
+                    p.loaded.get(&b)
+                };
+                if let Some(bin) = bin {
+                    found.push(Found { image, binary: b, bin });
+                }
+            }
+        } else if let Some(bin) = &self.binary {
+            let name = self.name.rsplit(['/', '\\']).next().unwrap_or(&self.name);
+            let id = bin.summary().build_id.clone();
+            let Matches { pairs, notes: n } = match_images(
+                &report,
+                &[Candidate {
+                    binary: 0,
+                    name,
+                    ids: id.iter().map(String::as_str).collect(),
+                }],
+            );
+            notes = n;
+            found = pairs
+                .into_iter()
+                .map(|(image, binary)| Found { image, binary, bin })
+                .collect();
+        }
+        to_js(&symbolicate(&report, &found, &notes))
+    }
+
+    // --- Comparing sizes with another build ----------------------------------------
+
+    /// Makes the binary copied in after `beginDebugInput` the build to compare with.
+    #[wasm_bindgen(js_name = baselineBinary)]
+    pub fn baseline_binary(&mut self, name: &str) -> Result<(), JsError> {
+        let data = self.take_input()?;
+        let (bin, _) = binviz::package::load_binary(data).map_err(err)?;
+        self.baseline = Some(Baseline::Binary(bin.size_snapshot(name)));
+        Ok(())
+    }
+
+    /// Starts a folder as the build to compare with: its files (`[{path,
+    /// size, …}]`) and what `packageDiscover` found in them. Add its binaries
+    /// with `baselineLoad`, `baselineAttach` and `baselineAdd`.
+    #[wasm_bindgen(js_name = baselineFolder)]
+    pub fn baseline_folder(&mut self, files: JsValue, info: JsValue) -> Result<(), JsError> {
+        let info: binviz::package::PackageInfo = serde_wasm_bindgen::from_value(info).map_err(err)?;
+        self.baseline = Some(Baseline::Folder(binviz::diff::FolderSnapshot {
+            name: info.name.clone(),
+            files: file_bytes(files, &info)?,
+            binaries: Vec::new(),
+        }));
+        Ok(())
+    }
+
+    /// Reads a binary of the earlier folder (copied in after `beginDebugInput`).
+    #[wasm_bindgen(js_name = baselineLoad)]
+    pub fn baseline_load(&mut self) -> Result<(), JsError> {
+        let data = self.take_input()?;
+        self.baseline_bin = Some(binviz::package::load_binary(data).map_err(err)?.0);
+        Ok(())
+    }
+
+    /// Attaches its debug file (copied in after `beginDebugInput`).
+    #[wasm_bindgen(js_name = baselineAttach)]
+    pub fn baseline_attach(&mut self, name: &str) -> Result<(), JsError> {
+        let data = self.take_input()?;
+        let bin = self
+            .baseline_bin
+            .as_mut()
+            .ok_or_else(|| JsError::new("no binary read"))?;
+        bin.attach_debug_file(name, data).map_err(err)
+    }
+
+    /// Adds the binary read to the earlier folder's snapshot, and lets it go.
+    #[wasm_bindgen(js_name = baselineAdd)]
+    pub fn baseline_add(&mut self, path: String, name: &str) -> Result<(), JsError> {
+        let bin = self.baseline_bin.take().ok_or_else(|| JsError::new("no binary read"))?;
+        if let Some(Baseline::Folder(f)) = &mut self.baseline {
+            f.binaries.push(binviz::diff::BinarySnapshot {
+                path,
+                snapshot: bin.size_snapshot(name),
+            });
+        }
+        Ok(())
+    }
+
+    /// "binary", "folder", or null with no build to compare with.
+    #[wasm_bindgen(js_name = baselineKind)]
+    pub fn baseline_kind(&self) -> Option<String> {
+        self.baseline.as_ref().map(|b| match b {
+            Baseline::Binary(_) => "binary".into(),
+            Baseline::Folder(_) => "folder".into(),
+        })
+    }
+
+    #[wasm_bindgen(js_name = baselineClear)]
+    pub fn baseline_clear(&mut self) {
+        self.baseline = None;
+        self.baseline_bin = None;
+    }
+
+    /// Starts the open folder's snapshot (its files, `[{path, size, …}]`);
+    /// add its binaries with `packageSnapshotAdd` once each is loaded.
+    #[wasm_bindgen(js_name = packageSnapshotBegin)]
+    pub fn package_snapshot_begin(&mut self, files: JsValue) -> Result<(), JsError> {
+        let p = self.package.as_ref().ok_or_else(|| JsError::new("no folder open"))?;
+        self.current_snapshot = Some(binviz::diff::FolderSnapshot {
+            name: p.info.name.clone(),
+            files: file_bytes(files, &p.info)?,
+            binaries: Vec::new(),
+        });
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = packageSnapshotAdd)]
+    pub fn package_snapshot_add(&mut self, index: u32) -> Result<(), JsError> {
+        let (path, name) = {
+            let p = self.package.as_ref().ok_or_else(|| JsError::new("no folder open"))?;
+            let pb = p
+                .info
+                .binaries
+                .get(index as usize)
+                .ok_or_else(|| JsError::new("no such binary"))?;
+            (pb.path.clone(), pb.name.clone())
+        };
+        let snapshot = self.package_binary(index)?.size_snapshot(&name);
+        if let Some(f) = &mut self.current_snapshot {
+            f.binaries.push(binviz::diff::BinarySnapshot { path, snapshot });
+        }
+        Ok(())
+    }
+
+    /// What changed from the earlier folder to the open one (after `packageSnapshotBegin` and `packageSnapshotAdd`).
+    #[wasm_bindgen(js_name = sizeDiffFolder)]
+    pub fn size_diff_folder(&self, top: u32) -> Result<JsValue, JsError> {
+        let Some(Baseline::Folder(old)) = &self.baseline else {
+            return Err(JsError::new("no folder to compare with"));
+        };
+        let new = self
+            .current_snapshot
+            .as_ref()
+            .ok_or_else(|| JsError::new("the open folder isn't read yet"))?;
+        to_js(&binviz::diff::diff_folders(old, new, top as usize))
+    }
+
+    /// What changed from the earlier binary (or, of an earlier folder, the
+    /// binary with the open one's name) to the open binary.
+    #[wasm_bindgen(js_name = sizeDiffBinary)]
+    pub fn size_diff_binary(&self, top: u32) -> Result<JsValue, JsError> {
+        let bin = self.bin()?;
+        let name = match &self.package {
+            Some(p) => p
+                .current
+                .and_then(|c| p.info.binaries.get(c as usize))
+                .map(|b| b.name.clone())
+                .unwrap_or_default(),
+            None => self.name.rsplit(['/', '\\']).next().unwrap_or(&self.name).to_string(),
+        };
+        let old = match &self.baseline {
+            Some(Baseline::Binary(s)) => s,
+            Some(Baseline::Folder(f)) => f
+                .binaries
+                .iter()
+                .find(|b| b.snapshot.name == name)
+                .map(|b| &b.snapshot)
+                .ok_or_else(|| JsError::new(&format!("the earlier build has no binary named {name}")))?,
+            None => return Err(JsError::new("no build to compare with")),
+        };
+        to_js(&binviz::diff::diff_binaries(
+            old,
+            &bin.size_snapshot(&name),
+            top as usize,
+        ))
     }
 
     /// Where the open binary's bytes go: sections, owners, largest symbols.
@@ -414,6 +692,31 @@ impl Session {
         let b = self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"))?;
         b.attach_debug_file(&name, bytes).map_err(err)?;
         self.opened()
+    }
+
+    /// The object files the open binary's debug map names (a Mach-O binary
+    /// linked without dsymutil keeps its DWARF there).
+    #[wasm_bindgen(js_name = debugMap)]
+    pub fn debug_map(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.debug_map())
+    }
+
+    /// Adds an object file (or static library), by its file name, for `debugMapLink`.
+    #[wasm_bindgen(js_name = debugMapAdd)]
+    pub fn debug_map_add(&mut self, name: String, bytes: Vec<u8>) {
+        self.debug_objects.insert(name, bytes);
+    }
+
+    /// Links the open binary's debug map from the objects added with
+    /// `debugMapAdd` (then let go): `{objects, linked, missing, failed, units}`.
+    #[wasm_bindgen(js_name = debugMapLink)]
+    pub fn debug_map_link(&mut self) -> Result<JsValue, JsError> {
+        let objects = std::mem::take(&mut self.debug_objects);
+        let b = self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"))?;
+        let report = b
+            .attach_debug_map(&mut |o| Ok(objects.get(o.file_name()).cloned()))
+            .map_err(err)?;
+        to_js(&report)
     }
 
     /// The bytes of the open binary (a member's bytes for containers).
@@ -739,6 +1042,107 @@ impl Session {
     #[wasm_bindgen(js_name = functionSummary)]
     pub fn function_summary(&self, address: u64, limit: u32) -> Result<JsValue, JsError> {
         to_js(&self.bin()?.function_summary(address, limit as usize))
+    }
+
+    // --- Text in games: relative search and table files -----------------
+
+    /// Relative search in the open file: `word` in any encoding that keeps its
+    /// letters in order (`width` 1, or 2 for 16-bit characters).
+    #[wasm_bindgen(js_name = relativeSearch)]
+    pub fn relative_search(&self, word: &str, width: u32, limit: u32) -> Result<JsValue, JsError> {
+        let found = binviz::tables::relative_search(self.bin()?.data(), word, width, limit as usize)
+            .map_err(|e| JsError::new(&e))?;
+        to_js(&found)
+    }
+
+    /// The table (as `.tbl` lines) of an alphabet starting at `first`.
+    #[wasm_bindgen(js_name = tableFromAlphabet)]
+    pub fn table_from_alphabet(&self, first: u32, letter: char, width: u32) -> String {
+        binviz::tables::Table::from_alphabet(first, letter, width).to_tbl()
+    }
+
+    /// Reads text with this table file from now on; returns how many entries it has.
+    #[wasm_bindgen(js_name = tableSet)]
+    pub fn table_set(&mut self, text: &str) -> Result<u32, JsError> {
+        let table = binviz::tables::Table::parse(text).map_err(|e| JsError::new(&e))?;
+        let n = table.len() as u32;
+        self.table = Some(table);
+        Ok(n)
+    }
+
+    #[wasm_bindgen(js_name = tableClear)]
+    pub fn table_clear(&mut self) {
+        self.table = None;
+    }
+
+    fn table(&self) -> Result<&binviz::tables::Table, JsError> {
+        self.table.as_ref().ok_or_else(|| JsError::new("no table set"))
+    }
+
+    /// Per byte value, the text of its one-byte entry ("" for none).
+    #[wasm_bindgen(js_name = tableChars)]
+    pub fn table_chars(&self) -> Result<Vec<String>, JsError> {
+        let t = self.table()?;
+        Ok((0..=255u8).map(|b| t.single(b).unwrap_or("").to_string()).collect())
+    }
+
+    /// The text at `offset` (up to `len` bytes, or the first end marker).
+    #[wasm_bindgen(js_name = tableDecode)]
+    pub fn table_decode(&self, offset: u64, len: u32) -> Result<JsValue, JsError> {
+        let data = self.bin()?.data();
+        let start = (offset as usize).min(data.len());
+        let bytes = &data[start..(start + len as usize).min(data.len())];
+        let mut text = self.table()?.decode(bytes, true);
+        text.offset = offset;
+        to_js(&text)
+    }
+
+    /// Where `text` is, as the table encodes it, with the text there.
+    #[wasm_bindgen(js_name = tableFind)]
+    pub fn table_find(&self, text: &str, limit: u32) -> Result<JsValue, JsError> {
+        let found = self
+            .table()?
+            .find_text(self.bin()?.data(), text, limit as usize)
+            .map_err(|e| JsError::new(&e))?;
+        to_js(&found)
+    }
+
+    /// All the text the table reads: strings of `min` entries or more.
+    #[wasm_bindgen(js_name = tableStrings)]
+    pub fn table_strings(&self, min: u32, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.table()?.strings(self.bin()?.data(), min as usize, limit as usize))
+    }
+
+    // --- Objective-C -------------------------------------------------------
+
+    /// How many classes, categories, protocols, methods and selectors there are.
+    #[wasm_bindgen(js_name = objcCounts)]
+    pub fn objc_counts(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.objc().counts())
+    }
+
+    /// Classes, categories and protocols: `[{kind, name, address, base, methods, swift}]`.
+    #[wasm_bindgen(js_name = objcEntries)]
+    pub fn objc_entries(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.objc().entries())
+    }
+
+    /// A class, category or protocol (`kind`) declared as its header would, or null.
+    #[wasm_bindgen(js_name = objcInterface)]
+    pub fn objc_interface(&self, kind: &str, name: &str) -> Result<JsValue, JsError> {
+        match self.bin()?.objc().interface_of(kind, name) {
+            Some(i) => to_js(&i),
+            None => Ok(JsValue::NULL),
+        }
+    }
+
+    /// The methods implementing a selector and the functions sending it, or null.
+    #[wasm_bindgen(js_name = objcSelector)]
+    pub fn objc_selector(&self, selector: &str) -> Result<JsValue, JsError> {
+        match self.bin()?.objc_selector(selector) {
+            Some(u) => to_js(&u),
+            None => Ok(JsValue::NULL),
+        }
     }
 
     // --- DWARF -------------------------------------------------------------

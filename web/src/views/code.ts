@@ -5,6 +5,7 @@ import { emptyState } from '../ui';
 import { basename, debounce, formatCount, formatSize, h, hex } from '../util';
 import { VList } from '../vlist';
 import { View } from './base';
+import { objcSelectorOf } from './objc';
 
 type Row = { kind: 'src'; loc: SourceLoc } | { kind: 'ins'; ins: Instruction; index: number };
 type Func = [bigint, bigint, string];
@@ -221,16 +222,23 @@ export class CodeView extends View {
     }
   }
 
-  /** "Called by 3 · Calls 12", filled in when references are indexed; opens the call graph. */
+  /**
+   * "Called by 3 · Calls 12" (an Objective-C method: "Sent by 2 · Calls 12"),
+   * filled in when references are indexed; opens the call graph.
+   */
   private callCounts(d: Disassembly): HTMLElement | null {
     const fn = d.function;
     if (!fn || !d.supported || store.xrefs === 'unsupported' || store.xrefs === 'none') return null;
     const el = h('button', { class: 'btn small', type: 'button', title: 'Call graph (0)' }, store.xrefs === 'building' ? 'Indexing calls…' : 'Calls…');
     el.addEventListener('click', () => store.setView('calls'));
     if (store.xrefs === 'ready') {
-      void Promise.all([store.api.callers(fn.address), store.api.callees(fn.address)]).then(([callers, callees]) => {
+      // Messages reach a method through objc_msgSend, not a call: count who sends its selector.
+      const selector = objcSelectorOf(fn.demangled ?? fn.name);
+      void Promise.all([store.api.callers(fn.address), store.api.callees(fn.address), selector ? store.api.objcSelector(selector) : null]).then(([callers, callees, uses]) => {
         if (this.current !== d) return;
-        el.textContent = `Called by ${formatCount(callers.length)} · Calls ${formatCount(callees.length)}`;
+        const into = uses && callers.length === 0 ? `Sent by ${formatCount(uses.senders.length)}` : `Called by ${formatCount(callers.length)}`;
+        el.textContent = `${into} · Calls ${formatCount(callees.length)}`;
+        if (uses && callers.length === 0) el.title = `Functions sending ${selector} (the inspector lists them) · call graph (0)`;
       });
     }
     return el;

@@ -20,11 +20,17 @@ use crate::model::{Format, RegionKind, Section};
 use crate::util::{Bytes, Endian};
 
 pub(crate) enum Scheme {
-    /// Plain addresses in the data sections.
-    Plain,
-    /// Mach-O chained fixups: the image's base address and, per segment with
-    /// fixups, (start, end, file offset, pointer format).
-    Chained { base: u64, segments: Vec<ChainedSegment> },
+    /// Plain addresses in the data sections; for Mach-O with dyld info, also
+    /// where the loader binds pointers to symbols: (address, symbol), sorted.
+    Plain { binds: Vec<(u64, String)> },
+    /// Mach-O chained fixups: the image's base address, per segment with
+    /// fixups (start, end, file offset, pointer format), and the symbols
+    /// binds refer to by ordinal.
+    Chained {
+        base: u64,
+        segments: Vec<ChainedSegment>,
+        imports: Vec<String>,
+    },
     /// Relocated ELF: (location, target), sorted by location.
     Relocated(Vec<(u64, u64)>),
 }
@@ -58,6 +64,106 @@ pub(crate) fn stringy(name: &str) -> bool {
     .any(|s| name.contains(s))
 }
 
+/// The import a chained pointer binds to (its ordinal), if it is a bind.
+fn chained_bind(v: u64, format: u16) -> Option<usize> {
+    match format {
+        // DYLD_CHAINED_PTR_ARM64E, _ARM64E_USERLAND: a 16-bit ordinal; _USERLAND24: 24 bits.
+        1 | 9 => ((v >> 62) & 1 == 1).then_some((v & 0xFFFF) as usize),
+        12 => ((v >> 62) & 1 == 1).then_some((v & 0xFF_FFFF) as usize),
+        // DYLD_CHAINED_PTR_64, _64_OFFSET
+        2 | 6 => (v >> 63 == 1).then_some((v & 0xFF_FFFF) as usize),
+        _ => None,
+    }
+}
+
+/// The names of the symbols binds refer to, by ordinal (`dyld_chained_import`s).
+fn chained_imports(b: &Bytes, data: &[u8], dataoff: u64) -> Vec<String> {
+    let (Some(imports), Some(symbols), Some(count), Some(format)) = (
+        b.u32(dataoff + 8),
+        b.u32(dataoff + 12),
+        b.u32(dataoff + 16),
+        b.u32(dataoff + 20),
+    ) else {
+        return Vec::new();
+    };
+    let (imports, symbols) = (dataoff + imports as u64, dataoff + symbols as u64);
+    let name = |off: u64| -> String {
+        let start = (symbols + off) as usize;
+        let bytes = data.get(start..).unwrap_or_default();
+        let end = bytes.iter().take(4096).position(|&c| c == 0).unwrap_or(0);
+        String::from_utf8_lossy(&bytes[..end]).into_owned()
+    };
+    let mut out = Vec::new();
+    for i in 0..count.min(1 << 20) as u64 {
+        let offset = match format {
+            1 => b.u32(imports + 4 * i).map(|v| (v >> 9) as u64),
+            2 => b.u32(imports + 8 * i).map(|v| (v >> 9) as u64),
+            3 => b.u64(imports + 16 * i).map(|v| v >> 32),
+            _ => None,
+        };
+        let Some(offset) = offset else { break };
+        out.push(name(offset));
+    }
+    out
+}
+
+/// Where the loader binds pointers to symbols in a Mach-O image with dyld
+/// info (`LC_DYLD_INFO`): (address, symbol), sorted by address.
+fn dyld_info_binds(b: &Bytes, bin: &Binary) -> Vec<(u64, String)> {
+    use object::macho;
+    let mut out = Vec::new();
+    let Some(ncmds) = b.u32(16) else { return out };
+    let mut off: u64 = if bin.is64 { 32 } else { 28 };
+    // Binds are placed by segment index: the segments' addresses, in load command order.
+    let mut segments = Vec::new();
+    let mut info = None;
+    for _ in 0..ncmds.min(65536) {
+        let (Some(cmd), Some(size)) = (b.u32(off), b.u32(off + 4)) else {
+            break;
+        };
+        if cmd == macho::LC_SEGMENT_64.0 {
+            segments.push(b.u64(off + 24).unwrap_or(0));
+        } else if cmd == macho::LC_SEGMENT.0 {
+            segments.push(b.u32(off + 24).unwrap_or(0) as u64);
+        } else if cmd == macho::LC_DYLD_INFO.0 || cmd == macho::LC_DYLD_INFO_ONLY.0 {
+            info = Some(off);
+        }
+        if size < 8 {
+            break;
+        }
+        off += size as u64;
+    }
+    let Some(info) = info else { return out };
+    let Some(command) = b.slice(
+        info,
+        std::mem::size_of::<macho::DyldInfoCommand<object::Endianness>>() as u64,
+    ) else {
+        return out;
+    };
+    let Ok((command, _)) = object::pod::from_bytes::<macho::DyldInfoCommand<object::Endianness>>(command) else {
+        return out;
+    };
+    let endian = match bin.endian {
+        Endian::Little => object::Endianness::Little,
+        Endian::Big => object::Endianness::Big,
+    };
+    let pointer = if bin.is64 { 8 } else { 4 };
+    let Ok(mut binds) = command.binds(endian, &*bin.data, pointer) else {
+        return out;
+    };
+    while let Ok(Some(bind)) = binds.next() {
+        if let Some(&segment) = segments.get(bind.segment_index as usize) {
+            out.push((segment + bind.segment_offset, crate::util::lossy(bind.symbol)));
+        }
+        if out.len() >= 1 << 22 {
+            break;
+        }
+    }
+    out.sort_by_key(|b| b.0);
+    out.dedup_by_key(|b| b.0);
+    out
+}
+
 /// Decodes one link of a chain: the target if it is a rebase (binds point
 /// outside the image), and the distance to the next link (0 at the end).
 fn decode_chained(v: u64, format: u16, base: u64) -> (Option<u64>, u64) {
@@ -89,7 +195,7 @@ fn decode_chained(v: u64, format: u16, base: u64) -> (Option<u64>, u64) {
     }
 }
 
-fn chained_segments(b: &Bytes, bin: &Binary) -> Option<(u64, Vec<ChainedSegment>)> {
+fn chained_segments(b: &Bytes, bin: &Binary) -> Option<(u64, Vec<ChainedSegment>, Vec<String>)> {
     let ncmds = b.u32(16)?;
     let mut off: u64 = if bin.is64 { 32 } else { 28 };
     let mut data = None;
@@ -143,7 +249,7 @@ fn chained_segments(b: &Bytes, bin: &Binary) -> Option<(u64, Vec<ChainedSegment>
             pages,
         });
     }
-    Some((base, out))
+    Some((base, out, chained_imports(b, &bin.data, dataoff)))
 }
 
 fn relocated_elf(bin: &Binary, file: &object::File<'_>) -> Vec<(u64, u64)> {
@@ -263,13 +369,19 @@ impl Binary {
         let b = Bytes::new(&self.data, self.endian);
         match self.summary.format {
             Format::MachO => match chained_segments(&b, self) {
-                Some((base, segments)) => Scheme::Chained { base, segments },
-                None => Scheme::Plain,
+                Some((base, segments, imports)) => Scheme::Chained {
+                    base,
+                    segments,
+                    imports,
+                },
+                None => Scheme::Plain {
+                    binds: dyld_info_binds(&b, self),
+                },
             },
             Format::Elf if file.is_some_and(|f| f.kind() == ObjectKind::Dynamic) => {
                 Scheme::Relocated(relocated_elf(self, file.expect("checked")))
             }
-            _ => Scheme::Plain,
+            _ => Scheme::Plain { binds: Vec::new() },
         }
     }
 
@@ -284,7 +396,7 @@ impl Binary {
     /// checked; the caller keeps those inside the image.
     pub(crate) fn scan_pointers(&self, scheme: &Scheme, emit: &mut dyn FnMut(u64, u64)) {
         match scheme {
-            Scheme::Chained { base, segments } => {
+            Scheme::Chained { base, segments, .. } => {
                 let b = Bytes::new(&self.data, self.endian);
                 for seg in segments {
                     for p in 0..seg.pages {
@@ -316,7 +428,7 @@ impl Binary {
                     emit(at, t);
                 }
             }
-            Scheme::Plain => {
+            Scheme::Plain { .. } => {
                 let step = if self.is64 { 8u64 } else { 4 };
                 for sec in &self.sections {
                     if !sec.loaded
@@ -341,11 +453,29 @@ impl Binary {
         }
     }
 
+    /// The symbol the pointer at `address` is bound to by a Mach-O image's
+    /// loader (`_OBJC_CLASS_$_NSObject`, say). Only for places known to hold
+    /// pointers.
+    pub(crate) fn bound_symbol(&self, address: u64) -> Option<&str> {
+        match self.scheme() {
+            Scheme::Chained { segments, imports, .. } => {
+                let seg = segments.iter().find(|s| address >= s.start && address < s.end)?;
+                let v = Bytes::new(&self.data, self.endian).u64(seg.file_offset + (address - seg.start))?;
+                imports.get(chained_bind(v, seg.format)?).map(String::as_str)
+            }
+            Scheme::Plain { binds } => {
+                let i = binds.binary_search_by_key(&address, |b| b.0).ok()?;
+                Some(&binds[i].1)
+            }
+            Scheme::Relocated(_) => None,
+        }
+    }
+
     /// Decodes the pointer stored at `address` under `scheme`, if it holds one.
     pub(crate) fn decode_pointer(&self, scheme: &Scheme, address: u64) -> Option<u64> {
         match scheme {
-            Scheme::Plain => self.read_word(address),
-            Scheme::Chained { base, segments } => {
+            Scheme::Plain { .. } => self.read_word(address),
+            Scheme::Chained { base, segments, .. } => {
                 let seg = segments.iter().find(|s| address >= s.start && address < s.end)?;
                 let v = Bytes::new(&self.data, self.endian).u64(seg.file_offset + (address - seg.start))?;
                 decode_chained(v, seg.format, *base).0

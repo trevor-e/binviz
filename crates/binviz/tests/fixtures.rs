@@ -44,6 +44,13 @@ const ALL: &[&str] = &[
     "imports-elf-a64",
     "imports-macho-a64",
     "imports-macho-a64.chained",
+    "tiny.nes",
+    "tiny.gb",
+    "tiny.sfc",
+    "tiny.z64",
+    "tiny-psx.exe",
+    "tiny.gba",
+    "tiny.md",
 ];
 
 #[test]
@@ -1164,4 +1171,536 @@ fn elf_debug_files_pair_through_the_debug_link() {
         .unwrap();
     assert!(bin.summary().has_dwarf);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn crash_reports_symbolicate() {
+    use binviz::crash::{Found, ImageMatch, parse, symbolicate};
+    // An Android tombstone frame inside tiny::run, where dot() is inlined.
+    let bin = open("tiny-elf-x64");
+    let run = bin.symbols().by_name("tiny::run").expect("run");
+    let inlined = (run.address..run.address + run.size)
+        .find(|&a| bin.symbolize(a).first().and_then(|l| l.function.as_deref()) == Some("tiny::dot"))
+        .expect("an address in the inlined dot()");
+    let tombstone = format!(
+        "pid: 7, tid: 7, name: tiny  >>> tiny <<<\nsignal 11 (SIGSEGV)\nbacktrace:\n      #00 pc {inlined:016x}  /system/bin/tiny-elf-x64\n"
+    );
+    let report = parse(&tombstone).expect("a tombstone");
+    // No build ID in this fixture: it matches by name.
+    assert_eq!(report.images[0].matches([], "tiny-elf-x64"), ImageMatch::Yes);
+    let out = symbolicate(
+        &report,
+        &[Found {
+            image: 0,
+            binary: 0,
+            bin: &bin,
+        }],
+        &[],
+    );
+    let lines = &out.threads[0].frames[0].lines;
+    assert_eq!(lines[0].function.as_deref(), Some("tiny::dot"), "{lines:?}");
+    assert!(lines[0].inlined && lines[0].file.as_deref().is_some_and(|f| f.ends_with("tiny.rs")));
+    assert_eq!(lines.last().unwrap().function.as_deref(), Some("tiny::run"));
+
+    // An Apple report for the stripped app, loaded 0x4000000 higher than linked,
+    // symbolicated through its "dSYM" (the unstripped copy).
+    let mut app = open("imports-macho-a64.chained.stripped");
+    let main = open("imports-macho-a64.chained")
+        .symbols()
+        .by_name("_main")
+        .expect("main")
+        .address;
+    let uuid = app.summary().build_id.clone().expect("a UUID");
+    let slide = 0x400_0000u64;
+    let apple = format!(
+        "Process: ShopApp [1]\nThread 0 Crashed:\n0   ShopApp  0x{:016x} 0x{:x} + {}\n\nBinary Images:\n0x{:x} - 0x{:x} ShopApp arm64  <{}> /var/ShopApp.app/ShopApp\n",
+        main + slide + 8,
+        0x1_0000_0000u64 + slide,
+        main - 0x1_0000_0000 + 8,
+        0x1_0000_0000u64 + slide,
+        0x1_0000_ffffu64 + slide,
+        uuid.replace('-', "").to_lowercase()
+    );
+    let report = parse(&apple).expect("an Apple report");
+    assert_eq!(report.images[0].matches([uuid.as_str()], "ShopApp"), ImageMatch::Yes);
+    assert_eq!(
+        report.images[0].matches(["00000000-0000-0000-0000-000000000000"], "ShopApp"),
+        ImageMatch::OtherBuild
+    );
+    let mut dsym = fixture("imports-macho-a64.chained");
+    dsym[12..16].copy_from_slice(&10u32.to_le_bytes());
+    app.attach_debug_file("ShopApp.dSYM", dsym).unwrap();
+    let out = symbolicate(
+        &report,
+        &[Found {
+            image: 0,
+            binary: 3,
+            bin: &app,
+        }],
+        &[],
+    );
+    let frame = &out.threads[0].frames[0];
+    assert_eq!(frame.binary, Some(3));
+    assert_eq!(frame.binary_address, Some(main + 8));
+    assert_eq!(frame.lines[0].function.as_deref(), Some("_main"), "{frame:?}");
+    assert_eq!(frame.lines[0].offset, Some(8));
+}
+
+#[test]
+fn names_demangled_elsewhere_are_used() {
+    // binviz can't demangle Swift; names from `swift-demangle` (or anything
+    // else) replace the raw ones wherever a symbol is shown.
+    let mut bin = open("tiny-macho-a64");
+    assert_eq!(bin.symbols().by_name("_main").unwrap().display_name(), "_main");
+    bin.add_demangled_names([("_main".to_string(), "the entry point".to_string())]);
+    assert_eq!(
+        bin.symbols().by_name("_main").unwrap().display_name(),
+        "the entry point"
+    );
+    let found = bin.search("entry point", 5, None);
+    assert!(
+        found.hits.iter().any(|h| h.label.contains("the entry point")),
+        "{:?}",
+        found.hits
+    );
+}
+
+#[test]
+fn objective_c_metadata_names_what_stripping_removed() {
+    use binviz::{SymbolKind, SymbolSource};
+    let bin = open("objc-macho-a64.chained.stripped");
+    let objc = bin.objc();
+    // The class; its superclass is bound to libobjc's NSObject.
+    assert_eq!(objc.classes.len(), 1);
+    let greeter = &objc.classes[0];
+    assert_eq!(greeter.name, "Greeter");
+    assert_eq!(greeter.superclass.as_deref(), Some("NSObject"));
+    assert_eq!(greeter.instance_size, 16);
+    let ivar = &greeter.ivars[0];
+    assert_eq!(
+        (ivar.name.as_str(), ivar.types.as_str(), ivar.offset, ivar.size),
+        ("_name", "@\"NSString\"", Some(8), 8)
+    );
+    assert_eq!(greeter.properties[0].name, "name");
+    // A category on a class from elsewhere, with a relative method list.
+    let extras = &objc.categories[0];
+    assert_eq!((extras.name.as_str(), extras.class.as_str()), ("Extras", "NSObject"));
+
+    // The methods get their names back, sized by the function starts.
+    let named = |n: &str| bin.symbols().by_name(n).unwrap_or_else(|| panic!("{n}"));
+    for method in [
+        "-[Greeter hello]",
+        "-[Greeter greetWith:times:]",
+        "+[Greeter make]",
+        "-[NSObject(Extras) wave]",
+    ] {
+        let s = named(method);
+        assert_eq!(
+            (s.source, s.kind, s.size),
+            (SymbolSource::Objc, SymbolKind::Function, 8),
+            "{method}"
+        );
+    }
+    // So do the metadata, and the references code loads.
+    for name in [
+        "_OBJC_CLASS_$_Greeter",
+        "_OBJC_METACLASS_$_Greeter",
+        "__OBJC_CLASS_RO_$_Greeter",
+        "__OBJC_$_INSTANCE_METHODS_Greeter",
+        "__OBJC_$_CLASS_METHODS_Greeter",
+        "__OBJC_$_CATEGORY_NSObject_$_Extras",
+        "_OBJC_IVAR_$_Greeter._name",
+        "@selector(hello)",
+        "_objc_msgSend$wave",
+    ] {
+        assert_eq!(named(name).source, SymbolSource::Objc, "{name}");
+    }
+    assert_eq!(named("__OBJC_$_INSTANCE_METHODS_Greeter").size, 8 + 2 * 24);
+
+    // main sends each selector: through objc_msgSend, or the objc_msgSend$wave stub.
+    let main = bin.summary().entry.unwrap();
+    for selector in ["hello", "make", "wave"] {
+        let uses = bin.objc_selector(selector).unwrap();
+        assert_eq!(uses.implementations.len(), 1, "{selector}");
+        let senders: Vec<u64> = uses.senders.iter().map(|s| s.address).collect();
+        assert_eq!(senders, [main], "{selector}");
+    }
+    assert_eq!(bin.objc_selector("wave").unwrap().stubs.len(), 1);
+    assert!(bin.objc_selector("nothing").is_none());
+
+    // The class as its header would declare it.
+    let text = objc.interface("Greeter").unwrap().to_text();
+    for line in [
+        "@interface Greeter : NSObject",
+        "    NSString *_name;",
+        "@property (nonatomic, strong) NSString *name;",
+        "+ (id)make;",
+        "- (void)greetWith:(id)arg1 times:(int)arg2;",
+    ] {
+        assert!(text.contains(line), "{line}\n{text}");
+    }
+    let text = objc.interface("NSObject (Extras)").unwrap().to_text();
+    assert!(text.contains("- (void)wave;"), "{text}");
+}
+
+#[test]
+fn objective_c_classes_bound_by_dyld_info() {
+    use binviz::SymbolSource;
+    // Without chained fixups the loader binds the superclass by opcode.
+    let bin = open("objc-macho-a64");
+    let objc = bin.objc();
+    assert_eq!(objc.classes[0].superclass.as_deref(), Some("NSObject"));
+    assert_eq!(objc.categories[0].class, "NSObject");
+    // The implementations are where the symbol table says, and its names stay.
+    for (selector, symbol) in [
+        ("hello", "_Greeter_hello"),
+        ("greetWith:times:", "_Greeter_greetWith_times"),
+        ("make", "_Greeter_make"),
+        ("wave", "_NSObject_Extras_wave"),
+    ] {
+        let address = bin.symbols().by_name(symbol).unwrap().address;
+        assert_eq!(objc.implementations(selector)[0].address, address, "{selector}");
+        assert_eq!(bin.symbols().at(address).unwrap().name(), symbol);
+    }
+    // The metadata names what the symbol table doesn't.
+    assert_eq!(
+        bin.symbols().by_name("@selector(hello)").unwrap().source,
+        SymbolSource::Objc
+    );
+    // Images without Objective-C have nothing to show.
+    assert!(open("imports-macho-a64.chained").objc().is_empty());
+    assert!(open("tiny-elf-x64").objc().is_empty());
+}
+
+/// A debug map's object, read from the fixtures by its file name (the path it
+/// records is where it was built).
+fn object_from_fixtures(o: &binviz::dwarf::debugmap::DebugMapObject) -> Result<Option<Vec<u8>>, String> {
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin");
+    Ok(std::fs::read(dir.join(o.file_name())).ok())
+}
+
+#[test]
+fn debug_maps_bring_the_objects_dwarf() {
+    let obj = open("tiny-macho-a64.o");
+    let od = obj.debug_info().unwrap();
+    // As linked, and with the functions reordered and main dead-stripped.
+    for name in ["tiny-macho-a64", "tiny-macho-a64.reordered"] {
+        let mut bin = open(name);
+        assert!(bin.debug_info().is_none(), "{name}");
+        let map = bin.debug_map();
+        assert_eq!(map.len(), 1, "{name}");
+        assert_eq!(map[0].file_name(), "tiny-macho-a64.o");
+        let report = bin.attach_debug_map(&mut object_from_fixtures).unwrap();
+        assert_eq!((report.linked, report.units), (1, 1), "{name}: {report:?}");
+        let debug = bin.debug_info().unwrap();
+        // Every instruction has the object's line for it, wherever its function went.
+        for func in ["checksum", "tiny::fib", "tiny::run"] {
+            let (os, es) = (
+                obj.symbols().by_name(func).unwrap(),
+                bin.symbols().by_name(func).unwrap(),
+            );
+            assert_eq!(os.size, es.size, "{name}: {func}");
+            for delta in (0..os.size).step_by(4) {
+                assert_eq!(
+                    od.location(os.address + delta).map(|l| (l.line, l.column)),
+                    debug.location(es.address + delta).map(|l| (l.line, l.column)),
+                    "{name}: {func}+{delta:#x}"
+                );
+            }
+            let frames = debug.frames(es.address + 8);
+            let outer = frames.last().unwrap_or_else(|| panic!("{name}: no frames in {func}"));
+            let function = outer.demangled.as_deref().or(outer.function.as_deref()).unwrap_or("");
+            assert!(
+                function.ends_with(func.trim_start_matches("tiny::")),
+                "{name}: {function}"
+            );
+        }
+        // The DIEs follow their code.
+        let fib = debug
+            .search("fib", 10)
+            .into_iter()
+            .find(|d| d.tag == "DW_TAG_subprogram")
+            .unwrap();
+        assert_eq!(
+            fib.low_pc,
+            Some(bin.symbols().by_name("tiny::fib").unwrap().address),
+            "{name}"
+        );
+        let dead = debug
+            .search("main", 10)
+            .into_iter()
+            .any(|d| d.tag == "DW_TAG_subprogram" && d.name.as_deref() == Some("main"));
+        assert_eq!(dead, name == "tiny-macho-a64", "{name}: main");
+    }
+    // Objects that can't be found are reported, not guessed at.
+    let mut bin = open("tiny-macho-a64");
+    let err = bin.attach_debug_map(&mut |_| Ok(None)).unwrap_err();
+    assert!(err.message().contains("was not found"), "{err}");
+    // lld records no modification time; with one, a rebuilt object is refused.
+    assert_eq!(bin.debug_map()[0].modified, 0);
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin");
+    let report = bin.attach_debug_map_from_disk(&[dir]).unwrap();
+    assert_eq!(report.linked, 1, "{report:?}");
+}
+
+fn functions(bin: &Binary) -> Vec<(u64, String)> {
+    bin.symbols()
+        .iter()
+        .filter(|s| s.kind == binviz::SymbolKind::Function && s.defined)
+        .map(|s| (s.address, s.display_name().into_owned()))
+        .collect::<std::collections::BTreeMap<_, _>>()
+        .into_iter()
+        .collect()
+}
+
+#[test]
+fn nes_roms_are_followed_from_their_vectors() {
+    let bin = open("tiny.nes");
+    let s = bin.summary();
+    assert_eq!((s.format, s.arch.as_str()), (binviz::Format::Rom, "6502"));
+    // Banks get addresses of their own: the fixed last one is bank 3's $C000.
+    assert_eq!(s.entry, Some(0x3_C000));
+    let banks: Vec<(&str, u64)> = bin
+        .sections()
+        .iter()
+        .filter(|s| s.name.starts_with("PRG bank"))
+        .map(|s| (s.name.as_str(), s.address))
+        .collect();
+    assert_eq!(
+        banks,
+        [
+            ("PRG bank 0", 0x8000),
+            ("PRG bank 1", 0x1_8000),
+            ("PRG bank 2", 0x2_8000),
+            ("PRG bank 3 (fixed)", 0x3_C000)
+        ]
+    );
+    // The handlers, named after their vectors, and what they call.
+    let found = functions(&bin);
+    let names: Vec<&str> = found.iter().map(|f| f.1.as_str()).collect();
+    assert_eq!(names, ["reset", "sub_3c023", "sub_3c029", "nmi", "irq"]);
+    // The registers are named, and who reads and writes them is known.
+    bin.prepare_xrefs();
+    let ppuctrl = bin.symbols().by_name("PPUCTRL").unwrap().address;
+    assert_eq!(bin.references_to(ppuctrl, ppuctrl + 1, 0, 10).counts.write, 2);
+    let status = bin.symbols().by_name("PPUSTATUS").unwrap().address;
+    let readers = bin.references_to(status, status + 1, 0, 10);
+    assert_eq!(readers.refs[0].function, Some(0x3_C023));
+    let code = bin.disassemble_function(0x3_C000, 100);
+    let text: Vec<String> = code
+        .instructions
+        .iter()
+        .map(|i| {
+            format!(
+                "{} {}{}",
+                i.mnemonic,
+                i.operands,
+                i.target_symbol
+                    .as_deref()
+                    .map(|t| format!(" <{t}>"))
+                    .unwrap_or_default()
+            )
+        })
+        .collect();
+    assert_eq!(text[5], "sta $2000 <PPUCTRL>");
+    // A call into the switched window can't be placed from the fixed bank.
+    let into_bank = code
+        .instructions
+        .iter()
+        .find(|i| i.operands == "$8000" && i.mnemonic == "jsr")
+        .unwrap();
+    assert_eq!(into_bank.target, None);
+    // The palette table the loop reads.
+    let palette = bin.disassemble_function(0x3_C029, 100);
+    let read = palette
+        .instructions
+        .iter()
+        .find(|i| i.mnemonic == "lda" && i.operands.ends_with(",x"))
+        .unwrap();
+    assert_eq!(read.target, Some(0x3_C041));
+}
+
+#[test]
+fn game_boy_and_snes_roms() {
+    let gb = open("tiny.gb");
+    assert_eq!(gb.summary().arch, "SM83");
+    assert!(
+        gb.summary()
+            .properties
+            .iter()
+            .any(|p| p.key == "Header checksum" && p.value == "matches")
+    );
+    let names: Vec<String> = functions(&gb).into_iter().map(|f| f.1).collect();
+    // The entry jumps over the header: the code there is a function of its own.
+    for want in ["entry", "vblank", "sub_150", "sub_16f", "sub_14000"] {
+        assert!(names.iter().any(|n| n == want), "{want}: {names:?}");
+    }
+    let entry = gb.symbols().by_name("entry").unwrap();
+    assert_eq!(entry.size, 4);
+    gb.prepare_xrefs();
+    let lcdc = gb.symbols().by_name("LCDC").unwrap().address;
+    assert_eq!(gb.references_to(lcdc, lcdc + 1, 0, 10).counts.write, 2);
+
+    let snes = open("tiny.sfc");
+    let s = snes.summary();
+    assert_eq!((s.arch.as_str(), s.entry), ("65816", Some(0x8000)));
+    assert!(
+        s.properties
+            .iter()
+            .any(|p| p.key == "Title" && p.value == "BINVIZ TEST")
+    );
+    assert!(s.properties.iter().any(|p| p.key == "Checksum" && p.value == "matches"));
+    // `jsl` reaches bank $01; after `rep #$20` the accumulator's immediates are 16 bits.
+    let reset = snes.disassemble_function(0x8000, 100);
+    let lines: Vec<String> = reset
+        .instructions
+        .iter()
+        .map(|i| format!("{} {}", i.mnemonic, i.operands))
+        .collect();
+    assert!(lines.contains(&"lda #$1234".to_string()), "{lines:?}");
+    assert!(
+        reset
+            .instructions
+            .iter()
+            .any(|i| i.mnemonic == "jsl" && i.target == Some(0x1_8000))
+    );
+    let far = snes.symbols().at(0x1_8000).unwrap();
+    assert_eq!(far.size, 10);
+    // $7E0010 is WRAM; INIDISP is written in bank $00 and in bank $01.
+    snes.prepare_xrefs();
+    let inidisp = snes.symbols().by_name("INIDISP").unwrap().address;
+    assert_eq!(snes.references_to(inidisp, inidisp + 1, 0, 10).counts.write, 2);
+}
+
+#[test]
+fn nintendo_64_and_playstation_code() {
+    // The same ROM in the three byte orders reads the same.
+    let z64 = fixture("tiny.z64");
+    let v64: Vec<u8> = z64.chunks(2).flat_map(|p| [p[1], p[0]]).collect();
+    let n64: Vec<u8> = z64.chunks(4).flat_map(|w| [w[3], w[2], w[1], w[0]]).collect();
+    for (name, data) in [("z64", z64), ("v64", v64), ("n64", n64)] {
+        let bin = Binary::parse(data).unwrap();
+        assert_eq!(
+            (bin.summary().arch.as_str(), bin.summary().entry),
+            ("MIPS R4300i", Some(0x8000_0400)),
+            "{name}"
+        );
+        let entry = bin.disassemble_function(0x8000_0400, 100);
+        let text: Vec<String> = entry
+            .instructions
+            .iter()
+            .map(|i| {
+                format!(
+                    "{} {}{}",
+                    i.mnemonic,
+                    i.operands,
+                    i.target_symbol
+                        .as_deref()
+                        .map(|t| format!(" <{t}>"))
+                        .unwrap_or_default()
+                )
+            })
+            .collect();
+        assert_eq!(text[3], "sw $zero, 0x0($t0) <VI_STATUS>", "{name}");
+        // The call's delay slot belongs to the caller; the callee is a function of its own.
+        assert!(text[5].starts_with("jal 0x80000424"), "{name}: {text:?}");
+        assert_eq!(bin.symbols().at(0x8000_0424).unwrap().size, 24, "{name}");
+        // lui + lw: the counter the callee reads and writes.
+        bin.prepare_xrefs();
+        let counter = bin.references_to(0x8000_0600, 0x8000_0601, 0, 10);
+        assert_eq!((counter.counts.read, counter.counts.write), (1, 1), "{name}");
+    }
+
+    let psx = open("tiny-psx.exe");
+    assert_eq!(psx.summary().arch, "MIPS R3000A");
+    let text: Vec<String> = psx
+        .disassemble_function(0x8001_0000, 100)
+        .instructions
+        .iter()
+        .map(|i| {
+            format!(
+                "{} {}{}",
+                i.mnemonic,
+                i.operands,
+                i.target_symbol
+                    .as_deref()
+                    .map(|t| format!(" <{t}>"))
+                    .unwrap_or_default()
+            )
+        })
+        .collect();
+    assert_eq!(text[1], "sw $zero, 0x1074($t0) <I_MASK>");
+    assert_eq!(text[2], "lw $v0, 0x1814($t0) <GP1>");
+    assert_eq!(text[5], "li $t2, 0xa0 <bios_a>");
+    // $gp comes from the header: -0x8000($gp) is the start of the code.
+    let func = psx.disassemble_function(0x8001_0020, 10);
+    assert_eq!(func.instructions[0].target, Some(0x8001_0000));
+}
+
+#[test]
+fn game_boy_advance_arm_and_thumb() {
+    let bin = open("tiny.gba");
+    assert_eq!(
+        (bin.summary().arch.as_str(), bin.summary().entry),
+        ("ARM7TDMI", Some(0x0800_0000))
+    );
+    assert!(
+        bin.summary()
+            .properties
+            .iter()
+            .any(|p| p.key == "Header checksum" && p.value == "matches")
+    );
+    // The branch over the header, the ARM start-up code, and through `bx` the Thumb main and what it calls.
+    let starts: Vec<u64> = functions(&bin).into_iter().map(|f| f.0).collect();
+    assert_eq!(starts, [0x0800_0000, 0x0800_00C0, 0x0800_0100, 0x0800_0110]);
+    let arm = bin.disassemble_function(0x0800_00C0, 100);
+    let bx = arm.instructions.iter().find(|i| i.mnemonic == "bx").unwrap();
+    assert_eq!(bx.target, Some(0x0800_0100));
+    let thumb = bin.disassemble_function(0x0800_0100, 100);
+    let lens: Vec<u32> = thumb.instructions.iter().map(|i| i.len).collect();
+    assert_eq!(lens, [2, 2, 2, 4, 2]);
+    // Registers named through the literal pool: r0 = 0x04000130.
+    let load = &thumb.instructions[2];
+    assert_eq!(
+        (load.mnemonic.as_str(), load.target_symbol.as_deref()),
+        ("ldrh", Some("KEYINPUT"))
+    );
+    bin.prepare_xrefs();
+    let dispcnt = bin.symbols().by_name("DISPCNT").unwrap().address;
+    assert_eq!(bin.references_to(dispcnt, dispcnt + 1, 0, 10).counts.write, 1);
+}
+
+#[test]
+fn mega_drive_68000() {
+    let bin = open("tiny.md");
+    let s = bin.summary();
+    assert_eq!((s.arch.as_str(), s.entry), ("68000", Some(0x200)));
+    assert!(s.properties.iter().any(|p| p.key == "Checksum" && p.value == "matches"));
+    let starts: Vec<(u64, String)> = functions(&bin);
+    let names: Vec<&str> = starts.iter().map(|f| f.1.as_str()).collect();
+    // The reset, what it calls, and the interrupt handlers (the shared error loop named by its first vector).
+    assert_eq!(names, ["reset", "sub_21e", "hblank", "vblank"]);
+    // lea into a4, then (a4): the VDP's control port.
+    let reset = bin.disassemble_function(0x200, 100);
+    let writes: Vec<Option<&str>> = reset
+        .instructions
+        .iter()
+        .filter(|i| i.operands.ends_with("(a4)"))
+        .map(|i| i.target_symbol.as_deref())
+        .collect();
+    assert_eq!(writes, [Some("VDP_CTRL"), Some("VDP_CTRL")]);
+    bin.prepare_xrefs();
+    let frames = bin.references_to(0xFF_0010, 0xFF_0011, 0, 10);
+    assert_eq!((frames.counts.write, frames.refs[0].function), (1, Some(0x250)));
+    // A .smd copier dump: interleaved blocks behind a 512-byte header, read the same.
+    let md = fixture("tiny.md");
+    let mut block = vec![0u8; 0x4000];
+    block[..md.len()].copy_from_slice(&md);
+    let mut smd = vec![0u8; 512];
+    smd[8] = 0xAA;
+    smd[9] = 0xBB;
+    smd.extend((0..0x2000).map(|i| block[2 * i + 1]));
+    smd.extend((0..0x2000).map(|i| block[2 * i]));
+    let from_smd = Binary::parse(smd).unwrap();
+    assert_eq!(functions(&from_smd).len(), 4);
 }

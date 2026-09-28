@@ -3,6 +3,7 @@ import { familyOf } from './colors';
 import { store } from './store';
 import type { Annotation, Inspection, PathEntry, RefCounts, RefKind, Reference } from './types';
 import { basename, copyText, formatCount, formatSize, h, hex, icon, num } from './util';
+import { objcSelectorOf, selectorUses } from './views/objc';
 
 const REF_LABELS: Record<RefKind, [string, string]> = {
   call: ['call', 'calls'],
@@ -171,6 +172,12 @@ export class Inspector {
         else more.textContent = `Show more (${formatCount(page.total - shown)} left)`;
       });
       rows.push(h('div', { class: 'btn-row' }, more));
+    }
+    const selector = code && sym ? objcSelectorOf(sym.demangled ?? sym.name) : undefined;
+    if (selector) {
+      const uses = await store.api.objcSelector(selector);
+      if (store.selection.inspection !== ins) return;
+      rows.push(h('div', { class: 'objc-uses' }, ...selectorUses(selector, uses)));
     }
     if (code) {
       const graph = h('button', { class: 'btn small', type: 'button', title: 'Callers and callees, a few levels each way (0)' }, 'Call graph');

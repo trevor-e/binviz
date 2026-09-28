@@ -604,6 +604,7 @@ impl Binary {
                     SymbolSource::Dwarf => parts.push("from DWARF".into()),
                     SymbolSource::Import => parts.push("import stub".into()),
                     SymbolSource::DebugFile => parts.push("from the debug file".into()),
+                    SymbolSource::Objc => parts.push("from Objective-C metadata".into()),
                     _ => {}
                 }
                 if s.demangled().is_some() {

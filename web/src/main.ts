@@ -9,6 +9,8 @@ import { FolderView, KIND_GROUPS } from './views/folder';
 import type { View } from './views/base';
 import { CallsView } from './views/calls';
 import { CodeView } from './views/code';
+import { CrashView } from './views/crash';
+import { DiffView } from './views/diff';
 import { DwarfView } from './views/dwarf';
 import { HexView } from './views/hex';
 import { LayoutView } from './views/layout';
@@ -17,6 +19,8 @@ import { OverviewView } from './views/overview';
 import { SectionsView } from './views/sections';
 import { SourcesView } from './views/sources';
 import { SymbolsView } from './views/symbols';
+import { TextView } from './views/text';
+import { TilesView } from './views/tiles';
 
 /** Bundled samples (copied from tests/fixtures by scripts/build-wasm.mjs) and their sources. */
 const SAMPLES: { file: string; label: string; sources: string[]; folder?: boolean }[] = [
@@ -27,11 +31,16 @@ const SAMPLES: { file: string; label: string; sources: string[]; folder?: boolea
   { file: 'tiny-pe-x64.exe', label: 'PE · x86-64', sources: ['tiny.rs'] },
   { file: 'shapes-pe.exe', label: 'PE · C++ with DWARF 5', sources: ['shapes.cpp'] },
   { file: 'shapes-pe.stripped.exe', label: 'PE · stripped (reverse engineering)', sources: [] },
+  { file: 'objc-macho-a64.chained.stripped', label: 'Mach-O · stripped Objective-C', sources: [] },
+  { file: 'tiny.nes', label: 'NES ROM (6502, text, tiles)', sources: [] },
+  { file: 'tiny.gba', label: 'Game Boy Advance ROM (ARM and Thumb)', sources: [] },
   { file: 'Shop.xcarchive.zip', label: 'Zipped iOS app archive (3 binaries + dSYM)', sources: [], folder: true },
 ];
 
 const NAV: { view: ViewName; label: string; key: string }[] = [
   { view: 'folder', label: 'Folder', key: 'f' },
+  { view: 'crash', label: 'Crash', key: 'c' },
+  { view: 'diff', label: 'Compare', key: 'd' },
   { view: 'overview', label: 'Overview', key: '1' },
   { view: 'layout', label: 'Layout', key: '2' },
   { view: 'hex', label: 'Hex', key: '3' },
@@ -42,6 +51,8 @@ const NAV: { view: ViewName; label: string; key: string }[] = [
   { view: 'dwarf', label: 'DWARF', key: '7' },
   { view: 'sources', label: 'Sources', key: '8' },
   { view: 'map', label: 'Map', key: '9' },
+  { view: 'text', label: 'Text', key: 't' },
+  { view: 'tiles', label: 'Tiles', key: 'g' },
 ];
 
 // --- Theme ------------------------------------------------------------------
@@ -81,6 +92,8 @@ function localStorageSet(key: string, value: string) {
 const app = document.getElementById('app')!;
 const views: Record<ViewName, View> = {
   folder: new FolderView(),
+  crash: new CrashView(),
+  diff: new DiffView(),
   overview: new OverviewView(),
   layout: new LayoutView(),
   hex: new HexView(),
@@ -91,6 +104,8 @@ const views: Record<ViewName, View> = {
   dwarf: new DwarfView(),
   sources: new SourcesView(),
   map: new MapView(),
+  text: new TextView(),
+  tiles: new TilesView(),
 };
 const inspector = new Inspector();
 const palette = new SearchPalette();
@@ -159,25 +174,30 @@ main.appendChild(landing);
 for (const v of Object.values(views)) main.appendChild(v.el);
 
 app.replaceChildren(topbar, sidebar, main, inspector.el);
-document.body.appendChild(h('div', { class: 'drop-overlay' }, 'Drop a binary, or a folder or zip of them'));
+document.body.appendChild(h('div', { class: 'drop-overlay' }, 'Drop a binary, a folder or zip of them, or a crash report'));
 
 // --- Rendering state ----------------------------------------------------------
 
 function renderChrome() {
   const f = store.file;
   const pkg = store.package;
-  app.classList.toggle('empty', !f && !pkg);
-  landing.style.display = f || pkg ? 'none' : 'grid';
+  app.classList.toggle('empty', !f && !pkg && !store.crash);
+  landing.style.display = f || pkg || store.crash ? 'none' : 'grid';
   debugBtn.toggleAttribute('disabled', !f);
   sourcesBtn.toggleAttribute('disabled', !f?.dwarf);
   palette.input.disabled = !f;
   for (const [name, b] of navButtons) {
     if (name === 'folder') b.hidden = !pkg;
+    else if (name === 'crash') b.hidden = !store.crash;
+    // Games' own text encodings: for ROMs.
+    else if (name === 'text' || name === 'tiles') b.hidden = f?.summary.format !== 'rom' && f?.summary.format !== 'unknown';
+    else if (name === 'diff') b.toggleAttribute('disabled', !f && !pkg);
     else b.toggleAttribute('disabled', !f);
   }
   if (!f) {
-    fileInfo.replaceChildren(...(pkg ? [h('span', { class: 'name', title: pkg.info.name }, basename(pkg.info.name))] : []));
-    if (!pkg) renderLanding();
+    const name = pkg?.info.name ?? store.crash?.name;
+    fileInfo.replaceChildren(...(name ? [h('span', { class: 'name', title: name }, basename(name))] : []));
+    if (!pkg && !store.crash) renderLanding();
     return;
   }
   const s = f.summary;
@@ -254,7 +274,7 @@ function renderLanding() {
         'div',
         { class: 'dropzone' },
         h('div', { class: 'big' }, 'Drop a binary, or a folder or zip of them'),
-        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, debug files (.dSYM, .debug), universal binaries and archives; a folder or zip (an .ipa, an .app, a build) opens every binary in it, each paired with its debug file'),
+        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, debug files (.dSYM, .debug), universal binaries and archives; a folder or zip (an .ipa, an .app, a build) opens every binary in it, each paired with its debug file. Drop or paste a crash report (.crash, .ips, a tombstone) to symbolicate it.'),
         h('div', { class: 'dropzone-actions' }, choose, chooseFolder),
       ),
       h('div', { class: 'secondary', style: 'margin-top:22px' }, 'Or try a sample:'),
@@ -273,6 +293,11 @@ store.on('package', () => {
   renderChrome();
   renderView();
 });
+store.on('crash', () => {
+  renderChrome();
+  renderView();
+});
+store.on('diff', () => renderView());
 store.on('view', () => renderView());
 store.on('selection', () => {
   back.toggleAttribute('disabled', !store.canGoBack());
@@ -313,6 +338,12 @@ async function openFile(file: File) {
     await openFolder([{ kind: 'zip', name: file.name, blob: file }]);
     return;
   }
+  // A crash report is symbolicated with what is open.
+  const report = await crashText(file);
+  if (report) {
+    await store.openCrash(file.name, report);
+    return;
+  }
   // A debug file goes with what is open (the folder's binary it pairs with, or the open binary).
   if (store.file) {
     const header = await store.api.sniff(file);
@@ -330,12 +361,24 @@ async function openFile(file: File) {
  * Opens every binary in folders and zips. With none in them, a folder dropped
  * next to an open binary is its source code instead (`files`).
  */
-async function openFolder(sources: PackageSource[], files: { path: string; file: File }[] = []) {
+async function openFolder(sources: PackageSource[], files: { path: string; file: File }[] = [], quiet = false) {
   if (await store.openFolder(sources)) return;
   const name = sources.map((s) => s.name).join(' + ');
   if (files.length > 0 && store.file?.dwarf) await loadSources(files.filter((f) => !SKIP_DIRS.test(f.path) && f.file.size < 8 * 1024 * 1024));
-  else toast(`No binaries in ${name}`, 'error');
+  else if (!quiet) toast(`No binaries in ${name}`, 'error');
 }
+
+/** A crash report's text, if the file is one (it is text, and reads as a report). */
+async function crashText(file: Blob): Promise<string | null> {
+  if (file.size < 20 || file.size > 64 * 1024 * 1024) return null;
+  const head = new Uint8Array(await file.slice(0, 4096).arrayBuffer());
+  if (head.includes(0)) return null;
+  const text = await file.text();
+  return (await store.api.crashParse(text)) ? text : null;
+}
+
+/** Crash reports found in a dropped folder go with the binaries next to them. */
+const CRASH_FILE = /(\.crash|\.ips|(^|\/)tombstone[^/]*)$/i;
 
 async function isZip(blob: Blob): Promise<boolean> {
   const b = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
@@ -470,6 +513,11 @@ window.addEventListener('drop', async (e) => {
   const entries = items.map((i) => i.webkitGetAsEntry?.()).filter((x): x is FileSystemEntry => !!x);
   const dropped = [...(e.dataTransfer?.files ?? [])];
   try {
+    // On the Compare view, waiting for the earlier build: this is it.
+    if (store.view === 'diff' && !store.diff && (store.file || store.package)) {
+      await compareDropped(entries, dropped);
+      return;
+    }
     await openDropped(entries, dropped);
   } catch (err) {
     toast(err instanceof Error ? err.message : String(err), 'error');
@@ -484,7 +532,52 @@ async function openDropped(entries: FileSystemEntry[], dropped: File[]) {
     if (dropped[0]) await openFile(dropped[0]);
     return;
   }
-  // Zips stay zips; everything else (folders walked in full) is one folder.
+  // Zips stay zips; crash reports are symbolicated once the rest is open;
+  // everything else (folders walked in full) is one folder.
+  const sources: PackageSource[] = [];
+  const files: { path: string; file: File }[] = [];
+  const reports: { name: string; text: string }[] = [];
+  const loose: File[] = entries.length > 0 ? [] : [...dropped];
+  for (const en of entries) {
+    if (en.isDirectory) await walkAll(en, files);
+    else {
+      const f = dropped.find((x) => x.name === en.name);
+      if (f) loose.push(f);
+    }
+  }
+  for (const f of loose) {
+    const report = await crashText(f);
+    if (report) reports.push({ name: f.name, text: report });
+    else if (await isZip(f)) sources.push({ kind: 'zip', name: f.name, blob: f });
+    else files.push({ path: f.name, file: f });
+  }
+  for (const f of files.filter((f) => CRASH_FILE.test(f.path))) {
+    const report = await crashText(f.file);
+    if (report) reports.push({ name: basename(f.path), text: report });
+  }
+  const folders = entries.filter((en) => en.isDirectory).map((en) => en.name);
+  if (files.length > 0) sources.unshift({ kind: 'folder', name: folders.join(' + ') || files[0].path, files });
+  if (sources.length > 0) await openFolder(sources, files, reports.length > 0);
+  if (reports.length > 0) await store.openCrash(reports[0].name, reports[0].text);
+}
+
+// Pasting a crash report anywhere (but into a text field) symbolicates it.
+window.addEventListener('paste', async (e) => {
+  const target = e.target as HTMLElement;
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+  const text = e.clipboardData?.getData('text/plain') ?? '';
+  if (text.length < 20) return;
+  if (await store.api.crashParse(text)) await store.openCrash('Pasted crash report', text);
+  else toast('The pasted text isn’t a crash report binviz can read (Apple .crash or .ips, an Android tombstone, a stack trace)', 'error');
+});
+
+/** The earlier build to compare sizes with, dropped on the Compare view. */
+async function compareDropped(entries: FileSystemEntry[], dropped: File[]) {
+  if (!entries.some((en) => en.isDirectory) && dropped.length === 1) {
+    const f = dropped[0];
+    await store.compareWith(f.name, (await isZip(f)) ? { kind: 'folder', sources: [{ kind: 'zip', name: f.name, blob: f }] } : { kind: 'file', name: f.name, blob: f });
+    return;
+  }
   const sources: PackageSource[] = [];
   const files: { path: string; file: File }[] = [];
   for (const en of entries) {
@@ -495,10 +588,9 @@ async function openDropped(entries: FileSystemEntry[], dropped: File[]) {
       else if (f) files.push({ path: f.name, file: f });
     }
   }
-  if (entries.length === 0) for (const f of dropped) files.push({ path: f.name, file: f });
-  const folders = entries.filter((en) => en.isDirectory).map((en) => en.name);
-  if (files.length > 0) sources.unshift({ kind: 'folder', name: folders.join(' + ') || files[0].path, files });
-  await openFolder(sources, files);
+  const name = entries.map((en) => en.name).join(' + ') || 'folder';
+  if (files.length > 0) sources.unshift({ kind: 'folder', name, files });
+  await store.compareWith(name, { kind: 'folder', sources });
 }
 
 /** Every file under `entry` (up to 500 000 of them). */
@@ -558,7 +650,8 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const nav = NAV.find((n) => n.key === e.key);
-  if (nav && (nav.view === 'folder' ? store.package : store.file)) store.setView(nav.view);
+  const ready = nav && (nav.view === 'folder' ? store.package : nav.view === 'crash' ? store.crash : nav.view === 'diff' ? store.file || store.package : store.file);
+  if (nav && ready) store.setView(nav.view);
 });
 
 // A handle for poking at the app from the devtools console during development.

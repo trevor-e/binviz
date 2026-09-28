@@ -290,6 +290,35 @@ fn a_folder_opens_every_binary() {
     // Every binary at once.
     let found = s.ok("search", json!({ "query": "fib", "binary": "all" }));
     assert!(found.contains("## `Tiny`") && found.contains("## `Widget`"), "{found}");
+    // A crash report symbolicates with the folder's binaries, found by UUID.
+    let main_at = binviz::Binary::parse(main.clone())
+        .unwrap()
+        .symbols()
+        .by_name("_main")
+        .expect("_main")
+        .address;
+    let ips = format!(
+        "{{\"bug_type\":\"309\"}}\n{}",
+        json!({
+            "procName": "ShopApp",
+            "threads": [{ "triggered": true, "frames": [{ "imageOffset": main_at - 0x1_0000_0000 + 4, "imageIndex": 0 }] }],
+            "usedImages": [{ "base": 0x1_0400_0000u64, "size": 0x10000, "uuid": "4c4c44b4-5555-3144-a10f-328b2873456c", "name": "ShopApp", "path": "/var/ShopApp.app/ShopApp" }],
+        })
+    );
+    let crash = s.ok("symbolicate", json!({ "report": ips }));
+    assert!(
+        crash.contains("symbolicated with `ShopApp`") && crash.contains("_main + 4"),
+        "{crash}"
+    );
+    // Two builds compared without opening them.
+    let diff = s.ok(
+        "size_diff",
+        json!({
+            "old": bin.join("imports-macho-a64.chained").to_str().unwrap(),
+            "new": bin.join("imports-macho-a64").to_str().unwrap(),
+        }),
+    );
+    assert!(diff.contains("Sections:") && diff.contains("__stub_helper"), "{diff}");
     let app = s.ok("folder_summary", json!({ "analyze": true }));
     assert!(
         app.contains("Asset catalogs") && app.contains("Largest owners"),
@@ -299,4 +328,29 @@ fn a_folder_opens_every_binary() {
     let text = listed["result"]["content"][0]["text"].as_str().unwrap_or_default();
     assert_eq!(text.lines().count(), 3, "{text}");
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn objective_c_classes_and_senders() {
+    let path = fixture_copy("objc-macho-a64.chained.stripped");
+    let mut s = Session::start();
+    let opened = s.ok("open_binary", json!({ "path": path.to_str().unwrap() }));
+    assert!(opened.contains("Objective-C: 1 class, 1 category"), "{opened}");
+    let list = s.ok("objc", json!({}));
+    assert!(
+        list.contains("Greeter : NSObject") && list.contains("NSObject (Extras)"),
+        "{list}"
+    );
+    let class = s.ok("objc", json!({ "name": "Greeter" }));
+    assert!(class.contains("- (void)greetWith:(id)arg1 times:(int)arg2;"), "{class}");
+    let selector = s.ok("objc", json!({ "name": "wave" }));
+    assert!(
+        selector.contains("-[NSObject(Extras) wave]") && selector.contains("sent by 1 function"),
+        "{selector}"
+    );
+    // The recovered names work like any other.
+    let code = s.ok("disassemble", json!({ "at": "-[Greeter hello]" }));
+    assert!(code.contains("-[Greeter hello]"), "{code}");
+    let (text, error) = s.call("objc", json!({ "name": "Greet" }));
+    assert!(error && text.contains("similar: Greeter"), "{text}");
 }

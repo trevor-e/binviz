@@ -21,6 +21,9 @@ pub enum GroupKind {
     Namespace,
     /// A C library's naming prefix (`sqlite3_`, `png_`...).
     CPrefix,
+    /// Helpers the compiler made: outlined code, block copy/destroy helpers,
+    /// global initializers, Swift runtime helpers.
+    CompilerGenerated,
     /// Functions recovered without a name (`sub_...`).
     Unnamed,
     Other,
@@ -33,6 +36,7 @@ impl GroupKind {
             GroupKind::ObjcClass => "Objective-C class",
             GroupKind::Namespace => "C++ namespace / Rust crate",
             GroupKind::CPrefix => "C prefix",
+            GroupKind::CompilerGenerated => "compiler-generated",
             GroupKind::Unnamed => "unnamed functions",
             GroupKind::Other => "other",
         }
@@ -95,28 +99,109 @@ pub struct SizeReport {
     pub string_bytes: u64,
 }
 
+/// Objective-C metadata named after its class (the class object, its ivars,
+/// method, property and protocol lists, categories).
+const OBJC_METADATA: [&str; 24] = [
+    "OBJC_CLASS_$_",
+    "OBJC_METACLASS_$_",
+    "OBJC_IVAR_$_",
+    "OBJC_CLASS_RO_$_",
+    "OBJC_METACLASS_RO_$_",
+    "OBJC_$_PROP_LIST_",
+    "OBJC_$_CLASS_PROP_LIST_",
+    "OBJC_$_CATEGORY_CLASS_METHODS_",
+    "OBJC_$_CATEGORY_INSTANCE_METHODS_",
+    "OBJC_$_CATEGORY_",
+    "OBJC_$_INSTANCE_VARIABLES_",
+    "OBJC_$_INSTANCE_METHODS_",
+    "OBJC_$_CLASS_METHODS_",
+    "OBJC_$_PROTOCOL_INSTANCE_METHODS_OPT_",
+    "OBJC_$_PROTOCOL_CLASS_METHODS_OPT_",
+    "OBJC_$_PROTOCOL_INSTANCE_METHODS_",
+    "OBJC_$_PROTOCOL_CLASS_METHODS_",
+    "OBJC_$_PROTOCOL_METHOD_TYPES_",
+    "OBJC_$_CLASS_PROTOCOLS_",
+    "OBJC_$_PROTOCOL_REFS_",
+    "OBJC_PROTOCOL_$_",
+    "OBJC_CLASS_PROTOCOLS_$_",
+    "OBJC_CATEGORY_PROTOCOLS_$_",
+    "OBJC_LABEL_PROTOCOL_$_",
+];
+
+/// Names the compiler gives its helpers, as C writes them (a Mach-O
+/// symbol has one more underscore in front).
+const COMPILER_GENERATED: [&str; 8] = [
+    "OUTLINED_FUNCTION",
+    "globalinit_",
+    "block_",
+    "__Block_",
+    "__copy_",
+    "__destroy",
+    "__swift_",
+    "objectdestroy.",
+];
+
+/// A class name as Objective-C sees it: Swift classes exposed to it have
+/// mangled names (`_TtC5MyApp14ViewController`), or as binviz writes them
+/// (`MyApp.ViewController`), which belong to a Swift module.
+fn class_owner(class: &str) -> (GroupKind, String) {
+    if let Some((module, _)) = class.split_once('.') {
+        return (GroupKind::SwiftModule, module.to_string());
+    }
+    let t = class.trim_start_matches('_');
+    if let Some(rest) = t.strip_prefix("Tt")
+        && let Some(rest) = rest.strip_prefix(|c: char| c.is_ascii_uppercase())
+    {
+        // `s` is the standard library: _TtCs12_SwiftObject.
+        if rest.starts_with('s') && !rest[1..].starts_with(|c: char| c.is_ascii_digit()) {
+            return (GroupKind::SwiftModule, "Swift (standard library)".into());
+        }
+        let rest = rest.strip_prefix('s').unwrap_or(rest);
+        let digits = rest.bytes().take_while(u8::is_ascii_digit).count();
+        if let Ok(n) = rest[..digits].parse::<usize>()
+            && let Some(module) = rest.get(digits..digits + n)
+        {
+            return (GroupKind::SwiftModule, module.to_string());
+        }
+    }
+    (GroupKind::ObjcClass, t.to_string())
+}
+
 /// The owner of a symbol, from its name.
 pub fn group_of(raw: &str, display: &str, source: SymbolSource) -> (GroupKind, String) {
     if source == SymbolSource::Discovered {
         return (GroupKind::Unnamed, "(unnamed functions)".into());
     }
-    // Objective-C methods: -[Class(Category) selector]
-    if let Some(rest) = display.strip_prefix("-[").or_else(|| display.strip_prefix("+[")) {
+    // Objective-C methods: -[Class(Category) selector], also as part of a
+    // longer name (the blocks inside a method: __23-[Class selector]_block_invoke).
+    if let Some(at) = display.find("-[").or_else(|| display.find("+[")) {
+        let rest = &display[at + 2..];
         let class = rest.split([' ', ']']).next().unwrap_or(rest);
         let class = class.split('(').next().unwrap_or(class);
-        return (GroupKind::ObjcClass, class.to_string());
-    }
-    for prefix in [
-        "_OBJC_CLASS_$_",
-        "_OBJC_METACLASS_$_",
-        "_OBJC_IVAR_$_",
-        "OBJC_CLASS_$_",
-        "OBJC_METACLASS_$_",
-    ] {
-        if let Some(rest) = raw.strip_prefix(prefix) {
-            let class = rest.split('.').next().unwrap_or(rest);
-            return (GroupKind::ObjcClass, class.to_string());
+        if !class.is_empty() {
+            return class_owner(class);
         }
+    }
+    // Objective-C metadata, named after its class (and category: Class_$_Category).
+    let bare = raw.trim_start_matches('_');
+    let bare = bare.strip_prefix("l_").unwrap_or(bare).trim_start_matches('_');
+    for prefix in OBJC_METADATA {
+        if let Some(rest) = bare.strip_prefix(prefix) {
+            let class = rest.split('.').next().unwrap_or(rest);
+            let class = class.split("_$_").next().unwrap_or(class);
+            return class_owner(class);
+        }
+    }
+    // What code loads to send a message or name a class or protocol (see crate::objc).
+    if ["@selector(", "@class(", "@protocol("]
+        .iter()
+        .any(|p| raw.starts_with(p))
+    {
+        return (GroupKind::ObjcClass, "(Objective-C references)".into());
+    }
+    // The Objective-C runtime's functions and message stubs (objc_msgSend$selector).
+    if bare.starts_with("objc_") {
+        return (GroupKind::ObjcClass, "(Objective-C runtime)".into());
     }
     // Swift: $s<len><module>... (also $S, $e; _T0 in Swift 3).
     let r = raw.trim_start_matches('_');
@@ -137,6 +222,14 @@ pub fn group_of(raw: &str, display: &str, source: SymbolSource) -> (GroupKind, S
             "(swift)"
         };
         return (GroupKind::SwiftModule, module.into());
+    }
+    // Helpers the compiler made.
+    let c_name = raw.strip_prefix('_').unwrap_or(raw);
+    if COMPILER_GENERATED
+        .iter()
+        .any(|p| raw.starts_with(p) || c_name.starts_with(p))
+    {
+        return (GroupKind::CompilerGenerated, "(compiler-generated)".into());
     }
     // Demangled C++ / Rust: the first path component.
     if display.contains("::") {
@@ -163,6 +256,76 @@ pub fn group_of(raw: &str, display: &str, source: SymbolSource) -> (GroupKind, S
 }
 
 impl Binary {
+    /// Every sized function and data symbol in the file, with the bytes it
+    /// accounts for: overlapping ones (aliases, nested labels) count once, and
+    /// zero-filled data (bss) takes no room in the file.
+    fn for_each_sized(&self, mut f: impl FnMut(&crate::Sym<'_>, u64)) {
+        let mut last_end = 0u64;
+        for s in self.symbols.in_range(0, u64::MAX) {
+            if s.size == 0 || !matches!(s.kind, SymbolKind::Function | SymbolKind::Data | SymbolKind::Unknown) {
+                continue;
+            }
+            if let Some(sec) = s.section.and_then(|i| self.sections.get(i as usize))
+                && (sec.file_offset.is_none() || sec.file_size == 0)
+            {
+                continue;
+            }
+            let start = s.address.max(last_end);
+            let end = s.address + s.size;
+            if end <= start {
+                continue;
+            }
+            last_end = end;
+            f(&s, end - start);
+        }
+    }
+
+    /// What the binary's size is made of, all of it, to compare with another
+    /// build (see [`crate::diff`]).
+    pub fn size_snapshot(&self, name: &str) -> crate::diff::SizeSnapshot {
+        let mut owners: HashMap<(GroupKind, String), (u64, u64)> = HashMap::new();
+        let mut symbols: HashMap<String, (u64, bool)> = HashMap::new();
+        self.for_each_sized(|s, bytes| {
+            let code = s.kind == SymbolKind::Function;
+            let display = s.display_name();
+            let owner = owners.entry(group_of(s.name(), &display, s.source)).or_default();
+            if code {
+                owner.0 += bytes;
+            } else {
+                owner.1 += bytes;
+            }
+            // Functions recovered without names are called after their addresses: no match across builds.
+            if s.source != SymbolSource::Discovered {
+                symbols.entry(display.into_owned()).or_insert((0, code)).0 += bytes;
+            }
+        });
+        crate::diff::SizeSnapshot {
+            name: name.to_string(),
+            file_size: self.data.len() as u64,
+            by_kind: self.composition(),
+            sections: self
+                .sections
+                .iter()
+                .map(|s| crate::diff::SectionBytes {
+                    name: match &s.segment_name {
+                        Some(seg) if !seg.is_empty() => format!("{seg},{}", s.name),
+                        _ => s.name.clone(),
+                    },
+                    file: if s.file_offset.is_some() { s.file_size } else { 0 },
+                    memory: if s.loaded { s.size } else { 0 },
+                })
+                .collect(),
+            owners: owners
+                .into_iter()
+                .map(|((kind, name), (code, data))| crate::diff::OwnerBytes { kind, name, code, data })
+                .collect(),
+            symbols: symbols
+                .into_iter()
+                .map(|(name, (bytes, code))| crate::diff::SymbolBytes { name, bytes, code })
+                .collect(),
+        }
+    }
+
     /// Where the bytes go. `top` bounds each list.
     pub fn size_report(&self, top: usize) -> SizeReport {
         let top = top.max(1);
@@ -188,19 +351,7 @@ impl Binary {
         let mut functions: Vec<(u64, u32)> = Vec::new();
         let mut data: Vec<(u64, u32)> = Vec::new();
         let mut symbolized = 0u64;
-        let mut last_end = 0u64;
-        for s in self.symbols.in_range(0, u64::MAX) {
-            if s.size == 0 || !matches!(s.kind, SymbolKind::Function | SymbolKind::Data | SymbolKind::Unknown) {
-                continue;
-            }
-            // Overlapping symbols (aliases, nested labels) count once.
-            let start = s.address.max(last_end);
-            let end = s.address + s.size;
-            if end <= start {
-                continue;
-            }
-            let bytes = end - start;
-            last_end = end;
+        self.for_each_sized(|s, bytes| {
             symbolized += bytes;
             let code = s.kind == SymbolKind::Function;
             let display = s.display_name();
@@ -222,7 +373,7 @@ impl Binary {
                 g.data_bytes += bytes;
                 data.push((s.size, s.index));
             }
-        }
+        });
         let biggest = |v: &mut Vec<(u64, u32)>| -> Vec<Sized> {
             let n = top.min(v.len());
             if n > 0 {
@@ -325,6 +476,73 @@ mod tests {
             (GroupKind::CPrefix, "sqlite3_".into())
         );
         assert_eq!(g("main", "main"), (GroupKind::Other, "(other)".into()));
+        // Blocks belong to the method they are in; metadata to its class (and
+        // a Swift class's to its module); runtime stubs together.
+        assert_eq!(
+            g("___23-[Foo bar]_block_invoke", "___23-[Foo bar]_block_invoke"),
+            (GroupKind::ObjcClass, "Foo".into())
+        );
+        assert_eq!(
+            g("__OBJC_$_INSTANCE_METHODS_Foo", "__OBJC_$_INSTANCE_METHODS_Foo"),
+            (GroupKind::ObjcClass, "Foo".into())
+        );
+        assert_eq!(
+            g("l_OBJC_$_CATEGORY_INSTANCE_METHODS_Foo_$_Extra", ""),
+            (GroupKind::ObjcClass, "Foo".into())
+        );
+        assert_eq!(
+            g("_OBJC_CLASS_$__TtC5MyApp14ViewController", ""),
+            (GroupKind::SwiftModule, "MyApp".into())
+        );
+        assert_eq!(
+            g(
+                "-[_TtC5MyApp14ViewController viewDidLoad]",
+                "-[_TtC5MyApp14ViewController viewDidLoad]"
+            ),
+            (GroupKind::SwiftModule, "MyApp".into())
+        );
+        assert_eq!(
+            g("_objc_msgSend$tableView:cellForRowAtIndexPath:", ""),
+            (GroupKind::ObjcClass, "(Objective-C runtime)".into())
+        );
+        // As binviz names a stripped binary's methods and metadata.
+        assert_eq!(
+            g(
+                "-[MyApp.ViewController viewDidLoad]",
+                "-[MyApp.ViewController viewDidLoad]"
+            ),
+            (GroupKind::SwiftModule, "MyApp".into())
+        );
+        assert_eq!(
+            g("__OBJC_$_PROTOCOL_INSTANCE_METHODS_OPT_Delegate", ""),
+            (GroupKind::ObjcClass, "Delegate".into())
+        );
+        assert_eq!(
+            g("__OBJC_CATEGORY_PROTOCOLS_$_NSObject_$_Extras", ""),
+            (GroupKind::ObjcClass, "NSObject".into())
+        );
+        assert_eq!(
+            g("@selector(hello)", "@selector(hello)"),
+            (GroupKind::ObjcClass, "(Objective-C references)".into())
+        );
+        // What the compiler made.
+        for name in [
+            "_OUTLINED_FUNCTION_12",
+            "___copy_helper_block_e8_32s",
+            "___swift_allocate_value_buffer",
+            "_globalinit_33_A1",
+        ] {
+            assert_eq!(
+                g(name, name),
+                (GroupKind::CompilerGenerated, "(compiler-generated)".into()),
+                "{name}"
+            );
+        }
+        // A C function that merely starts like one isn't.
+        assert_eq!(
+            g("_destroyWindow", "_destroyWindow"),
+            (GroupKind::Other, "(other)".into())
+        );
         assert_eq!(
             group_of("sub_1000", "sub_1000", SymbolSource::Discovered),
             (GroupKind::Unnamed, "(unnamed functions)".into())

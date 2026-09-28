@@ -372,6 +372,13 @@ a:hover,
   padding: 0 7px;
 }
 
+.btn.tiny {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+
 .busy {
   position: absolute;
   left: 0;
@@ -441,6 +448,11 @@ a:hover,
   text-align: left;
   cursor: pointer;
   color: var(--text-2);
+}
+
+/* Views that only apply sometimes (Folder, Crash) are hidden, not just disabled. */
+.nav-item[hidden] {
+  display: none;
 }
 
 .nav-item:hover {
@@ -730,6 +742,13 @@ th.right {
   padding: 32px;
   color: var(--text-2);
   text-align: center;
+}
+
+.debug-map-list {
+  margin: 12px auto;
+  max-width: 420px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .empty-state strong {
@@ -2411,6 +2430,75 @@ th.right {
   flex: none;
 }
 
+/* Objective-C classes (Symbols → Classes), and a selector's senders */
+.objc-row {
+  gap: 6px;
+}
+
+.objc-kind {
+  --kind: var(--f-code);
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 11px var(--mono);
+  color: var(--text);
+  background: color-mix(in srgb, var(--kind) var(--tint-b), transparent);
+}
+
+.objc-kind.k-category {
+  --kind: var(--f-rodata);
+}
+
+.objc-kind.k-protocol {
+  --kind: var(--f-debug);
+}
+
+.objc-interface {
+  padding: 8px 8px 16px;
+  font: 12.5px/1.5 var(--mono);
+}
+
+.objc-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.objc-line:hover {
+  background: var(--hover-wash);
+}
+
+.objc-text {
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.objc-line .spacer {
+  flex: 1;
+}
+
+.objc-uses {
+  margin: 2px 0 8px 24px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--border-strong);
+  font: 12.5px var(--sans);
+}
+
+.insp-section .objc-uses {
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
 /* ---------------------------------------------------------------------------
    DWARF: listings, details, problems
 --------------------------------------------------------------------------- */
@@ -2712,7 +2800,7 @@ td.pkg-file {
   text-overflow: ellipsis;
 }
 
-td.pkg-spread {
+table.data td.pkg-spread {
   white-space: normal;
   min-width: 18ch;
 }
@@ -2795,6 +2883,128 @@ td.bar-cell {
   margin-top: 10px;
 }
 
+/* ---------------------------------------------------------------------------
+   Crash reports
+--------------------------------------------------------------------------- */
+.crash-facts dd {
+  white-space: pre-wrap;
+}
+
+.crash-hint {
+  margin: 12px 0 0;
+}
+
+.crash-chip {
+  margin-left: 8px;
+  color: var(--critical);
+  border-color: color-mix(in srgb, var(--critical) 40%, transparent);
+  font-weight: 500;
+}
+
+table.crash-frames td {
+  vertical-align: top;
+}
+
+table.data td.crash-fn {
+  white-space: normal;
+  min-width: 24ch;
+}
+
+.crash-inline {
+  font-size: 11.5px;
+  color: var(--text-2);
+  padding-left: 12px;
+}
+
+.crash-others > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.crash-others[open] > summary {
+  margin-bottom: 12px;
+}
+
+.crash-thread + .crash-thread {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--grid);
+}
+
+.crash-thread h2 {
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+/* ---------------------------------------------------------------------------
+   Comparing builds
+--------------------------------------------------------------------------- */
+/* Diverging: growth to the right (warm), shrinking to the left (cool), zero in the middle. */
+.delta-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 8px;
+  min-width: 80px;
+}
+
+.delta-neg {
+  display: flex;
+  justify-content: flex-end;
+  border-right: 1px solid var(--axis);
+}
+
+.delta-pos {
+  display: flex;
+}
+
+.delta-neg span {
+  background: var(--f-code);
+  border-radius: 3px 0 0 3px;
+}
+
+.delta-pos span {
+  background: var(--f-header);
+  border-radius: 0 3px 3px 0;
+}
+
+/* The name column takes what the numbers leave, and wraps. */
+table.data td.diff-name {
+  width: 100%;
+  max-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.diff-detail {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: var(--sans);
+}
+
+.diff-delta {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.diff-binary > summary {
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.diff-binary[open] > summary {
+  margin-bottom: 12px;
+}
+
+.diff-binary-title {
+  font-weight: 600;
+}
+
+.diff-binary .grid-2,
+.diff-binary > .card {
+  margin-top: 12px;
+}
+
 /* Code and data must show exactly what is there: no `->` → `→` ligatures.
    Kept last because the `font` shorthand above resets these properties. */
 .mono,
@@ -2814,9 +3024,102 @@ td.bar-cell {
 .ref-row *,
 .scope-var *,
 .problem-row *,
+.crash-fn *,
+.diff-name.mono,
 .hit-label,
 .c-name,
 .note-name {
   font-variant-ligatures: none;
   font-feature-settings: 'liga' 0, 'calt' 0;
+}
+
+/* Text in games (Text view) */
+.text-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 8px 16px;
+}
+
+.text-encoding-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.text-encoding-head .spacer,
+.text-tools .toolbar .spacer {
+  flex: 1;
+}
+
+.text-preview {
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-2);
+}
+
+.text-preview mark {
+  background: color-mix(in srgb, var(--f-data) var(--tint-b), transparent);
+  color: var(--text);
+  border-radius: 2px;
+}
+
+.table-edit {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-text {
+  width: 100%;
+  resize: vertical;
+  font-size: 12.5px;
+  min-height: 120px;
+}
+
+.table-help {
+  font-size: 12px;
+}
+
+.text-tools {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.text-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.hex-row .ascii .a.long {
+  color: var(--link);
+}
+
+/* Tiles view */
+.vlist.tiles .tile-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1px 12px;
+}
+
+.tile-row .addr {
+  width: 10ch;
+  flex: none;
+  font-size: 12px;
+}
+
+.tile-row canvas {
+  image-rendering: pixelated;
+  cursor: crosshair;
 }

@@ -3,6 +3,7 @@
 
 pub mod attribution;
 mod check;
+pub mod debugmap;
 pub(crate) mod die;
 mod explore;
 mod expr;
@@ -136,7 +137,7 @@ impl DebugInfo {
             };
             Ok(reader)
         };
-        let mut dwarf = gimli::Dwarf::load(|id| {
+        let dwarf = gimli::Dwarf::load(|id| {
             let r = load(id);
             if let Ok(r) = &r
                 && !r.bytes().is_empty()
@@ -151,6 +152,38 @@ impl DebugInfo {
         if dwarf.debug_info.reader().bytes().is_empty() && dwarf.debug_line.reader().bytes().is_empty() {
             return Ok(None);
         }
+        Self::from_dwarf(dwarf, found, source, sections, file.architecture()).map(Some)
+    }
+
+    /// DWARF sections made rather than read from a file (a debug map's objects', linked).
+    pub(crate) fn from_sections(
+        data: Vec<(gimli::SectionId, Vec<u8>)>,
+        endian: gimli::RunTimeEndian,
+        source: &str,
+        sections: &[Section],
+        arch: object::Architecture,
+    ) -> Result<DebugInfo> {
+        let mut found = Vec::new();
+        let dwarf = gimli::Dwarf::load(|id| -> Result<R> {
+            let bytes = data.iter().find(|d| d.0 == id).map_or(&[][..], |d| &d.1[..]);
+            if !bytes.is_empty() {
+                found.push(DwarfSection {
+                    name: id.name().to_string(),
+                    size: bytes.len() as u64,
+                });
+            }
+            Ok(R::new(Arc::from(bytes), endian))
+        })?;
+        Self::from_dwarf(dwarf, found, source, sections, arch)
+    }
+
+    fn from_dwarf(
+        mut dwarf: gimli::Dwarf<R>,
+        found: Vec<DwarfSection>,
+        source: &str,
+        sections: &[Section],
+        arch: object::Architecture,
+    ) -> Result<DebugInfo> {
         dwarf.file_type = gimli::DwarfFileType::Main;
         let dwarf = Arc::new(dwarf);
         let ctx = addr2line::Context::from_arc_dwarf(dwarf.clone())?;
@@ -220,7 +253,7 @@ impl DebugInfo {
             .map(|s| (s.address, s.address + s.size))
             .collect();
         let die_starts = units.iter().map(|_| OnceLock::new()).collect();
-        Ok(Some(DebugInfo {
+        Ok(DebugInfo {
             dwarf,
             ctx,
             units,
@@ -230,13 +263,13 @@ impl DebugInfo {
             source: source.to_string(),
             sections: found,
             code_ranges,
-            arch: file.architecture(),
+            arch,
             die_starts,
             names: OnceLock::new(),
             globals: OnceLock::new(),
             load_problems,
             listing: std::sync::Mutex::new(None),
-        }))
+        })
     }
 
     /// Unit-relative offsets of every entry (DIEs and null entries) in a unit.

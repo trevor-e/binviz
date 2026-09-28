@@ -16,6 +16,7 @@ const MAX_PAGES = 256;
 
 export class HexView extends View {
   private list!: VList;
+  private header?: HTMLElement;
   private spans = new Map<number, Span[]>();
   private loading = new Set<number>();
   private pages = new Map<number, Uint8Array>();
@@ -32,6 +33,13 @@ export class HexView extends View {
   constructor() {
     super('hex', true);
     window.addEventListener('themechange', () => this.visible && this.drawMinimap());
+    // Text read through a game's table file, when there is one.
+    store.on('table', () => {
+      if (this.list) {
+        this.header?.replaceChildren(...this.headerCells());
+        this.list.refresh();
+      }
+    });
   }
 
   protected render() {
@@ -62,6 +70,7 @@ export class HexView extends View {
       h('label', { class: 'secondary', style: 'display:flex;gap:4px;align-items:center' }, vaToggle, 'Addresses'),
     );
     const header = h('div', { class: 'hex-header' }, ...this.headerCells());
+    this.header = header;
 
     this.list = new VList({ rowHeight: 22, className: 'hex', renderRow: (i) => this.row(i), onRange: (a, b) => this.onRange(a, b) });
     this.list.setCount(Math.ceil(num(f.summary.fileSize) / ROW));
@@ -104,7 +113,7 @@ export class HexView extends View {
       h('span', { style: `width:${this.offWidth + 3}ch;flex:none` }, 'Offset'),
       this.showVA ? h('span', { style: 'width:19ch;flex:none' }, 'Address') : h('span'),
       h('span', { style: 'display:flex;margin-right:16px' }, ...cols),
-      h('span', null, 'Text'),
+      h('span', { title: store.table ? 'Read with the table file (the Text view has it)' : '' }, store.table ? 'Text (table)' : 'Text'),
     ];
   }
 
@@ -160,6 +169,7 @@ export class HexView extends View {
     const hov = this.hover;
     let hexHtml = '';
     let asciiHtml = '';
+    const table = store.table?.chars;
     for (let o = off; o < off + ROW; o++) {
       const gap = o - off === 8 ? ' gap' : '';
       if (o >= end) {
@@ -180,7 +190,15 @@ export class HexView extends View {
       if (o === sel) extra += ' sel';
       if ((hl && big >= hl.start && big < hl.end) || (hov && big >= hov.start && big < hov.end)) extra += ' hl';
       hexHtml += `<span class="b${gap} ${cls}${extra}" data-o="${o}">${hexPad(b, 2)}</span>`;
-      const ch = b >= 0x20 && b < 0x7f ? escapeHtml(String.fromCharCode(b)) : '·';
+      let ch: string;
+      if (table) {
+        // As the table reads it: one character per byte (longer entries by their first).
+        const t = table[b];
+        ch = t ? escapeHtml([...t][0] === '\n' ? '⏎' : [...t][0]) : '·';
+        if (t && [...t].length > 1) extra += ' long';
+      } else {
+        ch = b >= 0x20 && b < 0x7f ? escapeHtml(String.fromCharCode(b)) : '·';
+      }
       asciiHtml += `<span class="a ${cls}${extra}" data-o="${o}">${ch}</span>`;
     }
     let va = '';

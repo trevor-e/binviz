@@ -6,10 +6,10 @@
 // in the worker (zips inside open like folders), and binaries are streamed
 // straight into WebAssembly memory, one at a time.
 import init, {
-  Session, packageBundle, packageDiscover, packageHeader, packagePlan, zipDecompressZstandard, zipFindDirectory,
-  zipParseDirectory, zipZip64Directory,
+  Session, crashParse, packageBundle, packageDiscover, packageHeader, packagePlan, zipDecompressZstandard,
+  zipFindDirectory, zipParseDirectory, zipZip64Directory,
 } from './pkg/binviz_wasm.js';
-import type { BinaryHeader, BundleInfo, PackageInfo, PackageSource } from './types';
+import type { BaselineSource, BinaryHeader, BundleInfo, DebugMapObject, DebugMapReport, PackageBinary, PackageInfo, PackageSource, Summary } from './types';
 
 const ready = init();
 let session: Session | null = null;
@@ -65,6 +65,8 @@ const NESTED_ZIPS = 2;
 let entries: Entry[] = [];
 const loaded = new Set<number>();
 const attached = new Set<number>();
+/** Binaries whose debug map was looked at. */
+const mapped = new Set<number>();
 let current = -1;
 /** What the last scan found, until it is opened. */
 let scanned: { info: PackageInfo; entries: Entry[] } | null = null;
@@ -262,7 +264,70 @@ async function loadBinary(memory: WebAssembly.Memory, index: number, makeCurrent
     }
     attached.add(index);
   }
+  // Built without dsymutil: its DWARF is in the object files its debug map names, if the folder has them.
+  if (!mapped.has(index)) {
+    mapped.add(index);
+    const map = session!.packageDebugMapNeeded(index) as DebugMapObject[];
+    if (map.length) {
+      status(`Reading ${b.name}’s object files…`);
+      const found = await addDebugObjects(map, entries, archOf(b), (e) => readBytes(e));
+      if (found) {
+        try {
+          post({ status: describeReport(session!.packageDebugMapLink(index) as DebugMapReport) });
+        } catch (e) {
+          post({ status: `${b.name}: ${e instanceof Error ? e.message : e}` });
+        }
+      }
+    }
+  }
 }
+
+/** The last part of a path. */
+const baseName = (path: string) => path.slice(path.lastIndexOf('/') + 1);
+
+/** A folder binary's architecture, as its header says (the first slice's). */
+const archOf = (b: PackageBinary) => b.ids[0]?.arch ?? '';
+
+/** A debug map object's file name: `main.o`, or a member's library, `libfoo.a`. */
+const objectFile = (o: DebugMapObject) => baseName(o.path.replaceAll('\\', '/'));
+
+/**
+ * Of the files named `name`, the one most likely built for `arch`: Xcode keeps
+ * each architecture's objects in a folder named after it (…/Objects-normal/arm64).
+ */
+function pickObject<T extends { path: string }>(candidates: T[] | undefined, arch: string): T | undefined {
+  if (!candidates?.length) return undefined;
+  const dirs = /arm64|aarch64/i.test(arch) ? ['arm64e', 'arm64'] : /x86.64/i.test(arch) ? ['x86_64h', 'x86_64'] : [];
+  return candidates.find((c) => dirs.some((d) => c.path.includes(`/${d}/`))) ?? candidates[0];
+}
+
+/**
+ * Hands the object files a debug map names to the session, from `files` (by
+ * name); returns how many were found.
+ */
+async function addDebugObjects<T extends { path: string }>(map: DebugMapObject[], files: T[], arch: string, read: (f: T) => Promise<Uint8Array>) {
+  const byName = new Map<string, T[]>();
+  for (const f of files) {
+    const n = baseName(f.path);
+    if (!n.endsWith('.o') && !n.endsWith('.a')) continue;
+    byName.set(n, [...(byName.get(n) ?? []), f]);
+  }
+  let found = 0;
+  const done = new Set<string>();
+  for (const o of map) {
+    const name = objectFile(o);
+    if (done.has(name)) continue;
+    done.add(name);
+    const f = pickObject(byName.get(name), arch);
+    if (!f) continue;
+    session!.debugMapAdd(name, await read(f));
+    found++;
+  }
+  return found;
+}
+
+const describeReport = (r: DebugMapReport) =>
+  `DWARF from ${r.linked} of ${r.objects} object files${r.missing.length ? ` (${r.missing.length} not found)` : ''}${r.failed.length ? ` (${r.failed.length} unusable)` : ''}`;
 
 /** Frees binaries that aren't current once they (with their debug files) take much memory. */
 function trim() {
@@ -274,6 +339,7 @@ function trim() {
       session!.packageUnload(i);
       loaded.delete(i);
       attached.delete(i);
+      mapped.delete(i);
     }
   }
 }
@@ -292,6 +358,7 @@ const packageMethods: Record<string, (memory: WebAssembly.Memory, id: number, ar
     scanned = null;
     loaded.clear();
     attached.clear();
+    mapped.clear();
     current = -1;
     if (info().binaries.length === 0) return { info: info(), opened: null };
     await loadBinary(memory, 0, true, (s) => post({ id, status: s }), (f) => post({ id, progress: f }));
@@ -306,6 +373,87 @@ const packageMethods: Record<string, (memory: WebAssembly.Memory, id: number, ar
     if (!e) throw new Error('nothing scanned to attach');
     await stream(memory, e, (f) => post({ id, progress: f }));
     return session!.attachInput(name);
+  },
+
+  /** Reads an earlier build to compare sizes with: a binary, or folders and zips (each binary with its debug file). */
+  async compareWith(memory, id, args) {
+    const [source] = args as [BaselineSource];
+    const status = (s: string) => post({ id, status: s });
+    const progress = (f: number) => post({ id, progress: f });
+    if (source.kind === 'file') {
+      status(`Reading ${source.name}…`);
+      const ptr = session!.beginDebugInput(source.blob.size);
+      await copyInto(memory, ptr, source.blob, progress);
+      session!.baselineBinary(source.name);
+      return 'binary';
+    }
+    const other = await scan(source.sources, status, progress);
+    session!.baselineFolder(listing(other.entries), other.info);
+    const n = Math.min(other.info.binaries.length, 300);
+    for (let i = 0; i < n; i++) {
+      const b = other.info.binaries[i];
+      status(`Reading ${b.name} of the earlier build (${i + 1} of ${n})…`);
+      try {
+        await stream(memory, other.entries[b.file], progress);
+        session!.baselineLoad();
+        if (b.debug !== undefined && b.debug !== null) {
+          const d = other.info.debugFiles[b.debug];
+          await stream(memory, other.entries[d.file], progress);
+          try {
+            session!.baselineAttach(d.path);
+          } catch {
+            /* names come from the binary alone */
+          }
+        }
+        session!.baselineAdd(b.path, b.name);
+      } catch (e) {
+        post({ status: `${b.path}: ${e instanceof Error ? e.message : e}` });
+      }
+    }
+    return 'folder';
+  },
+
+  /** What changed in size from the earlier build to what is open (reading each binary of an open folder). */
+  async sizeDiff(memory, id, args) {
+    const [top] = args as [number];
+    if (session!.baselineKind() === 'folder' && session!.packageInfo()) {
+      session!.packageSnapshotBegin(listing(entries));
+      const pkg = info();
+      const n = Math.min(pkg.binaries.length, 300);
+      for (let i = 0; i < n; i++) {
+        post({ id, status: `Reading ${pkg.binaries[i].name} (${i + 1} of ${n})…` });
+        const here = !loaded.has(i);
+        try {
+          await loadBinary(memory, i, false, () => {}, () => {});
+          session!.packageSnapshotAdd(i);
+        } catch (e) {
+          post({ status: `${pkg.binaries[i].path}: ${e instanceof Error ? e.message : e}` });
+        }
+        if (here && i !== current) {
+          session!.packageUnload(i);
+          loaded.delete(i);
+          attached.delete(i);
+        }
+      }
+      return { kind: 'folder', diff: session!.sizeDiffFolder(top) };
+    }
+    return { kind: 'binary', diff: session!.sizeDiffBinary(top) };
+  },
+
+  async crashParse(_memory, _id, args) {
+    const [text] = args as [string];
+    return crashParse(text);
+  },
+
+  /** Symbolicates a crash report with what is open: the folder's binaries it needs are loaded (with their debug files) first. */
+  async symbolicateCrash(memory, id, args) {
+    const [text] = args as [string];
+    if (session!.packageInfo()) {
+      for (const i of session!.crashNeeds(text)) {
+        await loadBinary(memory, i, false, (s) => post({ id, status: s }), (f) => post({ id, progress: f }));
+      }
+    }
+    return session!.symbolicate(text);
   },
 
   async sniff(_memory, _id, args) {
@@ -338,9 +486,22 @@ const packageMethods: Record<string, (memory: WebAssembly.Memory, id: number, ar
         session!.packageUnload(i);
         loaded.delete(i);
         attached.delete(i);
+        mapped.delete(i);
       }
     }
     return { info: info(), reports };
+  },
+
+  /** Links the open binary's debug map from the object files of a chosen folder. */
+  async linkDebugMap(_memory, id, args) {
+    const [files] = args as [{ path: string; file: File }[]];
+    const map = session!.debugMap() as DebugMapObject[];
+    const summary = session!.summary() as Summary;
+    post({ id, status: 'Reading the object files…' });
+    const found = await addDebugObjects(map, files, summary.arch, async (f) => new Uint8Array(await f.file.arrayBuffer()));
+    if (!found) throw new Error(`None of the ${map.length} object files the debug map names is in that folder`);
+    const report = session!.debugMapLink() as DebugMapReport;
+    return { report, summary: session!.summary() };
   },
 
   /** A file's bytes (a stored zip entry's, or a dropped file's) as a Blob, if it has one. */
@@ -366,6 +527,7 @@ self.onmessage = async (event: MessageEvent<Request>) => {
           entries = [];
           loaded.clear();
           attached.clear();
+          mapped.clear();
           current = -1;
         }
         return method === 'openBlob' ? session!.openInput(name) : session!.attachInput(name);

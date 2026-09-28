@@ -157,9 +157,9 @@ impl Binary {
 
     /// Rebuilds the symbols that don't come from the file's own tables: an
     /// attached debug file's symbols, DWARF subprograms (when the file has no
-    /// function symbols) and recovered function boundaries (`sub_<address>`),
-    /// each only where nothing before it names the address; then the user's
-    /// names on top.
+    /// function symbols), names from Objective-C metadata and recovered
+    /// function boundaries (`sub_<address>`), each only where nothing before
+    /// it names the address; then the user's names on top.
     pub(crate) fn rebuild_static_symbols(&mut self) {
         let file = self.symbols.file_len();
         // Addresses the file already names.
@@ -216,6 +216,26 @@ impl Binary {
             dwarf.dedup_by_key(|d| d.1);
         }
         merge(&mut named, &mut dwarf.iter().map(|d| d.1).collect());
+        // Objective-C methods, metadata and selector references.
+        let objc: Vec<(&str, u64, u64, bool, u32)> = self
+            .objc
+            .get_or_init(|| crate::objc::parse(self))
+            .names
+            .iter()
+            .filter(|n| named.binary_search(&n.address).is_err())
+            .filter_map(|n| {
+                // A method runs to the next function start, when the image lists them.
+                let size = match n.size {
+                    0 if n.code => self
+                        .discovered
+                        .binary_search_by_key(&n.address, |d| d.0)
+                        .map_or(0, |i| self.discovered[i].1),
+                    size => size,
+                };
+                Some((n.name.as_str(), n.address, size, n.code, section_of(n.address)?))
+            })
+            .collect();
+        merge(&mut named, &mut objc.iter().map(|o| o.1).collect());
         // Recovered functions go where nothing is named: `named` is sorted, so check by search.
         let recovered: Vec<(u64, u64, Option<u32>)> = self
             .discovered
@@ -246,6 +266,17 @@ impl Binary {
                 binding: Binding::Global,
                 section: Some(*section),
                 source: SymbolSource::Dwarf,
+                defined: true,
+                plain: true,
+            }))
+            .chain(objc.iter().map(|&(name, address, size, code, section)| NewSym {
+                name,
+                address,
+                size,
+                kind: if code { SymbolKind::Function } else { SymbolKind::Data },
+                binding: Binding::Local,
+                section: Some(section),
+                source: SymbolSource::Objc,
                 defined: true,
                 plain: true,
             }))

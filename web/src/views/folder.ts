@@ -47,6 +47,7 @@ const GROUP_LABELS: Record<GroupKind, string> = {
   'objc-class': 'Objective-C class',
   namespace: 'C++ namespace / Rust crate',
   'c-prefix': 'C prefix',
+  'compiler-generated': 'Compiler-generated',
   unnamed: 'Unnamed functions',
   other: 'Other',
 };

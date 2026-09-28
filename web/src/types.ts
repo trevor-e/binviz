@@ -9,7 +9,7 @@ export type RegionKind =
 export interface Property { key: string; value: string }
 
 export interface Summary {
-  format: 'elf' | 'mach-o' | 'pe' | 'coff' | 'xcoff' | 'wasm' | 'unknown';
+  format: 'elf' | 'mach-o' | 'pe' | 'coff' | 'xcoff' | 'wasm' | 'rom' | 'unknown';
   formatName: string;
   kind: string;
   arch: string;
@@ -63,7 +63,7 @@ export interface Segment {
 
 export type SymbolKind = 'function' | 'data' | 'section' | 'file' | 'label' | 'tls' | 'debug' | 'unknown';
 
-export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import' | 'debug-file';
+export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import' | 'debug-file' | 'objc';
 
 export interface Sym {
   index: number;
@@ -189,6 +189,18 @@ export interface Disassembly {
 
 export interface Member { index: number; name: string; offset: bigint; size: bigint; arch?: string }
 export interface ContainerInfo { kind: string; fileSize: bigint; members: Member[] }
+
+// --- Text in games ------------------------------------------------------------
+
+export interface RelativeHit { offset: bigint; preview: string; at: number }
+/** An encoding relative search found: the value standing for A (or a, or 0). */
+export interface TextEncoding { first: number; letter: string; hits: RelativeHit[] }
+export interface RelativeSearch { word: string; width: number; encodings: TextEncoding[]; total: number }
+export interface TableText { offset: bigint; len: number; text: string }
+
+/** An object file a Mach-O debug map names (where a binary linked without dsymutil keeps its DWARF). */
+export interface DebugMapObject { index: number; path: string; member?: string; modified: bigint; symbols: number }
+export interface DebugMapReport { objects: number; linked: number; missing: string[]; failed: string[]; units: number }
 
 export type Opened =
   | { kind: 'binary'; name: string; summary: Summary }
@@ -433,6 +445,18 @@ export type NodeKind = 'function' | 'import' | 'code' | 'data';
 
 export interface CallEdge { address: bigint; name: string; kind: NodeKind; calls: number; site: bigint }
 
+// --- Objective-C metadata ----------------------------------------------------
+
+export interface ObjcCounts { classes: number; swiftClasses: number; categories: number; protocols: number; methods: number; selectors: number }
+export type ObjcKind = 'class' | 'category' | 'protocol';
+/** A class (with its superclass as base), a category (base: the class it adds to) or a protocol. */
+export interface ObjcEntry { kind: ObjcKind; name: string; address: bigint; base?: string; methods: number; swift: boolean }
+/** A line of a header: a method's has its implementation and selector. */
+export interface InterfaceLine { text: string; address?: bigint; selector?: string }
+export interface ObjcInterface { kind: ObjcKind; name: string; address: bigint; lines: InterfaceLine[] }
+export interface Implementation { name: string; address: bigint }
+export interface SelectorUses { selector: string; implementations: Implementation[]; references: bigint[]; stubs: bigint[]; senders: CallEdge[] }
+
 export interface GraphNode {
   address: bigint;
   name: string;
@@ -521,7 +545,7 @@ export interface PackageInfo {
 /** Where a folder's files come from (sent to the worker): a zip, or files dropped or picked. */
 export type PackageSource = { kind: 'zip'; name: string; blob: Blob } | { kind: 'folder'; name: string; files: { path: string; file: File }[] };
 
-export type GroupKind = 'swift-module' | 'objc-class' | 'namespace' | 'c-prefix' | 'unnamed' | 'other';
+export type GroupKind = 'swift-module' | 'objc-class' | 'namespace' | 'c-prefix' | 'compiler-generated' | 'unnamed' | 'other';
 export interface SizeGroup { kind: GroupKind; name: string; functions: number; codeBytes: bigint; dataSymbols: number; dataBytes: bigint }
 export interface SizedSymbol { name: string; address: bigint; size: bigint; approximate: boolean }
 export interface SizeReport {
@@ -536,3 +560,80 @@ export interface SizeReport {
   strings: number;
   stringBytes: bigint;
 }
+
+// --- Crash reports ----------------------------------------------------------------
+
+export interface CrashImage { name: string; path?: string; id?: string; arch?: string; loadAddress?: bigint; size?: bigint }
+export interface CrashFrame { index: number; image?: number; imageName: string; address?: bigint; offset?: bigint; linked?: bigint; symbol?: string }
+export interface CrashThread { name: string; crashed: boolean; frames: CrashFrame[] }
+export interface CrashReport {
+  format: string;
+  process?: string;
+  identifier?: string;
+  version?: string;
+  os?: string;
+  arch?: string;
+  exception?: string;
+  reason?: string;
+  images: CrashImage[];
+  /** The crashed thread first. */
+  threads: CrashThread[];
+}
+/** One function of a frame: innermost first, the calls inlined there, then the function around them. */
+export interface SymbolLine { function?: string; offset?: bigint; file?: string; line?: number; column?: number; inlined: boolean }
+export interface SymbolicatedFrame {
+  index: number;
+  image?: number;
+  imageName: string;
+  /** As the report gives it (at run time). */
+  address?: bigint;
+  /** In the binary that symbolicated it. */
+  binaryAddress?: bigint;
+  /** That binary: an index into the open folder's binaries (0 for a lone binary). */
+  binary?: number;
+  lines: SymbolLine[];
+  reported?: string;
+}
+export interface SymbolicatedThread { name: string; crashed: boolean; frames: SymbolicatedFrame[] }
+export interface ImageStatus { image: number; frames: number; binary?: number; note?: string }
+export interface Symbolicated { report: CrashReport; images: ImageStatus[]; threads: SymbolicatedThread[] }
+
+// --- Comparing sizes with another build ---------------------------------------------
+
+export interface Change { name: string; old: bigint; new: bigint }
+export interface KindChange { kind: RegionKind; old: bigint; new: bigint }
+export interface CategoryChange { category: FileCategory; old: bigint; new: bigint }
+export interface OwnerChange { kind: GroupKind; name: string; old: bigint; new: bigint }
+export interface SymbolChange { name: string; code: boolean; old: bigint; new: bigint }
+export interface SizeDiff {
+  oldName: string;
+  newName: string;
+  oldSize: bigint;
+  newSize: bigint;
+  byKind: KindChange[];
+  sections: Change[];
+  owners: OwnerChange[];
+  ownersChanged: number;
+  symbols: SymbolChange[];
+  symbolsAdded: number;
+  symbolsRemoved: number;
+  symbolsChanged: number;
+}
+export interface BinaryChange { path: string; name: string; old: bigint; new: bigint; diff?: SizeDiff }
+export interface FolderDiff {
+  oldName: string;
+  newName: string;
+  oldSize: bigint;
+  newSize: bigint;
+  categories: CategoryChange[];
+  files: Change[];
+  filesAdded: number;
+  filesRemoved: number;
+  filesChanged: number;
+  binaries: BinaryChange[];
+  owners: OwnerChange[];
+  ownersChanged: number;
+}
+export type Comparison = { kind: 'binary'; diff: SizeDiff } | { kind: 'folder'; diff: FolderDiff };
+/** The earlier build to compare with: a binary, or folders and zips. */
+export type BaselineSource = { kind: 'file'; name: string; blob: Blob } | { kind: 'folder'; sources: PackageSource[] };

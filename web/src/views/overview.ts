@@ -26,7 +26,8 @@ export class OverviewView extends View {
   protected render() {
     const mapping = h('div', { class: 'mapping' });
     const page = h('div', { class: 'page' });
-    page.append(this.identity(), h('div', { class: 'grid-2' }, this.composition(), this.dwarfCard()), this.fileMapCard(), this.mappingCard(mapping));
+    const rom = store.file!.summary.format === 'rom';
+    page.append(this.identity(), h('div', { class: 'grid-2' }, this.composition(), rom ? this.romCard() : this.dwarfCard()), this.fileMapCard(), this.mappingCard(mapping));
     this.el.replaceChildren(page);
     void this.loadMap();
     // Measure the diagram's width only once it is in the document.
@@ -53,7 +54,8 @@ export class OverviewView extends View {
       facts.push(['Entry point', link]);
     }
     if (s.imageBase !== undefined) facts.push(['Image base', h('span', { class: 'mono' }, hex(s.imageBase))]);
-    if (s.buildId) facts.push([s.format === 'mach-o' ? 'UUID' : s.format === 'pe' ? 'PDB signature' : 'Build ID', h('span', { class: 'mono' }, s.buildId)]);
+    // A ROM's CRC32 is among its properties.
+    if (s.buildId && s.format !== 'rom') facts.push([s.format === 'mach-o' ? 'UUID' : s.format === 'pe' ? 'PDB signature' : 'Build ID', h('span', { class: 'mono' }, s.buildId)]);
     if (s.debugLink) facts.push([s.format === 'pe' ? 'PDB path' : 'Debug link', h('span', { class: 'mono' }, s.debugLink)]);
     facts.push(['Contents', `${s.sectionCount} sections · ${s.segmentCount} segments · ${formatCount(s.symbolCount)} symbols`]);
     if (s.syntheticAddresses) facts.push(['Addresses', 'Relocatable object: binviz laid out its sections at synthetic addresses and applied relocations to the DWARF']);
@@ -62,7 +64,7 @@ export class OverviewView extends View {
       'div',
       { class: 'card' },
       h('h2', { style: 'font-size:18px' }, basename(f.name)),
-      h('p', { class: 'sub' }, `${s.formatName} ${s.kind.toLowerCase()} for ${s.arch}`),
+      h('p', { class: 'sub' }, s.format === 'rom' ? `${s.kind} (${s.formatName}) for the ${s.arch}` : `${s.formatName} ${s.kind.toLowerCase()} for ${s.arch}`),
       h('dl', { class: 'facts' }, facts.flatMap(([k, v]) => [h('dt', null, k), h('dd', null, v)])),
     );
   }
@@ -99,6 +101,22 @@ export class OverviewView extends View {
       h('p', { class: 'sub' }, 'Every byte is attributed to the structure that owns it'),
       bar,
       h('table', { class: 'data' }, h('thead', null, h('tr', null, h('th', null, 'Region kind'), h('th', { class: 'right' }, 'Bytes'), h('th', { class: 'right' }, 'Share'))), h('tbody', null, rows)),
+    );
+  }
+
+  /** A ROM's code: how it was found. */
+  private romCard(): HTMLElement {
+    const s = store.file!.summary;
+    const found = s.properties.find((p) => p.key === 'Code found')?.value ?? '';
+    const open = h('button', { class: 'btn' }, 'Open the code');
+    open.addEventListener('click', () => store.setView('code'));
+    return h(
+      'div',
+      { class: 'card' },
+      h('h2', null, 'Code'),
+      h('p', { class: 'sub' }, found),
+      h('p', { class: 'secondary' }, 'A ROM mixes code with graphics, tables and text. binviz follows the code from the reset and interrupt vectors, each call and branch in turn; what nothing reaches stays unexplored until you name it.'),
+      open,
     );
   }
 

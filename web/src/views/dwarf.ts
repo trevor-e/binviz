@@ -2,7 +2,7 @@
 // each DIE with its attributes, the source behind it and its layout, line
 // tables, and a check for everything that can't be read or doesn't add up.
 import { store } from '../store';
-import type { AttrInfo, CodeLine, DieDetails, DieSummary, DwarfCheck, DwarfProblem, LineProgramInfo, LineRow, Link, MemberLayout, SourceLoc, TagCount, UnitInfo } from '../types';
+import type { AttrInfo, CodeLine, DebugMapObject, DieDetails, DieSummary, DwarfCheck, DwarfProblem, LineProgramInfo, LineRow, Link, MemberLayout, SourceLoc, TagCount, UnitInfo } from '../types';
 import { LINE_FLAGS } from '../types';
 import { emptyState, toast } from '../ui';
 import { basename, debounce, formatCount, formatSize, h, hex, icon, num, parseNumber } from '../util';
@@ -86,7 +86,12 @@ export class DwarfView extends View {
     if (!f.dwarf) {
       const btn = h('button', { class: 'btn' }, 'Add debug file…');
       btn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('binviz:attach-debug')));
-      this.el.replaceChildren(emptyState('No DWARF debug information', 'Rebuild with debug info (-g), or add a separate debug file: a .dSYM’s DWARF file, a .debug file, or an unstripped copy.', btn));
+      const state = emptyState('No DWARF debug information', 'Rebuild with debug info (-g), or add a separate debug file: a .dSYM’s DWARF file, a .debug file, or an unstripped copy.', btn);
+      this.el.replaceChildren(state);
+      // Linked without dsymutil, a Mach-O binary's DWARF is in the object files its debug map names.
+      void store.api.debugMap().then((objects) => {
+        if (store.file === f && objects.length && state.isConnected) this.el.replaceChildren(debugMapState(objects, btn));
+      });
       return;
     }
     const search = h('input', { class: 'field small', type: 'search', placeholder: 'Search DIEs, or 0x… offset', style: 'width:240px', 'aria-label': 'Search DIEs by name, or go to a .debug_info offset' });
@@ -697,4 +702,30 @@ export class DwarfView extends View {
   protected onSelection() {
     this.lineList?.refresh();
   }
+}
+
+/** What to do for a binary whose DWARF is in the object files its debug map names. */
+function debugMapState(objects: DebugMapObject[], addFile: HTMLElement): HTMLElement {
+  const input = h('input', { type: 'file', multiple: true, webkitdirectory: true, style: 'display:none' });
+  input.addEventListener('change', () => {
+    const files = [...(input.files ?? [])].map((file) => ({ path: file.webkitRelativePath || file.name, file }));
+    input.value = '';
+    if (files.length) void store.linkDebugMap(files);
+  });
+  const choose = h('button', { class: 'btn primary', type: 'button' }, 'Choose their folder…');
+  choose.addEventListener('click', () => input.click());
+  const name = (o: DebugMapObject) => {
+    const file = o.path.slice(Math.max(o.path.lastIndexOf('/'), o.path.lastIndexOf('\\')) + 1);
+    return o.member ? `${file}(${o.member})` : file;
+  };
+  const shown = objects.slice(0, 8).map((o) => h('div', { class: 'mono', title: o.path }, name(o)));
+  const more = objects.length > 8 ? h('div', null, `and ${formatCount(objects.length - 8)} more`) : null;
+  const n = objects.length;
+  return emptyState(
+    `Its DWARF is in ${formatCount(n)} object file${n === 1 ? '' : 's'}`,
+    'This binary was linked without dsymutil, so its debug info stayed in the object files it was built from, which its debug map names. Choose the folder holding them (Xcode keeps them under DerivedData/…/Objects-normal/<arch>), or add a dSYM.',
+    h('div', { class: 'debug-map-list' }, ...shown, more),
+    h('div', { class: 'btn-row', style: 'justify-content:center' }, choose, addFile),
+    input,
+  );
 }

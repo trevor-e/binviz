@@ -18,6 +18,10 @@ json describes the folder, and every other command works on the first binary
 
 COMMANDS:
     info <file>                    Summary, sections and segments
+    crash <file> <report>          Symbolicate a crash report (Apple .crash or .ips, Android
+                                   tombstone, a stack trace) with a binary or a folder's binaries
+    diff <old> <new>               What changed in size between two builds: two binaries, or
+                                   two folders or zips (files, owners, symbols)
     layout <file> [depth]          File layout tree (default depth 2)
     at <file> <offset>             What the byte at a file offset is
     inspect <file> <address>       Everything known about a virtual address
@@ -49,12 +53,24 @@ COMMANDS:
                                    Call graph around a function
     callpath <file> <from> <to>    A shortest chain of calls between two functions
     func <file> <addr|symbol>      Callers, callees, strings and data of a function
+    relsearch <file> <word> [16] [tbl]
+                                   Relative search: a word in an encoding of the file's own
+                                   (A = $80, say), found by the spacing of its letters; 16 for
+                                   2-byte characters; tbl prints the table it implies
+    text <file> <table.tbl> [offset [length] | text]
+                                   Text read with a table file: all of it, at an offset, or
+                                   where some text is
+    objc <file> [name]             Objective-C classes, categories and protocols; with a name,
+                                   one declared as its header would, or a selector's
+                                   implementations and the functions that send it
     attribution <file> [unit]      Code and data per source file (or unit)
     attributed <file> <id> [unit]  Address ranges of one source file (or unit)
     json <file>                    Summary as JSON
     check <file>                   Verify that the layout covers every byte
 
-Options: --debug <file>  load DWARF from a separate file (dSYM, .debug)
+Options: --debug <file>  load DWARF from a separate file (dSYM, .debug), or for a
+                         Mach-O binary linked without dsymutil, from the folder
+                         holding the object files its debug map names
          --member <n>    pick a slice/member of a universal binary or archive, or
                          a binary of a folder (its name, path or number)
          --notes <file>  load annotations (a JSON array) first
@@ -109,15 +125,56 @@ fn open(path: &str, debug: Option<&str>, member: Option<&str>) -> Result<Binary,
     } else {
         Binary::parse(data).map_err(|e| e.to_string())?
     };
+    let mut folders = Vec::new();
     if let Some(d) = debug {
-        let bytes = std::fs::read(d).map_err(|e| format!("{d}: {e}"))?;
-        bin.attach_debug_file(d, bytes).map_err(|e| e.to_string())?;
+        if std::path::Path::new(d).is_dir() {
+            folders.push(std::path::PathBuf::from(d));
+        } else {
+            let bytes = std::fs::read(d).map_err(|e| format!("{d}: {e}"))?;
+            bin.attach_debug_file(d, bytes).map_err(|e| e.to_string())?;
+        }
+    }
+    // Built without dsymutil, a Mach-O binary's DWARF is in the objects its debug map names.
+    if bin.debug_info().is_none() && !bin.debug_map().is_empty() {
+        if let Some(dir) = std::path::Path::new(path).parent() {
+            folders.push(dir.to_path_buf());
+        }
+        debug_map_note(bin.attach_debug_map_from_disk(&folders));
     }
     Ok(bin)
 }
 
+/// Says how linking a debug map's DWARF went.
+fn debug_map_note(result: binviz::Result<binviz::dwarf::debugmap::DebugMapReport>) {
+    match result {
+        Ok(r) => eprintln!("{}", r.to_text()),
+        Err(e) => eprintln!("debug map: {e} (--debug <folder> says where the objects are)"),
+    }
+}
+
 fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option<&str>) -> Result<(), String> {
     let cmd = args[0].as_str();
+    if cmd == "diff" {
+        let new = args.get(2).ok_or("compare with what? binviz diff <old> <new>")?;
+        return diff(&args[1], new);
+    }
+    if cmd == "crash" {
+        let report = args.get(2).ok_or("which crash report? binviz crash <file> <report>")?;
+        return crash(&args[1], report, debug, member);
+    }
+    // These read any file's bytes, whatever it is.
+    if cmd == "relsearch" {
+        let word = args
+            .get(2)
+            .ok_or("which word? binviz relsearch <file> <word> [16] [tbl]")?;
+        return relsearch(&args[1], word, &args[3..]);
+    }
+    if cmd == "text" {
+        let table = args
+            .get(2)
+            .ok_or("which table? binviz text <file> <table.tbl> [offset [length] | text]")?;
+        return table_text(&args[1], table, &args[3..]);
+    }
     let path = std::path::Path::new(&args[1]);
     let mut bin = if binviz::package::is_package_path(path) {
         let mut pkg = binviz::package::DiskPackage::open(path)?;
@@ -143,6 +200,8 @@ fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option
     } else {
         open(&args[1], debug, member)?
     };
+    // Swift names read better through `swift-demangle`, where it is installed.
+    bin.demangle_swift_with_tool();
     if let Some(path) = notes {
         let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
         let list: Vec<binviz::Annotation> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
@@ -640,6 +699,21 @@ fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option
                 );
             }
         }
+        "objc" => {
+            let objc = bin.objc();
+            match arg(2) {
+                None => print!("{}", objc.to_text(2000)),
+                Some(name) => {
+                    if let Some(i) = objc.interface(name) {
+                        print!("{}", i.to_text());
+                    } else if let Some(uses) = bin.objc_selector(name) {
+                        print!("{}", uses.to_text());
+                    } else {
+                        return Err(format!("no class, category, protocol or selector named {name}"));
+                    }
+                }
+            }
+        }
         "callers" | "callees" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
             let list = if cmd == "callers" {
@@ -739,8 +813,73 @@ fn fmt_addr(a: u64) -> String {
     format!("{a:#x}")
 }
 
+/// `relsearch`: a word in an encoding of the file's own.
+fn relsearch(path: &str, word: &str, rest: &[String]) -> Result<(), String> {
+    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let width = if rest.iter().any(|a| a == "16") { 2 } else { 1 };
+    let found = binviz::tables::relative_search(&data, word, width, 50)?;
+    if rest.iter().any(|a| a == "tbl") {
+        let e = found
+            .encodings
+            .first()
+            .ok_or_else(|| format!("{word:?} is nowhere in {path}, in any encoding"))?;
+        print!(
+            "{}",
+            binviz::tables::Table::from_alphabet(e.first, e.letter, width).to_tbl()
+        );
+        return Ok(());
+    }
+    print!("{}", found.to_text());
+    if !found.encodings.is_empty() {
+        eprintln!(
+            "
+As a table file: binviz relsearch {path} {word}{} tbl > game.tbl",
+            if width == 2 { " 16" } else { "" }
+        );
+    }
+    Ok(())
+}
+
+/// `text`: the file's text, read with a table file.
+fn table_text(path: &str, table: &str, rest: &[String]) -> Result<(), String> {
+    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let tbl = std::fs::read_to_string(table).map_err(|e| format!("{table}: {e}"))?;
+    let table = binviz::tables::Table::parse(&tbl).map_err(|e| format!("{table}: {e}"))?;
+    let show = |s: &str| s.replace('\n', "⏎");
+    match rest.first() {
+        None => {
+            let found = table.strings(&data, 4, 5000);
+            for s in &found {
+                println!("{:#08x}  {}", s.offset, show(&s.text));
+            }
+            eprintln!("{} strings of 4 characters or more", found.len());
+        }
+        Some(a) if num(a).is_ok() => {
+            let offset = num(a)? as usize;
+            let len = rest.get(1).map(|l| num(l)).transpose()?.unwrap_or(256) as usize;
+            let bytes = data
+                .get(offset..(offset + len).min(data.len()))
+                .ok_or_else(|| format!("{offset:#x} is past the end of {path}"))?;
+            println!("{}", table.decode(bytes, false).text);
+        }
+        Some(text) => {
+            let hits = table.find(&data, text, 1000)?;
+            for &at in &hits {
+                let bytes = &data[at as usize..(at as usize + 96).min(data.len())];
+                println!("{at:#08x}  {}", show(&table.decode(bytes, true).text));
+            }
+            eprintln!("{} places", hits.len());
+        }
+    }
+    Ok(())
+}
+
 fn info(bin: &Binary) {
     let s = bin.summary();
+    if s.format == binviz::Format::Unknown {
+        println!("{} bytes of raw data: not a format binviz recognizes", s.file_size);
+        return;
+    }
     println!(
         "{} {} {} ({}-bit, {} endian), {} bytes",
         s.format_name,
@@ -765,6 +904,10 @@ fn info(bin: &Binary) {
     println!("dwarf: {}  symbols: {}", s.has_dwarf, s.symbol_count);
     for p in &s.properties {
         println!("{}: {}", p.key, p.value);
+    }
+    let objc = bin.objc();
+    if !objc.is_empty() {
+        println!("Objective-C: {}", objc.counts().to_text());
     }
     println!("\nSegments:");
     for g in bin.segments() {
@@ -923,6 +1066,117 @@ fn human(n: u64) -> String {
     format!("{x:.1} {}", UNITS[u])
 }
 
+/// What changed in size between two builds: two binaries, or two folders or zips.
+fn diff(old: &str, new: &str) -> Result<(), String> {
+    use binviz::package::{DiskPackage, is_package_path, load_binary};
+    let (op, np) = (std::path::Path::new(old), std::path::Path::new(new));
+    match (is_package_path(op), is_package_path(np)) {
+        (true, true) => {
+            let demangle = |b: &mut Binary| {
+                b.demangle_swift_with_tool();
+            };
+            let before = DiskPackage::open(op)?.snapshot(FOLDER_BINARIES, demangle);
+            let after = DiskPackage::open(np)?.snapshot(FOLDER_BINARIES, demangle);
+            print!("{}", binviz::diff::diff_folders(&before, &after, 40).to_text());
+        }
+        (false, false) => {
+            let snapshot = |path: &str| -> Result<binviz::diff::SizeSnapshot, String> {
+                let data = binviz::read_file(std::path::Path::new(path)).map_err(|e| format!("{path}: {e}"))?;
+                let (mut bin, _) = load_binary(data).map_err(|e| format!("{path}: {e}"))?;
+                bin.demangle_swift_with_tool();
+                let name = std::path::Path::new(path)
+                    .file_name()
+                    .map_or(path.to_string(), |n| n.to_string_lossy().into_owned());
+                Ok(bin.size_snapshot(&name))
+            };
+            print!(
+                "{}",
+                binviz::diff::diff_binaries(&snapshot(old)?, &snapshot(new)?, 40).to_text()
+            );
+        }
+        _ => return Err("compare like with like: two binaries, or two folders or zips".into()),
+    }
+    Ok(())
+}
+
+/// Symbolicates a crash report with a binary, or with a folder's binaries
+/// (each image of the report found by UUID or build ID).
+fn crash(path: &str, report_path: &str, debug: Option<&str>, member: Option<&str>) -> Result<(), String> {
+    use binviz::crash::{Candidate, Found, Matches, match_images, parse, symbolicate};
+    let text = std::fs::read_to_string(report_path).map_err(|e| format!("{report_path}: {e}"))?;
+    let report = parse(&text).ok_or_else(|| {
+        format!("{report_path}: not a crash report (an Apple .crash or .ips, an Android tombstone, or a stack trace)")
+    })?;
+    let p = std::path::Path::new(path);
+    // Binaries by the index the matching knows them by, and their names.
+    let mut bins: Vec<(u32, String, Binary)> = Vec::new();
+    let (pairs, notes) = if binviz::package::is_package_path(p) && member.is_none() {
+        let mut pkg = binviz::package::DiskPackage::open(p)?;
+        let Matches { pairs, notes } = {
+            let candidates: Vec<Candidate> = pkg
+                .info
+                .binaries
+                .iter()
+                .map(|b| Candidate {
+                    binary: b.index,
+                    name: &b.name,
+                    ids: b.ids.iter().map(|x| x.id.as_str()).collect(),
+                })
+                .collect();
+            match_images(&report, &candidates)
+        };
+        let mut wanted: Vec<u32> = pairs.iter().map(|&(_, b)| b).collect();
+        wanted.sort_unstable();
+        wanted.dedup();
+        for b in wanted {
+            let mut bin = folder_load(&mut pkg, b as usize)?;
+            folder_attach(&mut pkg, b as usize, &mut bin);
+            bin.demangle_swift_with_tool();
+            bins.push((b, pkg.info.binaries[b as usize].name.clone(), bin));
+        }
+        (pairs, notes)
+    } else {
+        let mut bin = if binviz::package::is_package_path(p) {
+            let mut pkg = binviz::package::DiskPackage::open(p)?;
+            folder_binary(&mut pkg, member, debug)?
+        } else {
+            open(path, debug, member)?
+        };
+        bin.demangle_swift_with_tool();
+        let name = member.map(str::to_string).unwrap_or_else(|| {
+            p.file_name()
+                .map_or(path.to_string(), |n| n.to_string_lossy().into_owned())
+        });
+        let id = bin.summary().build_id.clone();
+        let Matches { pairs, notes } = match_images(
+            &report,
+            &[Candidate {
+                binary: 0,
+                name: &name,
+                ids: id.iter().map(String::as_str).collect(),
+            }],
+        );
+        bins.push((0, name, bin));
+        (pairs, notes)
+    };
+    let found: Vec<Found> = pairs
+        .iter()
+        .filter_map(|&(image, b)| {
+            let (_, _, bin) = bins.iter().find(|(i, _, _)| *i == b)?;
+            Some(Found { image, binary: b, bin })
+        })
+        .collect();
+    let out = symbolicate(&report, &found, &notes);
+    print!(
+        "{}",
+        out.to_text(|b| bins
+            .iter()
+            .find(|(i, _, _)| *i == b)
+            .map_or_else(|| format!("#{b}"), |(_, n, _)| n.clone()))
+    );
+    Ok(())
+}
+
 /// Searches a binary (`args`: the query, and optionally a kind of result).
 fn search(bin: &Binary, args: &[String]) -> Result<binviz::SearchResults, String> {
     let query = args.first().ok_or("missing query")?;
@@ -1014,6 +1268,9 @@ fn folder_binary(
         }
         None => folder_attach(pkg, i, &mut bin),
     };
+    if let Some(result) = pkg.attach_debug_map(&mut bin) {
+        debug_map_note(result);
+    }
     eprintln!(
         "{} › {}{}",
         pkg.info.name,
@@ -1035,6 +1292,7 @@ fn folder_search(pkg: &mut binviz::package::DiskPackage, args: &[String]) -> Res
             }
         };
         folder_attach(pkg, i, &mut bin);
+        bin.demangle_swift_with_tool();
         let res = search(&bin, args)?;
         let b = &pkg.info.binaries[i];
         if res.hits.is_empty() {

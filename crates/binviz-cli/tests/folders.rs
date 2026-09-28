@@ -62,3 +62,27 @@ fn a_folder_works_like_a_file() {
     assert!(found.contains("No matches in: ShopApp"), "{found}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_debug_map_brings_the_objects_dwarf() {
+    // Linked without dsymutil: the DWARF is in the object, found next to the binary,
+    // in the folder --debug names, or anywhere in a folder opened whole.
+    let dir = std::env::temp_dir().join(format!("binviz-cli-debugmap-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let objects = dir.join("Intermediates/Objects-normal/arm64");
+    std::fs::create_dir_all(&objects).unwrap();
+    std::fs::create_dir_all(dir.join("Products")).unwrap();
+    std::fs::write(dir.join("Products/tiny"), fixture("tiny-macho-a64.reordered")).unwrap();
+    std::fs::write(objects.join("tiny-macho-a64.o"), fixture("tiny-macho-a64.o")).unwrap();
+    let exe = dir.join("Products/tiny");
+    let (out, err) = binviz(&["dwarf", exe.to_str().unwrap(), "--debug", objects.to_str().unwrap()]);
+    assert!(out.contains("source: debug map"), "{out}");
+    assert!(err.contains("DWARF from 1 of 1 object files"), "{err}");
+    let (out, _) = binviz(&["dwarf", dir.to_str().unwrap(), "--member", "tiny"]);
+    assert!(out.contains("source: debug map"), "{out}");
+    // On its own it is found where it was built (on the machine that built the
+    // fixtures), else not at all; either way the binary opens and says so.
+    let (out, err) = binviz(&["info", exe.to_str().unwrap()]);
+    assert!(out.contains("Debug map: 1 object file"), "{out}");
+    assert!(err.contains("DWARF from 1 of 1") || err.contains("debug map:"), "{err}");
+}

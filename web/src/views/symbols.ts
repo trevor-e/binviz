@@ -1,15 +1,36 @@
-// Symbols, imports and exports.
+// Symbols, Objective-C classes, imports, exports and strings.
 import { store } from '../store';
-import type { Export, FoundString, Import, Sym, SymbolQuery } from '../types';
+import type { Export, FoundString, Import, ObjcCounts, ObjcEntry, ObjcKind, Sym, SymbolQuery } from '../types';
 import { emptyState } from '../ui';
 import { debounce, formatCount, h, hex, num } from '../util';
 import { VList } from '../vlist';
 import { View } from './base';
+import { selectorUses } from './objc';
 
 const PAGE = 200;
 const COLS = 'grid-template-columns:19ch 9ch 9ch 8ch 8ch minmax(0,1fr)';
 
-type Tab = 'symbols' | 'imports' | 'exports' | 'strings';
+type Tab = 'symbols' | 'classes' | 'imports' | 'exports' | 'strings';
+
+const OBJC_KINDS: [ObjcKind | '', string][] = [
+  ['', 'All'],
+  ['class', 'Classes'],
+  ['category', 'Categories'],
+  ['protocol', 'Protocols'],
+];
+
+/** `1 class`, `2 categories` */
+function count(n: number, noun: string): string {
+  if (n === 1) return `1 ${noun}`;
+  if (noun === 'class') return `${formatCount(n)} classes`;
+  if (noun === 'category') return `${formatCount(n)} categories`;
+  return `${formatCount(n)} ${noun}s`;
+}
+
+export function describeObjc(c: ObjcCounts): string {
+  const swift = c.swiftClasses ? ` (${formatCount(c.swiftClasses)} Swift)` : '';
+  return `${count(c.classes, 'class')}${swift}, ${count(c.categories, 'category')}, ${count(c.protocols, 'protocol')}; ${count(c.methods, 'method')}`;
+}
 
 export class SymbolsView extends View {
   private tab: Tab = 'symbols';
@@ -28,6 +49,11 @@ export class SymbolsView extends View {
   private strGeneration = 0;
   private strList?: VList;
   private strCount?: HTMLElement;
+  private objc?: ObjcCounts;
+  private objcEntries?: ObjcEntry[];
+  private objcFilter = '';
+  private objcKind: ObjcKind | '' = '';
+  private objcSelected?: ObjcEntry;
 
   constructor() {
     super('symbols', true);
@@ -39,27 +65,45 @@ export class SymbolsView extends View {
 
   protected render() {
     const tabs = h('div', { class: 'tabs' });
-    for (const t of ['symbols', 'imports', 'exports', 'strings'] as const) {
-      const b = h('button', { class: `tab${this.tab === t ? ' active' : ''}` }, t[0].toUpperCase() + t.slice(1));
-      b.addEventListener('click', () => {
-        this.tab = t;
-        tabs.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === b));
-        this.renderBody();
-      });
-      tabs.appendChild(b);
-    }
+    const tab = (t: Tab, label: string) => {
+      const b = h('button', { class: `tab${this.tab === t ? ' active' : ''}`, title: t === 'classes' ? 'Objective-C classes, categories and protocols' : '' }, label);
+      b.addEventListener('click', () => this.showTab(t));
+      b.dataset.tab = t;
+      return b;
+    };
+    tabs.append(tab('symbols', 'Symbols'), tab('imports', 'Imports'), tab('exports', 'Exports'), tab('strings', 'Strings'));
     this.body = h('div', { style: 'display:flex;flex-direction:column;flex:1;min-height:0' });
     this.el.replaceChildren(h('div', { class: 'toolbar' }, tabs), this.body);
+    const file = store.file;
+    this.objc = undefined;
+    this.objcEntries = undefined;
+    this.objcSelected = undefined;
+    if (this.tab === 'classes') this.tab = 'symbols';
     void Promise.all([store.api.imports(), store.api.exports()]).then(([i, e]) => {
       this.imports = i;
       this.exports = e;
-      if (this.tab !== 'symbols') this.renderBody();
+      if (this.tab === 'imports' || this.tab === 'exports') this.renderBody();
     });
+    // Objective-C classes get a tab when the binary has any.
+    void store.api.objcCounts().then((c) => {
+      if (store.file !== file || c.classes + c.categories + c.protocols === 0) return;
+      this.objc = c;
+      tabs.firstElementChild!.after(tab('classes', 'Classes'));
+    });
+    this.renderBody();
+  }
+
+  /** Shows a tab: `classes` only when the binary has Objective-C classes. */
+  showTab(t: Tab) {
+    if (t === 'classes' && !this.objc) return;
+    this.tab = t;
+    this.el.querySelectorAll<HTMLElement>('.tabs .tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === t));
     this.renderBody();
   }
 
   private renderBody() {
     if (this.tab === 'symbols') this.renderSymbols();
+    else if (this.tab === 'classes') void this.renderClasses();
     else if (this.tab === 'imports') this.renderImports();
     else if (this.tab === 'exports') this.renderExports();
     else this.renderStrings();
@@ -133,6 +177,122 @@ export class SymbolsView extends View {
     row.addEventListener('click', () => s.defined && void store.select({ address: s.address }, { origin: 'symbols' }));
     row.addEventListener('dblclick', () => s.defined && void store.select({ address: s.address }, { view: s.kind === 'function' ? 'code' : 'hex' }));
     return row;
+  }
+
+  private async renderClasses() {
+    const file = store.file;
+    this.objcEntries ??= await store.api.objcEntries();
+    if (store.file !== file || this.tab !== 'classes') return;
+    const entries = this.objcEntries;
+    const filter = h('input', { class: 'field small', type: 'search', placeholder: 'Filter by name', value: this.objcFilter, style: 'width:220px' });
+    const kind = h('select', { class: 'field small', 'aria-label': 'Kind' }, ...OBJC_KINDS.map(([k, label]) => h('option', { value: k, selected: this.objcKind === k }, label)));
+    const shownCount = h('span', { class: 'secondary' });
+    const detail = h('div', { class: 'pane grow scroll objc-detail' });
+    let shown: ObjcEntry[] = [];
+    const list = new VList({
+      rowHeight: 24,
+      renderRow: (i) => {
+        const e = shown[i];
+        const selected = this.objcSelected?.kind === e.kind && this.objcSelected.name === e.name;
+        const row = h(
+          'div',
+          { class: `list-row objc-row${selected ? ' selected' : ''}`, title: e.kind === 'class' && e.base ? `${e.name} : ${e.base}` : e.name },
+          h('span', { class: `objc-kind k-${e.kind}`, title: e.kind }, e.kind === 'class' ? 'C' : e.kind === 'category' ? '+' : 'P'),
+          h('span', { class: 'nm' }, e.name),
+          e.kind === 'class' && e.base ? h('span', { class: 'nm muted' }, `: ${e.base}`) : null,
+          h('span', { class: 'spacer' }),
+          h('span', { class: 'muted mono', title: 'Methods' }, formatCount(e.methods)),
+        );
+        row.addEventListener('click', () => {
+          this.objcSelected = e;
+          list.refresh();
+          void this.showInterface(e, detail);
+        });
+        return row;
+      },
+    });
+    const apply = () => {
+      const f = this.objcFilter.toLowerCase();
+      shown = entries.filter((e) => (!this.objcKind || e.kind === this.objcKind) && (!f || e.name.toLowerCase().includes(f) || (e.base ?? '').toLowerCase() === f));
+      shownCount.textContent = shown.length === entries.length ? '' : `${formatCount(shown.length)} shown`;
+      list.setCount(shown.length);
+    };
+    filter.addEventListener(
+      'input',
+      debounce(() => {
+        this.objcFilter = filter.value;
+        apply();
+      }, 120),
+    );
+    kind.addEventListener('change', () => {
+      this.objcKind = kind.value as ObjcKind | '';
+      apply();
+    });
+    this.body.replaceChildren(
+      h('div', { class: 'toolbar' }, filter, kind, h('span', { class: 'spacer' }), shownCount, this.objc ? h('span', { class: 'secondary' }, describeObjc(this.objc)) : null),
+      h('div', { class: 'split' }, h('div', { class: 'pane side wider' }, list.el), detail),
+    );
+    apply();
+    const first = this.objcSelected ?? shown[0];
+    if (first) {
+      this.objcSelected = first;
+      list.refresh();
+      void this.showInterface(first, detail);
+    }
+  }
+
+  /** The selected class, category or protocol as its header would declare it. */
+  private async showInterface(e: ObjcEntry, detail: HTMLElement) {
+    const i = await store.api.objcInterface(e.kind, e.name);
+    if (this.objcSelected !== e) return;
+    if (!i) {
+      detail.replaceChildren(h('div', { class: 'pad muted' }, `${e.name} could not be read.`));
+      return;
+    }
+    const open = (address: bigint, view: 'code' | 'hex') => void store.select({ address }, { view });
+    const head = h('div', { class: 'pane-head' }, h('span', { class: `objc-kind k-${e.kind}` }, e.kind === 'class' ? 'C' : e.kind === 'category' ? '+' : 'P'), h('b', { class: 'nm' }, i.name), h('span', { class: 'muted' }, e.kind === 'class' && e.swift ? 'Swift class' : e.kind), h('span', { class: 'spacer' }));
+    const meta = h('span', { class: 'addr link', title: 'Its metadata' }, hex(i.address));
+    meta.addEventListener('click', () => open(i.address, 'hex'));
+    head.appendChild(meta);
+    const lines = i.lines.map((l) => {
+      const line = h('div', { class: 'objc-line' });
+      const text = h('span', { class: `objc-text${l.address !== undefined ? ' link' : ''}` }, l.text);
+      line.appendChild(text);
+      if (l.address !== undefined) {
+        const a = l.address;
+        text.title = 'Open the implementation';
+        text.addEventListener('click', () => open(a, 'code'));
+      }
+      if (l.selector) {
+        const sel = l.selector;
+        const senders = h('button', { class: 'btn tiny', type: 'button', title: `The functions that send ${sel}` }, 'Senders');
+        const out = h('div', { class: 'objc-uses' });
+        senders.addEventListener('click', () => {
+          if (out.isConnected) {
+            out.remove();
+            return;
+          }
+          line.after(out);
+          void this.fillSenders(sel, out);
+        });
+        line.append(h('span', { class: 'spacer' }), senders);
+      }
+      if (l.address !== undefined) {
+        const a = l.address;
+        const addr = h('span', { class: 'addr link' }, hex(a));
+        addr.addEventListener('click', () => open(a, 'code'));
+        line.appendChild(addr);
+      }
+      return line;
+    });
+    detail.replaceChildren(head, h('div', { class: 'objc-interface' }, ...lines));
+  }
+
+  private async fillSenders(selector: string, out: HTMLElement) {
+    out.replaceChildren(h('div', { class: 'muted' }, store.xrefs === 'ready' ? 'Looking…' : 'Finding every reference in the code…'));
+    await store.ensureXrefs();
+    const uses = await store.api.objcSelector(selector);
+    out.replaceChildren(...selectorUses(selector, uses));
   }
 
   private renderImports() {

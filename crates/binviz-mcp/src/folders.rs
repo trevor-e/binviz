@@ -69,7 +69,7 @@ impl Server {
                 .disk
                 .read_shared(b.file)
                 .and_then(|data| load_binary(data.clone()).map(|l| (l, data)).map_err(|e| e.to_string()));
-            let ((bin, arch), data) = match loaded {
+            let ((mut bin, arch), data) = match loaded {
                 Ok(x) => x,
                 Err(e) => {
                     pkg.errors.push(format!("{}: {e}", b.path));
@@ -78,6 +78,7 @@ impl Server {
             };
             // All slices' UUIDs, and a debug file the binary's debug link names.
             update_loaded(&mut info, i as u32, &data, &bin);
+            bin.demangle_swift_with_tool();
             let id = self.unique_id(&b.name.replace(' ', ""));
             let mut open = Open {
                 id: id.clone(),
@@ -93,6 +94,7 @@ impl Server {
                 package: Some(package),
                 pending_debug: None,
                 debug_note: None,
+                debug_map_tried: false,
             };
             let notes_path = string(args, "notes_file")
                 .filter(|_| i == 0)
@@ -160,8 +162,18 @@ impl Server {
         self.current = (!self.open.is_empty()).then(|| self.open.len() - 1);
     }
 
-    /// Attaches an open binary's debug file from its folder, if one is waiting.
+    /// Attaches binary `i`'s debug file from its folder, or the DWARF its
+    /// debug map names, the first time it is used.
     pub(crate) fn attach_pending(&mut self, i: usize) {
+        self.attach_pending_file(i);
+        if !self.open[i].debug_map_tried {
+            self.open[i].debug_map_tried = true;
+            self.attach_debug_map(i);
+        }
+    }
+
+    /// Attaches an open binary's debug file from its folder, if one is waiting.
+    fn attach_pending_file(&mut self, i: usize) {
         let Some((file, path)) = self.open[i].pending_debug.take() else {
             return;
         };
@@ -172,10 +184,20 @@ impl Server {
                 .attach_debug_file(&path, data)
                 .map_err(|e| e.to_string())
         });
+        // The debug file's names: Swift ones through `swift-demangle`, where it is installed.
+        self.open[i].bin.demangle_swift_with_tool();
         self.open[i].debug_note = Some(match result {
             Ok(()) => format!("debug file attached: {path}"),
             Err(e) => format!("debug file {path} could not be attached: {e}"),
         });
+    }
+
+    /// Links the DWARF a binary of a folder has in object files (its debug map).
+    fn attach_debug_map(&mut self, i: usize) {
+        let Some(p) = self.open[i].package else { return };
+        if let Some(result) = self.packages[p].disk.attach_debug_map(&mut self.open[i].bin) {
+            self.open[i].debug_note = Some(crate::tools::debug_map_note(result));
+        }
     }
 
     /// The folder a request is about: `package` (an id or name), else the

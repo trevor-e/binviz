@@ -151,6 +151,8 @@ pub struct SymbolTable {
     /// `base_by_addr` with the user's symbols merged in.
     by_addr: Vec<u32>,
     demangled: OnceLock<Demangled>,
+    /// Names demangled elsewhere (Swift ones, by `swift-demangle`): raw → demangled.
+    external: std::collections::HashMap<Box<str>, Box<str>>,
     /// File and recovered records sorted by raw name, built on first lookup by name.
     by_name: OnceLock<Vec<u32>>,
     /// File and recovered records sorted by display name, built the first time
@@ -219,8 +221,9 @@ fn lookup_rank(r: &Rec) -> (u8, u8, u8, u8, u8) {
         SymbolSource::Export => 3,
         SymbolSource::DebugFile => 4,
         SymbolSource::Dwarf => 5,
-        SymbolSource::Import => 6,
-        SymbolSource::Discovered => 7,
+        SymbolSource::Objc => 6,
+        SymbolSource::Import => 7,
+        SymbolSource::Discovered => 8,
     };
     (user, kind, sized, binding, source)
 }
@@ -345,12 +348,20 @@ impl Builder {
             base_by_addr: Vec::new(),
             by_addr: Vec::new(),
             demangled: OnceLock::new(),
+            external: std::collections::HashMap::new(),
             by_name: OnceLock::new(),
             name_order: OnceLock::new(),
             query_cache: Mutex::new(None),
             function_cache: Mutex::new(None),
         }
     }
+}
+
+/// Whether a name is (or holds) a Swift mangled name, which binviz can't
+/// demangle itself: `$s…`, `_T0…`, and Objective-C names of Swift classes (`_TtC…`).
+fn has_swift_mangling(name: &str) -> bool {
+    let n = name.trim_start_matches('_');
+    n.starts_with("$s") || n.starts_with("$S") || n.starts_with("$e") || n.starts_with("T0") || name.contains("_Tt")
 }
 
 fn push_rec(recs: &mut Vec<Rec>, names: &mut String, s: NewSym<'_>) {
@@ -503,6 +514,11 @@ impl SymbolTable {
     }
 
     fn demangled_of(&self, index: u32) -> Option<Cow<'_, str>> {
+        if !self.external.is_empty()
+            && let Some(d) = self.external.get(self.name_of(index))
+        {
+            return Some(Cow::Borrowed(d));
+        }
         let r = &self.recs[index as usize];
         if r.flags & PLAIN != 0 {
             return None;
@@ -523,10 +539,11 @@ impl SymbolTable {
             let mut owners = Vec::new();
             for i in 0..self.file_len {
                 let r = &self.recs[i as usize];
-                let d = if r.flags & PLAIN == 0 {
-                    util::demangle(self.name_of(i))
-                } else {
-                    None
+                let raw = self.name_of(i);
+                let d = match self.external.get(raw) {
+                    Some(d) => Some(d.to_string()),
+                    None if r.flags & PLAIN == 0 => util::demangle(raw),
+                    None => None,
                 };
                 match d {
                     Some(d) => {
@@ -545,6 +562,33 @@ impl SymbolTable {
     /// Demangles every name now (search and sorting by name need them all).
     pub fn prepare_names(&self) {
         self.demangled_all();
+    }
+
+    /// The Swift mangled names not demangled yet, each once.
+    pub fn swift_names(&self) -> Vec<String> {
+        let mut seen = std::collections::HashSet::new();
+        (0..self.recs.len() as u32)
+            .map(|i| self.name_of(i))
+            .filter(|n| has_swift_mangling(n) && !self.external.contains_key(*n) && seen.insert(*n))
+            .map(str::to_string)
+            .collect()
+    }
+
+    /// Takes demangled names from elsewhere (raw, demangled), for every symbol with that raw name.
+    pub(crate) fn add_demangled(&mut self, pairs: impl IntoIterator<Item = (String, String)>) {
+        let before = self.external.len();
+        for (raw, demangled) in pairs {
+            if raw != demangled && !demangled.is_empty() {
+                self.external.insert(raw.into(), demangled.into());
+            }
+        }
+        if self.external.len() != before {
+            // Everything built from display names is built again.
+            self.demangled = OnceLock::new();
+            self.name_order = OnceLock::new();
+            *self.query_cache.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            *self.function_cache.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        }
     }
 
     /// Every raw name, back to back in record order, for scanning all at once.
@@ -934,4 +978,88 @@ fn kind_name(kind: SymbolKind) -> &'static str {
         SymbolKind::Debug => "debug",
         SymbolKind::Unknown => "unknown",
     }
+}
+
+impl crate::Binary {
+    /// Names demangled elsewhere, as (raw, demangled) pairs: binviz can't
+    /// demangle Swift itself (see [`SymbolTable::swift_names`](SymbolTable::swift_names)).
+    pub fn add_demangled_names(&mut self, pairs: impl IntoIterator<Item = (String, String)>) {
+        self.symbols.add_demangled(pairs);
+    }
+
+    /// Demangles the Swift names with `swift-demangle` (from a Swift
+    /// toolchain, or Xcode through `xcrun`) when it is installed; false if it
+    /// isn't, or there was nothing to demangle.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn demangle_swift_with_tool(&mut self) -> bool {
+        let names = self.symbols.swift_names();
+        if names.is_empty() {
+            return false;
+        }
+        match swift_demangle(&names) {
+            Some(out) => {
+                self.symbols.add_demangled(names.into_iter().zip(out));
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+/// Runs `swift-demangle` over `names`, one per line in and out. The first
+/// call finds which way to run it works (none, on most machines without a
+/// Swift toolchain), and later calls use that.
+#[cfg(not(target_arch = "wasm32"))]
+fn swift_demangle(names: &[String]) -> Option<Vec<String>> {
+    static TOOL: OnceLock<Option<usize>> = OnceLock::new();
+    const WAYS: [(&str, &[&str]); 2] = [
+        ("swift-demangle", &["-simplified"]),
+        ("xcrun", &["swift-demangle", "-simplified"]),
+    ];
+    if let Some(known) = TOOL.get() {
+        return known.and_then(|i| run_filter(WAYS[i].0, WAYS[i].1, names));
+    }
+    for (i, (program, args)) in WAYS.iter().enumerate() {
+        // Without Xcode's tools installed, `xcrun` offers to install them: ask first.
+        if *program == "xcrun"
+            && !std::process::Command::new("xcode-select")
+                .arg("-p")
+                .output()
+                .is_ok_and(|o| o.status.success())
+        {
+            continue;
+        }
+        if let Some(out) = run_filter(program, args, names) {
+            let _ = TOOL.set(Some(i));
+            return Some(out);
+        }
+    }
+    let _ = TOOL.set(None);
+    None
+}
+
+/// Pipes `lines` through a filter program; its output, if it gave one line per line.
+#[cfg(not(target_arch = "wasm32"))]
+fn run_filter(program: &str, args: &[&str], lines: &[String]) -> Option<Vec<String>> {
+    use std::io::{Read, Write};
+    use std::process::{Command, Stdio};
+    let mut child = Command::new(program)
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()?;
+    // Write from another thread: the tool answers as it reads, and a full pipe would stall both.
+    let mut stdin = child.stdin.take()?;
+    let input = lines.join("\n") + "\n";
+    let writer = std::thread::spawn(move || {
+        let _ = stdin.write_all(input.as_bytes());
+    });
+    let mut out = String::new();
+    let read = child.stdout.take().map(|mut o| o.read_to_string(&mut out));
+    let _ = writer.join();
+    let ok = child.wait().is_ok_and(|s| s.success()) && read.is_some_and(|r| r.is_ok());
+    let out: Vec<String> = out.lines().map(str::to_string).collect();
+    (ok && out.len() == lines.len()).then_some(out)
 }

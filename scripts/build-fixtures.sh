@@ -5,7 +5,7 @@
 # platform SDKs are needed. Required rustup targets:
 #   rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl aarch64-apple-darwin
 # Optional: a MinGW g++ on PATH (for the C++ PE fixture) and the llvm-tools
-# component (for the split-debug ELF pair).
+# component (for the split-debug ELF pair). Python 3 writes the game ROMs.
 #
 # Pass --large to also build the std-linked "demo" binaries (~5 MB each) into
 # tests/fixtures/large (git-ignored), which are handy for manual testing.
@@ -38,6 +38,11 @@ rustc "$src/tiny.rs" "${tiny_flags[@]}" --target aarch64-apple-darwin -o "$out/t
     -o "$out/tiny-macho-a64" "$out/tiny-macho-a64.o"
 "$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -dylib \
     -o "$out/libtiny.dylib" "$out/tiny-macho-a64.o"
+# The executables' DWARF stays in the object, which their debug map names: once
+# as linked, once with the functions reordered and main dead-stripped.
+"$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -e __start \
+    -dead_strip -no_exported_symbols -order_file "$src/tiny.order" \
+    -o "$out/tiny-macho-a64.reordered" "$out/tiny-macho-a64.o"
 
 if [ -x "$objcopy" ] || [ -x "$objcopy.exe" ]; then
     echo "tiny: split debug info (ELF + .debug with .gnu_debuglink)"
@@ -75,11 +80,24 @@ rustc "$src/imports.rs" "${imports_flags[@]}" --target aarch64-apple-darwin -o "
     -o "$out/imports-macho-a64" "$tmp/imports-macho.o" "$src/libSystem.tbd"
 "$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -fixup_chains -e _main \
     -o "$out/imports-macho-a64.chained" "$tmp/imports-macho.o" "$src/libSystem.tbd"
-rm -rf "$tmp"
+
+echo "objc: Objective-C classes, categories, selector references and objc_msgSend\$ stubs"
+rustc "$src/objc.rs" "${imports_flags[@]}" --target aarch64-apple-darwin -o "$tmp/objc.o" 2>/dev/null
+# With dyld info (binds by opcode), and with chained fixups.
+"$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -e _main \
+    -o "$out/objc-macho-a64" "$tmp/objc.o" "$src/libSystem.tbd" "$src/libobjc.tbd"
+"$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -fixup_chains -e _main \
+    -o "$tmp/objc-macho-a64.chained" "$tmp/objc.o" "$src/libSystem.tbd" "$src/libobjc.tbd"
 if [ -x "$objcopy" ] || [ -x "$objcopy.exe" ]; then
     # The app binary of the sample package; the unstripped copy stands in for its dSYM.
     "$objcopy" --strip-all "$out/imports-macho-a64.chained" "$out/imports-macho-a64.chained.stripped"
+    # Without its symbols, only the Objective-C metadata names the methods.
+    "$objcopy" --strip-all "$tmp/objc-macho-a64.chained" "$out/objc-macho-a64.chained.stripped"
 fi
+rm -rf "$tmp"
+
+echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"
+python3 "$src/roms.py" "$out" 2>/dev/null || python "$src/roms.py" "$out"
 
 if command -v g++ >/dev/null 2>&1; then
     echo "C++: PE x86-64 (MinGW g++, DWARF 5)"

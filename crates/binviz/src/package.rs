@@ -773,31 +773,13 @@ pub fn discover(
     match_debug(&mut info);
 
     // Sizes by kind of content.
-    let binary_files: HashSet<u32> = info.binaries.iter().map(|b| b.file).collect();
-    let debug_files: HashSet<u32> = info
-        .debug_files
-        .iter()
-        .map(|d| d.file)
-        .chain(
-            info.binaries
-                .iter()
-                .filter(|b| b.kind == BinaryKind::Debug)
-                .map(|b| b.file),
-        )
-        .collect();
+    let kinds = file_categories(files, &info);
     let mut by: HashMap<FileCategory, CategorySize> = HashMap::new();
     let mut refs = Vec::new();
     // Compressed sizes mean something when everything is zipped (not for a folder with a zip in it).
     let zipped = !files.is_empty() && files.iter().all(|f| f.compressed_size.is_some());
-    for (i, f) in files.iter().enumerate() {
+    for (i, (f, &cat)) in files.iter().zip(&kinds).enumerate() {
         let i = i as u32;
-        let cat = if debug_files.contains(&i) || is_dsym_path(&f.path) {
-            FileCategory::DebugSymbols
-        } else if binary_files.contains(&i) {
-            FileCategory::Binaries
-        } else {
-            category(&f.path)
-        };
         let c = by.entry(cat).or_insert(CategorySize {
             category: cat,
             files: 0,
@@ -835,12 +817,11 @@ pub fn discover(
 
     // Duplicates, among the files a zip directory gives checksums for.
     let mut groups: HashMap<(u32, u64), Vec<&str>> = HashMap::new();
-    for (i, f) in files.iter().enumerate() {
+    for (f, &cat) in files.iter().zip(&kinds) {
         if let Some(crc) = f.crc32
             && f.size >= 512
-            && !debug_files.contains(&(i as u32))
-            && !is_dsym_path(&f.path)
-            && category(&f.path) != FileCategory::CodeSignature
+            && cat != FileCategory::DebugSymbols
+            && cat != FileCategory::CodeSignature
         {
             groups.entry((crc, f.size)).or_default().push(&f.path);
         }
@@ -862,6 +843,41 @@ pub fn discover(
     dups.truncate(50);
     info.duplicates = dups;
     info
+}
+
+/// Each file's kind of content, with binaries and debug files as [`discover`] found them.
+pub fn file_categories(files: &[PackageFile], info: &PackageInfo) -> Vec<FileCategory> {
+    let binaries: HashSet<u32> = info
+        .binaries
+        .iter()
+        .filter(|b| b.kind != BinaryKind::Debug)
+        .map(|b| b.file)
+        .collect();
+    let debug: HashSet<u32> = info
+        .debug_files
+        .iter()
+        .map(|d| d.file)
+        .chain(
+            info.binaries
+                .iter()
+                .filter(|b| b.kind == BinaryKind::Debug)
+                .map(|b| b.file),
+        )
+        .collect();
+    files
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let i = i as u32;
+            if debug.contains(&i) || is_dsym_path(&f.path) {
+                FileCategory::DebugSymbols
+            } else if binaries.contains(&i) {
+                FileCategory::Binaries
+            } else {
+                category(&f.path)
+            }
+        })
+        .collect()
 }
 
 /// Pairs binaries with debug files by build ID (UUID), where neither has a pair yet.
@@ -1150,6 +1166,47 @@ impl DiskPackage {
         }
     }
 
+    /// The folder's sizes, to compare with another build: every file, and the
+    /// first `max` binaries (each read with its debug file, then handed to
+    /// `prepare`: to demangle its Swift names, say).
+    pub fn snapshot(&mut self, max: usize, mut prepare: impl FnMut(&mut crate::Binary)) -> crate::diff::FolderSnapshot {
+        let files = self
+            .files
+            .iter()
+            .zip(file_categories(&self.files, &self.info))
+            .map(|(f, category)| crate::diff::FileBytes {
+                path: f.path.clone(),
+                bytes: f.size,
+                category,
+            })
+            .collect();
+        let mut binaries = Vec::new();
+        for i in 0..self.info.binaries.len().min(max) {
+            let b = self.info.binaries[i].clone();
+            let Ok(data) = self.read_shared(b.file) else { continue };
+            let Ok((mut bin, _)) = load_binary(data.clone()) else {
+                continue;
+            };
+            update_loaded(&mut self.info, i as u32, &data, &bin);
+            if let Some(d) = self.info.binaries[i].debug {
+                let debug = self.info.debug_files[d as usize].clone();
+                if let Ok(bytes) = self.read_shared(debug.file) {
+                    let _ = bin.attach_debug_file(&debug.path, bytes);
+                }
+            }
+            prepare(&mut bin);
+            binaries.push(crate::diff::BinarySnapshot {
+                path: b.path.clone(),
+                snapshot: bin.size_snapshot(&b.name),
+            });
+        }
+        crate::diff::FolderSnapshot {
+            name: self.info.name.clone(),
+            files,
+            binaries,
+        }
+    }
+
     /// A file's bytes.
     pub fn read(&mut self, file: u32) -> Result<Vec<u8>, String> {
         self.read_prefix(file, u64::MAX)
@@ -1173,6 +1230,33 @@ impl DiskPackage {
 
     /// A file's bytes as shared storage for [`crate::Binary::parse`]: files
     /// on disk are read straight into it.
+    /// Links the DWARF a Mach-O binary's debug map names (when it has no
+    /// DWARF yet) from the object files and static libraries in this folder,
+    /// or where they were when it was linked. `None` when there is nothing
+    /// to link.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn attach_debug_map(
+        &self,
+        bin: &mut crate::Binary,
+    ) -> Option<crate::Result<crate::dwarf::debugmap::DebugMapReport>> {
+        if bin.debug_info().is_some() || bin.debug_map().is_empty() {
+            return None;
+        }
+        let mut folders: Vec<std::path::PathBuf> = self
+            .locs
+            .iter()
+            .filter_map(|l| match l {
+                Loc::Disk(p) if p.extension().is_some_and(|e| e == "o" || e == "a") => {
+                    p.parent().map(std::path::Path::to_path_buf)
+                }
+                _ => None,
+            })
+            .collect();
+        folders.sort();
+        folders.dedup();
+        Some(bin.attach_debug_map_from_disk(&folders))
+    }
+
     pub fn read_shared(&mut self, file: u32) -> Result<std::sync::Arc<[u8]>, String> {
         if let Some(Loc::Disk(path)) = self.locs.get(file as usize) {
             return crate::read_file(path).map_err(|e| format!("{}: {e}", path.display()));
