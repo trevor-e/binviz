@@ -313,6 +313,19 @@ impl Binary {
         if let Some(n) = parse_number(q) {
             self.search_number(n, c);
         }
+        // A ROM's bank:address (`03:C000`).
+        if let Some(address) = self.rom_address(q)
+            && c.wants(HitKind::Address)
+        {
+            let mut hit = SearchHit::new(
+                HitKind::Address,
+                q.to_string(),
+                format!("{address:#x} · {}", self.describe_address(address)),
+                2500,
+            );
+            hit.address = Some(address);
+            c.add(HitKind::Address, 1, vec![hit]);
+        }
         if let Some((name, delta)) = q.rsplit_once('+')
             && let Some(delta) = parse_number(delta)
             && let Some(sym) = self.symbols.by_name(name.trim())

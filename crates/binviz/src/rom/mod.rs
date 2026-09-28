@@ -11,8 +11,11 @@
 //! banks sharing a window don't collide.
 
 pub(crate) mod analysis;
+pub mod cdl;
 mod gb;
 mod gba;
+mod jumptable;
+pub mod labels;
 mod megadrive;
 mod n64;
 mod nes;
@@ -25,7 +28,7 @@ use serde::Serialize;
 
 use crate::binary::Binary;
 use crate::cpu::{Cpu, State};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::layout::{Builder, Machine};
 use crate::model::{Format, Property, RegionKind, Section, Segment, Summary, SymbolKind, SymbolSource};
 use crate::symbols::{Binding, Builder as SymbolBuilder, NewSym};
@@ -219,6 +222,8 @@ pub(crate) struct Rom {
     pub state: State,
     layout: fn(&mut Builder<'_>),
     pub analysis: analysis::Analysis,
+    /// A code/data log the code was followed with, and what it covers.
+    pub log: Option<(Arc<cdl::CodeDataLog>, cdl::LogSummary)>,
 }
 
 impl Rom {
@@ -265,7 +270,82 @@ impl Binary {
     /// A ROM read into the model: sections for its banks, RAM and registers,
     /// symbols for its vectors and registers, and the code followed from its
     /// entry points.
-    pub(crate) fn from_rom(data: Arc<[u8]>, mut parts: RomParts) -> Result<Binary> {
+    pub(crate) fn from_rom(data: Arc<[u8]>, parts: RomParts) -> Result<Binary> {
+        Binary::from_rom_logged(data, parts, None)
+    }
+
+    /// The same ROM read again with a code/data log (FCEUX's or Mesen's):
+    /// the code it saw run is followed too (code reached only through jump
+    /// tables), what it saw read as data isn't taken for code, the 65816's
+    /// register widths and ARM or Thumb are as they were when the code ran,
+    /// and an NES game's switched banks are placed where they ran.
+    pub fn with_code_log(&self, log: &[u8]) -> Result<(Binary, cdl::LogSummary)> {
+        let rom = self
+            .rom
+            .as_ref()
+            .ok_or_else(|| Error::new("code/data logs are for game ROMs"))?;
+        let data = &self.data;
+        let shape = match rom.platform {
+            Platform::Nes => {
+                let h = nes::header(data).ok_or_else(|| Error::new("not an iNES file"))?;
+                cdl::RomShape {
+                    platform: rom.platform,
+                    rom_offset: h.prg_offset,
+                    rom_size: h.prg_size,
+                    chr_size: h.chr_size,
+                }
+            }
+            Platform::Snes => {
+                let copier = if data.len() % 1024 == 512 { 512 } else { 0 };
+                cdl::RomShape {
+                    platform: rom.platform,
+                    rom_offset: copier,
+                    rom_size: data.len() as u64 - copier,
+                    chr_size: 0,
+                }
+            }
+            Platform::GameBoy | Platform::GameBoyColor | Platform::GameBoyAdvance => cdl::RomShape {
+                platform: rom.platform,
+                rom_offset: 0,
+                rom_size: data.len() as u64,
+                chr_size: 0,
+            },
+            p => {
+                return Err(Error::new(format!(
+                    "binviz reads code/data logs for the NES, SNES, Game Boy and Game Boy Advance, not the {}",
+                    p.name()
+                )));
+            }
+        };
+        let log = cdl::CodeDataLog::parse(log, &shape)?;
+        let (parts, placed) = match rom.platform {
+            Platform::Nes => nes::detect_with(data, log.page_windows().as_deref()),
+            _ => detect(data).map(|p| (p, 0)),
+        }
+        .ok_or_else(|| Error::new("the ROM no longer reads"))?;
+        let summary = log.summary(crc32(data), placed);
+        let bin = Binary::from_rom_logged(data.clone(), parts, Some((Arc::new(log), summary.clone())))?;
+        Ok((bin, summary))
+    }
+
+    /// What the code/data log the code was followed with covers, if there is one.
+    pub fn code_log(&self) -> Option<&cdl::LogSummary> {
+        self.rom.as_ref()?.log.as_ref().map(|(_, s)| s)
+    }
+
+    /// The code/data log's flags for a file offset ([`cdl::flag`] bits).
+    pub fn code_log_at(&self, offset: u64) -> u16 {
+        self.rom
+            .as_ref()
+            .and_then(|r| r.log.as_ref())
+            .map_or(0, |(l, _)| l.at(offset))
+    }
+
+    fn from_rom_logged(
+        data: Arc<[u8]>,
+        mut parts: RomParts,
+        log: Option<(Arc<cdl::CodeDataLog>, cdl::LogSummary)>,
+    ) -> Result<Binary> {
         let data: Arc<[u8]> = parts.data.take().map_or(data, Arc::from);
         let mut sections = Vec::new();
         let mut segments = Vec::new();
@@ -324,6 +404,7 @@ impl Binary {
             state: parts.state,
             layout: parts.layout,
             analysis: Default::default(),
+            log,
         };
         rom.analysis = analysis::analyze(&data, &sections, &rom);
         let size_of = |a: u64| {
@@ -373,12 +454,43 @@ impl Binary {
         properties.push(prop(
             "Code found",
             format!(
-                "{} instructions in {} functions, following the code from {} vectors",
+                "{} instructions in {} functions, following the code from {} vectors{}",
                 rom.analysis.instructions,
                 rom.analysis.functions.len(),
-                rom.vectors.len()
+                rom.vectors.len(),
+                if rom.log.is_some() {
+                    " and what the code/data log saw run"
+                } else {
+                    ""
+                }
             ),
         ));
+        if let Some((_, s)) = &rom.log {
+            let pct = |n: u64| {
+                let p = n as f64 * 100.0 / s.bytes.max(1) as f64;
+                if n > 0 && p < 0.1 {
+                    "<0.1%".to_string()
+                } else {
+                    format!("{p:.1}%")
+                }
+            };
+            let mut text = format!(
+                "{}: {} bytes of code ({}), {} of data ({}), {} never seen",
+                s.format.name(),
+                s.code,
+                pct(s.code),
+                s.data,
+                pct(s.data),
+                pct(s.bytes - (s.code + s.data - s.both))
+            );
+            if s.pages_placed > 0 {
+                text.push_str(&format!("; {} PRG pages placed where they ran", s.pages_placed));
+            }
+            if s.crc_matches == Some(false) {
+                text.push_str("; made for another ROM (its CRC-32 differs)");
+            }
+            properties.push(prop("Code/data log", text));
+        }
         let summary = Summary {
             format: Format::Rom,
             format_name: parts.format_name,
@@ -436,6 +548,33 @@ impl Binary {
         binary.rebuild_static_symbols();
         binary.layout = binary.build_layout(Format::Rom);
         Ok(binary)
+    }
+
+    /// A ROM address as people write them, `bank:address`: `03:C000` (bank
+    /// 3's `$C000`), or for the SNES a 24-bit address (`$80:8000`, mirrors
+    /// folded). binviz's address for it, if it is somewhere.
+    pub fn rom_address(&self, text: &str) -> Option<u64> {
+        let rom = self.rom.as_ref()?;
+        let (bank, address) = text.trim().trim_start_matches('$').split_once(':')?;
+        let bank = u64::from_str_radix(bank.trim(), 16).ok()?;
+        let address = u64::from_str_radix(address.trim().trim_start_matches('$'), 16).ok()?;
+        if bank > 0xFF || address > 0xFFFF {
+            return None;
+        }
+        let known = |a: u64| {
+            self.sections
+                .iter()
+                .any(|s| s.loaded && a >= s.address && a < s.address + s.size.max(1))
+        };
+        match rom.map {
+            Map::Snes { .. } => rom.map.resolve(0, bank << 16 | address),
+            // A bank of its own at that address, else the bank a window that doesn't switch holds.
+            Map::Banked(_) => {
+                let a = bank << 16 | address;
+                if known(a) { Some(a) } else { rom.map.resolve(a, address) }
+            }
+            Map::Flat(_) => None,
+        }
     }
 
     /// The console, for a ROM.

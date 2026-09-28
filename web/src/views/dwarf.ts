@@ -82,7 +82,9 @@ export class DwarfView extends View {
     this.nameFilter = '';
     this.check = null;
     this.loadProblems = [];
-    if (this.mode === 'problems') this.mode = 'dies';
+    // Problems are found when asked for: a new file starts on its DIEs.
+    const want = store.viewState.dwarf;
+    this.mode = want === 'lines' ? 'lines' : 'dies';
     if (!f.dwarf) {
       const btn = h('button', { class: 'btn' }, 'Add debug file…');
       btn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('binviz:attach-debug')));
@@ -102,7 +104,10 @@ export class DwarfView extends View {
     this.tabs = h('div', { class: 'tabs' });
     const tab = (m: Mode, label: string) => {
       const b = h('button', { class: `tab${this.mode === m ? ' active' : ''}`, type: 'button' }, label);
-      b.addEventListener('click', () => this.setMode(m));
+      b.addEventListener('click', () => {
+        this.setMode(m);
+        store.setViewState('dwarf', m);
+      });
       b.dataset.mode = m;
       this.tabs.appendChild(b);
       return b;
@@ -134,6 +139,11 @@ export class DwarfView extends View {
       this.loadProblems = p;
       this.updateProblemTab();
     });
+  }
+
+  protected onState() {
+    const want = store.viewState.dwarf;
+    if ((want === 'dies' || want === 'lines' || want === 'problems') && want !== this.mode && this.tabs) this.setMode(want);
   }
 
   private setMode(m: Mode) {

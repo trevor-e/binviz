@@ -11,48 +11,66 @@ USAGE:
     binviz <command> <file> [args]
 
 A folder or a zip (an .ipa, an .app, a build…) works as the <file> too, and
-stands for the binaries in it, each paired with its debug file (dSYM, .debug):
+stands for the binaries in it, each paired with its debug file (dSYM, .debug, PDB):
 info lists them all and sums their code by owner, search searches them all,
-json describes the folder, and every other command works on the first binary
-(an app's own executable) or the one --member names.
+info json describes the folder, and every other command works on the first
+binary (an app's own executable) or the one --member names. A CD image opens
+the executable the disc boots.
 
 COMMANDS:
-    info <file>                    Summary, sections and segments
-    crash <file> <report>          Symbolicate a crash report (Apple .crash or .ips, Android
-                                   tombstone, a stack trace) with a binary or a folder's binaries
-    diff <old> <new>               What changed in size between two builds: two binaries, or
-                                   two folders or zips (files, owners, symbols)
+  The file
+    info <file> [json]             Summary, sections and segments (json: as JSON)
     layout <file> [depth]          File layout tree (default depth 2)
-    at <file> <offset>             What the byte at a file offset is
-    inspect <file> <address>       Everything known about a virtual address
+    inspect <file> <address|@offset>
+                                   Everything known about an address, or the byte at a file offset
+    check <file>                   Verify that the layout covers every byte
+  Names and code
     symbols <file> [filter]        Symbols, optionally filtered by name
-    disasm <file> <addr|symbol> [n]
-                                   Disassemble a function with source lines
-    dwarf <file>                   DWARF summary and compilation units
-    die <file> <unit> [offset]     Children (or details) of a DIE
-    lines <file> <unit> [first] [count]
-                                   Line table rows of a unit
-    sources <file>                 Source files referenced by the line tables
-    dwarf-check <file>             Everything in the DWARF that can't be read or doesn't add up
-    dwarf-list <file> <unit> [tags] [name]
-                                   A unit's DIEs by tag (functions, variables, types, DW_TAG_…)
-    dwarf-find <file> <query> [all]
-                                   DIEs by name (all: locals and parameters too)
-    dwarf-offset <file> <offset>   The DIE at a .debug_info offset
-    dwarf-at <file> <addr|symbol>  Scopes and variables in scope at an address
-    file-lines <file> <file-id>    Address ranges for each line of a source file
+    strings <file> [filter]        Printable strings in the data sections
     search <file> <query> [kind]   Search addresses, offsets (@0x..), names, byte
                                    patterns (48 8b ?? 08), \"text\", file:line
-    strings <file> [filter]        Printable strings in the data sections
-    coverage <file>                How much of the code and data is mapped out
-    xrefs <file> <addr|symbol>     References to an address, symbol or string
-    refs-from <file> <addr|symbol> References made by a function (or data)
-    callers <file> <addr|symbol>   Functions that call a function
-    callees <file> <addr|symbol>   Functions a function calls
-    callgraph <file> <addr|symbol> [up] [down]
-                                   Call graph around a function
-    callpath <file> <from> <to>    A shortest chain of calls between two functions
+    disasm <file> <addr|symbol> [n]
+                                   Disassemble a function with source lines
     func <file> <addr|symbol>      Callers, callees, strings and data of a function
+    refs <file> <addr|symbol> [from]
+                                   References to an address, symbol or string (from: the
+                                   references a function or data makes)
+    calls <file> <addr|symbol> [up] [down]
+                                   The call graph around a function; `callers` or `callees`
+                                   in place of up and down lists just those
+    calls <file> <from> to <to>    A shortest chain of calls between two functions
+    coverage <file>                How much of the code and data is mapped out
+    objc <file> [name]             Objective-C classes, categories and protocols; with a name,
+                                   one declared as its header would, or a selector's
+                                   implementations and the functions that send it
+  Debug info
+    dwarf <file>                   DWARF summary and compilation units
+    dwarf <file> check             Everything in the DWARF that can't be read or doesn't add up
+    dwarf <file> find <query> [all]
+                                   DIEs by name (all: locals and parameters too)
+    dwarf <file> die <unit> [offset] | offset <offset>
+                                   A DIE's children or details; the DIE at a .debug_info offset
+    dwarf <file> list <unit> [tags] [name]
+                                   A unit's DIEs by tag (functions, variables, types, DW_TAG_…)
+    dwarf <file> at <addr|symbol>  Scopes and variables in scope at an address
+    dwarf <file> lines <unit> [first] [count] | sources | file <id>
+                                   A unit's line table; the source files; one file's lines
+    attribution <file> [unit] [id] Code and data per source file (or unit); with an id,
+                                   the address ranges of that one
+    crash <file> <report>          Symbolicate a crash report (Apple .crash or .ips, Android
+                                   tombstone, a stack trace) with a binary or a folder's binaries
+  Two versions
+    diff <old> <new>               What changed in size between two builds: two binaries, or
+                                   two folders or zips (files, owners, symbols)
+    diff <old> <new> functions [name]
+                                   Which functions of two builds (or ROM revisions) are which:
+                                   identical, relocated, changed, added, removed; with a
+                                   function, its instructions and its match's lined up
+    patch <file> <patch> [out]     What an IPS, UPS or BPS patch changes, placed in banks,
+                                   functions and regions; out: the patched file
+    patch <old> <new> <out.ips|ups|bps>
+                                   Write the patch that turns old into new
+  Games
     relsearch <file> <word> [16] [tbl]
                                    Relative search: a word in an encoding of the file's own
                                    (A = $80, say), found by the spacing of its letters; 16 for
@@ -60,21 +78,20 @@ COMMANDS:
     text <file> <table.tbl> [offset [length] | text]
                                    Text read with a table file: all of it, at an offset, or
                                    where some text is
-    objc <file> [name]             Objective-C classes, categories and protocols; with a name,
-                                   one declared as its header would, or a selector's
-                                   implementations and the functions that send it
-    attribution <file> [unit]      Code and data per source file (or unit)
-    attributed <file> <id> [unit]  Address ranges of one source file (or unit)
-    json <file>                    Summary as JSON
-    check <file>                   Verify that the layout covers every byte
+    labels <rom> <file | format>   An emulator's label file (Mesen .mlb, FCEUX .nl, a .sym:
+                                   RGBDS, WLA DX, no$gba) as notes, JSON for --notes; or with a
+                                   format (mlb, nl, sym, nocash), the --notes as that label file
 
-Options: --debug <file>  load DWARF from a separate file (dSYM, .debug), or for a
-                         Mach-O binary linked without dsymutil, from the folder
-                         holding the object files its debug map names
+Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
+                         PDB), or for a Mach-O binary linked without dsymutil,
+                         from the folder holding the object files its debug
+                         map names
          --member <n>    pick a slice/member of a universal binary or archive, or
                          a binary of a folder (its name, path or number)
          --notes <file>  load annotations (a JSON array) first
-Numbers accept decimal or 0x-prefixed hex.";
+         --log <file>    a game ROM: follow its code with an emulator's code/data log
+                         (FCEUX's or Mesen's .cdl): the code the game ran, the data it read
+Numbers accept decimal or 0x-prefixed hex; banked ROMs' addresses bank:address (03:C000).";
 
 fn num(s: &str) -> Result<u64, String> {
     let r = match s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
@@ -94,11 +111,18 @@ fn main() -> ExitCode {
     let debug = take_opt("--debug");
     let member = take_opt("--member");
     let notes = take_opt("--notes");
+    let log = take_opt("--log");
     if args.len() < 2 {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
     }
-    match run(&args, debug.as_deref(), member.as_deref(), notes.as_deref()) {
+    match run(
+        &args,
+        debug.as_deref(),
+        member.as_deref(),
+        notes.as_deref(),
+        log.as_deref(),
+    ) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("error: {e}");
@@ -111,8 +135,23 @@ fn open(path: &str, debug: Option<&str>, member: Option<&str>) -> Result<Binary,
     let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
     let mut bin = if Container::is_container(&data) {
         let c = Container::parse(data).map_err(|e| e.to_string())?;
+        // A disc opens the executable it boots, unless another file is asked for.
+        let boots = c
+            .members()
+            .iter()
+            .find(|m| m.arch.as_deref() == Some("boots first"))
+            .map(|m| m.index);
         let index = match member {
             Some(m) => num(m)? as u32,
+            None if boots.is_some() => {
+                let i = boots.unwrap();
+                eprintln!(
+                    "{}: opening {}, which it boots (--member picks another)",
+                    c.info().kind,
+                    c.members()[i as usize].name
+                );
+                i
+            }
             None => {
                 eprintln!("{} with {} members:", c.info().kind, c.members().len());
                 for m in c.members() {
@@ -152,15 +191,88 @@ fn debug_map_note(result: binviz::Result<binviz::dwarf::debugmap::DebugMapReport
     }
 }
 
-fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option<&str>) -> Result<(), String> {
+/// The commands as written (`dwarf <file> find main`) as their handlers are
+/// named (`dwarf-find`); the older names still work.
+fn internal(args: &[String]) -> Vec<String> {
+    let mut a = args.to_vec();
+    let at = |a: &[String], i: usize| a.get(i).cloned();
+    match (at(&a, 0).as_deref(), at(&a, 2).as_deref(), at(&a, 3).as_deref()) {
+        (Some("inspect"), Some(t), _) if t.starts_with('@') => {
+            a[0] = "at".into();
+            a[2] = t[1..].to_string();
+        }
+        (Some("refs"), _, Some("from")) => {
+            a[0] = "refs-from".into();
+            a.remove(3);
+        }
+        (Some("refs"), _, _) => a[0] = "xrefs".into(),
+        (Some("calls"), _, Some("to")) => {
+            a[0] = "callpath".into();
+            a.remove(3);
+        }
+        (Some("calls"), _, Some(w @ ("callers" | "callees"))) => {
+            a[0] = w.to_string();
+            a.remove(3);
+        }
+        (Some("calls"), _, _) => a[0] = "callgraph".into(),
+        (Some("dwarf"), Some(sub), _) => {
+            let handler = match sub {
+                "check" => "dwarf-check",
+                "find" => "dwarf-find",
+                "die" => "die",
+                "at" => "dwarf-at",
+                "lines" => "lines",
+                "list" => "dwarf-list",
+                "offset" => "dwarf-offset",
+                "sources" => "sources",
+                "file" => "file-lines",
+                _ => return a,
+            };
+            a[0] = handler.into();
+            a.remove(2);
+        }
+        // attribution <file> [unit] [id]: an id names one source file or unit.
+        (Some("attribution"), _, _) => {
+            if let Some(i) = a.iter().skip(2).position(|x| num(x).is_ok()) {
+                let id = a.remove(i + 2);
+                a[0] = "attributed".into();
+                a.insert(2, id);
+            }
+        }
+        (Some("info"), Some("json"), _) => {
+            a[0] = "json".into();
+            a.truncate(2);
+        }
+        _ => {}
+    }
+    a
+}
+
+fn run(
+    args: &[String],
+    debug: Option<&str>,
+    member: Option<&str>,
+    notes: Option<&str>,
+    log: Option<&str>,
+) -> Result<(), String> {
+    let args = &internal(args);
     let cmd = args[0].as_str();
     if cmd == "diff" {
         let new = args.get(2).ok_or("compare with what? binviz diff <old> <new>")?;
+        if args.get(3).map(String::as_str) == Some("functions") {
+            return diff_functions(&args[1], new, args.get(4).map(String::as_str));
+        }
         return diff(&args[1], new);
     }
     if cmd == "crash" {
         let report = args.get(2).ok_or("which crash report? binviz crash <file> <report>")?;
         return crash(&args[1], report, debug, member);
+    }
+    if cmd == "patch" {
+        let second = args
+            .get(2)
+            .ok_or("which patch? binviz patch <file> <patch> [out], or binviz patch <old> <new> <out.ips>")?;
+        return patch(&args[1], second, args.get(3).map(String::as_str));
     }
     // These read any file's bytes, whatever it is.
     if cmd == "relsearch" {
@@ -202,6 +314,27 @@ fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option
     };
     // Swift names read better through `swift-demangle`, where it is installed.
     bin.demangle_swift_with_tool();
+    if let Some(path) = log {
+        let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+        let (logged, s) = bin.with_code_log(&bytes).map_err(|e| format!("{path}: {e}"))?;
+        eprintln!(
+            "{} code/data log: {} bytes of code, {} of data{}{}",
+            s.format.name(),
+            s.code,
+            s.data,
+            if s.pages_placed > 0 {
+                format!(", {} PRG pages placed where they ran", s.pages_placed)
+            } else {
+                String::new()
+            },
+            if s.crc_matches == Some(false) {
+                " (made for another version of the ROM)"
+            } else {
+                ""
+            }
+        );
+        bin = logged;
+    }
     if let Some(path) = notes {
         let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
         let list: Vec<binviz::Annotation> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
@@ -570,6 +703,54 @@ fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option
                 println!("{at:>12} {}{:?}", if s.wide { "L" } else { " " }, s.text);
             }
         }
+        "labels" => {
+            use binviz::rom::labels::LabelFormat;
+            let what = arg(2)
+                .ok_or("which label file, or which format? binviz labels <rom> <file | mlb | nl | sym | nocash>")?;
+            match LabelFormat::from_name(what).filter(|_| !std::path::Path::new(what).exists()) {
+                Some(format) => {
+                    if bin.annotations().is_empty() {
+                        eprintln!("no notes to write: give them with --notes <file>");
+                    }
+                    let files = bin.write_labels(format).map_err(|e| e.to_string())?;
+                    if format == LabelFormat::Nl {
+                        // FCEUX reads its name lists from next to the ROM, one per bank.
+                        for f in &files {
+                            let out = format!("{}.{}", args[1], f.suffix);
+                            std::fs::write(&out, &f.text).map_err(|e| format!("{out}: {e}"))?;
+                            eprintln!("wrote {out}");
+                        }
+                    } else {
+                        for f in &files {
+                            print!("{}", f.text);
+                        }
+                    }
+                }
+                None => {
+                    let text = std::fs::read_to_string(what).map_err(|e| format!("{what}: {e}"))?;
+                    let read = bin.read_labels(what, &text).map_err(|e| e.to_string())?;
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&read.labels).map_err(|e| e.to_string())?
+                    );
+                    eprintln!(
+                        "{} labels from a {} file{}{}",
+                        read.labels.len(),
+                        read.format.name(),
+                        if read.skipped > 0 {
+                            format!("; {} skipped (places binviz can't place)", read.skipped)
+                        } else {
+                            String::new()
+                        },
+                        if read.directives > 0 {
+                            format!("; {} directives", read.directives)
+                        } else {
+                            String::new()
+                        }
+                    );
+                }
+            }
+        }
         "coverage" => {
             let c = bin.coverage(15);
             let pct = |n: u64, total: u64| {
@@ -803,6 +984,10 @@ fn resolve_address(bin: &Binary, s: &str) -> Result<u64, String> {
     if let Ok(n) = num(s) {
         return Ok(n);
     }
+    // A ROM's bank:address (03:C000).
+    if let Some(a) = bin.rom_address(s) {
+        return Ok(a);
+    }
     bin.symbols()
         .by_name(s)
         .map(|s| s.address)
@@ -811,6 +996,84 @@ fn resolve_address(bin: &Binary, s: &str) -> Result<u64, String> {
 
 fn fmt_addr(a: u64) -> String {
     format!("{a:#x}")
+}
+
+/// Applies a patch and says what it changes, or makes one from two files.
+fn patch(file: &str, second: &str, out: Option<&str>) -> Result<(), String> {
+    use binviz::patch::{ChangeKind, PatchFormat};
+    let read = |p: &str| std::fs::read(p).map_err(|e| format!("{p}: {e}"));
+    let data = read(file)?;
+    let other = read(second)?;
+    if PatchFormat::detect(&other).is_none() {
+        // Two files: the patch from the first to the second.
+        let out = out.ok_or("where to write the patch? binviz patch <old> <new> <out.ips|ups|bps>")?;
+        let format = std::path::Path::new(out)
+            .extension()
+            .and_then(|e| PatchFormat::from_name(&e.to_string_lossy()))
+            .ok_or("name the patch .ips, .ups or .bps")?;
+        let bytes = binviz::patch::create(format, &data, &other).map_err(|e| e.to_string())?;
+        std::fs::write(out, &bytes).map_err(|e| format!("{out}: {e}"))?;
+        let changes = binviz::patch::changes(&data, &other);
+        eprintln!(
+            "wrote {out}: {} patch, {} bytes, {} changes",
+            format.name(),
+            bytes.len(),
+            changes.len()
+        );
+        return Ok(());
+    }
+    let applied = binviz::patch::apply(&other, &data).map_err(|e| format!("{second}: {e}"))?;
+    let i = &applied.info;
+    println!(
+        "{} patch: {} records, makes {} bytes{}",
+        i.format.name(),
+        i.records,
+        i.target_size,
+        match (applied.source_matches, applied.target_matches) {
+            (Some(true), Some(true)) => " (made for this file; the result is as promised)",
+            (Some(false), _) => " (made for another file)",
+            (Some(true), Some(false)) => " (the result isn't what it promises)",
+            _ => "",
+        }
+    );
+    if let Some(m) = &i.metadata {
+        println!("metadata: {m}");
+    }
+    for w in &applied.warnings {
+        println!("warning: {w}");
+    }
+    let bin = Binary::parse(data.clone()).unwrap_or_else(|_| Binary::raw(data.clone()));
+    let placed = binviz::patch::place(&bin, &applied.changes);
+    println!("{} changes, {} bytes differ:", applied.changes.len(), applied.differ);
+    for p in placed.iter().take(2000) {
+        let c = &p.change;
+        let at = p.address.map(|a| format!(" {a:#x}")).unwrap_or_default();
+        let kind = match c.kind {
+            ChangeKind::Changed => String::new(),
+            ChangeKind::Added => " added".into(),
+            ChangeKind::Removed => " removed".into(),
+        };
+        println!(
+            "  {:#010x} {:>6} bytes{kind}  {}{at}{}{}",
+            c.offset,
+            c.len,
+            p.section.as_deref().unwrap_or("-"),
+            p.function.as_ref().map(|f| format!(" in {f}")).unwrap_or_default(),
+            if p.region.is_empty() {
+                String::new()
+            } else {
+                format!("  [{}]", p.region.join(" > "))
+            }
+        );
+    }
+    if placed.len() > 2000 {
+        println!("  … {} more", placed.len() - 2000);
+    }
+    if let Some(out) = out {
+        std::fs::write(out, &applied.output).map_err(|e| format!("{out}: {e}"))?;
+        eprintln!("wrote the patched file to {out}");
+    }
+    Ok(())
 }
 
 /// `relsearch`: a word in an encoding of the file's own.
@@ -1067,6 +1330,44 @@ fn human(n: u64) -> String {
 }
 
 /// What changed in size between two builds: two binaries, or two folders or zips.
+/// Which functions of two builds are which, or one function's code next to its match's.
+fn diff_functions(old: &str, new: &str, function: Option<&str>) -> Result<(), String> {
+    let load = |path: &str| -> Result<Binary, String> {
+        let data = binviz::read_file(std::path::Path::new(path)).map_err(|e| format!("{path}: {e}"))?;
+        let (mut bin, _) = binviz::package::load_binary(data).map_err(|e| format!("{path}: {e}"))?;
+        bin.demangle_swift_with_tool();
+        Ok(bin)
+    };
+    let (a, b) = (load(old)?, load(new)?);
+    let d = a.diff_functions(&b);
+    let Some(want) = function else {
+        print!("{}", d.to_text(60));
+        return Ok(());
+    };
+    let address = resolve_address(&a, want)?;
+    let pair = d
+        .pairs
+        .iter()
+        .find(|p| address >= p.old.address && address < p.old.address + p.old.size.max(1))
+        .ok_or_else(|| format!("{want} has no match in {new} (removed, or not a function)"))?;
+    println!(
+        "{} {:#x} → {} {:#x}: {:?}, {:.0}% similar, matched by {:?}
+",
+        pair.old.name,
+        pair.old.address,
+        pair.new.name,
+        pair.new.address,
+        pair.status,
+        pair.similarity * 100.0,
+        pair.how
+    );
+    print!(
+        "{}",
+        binviz::fndiff::code_text(&a.diff_function_code(pair.old.address, &b, pair.new.address))
+    );
+    Ok(())
+}
+
 fn diff(old: &str, new: &str) -> Result<(), String> {
     use binviz::package::{DiskPackage, is_package_path, load_binary};
     let (op, np) = (std::path::Path::new(old), std::path::Path::new(new));

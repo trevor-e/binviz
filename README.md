@@ -27,7 +27,9 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   `llvm-dwarfdump` output or an error message leads to its DIE; and at any
   address you get the variables in scope and where each one's value is.
   Separate debug files (`.dSYM` DWARF, `objcopy --only-keep-debug` output) can
-  be attached. A Mach-O binary linked without dsymutil gets its DWARF from the
+  be attached, and so can a Windows binary's PDB: its modules, functions,
+  globals and line records are read into DWARF, so everything above works
+  for MSVC, clang-cl and Rust `-msvc` builds too. A Mach-O binary linked without dsymutil gets its DWARF from the
   object files its debug map names, moved to the binary's addresses as
   dsymutil would move it (functions reordered or dead-stripped included); the
   objects are found where they were built, next to the binary, anywhere in a
@@ -70,12 +72,41 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   `PPUCTRL`?) are there as for any binary. Disassemblers for the 6502, 65816
   (register widths followed through `rep` and `sep`), SM83, ARM7TDMI (ARM and
   Thumb), 68000 and MIPS (delay slots, `lui` pairs, `$gp`) name what the code
-  touches. Files of no format binviz knows open as raw bytes.
+  touches, and jump tables are followed in the forms games' code uses (65816
+  `jmp ($nnnn,x)`, the 6502's `pha`/`pha`/`rts` trick, 68000 offset and branch
+  tables, ARM and Thumb switch tables). Addresses in banked ROMs read the way
+  their debuggers write them, `03:C000` (on the SNES `$80:8000`), and go to
+  and search take them too. PlayStation discs (`.bin` raw images or `.iso`)
+  open to their files, the executable `SYSTEM.CNF` boots first; only the
+  sectors needed are read. Files of no format binviz knows open as raw bytes.
 - **Text and graphics in games.** Relative search finds text in a game's own
   encoding from a word it shows; table files (`.tbl`) read, search and dump the
   text, and the hex view reads it through the table. A tile viewer draws the
   graphics in the consoles' formats (1, 2, 4 and 8 bits per pixel, planar or
   linear) from any offset.
+- **What emulators saw.** Play the game with FCEUX's or Mesen's code/data
+  logger on and load its `.cdl`: the code the game ran is followed too (code
+  reached only through jump tables and pointers), bytes it only read as data
+  are never taken for code, each 65816 instruction decodes with the register
+  widths it ran with and each ARM7 one as ARM or Thumb as it ran, and an NES
+  game's switched banks go where they ran (MMC3's 8 KiB pages at `$A000`...).
+  Label files come and go both ways: Mesen's `.mlb`, FCEUX's `.nl`, and the
+  `.sym` files of RGBDS, WLA DX and no$gba become notes (banks placed), and
+  your notes become label files for the emulator's debugger.
+- **Function by function.** Two builds, two revisions of a game or a ROM and
+  its patched copy are compared the way BinDiff does: functions matched by
+  name, by identical bytes, by the same instructions (code that moved), through
+  the call graph and, for ROMs, by address, even with no symbols at all; each
+  pair identical, relocated (only addresses differ) or changed and how much,
+  with its instructions lined up side by side; and the functions added and
+  removed.
+- **Patches.** Drop an IPS, UPS or BPS patch (a hack's, a translation's) on
+  the open file: each run of bytes it changes is placed in its bank, function
+  and region, with its bytes (and text, through the table file) before and
+  after, and whether the patch was made for this version of the game is
+  checked by CRC-32 (a patch made without the SNES copier header is applied
+  past it). Or edit bytes in the hex view, hex digits or text: the edits save
+  as an IPS, UPS or BPS patch, and the patched file opens with your notes.
 - **Objective-C, recovered.** The class metadata a Mach-O image keeps even
   stripped is read back: classes, categories and protocols declared as their
   headers would (ivars with offsets, properties, methods with argument types,
@@ -93,8 +124,9 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   found by its header (Mach-O, ELF or PE, zips inside opened too), so an
   `.ipa`, an `.app` or `.xcarchive`, an APK or a build folder are all just
   folders. Each binary is paired with its separate debug file (a dSYM, an ELF
-  `.debug` file) by UUID or build ID, or the debug link an ELF file names,
-  whatever the names, so stripped binaries get their names and DWARF back.
+  `.debug` file, a PDB) by UUID or build ID, whatever the names, or by the
+  debug link an ELF file names or the PDB a PE file names, so stripped
+  binaries get their names and DWARF back.
   Debug files dropped later (the zip of dSYMs App Store Connect gives you, say)
   join what is open. The folder's size is broken down by content (asset
   catalogs, images, localizations, fonts…) with the largest and duplicated
@@ -126,26 +158,35 @@ inlined frames.
 
 | View | What it shows |
 |---|---|
-| Compare | What changed in size since an earlier build (choose it, or drop it on the view): files, kinds of content, binaries, and their sections, owners and symbols |
+| Compare | What changed in size since an earlier build (choose it, or drop it on the view): files, kinds of content, binaries, and their sections, owners and symbols; for two binaries, their functions compared one by one, a pair's instructions side by side |
 | Crash | A crash report symbolicated with what is open: each frame's function, source line and inlined calls, and the images the report needs; click a frame for its code |
 | Folder | For a folder or zip: its binaries paired with their debug files, what its files are, the largest and duplicated ones, and the code of every binary summed by owner. Pick a binary (here or in the top bar) to explore it in the other views |
-| Overview | Format facts, exact byte composition, a file map (by region or entropy), and a diagram of how the file's bytes land in the address space |
-| Layout | The region tree, expandable down to single fields and table entries |
+| Overview | Format facts, exact byte composition, a file map (by region, entropy or reverse-engineering coverage), and a diagram of how the file's bytes land in the address space |
+| Layout | The file's parts. **Regions**: the region tree, expandable down to single fields and table entries. **Sections**: segments and sections as the loader sees them (a ROM's banks, RAM and registers). **Coverage**: how much of the code and data is mapped out, section by section, with the largest unexplored gaps |
 | Hex | Every byte tinted by the structure that owns it; hover for the full path, minimap to navigate |
 | Code | Functions and their disassembly with source lines (and source text, once loaded) interleaved; how many callers and callees each function has |
-| Call graph | Callers and callees of the selected function, a few levels each way, with the complete lists below; find a path of calls from another function (`main`, an entry point) |
+| Call graph | Callers and callees of the selected function, a few levels each way, with the complete lists below. Click a function to select it (the inspector shows it), double-click or **Centre here** to centre the graph on it; the functions centred on make a trail back. Find a path of calls from another function (`main`, an entry point) |
 | Symbols | Symbols, imports, exports and strings; filter, sort, jump. Mach-O images with Objective-C get a Classes tab: each class, category and protocol as its header would declare it, with the functions sending each selector |
-| Sections | Segments and sections |
 | DWARF | Units, the DIE tree or a unit's DIEs by tag, each DIE with its attributes (click a form for its bytes), declaration and call-site source, the lines its code came from and a structure's layout; line tables; Problems, a check of the whole DWARF |
-| Sources | Every source file in the line tables; lines that produced code are marked, click one to see its addresses |
-| Map | Code and data per source file or compilation unit, drawn onto each section; reverse-engineering coverage with the largest unexplored gaps |
+| Sources | Every source file in the line tables, sized by the code and data it produced: where those bytes are in each section, its functions and variables, and its text, lines that produced code marked (click one for its addresses). **Units** shows the same per compilation unit: what each crate or `.cpp` adds |
 | Text | Games' text (ROMs and raw files): relative search, a table file to edit, load and save, and the text it reads, searched or all of it |
 | Tiles | Games' graphics: 8×8 tiles in the consoles' formats from any offset, as grays or hues |
+| Patch | What a patch (dropped on the file) or your edits in the hex view change: each run of changed bytes placed in its bank, function and region, before and after, and the functions it changes, side by side; saved as IPS, UPS or BPS, or the patched file downloaded or opened |
 
 The inspector on the right always shows everything known about the current
 selection: its place in the file, what refers to it (callers, reads and
-writes, pointers in data), and your notes about it. Views are on keys `1`–`9`
-and `0` (`f` for Folder, `c` for Crash, `d` for Compare, `t` for Text, `g` for Tiles); `Alt+←/→` walks the history.
+writes, pointers in data), and your notes about it. Views are on keys `1`–`8`
+(`f` for Folder, `c` for Crash, `d` for Compare, `t` for Text, `g` for Tiles,
+`p` for Patch). In the hex view, **Edit** types over bytes: hex digits in the
+byte column, text in the text column (through the table file, when there is
+one); `Ctrl+Z` takes an edit back.
+
+Going somewhere (another view or tab, a link, a search result, a function
+in the call graph) is a step in the browser's history: its Back and Forward
+buttons (or `Alt+←/→`) walk it, even back to a file opened before. The URL
+says where you are, so a sample's link opens right there:
+`#sample=shapes-pe.exe&view=code&goto=total_area` (`goto` takes anything the
+search box does; `tab` picks a view's tab).
 
 ### Search
 
@@ -167,7 +208,7 @@ results; `↑↓` and `Enter` jump to one, and each group has a **Show all**.
 Press `N` (or **Add note…** in the inspector) to name a function, comment an
 instruction, or mark a range as reviewed. Names become symbols everywhere:
 disassembly, branch targets, search. Notes are saved in the browser per file
-(keyed by its SHA-256) and can be exported as JSON from **Map → Coverage**.
+(keyed by its SHA-256) and can be exported as JSON from **Layout → Coverage**.
 **Import…** there accepts a binviz export or a symbol list from another tool:
 a CSV with an address column (a Ghidra symbol table export, for example),
 `nm` output, or plain `address name` lines. RVAs are rebased onto the image.
@@ -219,41 +260,45 @@ cargo run --release -p binviz-cli -- info path/to/binary
 
 | Command | |
 |---|---|
-| `info <file>` | Summary, segments and sections |
-| `diff <old> <new>` | What changed in size between two builds: two binaries, or two folders or zips |
-| `crash <file> <report>` | Symbolicate a crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace) with a binary or a folder's binaries |
+| `info <file> [json]` | Summary, segments and sections (`json`: as JSON) |
 | `layout <file> [depth]` | The region tree |
-| `at <file> <offset>` | What the byte at a file offset is |
-| `inspect <file> <addr\|symbol>` | Everything about an address |
-| `disasm <file> <addr\|symbol> [n]` | Disassembly with source lines |
-| `symbols <file> [filter]` | Symbols |
-| `dwarf <file>` · `die <file> <unit> [offset]` · `lines <file> <unit>` | DWARF units, DIEs, line tables |
-| `dwarf-list <file> <unit> [tags] [name]` · `dwarf-find <file> <query> [all]` · `dwarf-offset <file> <offset>` | A unit's DIEs by tag, DIEs by name, the DIE at a `.debug_info` offset |
-| `dwarf-at <file> <addr\|symbol>` · `dwarf-check <file>` | Scopes and variables at an address; everything wrong with the DWARF |
-| `sources <file>` · `file-lines <file> <id>` | Source files and their address ranges |
+| `inspect <file> <address\|@offset>` | Everything about an address, or the byte at a file offset |
+| `symbols <file> [filter]` · `strings <file> [filter]` | Symbols; strings in the data sections |
 | `search <file> <query> [kind]` | The same search as the UI |
-| `strings <file> [filter]` | Strings in the data sections |
-| `attribution <file> [unit]` · `attributed <file> <id> [unit]` | Code and data per source file (or unit), and one file's ranges |
+| `disasm <file> <addr\|symbol> [n]` | Disassembly with source lines |
+| `func <file> <addr\|symbol>` | A function's callers, callees, strings and data |
+| `refs <file> <addr\|symbol> [from]` | References to an address (`from`: the references a function or data makes) |
+| `calls <file> <addr\|symbol> [up] [down]` · `calls <file> <from> to <to>` | The call graph around a function (`callers` or `callees` for just those); a shortest chain of calls |
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
-| `xrefs <file> <addr\|symbol>` · `refs-from <file> <addr\|symbol>` | References to an address, and the references a function makes |
-| `callers` · `callees` · `func <file> <addr\|symbol>` | Call sites in and out of a function; its callers, callees, strings and data |
-| `callgraph <file> <addr\|symbol> [up] [down]` · `callpath <file> <from> <to>` | The call graph around a function; a shortest chain of calls |
 | `objc <file> [name]` | Objective-C classes, categories and protocols; with a name, one declared as its header would, or a selector's implementations and senders |
+| `dwarf <file> [check \| find \| die \| offset \| list \| at \| lines \| sources \| file]` | DWARF units, and: everything wrong with it; DIEs by name, a DIE, the DIE at a `.debug_info` offset, a unit's DIEs by tag; scopes and variables at an address; line tables, source files and their address ranges |
+| `attribution <file> [unit] [id]` | Code and data per source file (or unit); with an id, that one's address ranges |
+| `crash <file> <report>` | Symbolicate a crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace) with a binary or a folder's binaries |
+| `diff <old> <new>` · `diff <old> <new> functions [name]` | What changed in size between two builds (binaries, or folders or zips); which functions are which, and one function's code next to its match's |
+| `patch <file> <patch> [out]` · `patch <old> <new> <out.ips>` | What an IPS, UPS or BPS patch changes, placed in banks and functions (`out`: the patched file); or the patch from one file to another |
 | `relsearch <file> <word> [16] [tbl]` | Relative search: a word in the file's own text encoding; `tbl` prints the table it implies |
 | `text <file> <table.tbl> [offset [length] \| text]` | Text read with a table file: all of it, at an offset, or where some text is |
+| `labels <rom> <file \| format>` | An emulator's label file (`.mlb`, `.nl`, `.sym`) as notes, JSON for `--notes`; or with a format (`mlb`, `nl`, `sym`, `nocash`), the `--notes` as that label file |
 | `check <file>` | Verify every byte is covered by the layout |
+
+The commands before these (`at`, `xrefs`, `refs-from`, `callers`, `callees`,
+`callgraph`, `callpath`, `die`, `lines`, `sources`, `file-lines`,
+`dwarf-check`, `dwarf-list`, `dwarf-find`, `dwarf-offset`, `dwarf-at`,
+`attributed`, `json`) still work.
 
 `--debug <file>` attaches a separate debug file (or names the folder holding
 the object files of a Mach-O debug map); `--member <n>` picks a slice of
 a universal binary or an archive member; `--notes <file.json>` loads
-annotations first.
+annotations first; `--log <file.cdl>` follows a game ROM's code with an
+emulator's code/data log.
 
 A folder or a zip (an `.ipa`, an `.app`, a build) works in place of a file:
 `info` lists every binary in it with its debug file, what the other files are,
 and the code of all the binaries summed by owner; `search` searches them all;
-`json` describes the folder; any other command works on the first binary (an
-app's own executable) or the one `--member` names, with its debug file
-attached.
+`info json` describes the folder; any other command works on the first binary
+(an app's own executable) or the one `--member` names, with its debug file
+attached. A CD image opens the executable the disc boots (`--member` picks
+another file).
 
 ## Agents (MCP server)
 
@@ -288,6 +333,9 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `xrefs` | Every reference to an address, symbol or string: calls, reads, writes, address-taken, pointers in data |
 | `objc` | Objective-C classes, categories and protocols; one declared as its header would; a selector's implementations and the functions sending it |
 | `relative_search` · `table_text` | Games' text: find a word in the game's own encoding, then read, search and dump the text with a table file |
+| `diff_functions` | Two builds compared function by function (stripped ones too): matches, what changed, what was added and removed, one function's code next to its match's |
+| `patch` | What an IPS, UPS or BPS patch changes in the open file (checked by CRC-32, each change placed in its bank, function and region); or the patch that turns it into a modified copy |
+| `code_log` · `labels` | A ROM's code followed with an emulator's code/data log; label files imported into the notes, or written from them |
 | `dwarf_units` · `dwarf_search` · `dwarf_dies` · `dwarf_die` | Browse the DWARF: units, DIEs by name or tag, one DIE with its attributes, source, code lines and layout |
 | `dwarf_at` | At an address: the source line, the inlined call stack, and the variables in scope with where each value lives |
 | `dwarf_check` | Everything in the DWARF that can't be read or doesn't add up — start here with a customer's broken build |
@@ -296,7 +344,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
 
 Notes are saved next to the binary in `<file>.binviz-notes.json`, the format
-the web UI imports and exports (Map → Coverage → Import), so an agent can map
+the web UI imports and exports (Layout → Coverage → Import), so an agent can map
 out a binary and you can look at the result in the UI, or the other way round.
 
 Things to ask: *"Open ~/Downloads/MyApp and tell me why it's so big"*, *"Find
@@ -414,20 +462,25 @@ crates/binviz        the library
   src/pointers.rs    pointers stored in data: chained fixups, dyld binds, ELF relocations, plain addresses
   src/objc.rs        Objective-C metadata: classes, categories, protocols, selectors, their names
   src/rom/           game ROMs: each console's header, memory map and registers, and
-                     the code followed from the vectors (analysis.rs)
+                     the code followed from the vectors (analysis.rs); emulators'
+                     code/data logs (cdl.rs) and label files (labels.rs)
   src/cpu/           decoders for consoles' CPUs: 6502 and 65816, SM83, ARM7TDMI, 68000, MIPS
   src/tables.rs      games' text: relative search and table files
+  src/patch.rs       IPS, UPS and BPS patches: applying, creating, where they change things
   src/stubs.rs       names for import stubs, PLT entries, GOT and IAT slots
   src/size.rs        where the bytes go: sections, symbols, owners (Swift, ObjC, C++, C)
   src/diff.rs        what changed in size between two builds
+  src/fndiff.rs      functions matched across builds (BinDiff-like) and lined up
+  src/disc.rs        CD images: ISO 9660 in raw or cooked sectors, what the disc boots
   src/crash.rs       crash reports: reading them, finding their images, symbolicating frames
-  src/package.rs     folders of binaries: headers, debug files paired by build ID, contents by kind
+  src/package.rs     folders of binaries: headers, debug files paired by build ID or name, contents by kind
   src/zip.rs         zip archives: the central directory, stored and deflated entries
   src/plist.rs       property lists, binary and XML
   src/dwarf/attribution.rs   code and globals per source file / unit
   src/dwarf/explore.rs       DIEs by tag, by offset and by name; variables in scope
   src/dwarf/check.rs         the DWARF checker
   src/dwarf/debugmap.rs      Mach-O debug maps: the objects' DWARF, linked to the binary
+  src/dwarf/pdb.rs           PDBs: modules, procedures and line records, written as DWARF
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
 crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents
@@ -452,8 +505,9 @@ cargo test
   through `xcrun`); the web UI shows them mangled. Their owners (Swift
   modules) are found either way.
 
-- MSVC debug info lives in PDB files, which are not read yet (the PDB path and
-  GUID are shown). Binaries from MinGW or Rust's `-gnu` toolchain carry DWARF.
+- From a PDB, binviz reads modules, procedures, globals, public symbols and
+  line records, not types or local variables (its type records aren't turned
+  into DWARF types), so variables in scope and structure layouts need DWARF.
 - Split DWARF (`.dwo`/`.dwp`) is detected but not followed.
 - `.eh_frame`, dyld opcode streams and chained fixups are shown as regions but
   not decoded entry by entry (chained fixups are walked to find pointers).
@@ -468,8 +522,12 @@ cargo test
   banks); code a fixed bank calls in a switched window isn't followed, since
   which bank is there depends on the game. Only the first megabyte of a
   Nintendo 64 game (what the boot code copies) is placed; the rest of the
-  cartridge is data at `0xB0000000`. Jumps through tables aren't followed.
+  cartridge is data at `0xB0000000`. Jumps through tables are followed in the
+  common forms above; others (MIPS switch tables, computed jumps) only when a
+  code/data log saw where they went.
   Master System, Game Gear and PC Engine ROMs aren't recognized yet (they open
   as raw bytes).
+- CD images: the ISO 9660 file system on Mode 1 and Mode 2 Form 1 data
+  sectors; XA audio and video files (Form 2) read as if they were data.
 - Objective-C metadata is read from images outside the dyld shared cache;
   Swift's own metadata (beyond classes visible to Objective-C) is not.

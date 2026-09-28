@@ -8,6 +8,7 @@ pub(crate) mod die;
 mod explore;
 mod expr;
 mod lines;
+pub(crate) mod pdb;
 
 use std::borrow::Cow;
 use std::sync::{Arc, OnceLock};

@@ -306,6 +306,125 @@ impl Binary {
         out
     }
 
+    /// A token per instruction in `start..end` (at most `limit`): what the
+    /// instruction does, its operation and the kinds of its operands, and not
+    /// where things are, so that the same code at another address reads the
+    /// same. Alignment padding at the end (nops, `int3`, zeros) is left out;
+    /// also returns how many bytes the instructions before it take.
+    pub(crate) fn instruction_tokens(&self, start: u64, end: u64, limit: usize) -> (Vec<u32>, u64) {
+        use std::hash::{Hash, Hasher};
+        let token = |f: &dyn Fn(&mut std::collections::hash_map::DefaultHasher)| {
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            f(&mut h);
+            h.finish() as u32
+        };
+        let Some(offset) = self.address_to_offset(start) else {
+            return (Vec::new(), 0);
+        };
+        let mut avail = end.saturating_sub(start);
+        if let Some(sec) = self.section_at(start)
+            && let Some(sec_off) = sec.file_offset
+        {
+            avail = avail.min((sec_off + sec.file_size).saturating_sub(offset));
+        }
+        avail = avail.min(self.data.len() as u64 - offset.min(self.data.len() as u64));
+        let bytes = &self.data[offset as usize..(offset + avail) as usize];
+        let mut out = Vec::new();
+        // Past the last instruction that isn't padding: (tokens, bytes).
+        let mut real = (0, 0u64);
+        let zeros = |b: &[u8]| b.iter().all(|&x| x == 0);
+        match self.isa() {
+            Isa::X86(bits) => {
+                let mut decoder = iced_x86::Decoder::with_ip(bits, bytes, start, iced_x86::DecoderOptions::NONE);
+                let mut ins = iced_x86::Instruction::default();
+                while decoder.can_decode() && out.len() < limit {
+                    let pos = decoder.position();
+                    decoder.decode_out(&mut ins);
+                    out.push(token(&|h| {
+                        (ins.mnemonic() as u32).hash(h);
+                        for i in 0..ins.op_count() {
+                            (ins.op_kind(i) as u32).hash(h);
+                        }
+                    }));
+                    let pad = matches!(ins.mnemonic(), iced_x86::Mnemonic::Nop | iced_x86::Mnemonic::Int3)
+                        || zeros(&bytes[pos..pos + ins.len()]);
+                    if !pad {
+                        real = (out.len(), (pos + ins.len()) as u64);
+                    }
+                }
+            }
+            Isa::A64 => {
+                let decoder = yaxpeax_arm::armv8::a64::InstDecoder::default();
+                for (n, word) in bytes.as_chunks::<4>().0.iter().take(limit).enumerate() {
+                    let mut reader = yaxpeax_arch::U8Reader::new(word);
+                    out.push(match decoder.decode(&mut reader) {
+                        Ok(ins) => token(&|h| {
+                            std::mem::discriminant(&ins.opcode).hash(h);
+                            for op in &ins.operands {
+                                std::mem::discriminant(op).hash(h);
+                            }
+                        }),
+                        Err(_) => token(&|h| u32::from_le_bytes(*word).hash(h)),
+                    });
+                    let w = u32::from_le_bytes(*word);
+                    if w != 0xD503_201F && w != 0 {
+                        real = (out.len(), (n as u64 + 1) * 4);
+                    }
+                }
+            }
+            Isa::Arm => {
+                let decoder = yaxpeax_arm::armv7::InstDecoder::default();
+                let mut pos = 0;
+                while pos + 4 <= bytes.len() && out.len() < limit {
+                    let mut reader = yaxpeax_arch::U8Reader::new(&bytes[pos..]);
+                    let len = match decoder.decode(&mut reader) {
+                        Ok(ins) => {
+                            out.push(token(&|h| {
+                                std::mem::discriminant(&ins.opcode).hash(h);
+                                for op in &ins.operands {
+                                    std::mem::discriminant(op).hash(h);
+                                }
+                            }));
+                            (ins.len().to_const() as usize).max(2)
+                        }
+                        Err(_) => {
+                            out.push(token(&|h| bytes[pos..pos + 4].hash(h)));
+                            4
+                        }
+                    };
+                    let w = u32::from_le_bytes(bytes[pos..pos + 4].try_into().unwrap());
+                    if !matches!(w, 0 | 0xE320_F000 | 0xE1A0_0000) {
+                        real = (out.len(), (pos + len) as u64);
+                    }
+                    pos += len;
+                }
+            }
+            Isa::Rom => {
+                let rom = self.rom.as_ref().expect("a ROM");
+                let mut state = self.rom_state_at(start);
+                let tail = self.code_bytes(start).unwrap_or(bytes);
+                let mut pos = 0;
+                while pos < bytes.len() && out.len() < limit {
+                    let address = start + pos as u64;
+                    let Some(insn) = crate::cpu::decode(rom.cpu, &tail[pos..], rom.map.cpu(address), &mut state) else {
+                        break;
+                    };
+                    // The addressing mode without its numbers: `lda $2000,x` reads `lda $N,x`.
+                    let shape = operand_shape(&insn.operands);
+                    out.push(token(&|h| {
+                        insn.mnemonic.hash(h);
+                        shape.hash(h);
+                    }));
+                    pos += (insn.len as usize).max(1);
+                    real = (out.len(), pos.min(bytes.len()) as u64);
+                }
+            }
+            Isa::None => return (Vec::new(), bytes.len() as u64),
+        }
+        out.truncate(real.0);
+        (out, real.1)
+    }
+
     /// Disassembles the function containing `address`: its symbol if there is
     /// one, else a window starting at the closest known instruction boundary.
     pub fn disassemble_function(&self, address: u64, limit: usize) -> Disassembly {
@@ -380,6 +499,39 @@ impl Binary {
             format!("{name}+{:#x}", r.offset)
         })
     }
+}
+
+/// Operands with their numbers (`$2000`, `#$3f`, `0x1c`) read as `N`: the shape of an addressing mode.
+pub(crate) fn operand_shape(operands: &str) -> String {
+    let mut out = String::with_capacity(operands.len());
+    let mut chars = operands.chars().peekable();
+    while let Some(c) = chars.next() {
+        let number = match c {
+            '$' => true,
+            '0' if chars.peek() == Some(&'x') => {
+                chars.next();
+                true
+            }
+            c if c.is_ascii_digit() && !out.ends_with(|p: char| p.is_ascii_alphanumeric()) => {
+                out.push('N');
+                while chars.peek().is_some_and(|d| d.is_ascii_hexdigit()) {
+                    chars.next();
+                }
+                continue;
+            }
+            _ => false,
+        };
+        if number {
+            out.push(if c == '$' { '$' } else { '0' });
+            out.push('N');
+            while chars.peek().is_some_and(|d| d.is_ascii_hexdigit()) {
+                chars.next();
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 fn split_text(text: &str) -> (String, String) {

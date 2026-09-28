@@ -1,4 +1,6 @@
-//! Files that contain several binaries: universal (fat) Mach-O and ar archives.
+//! Files that contain several binaries: universal (fat) Mach-O, ar
+//! archives, and CD images (a PlayStation game's disc, its files and the
+//! executable it boots first).
 
 use std::sync::Arc;
 
@@ -16,8 +18,10 @@ pub struct Member {
     pub name: String,
     pub offset: u64,
     pub size: u64,
-    /// Architecture of a fat slice, or detected for an archive member.
+    /// Architecture of a fat slice, or detected for an archive member (on a disc: what the file is).
     pub arch: Option<String>,
+    /// Its bytes are `offset..offset + size` of the file (not on a raw CD image, sector by sector).
+    pub contiguous: bool,
     #[serde(skip)]
     pub(crate) cputype: Option<u32>,
 }
@@ -34,6 +38,8 @@ pub struct ContainerInfo {
 pub struct Container {
     data: Arc<[u8]>,
     info: ContainerInfo,
+    /// A disc's sectors and files, by member index.
+    disc: Option<(crate::disc::Layout, Vec<crate::disc::DiscFile>)>,
 }
 
 fn cpu_name(cputype: u32) -> String {
@@ -50,17 +56,51 @@ fn cpu_name(cputype: u32) -> String {
 }
 
 impl Container {
-    /// True if the data is a fat Mach-O or an archive.
+    /// True if the data is a fat Mach-O, an archive, or a CD image.
     pub fn is_container(data: &[u8]) -> bool {
         matches!(
             object::FileKind::parse(data),
             Ok(object::FileKind::MachOFat32 | object::FileKind::MachOFat64 | object::FileKind::Archive)
-        )
+        ) || crate::disc::layout(&data[..data.len().min(crate::disc::PREFIX)]).is_some()
     }
 
     pub fn parse(data: impl Into<Arc<[u8]>>) -> Result<Container> {
         let data: Arc<[u8]> = data.into();
         let bytes: &[u8] = &data;
+        if let Some(layout) = crate::disc::layout(&bytes[..bytes.len().min(crate::disc::PREFIX)]) {
+            let disc = crate::disc::list(layout, &mut crate::disc::sectors(bytes, layout))?;
+            let files: Vec<crate::disc::DiscFile> = disc.files.into_iter().filter(|f| !f.dir).collect();
+            let members = files
+                .iter()
+                .enumerate()
+                .map(|(i, f)| Member {
+                    index: i as u32,
+                    name: f.path.clone(),
+                    offset: layout.offset(f.lba),
+                    size: f.size,
+                    arch: disc
+                        .boot
+                        .as_deref()
+                        .filter(|b| b.eq_ignore_ascii_case(&f.path))
+                        .map(|_| "boots first".into()),
+                    cputype: None,
+                    contiguous: layout.sector == 2048,
+                })
+                .collect();
+            return Ok(Container {
+                info: ContainerInfo {
+                    kind: if disc.volume.is_empty() {
+                        "CD image".into()
+                    } else {
+                        format!("CD image ({})", disc.volume)
+                    },
+                    file_size: bytes.len() as u64,
+                    members,
+                },
+                data,
+                disc: Some((layout, files)),
+            });
+        }
         let mut members = Vec::new();
         let kind = match object::FileKind::parse(bytes) {
             Ok(object::FileKind::MachOFat32) => {
@@ -94,6 +134,7 @@ impl Container {
                         size,
                         arch,
                         cputype: None,
+                        contiguous: true,
                     });
                 }
                 "Archive"
@@ -107,6 +148,7 @@ impl Container {
                 members,
             },
             data,
+            disc: None,
         })
     }
 
@@ -124,6 +166,9 @@ impl Container {
             .members
             .get(index as usize)
             .ok_or_else(|| Error::new("no such member"))?;
+        if let Some((layout, files)) = &self.disc {
+            return Ok(crate::disc::extract(&self.data, *layout, &files[index as usize])?.into());
+        }
         let start = m.offset as usize;
         let end = start
             .checked_add(m.size as usize)
@@ -147,5 +192,6 @@ fn push_fat<A: FatArch>(members: &mut Vec<Member>, i: usize, arch: &A) {
         size: arch.size().into(),
         arch: Some(cpu_name(cputype)),
         cputype: Some(cputype),
+        contiguous: true,
     });
 }

@@ -1,7 +1,7 @@
 import './styles.css';
 import { Inspector } from './inspector';
 import { SearchPalette } from './palette';
-import { store, type MapTab, type ViewName } from './store';
+import { LABEL_FILE, PATCH_FILE, store, type Intent, type Target, type ViewName } from './store';
 import { toast } from './ui';
 import { basename, formatSize, h, icon } from './util';
 import type { PackageSource } from './types';
@@ -14,9 +14,8 @@ import { DiffView } from './views/diff';
 import { DwarfView } from './views/dwarf';
 import { HexView } from './views/hex';
 import { LayoutView } from './views/layout';
-import { MapView } from './views/map';
-import { OverviewView } from './views/overview';
-import { SectionsView } from './views/sections';
+import { OverviewView, importLabels, loadCodeLog } from './views/overview';
+import { PatchView } from './views/patch';
 import { SourcesView } from './views/sources';
 import { SymbolsView } from './views/symbols';
 import { TextView } from './views/text';
@@ -31,6 +30,7 @@ const SAMPLES: { file: string; label: string; sources: string[]; folder?: boolea
   { file: 'tiny-pe-x64.exe', label: 'PE · x86-64', sources: ['tiny.rs'] },
   { file: 'shapes-pe.exe', label: 'PE · C++ with DWARF 5', sources: ['shapes.cpp'] },
   { file: 'shapes-pe.stripped.exe', label: 'PE · stripped (reverse engineering)', sources: [] },
+  { file: 'pdbdemo.zip', label: 'PE · MSVC-style, debug info in a PDB', sources: [], folder: true },
   { file: 'objc-macho-a64.chained.stripped', label: 'Mach-O · stripped Objective-C', sources: [] },
   { file: 'tiny.nes', label: 'NES ROM (6502, text, tiles)', sources: [] },
   { file: 'tiny.gba', label: 'Game Boy Advance ROM (ARM and Thumb)', sources: [] },
@@ -45,14 +45,13 @@ const NAV: { view: ViewName; label: string; key: string }[] = [
   { view: 'layout', label: 'Layout', key: '2' },
   { view: 'hex', label: 'Hex', key: '3' },
   { view: 'code', label: 'Code', key: '4' },
-  { view: 'calls', label: 'Call graph', key: '0' },
-  { view: 'symbols', label: 'Symbols', key: '5' },
-  { view: 'sections', label: 'Sections', key: '6' },
-  { view: 'dwarf', label: 'DWARF', key: '7' },
-  { view: 'sources', label: 'Sources', key: '8' },
-  { view: 'map', label: 'Map', key: '9' },
+  { view: 'calls', label: 'Call graph', key: '5' },
+  { view: 'symbols', label: 'Symbols', key: '6' },
+  { view: 'sources', label: 'Sources', key: '7' },
+  { view: 'dwarf', label: 'DWARF', key: '8' },
   { view: 'text', label: 'Text', key: 't' },
   { view: 'tiles', label: 'Tiles', key: 'g' },
+  { view: 'patch', label: 'Patch', key: 'p' },
 ];
 
 // --- Theme ------------------------------------------------------------------
@@ -100,12 +99,11 @@ const views: Record<ViewName, View> = {
   code: new CodeView(),
   calls: new CallsView(),
   symbols: new SymbolsView(),
-  sections: new SectionsView(),
   dwarf: new DwarfView(),
   sources: new SourcesView(),
-  map: new MapView(),
   text: new TextView(),
   tiles: new TilesView(),
+  patch: new PatchView(),
 };
 const inspector = new Inspector();
 const palette = new SearchPalette();
@@ -128,7 +126,7 @@ const button = (label: string, title: string, iconName: Parameters<typeof icon>[
   return b;
 };
 const openBtn = button('Open', 'Open a binary (Ctrl+O)', 'open', () => fileInput.click());
-const debugBtn = button('Debug file', 'Load DWARF from a separate file (.dSYM DWARF, .debug, unstripped copy)', 'debug', () => debugInput.click());
+const debugBtn = button('Debug file', 'Load debug info from a separate file (.dSYM DWARF, .debug, .pdb, unstripped copy)', 'debug', () => debugInput.click());
 const sourcesBtn = button('Sources', 'Load a source folder to show code next to addresses', 'source', () => sourcesInput.click());
 const themeBtn = button('', 'Toggle light/dark theme', 'theme', () => {
   const next = document.documentElement.dataset.resolvedTheme === 'dark' ? 'light' : 'dark';
@@ -157,8 +155,8 @@ const topbar = h(
 );
 
 const navButtons = new Map<ViewName, HTMLButtonElement>();
-const back = button('', 'Back (Alt+←)', 'back', () => void store.back(), 'ghost small icon-only');
-const forward = button('', 'Forward (Alt+→)', 'forward', () => void store.forward(), 'ghost small icon-only');
+const back = button('', 'Back (Alt+←, or the browser’s Back)', 'back', () => store.back(), 'ghost small icon-only');
+const forward = button('', 'Forward (Alt+→)', 'forward', () => store.forward(), 'ghost small icon-only');
 const sidebar = h('nav', { class: 'sidebar', 'aria-label': 'Views' });
 for (const n of NAV) {
   const b = h('button', { class: 'nav-item', type: 'button' }, n.label, h('kbd', null, n.key));
@@ -191,6 +189,8 @@ function renderChrome() {
     else if (name === 'crash') b.hidden = !store.crash;
     // Games' own text encodings: for ROMs.
     else if (name === 'text' || name === 'tiles') b.hidden = f?.summary.format !== 'rom' && f?.summary.format !== 'unknown';
+    // A patch applied, or bytes edited.
+    else if (name === 'patch') b.hidden = !store.patch;
     else if (name === 'diff') b.toggleAttribute('disabled', !f && !pkg);
     else b.toggleAttribute('disabled', !f);
   }
@@ -274,7 +274,7 @@ function renderLanding() {
         'div',
         { class: 'dropzone' },
         h('div', { class: 'big' }, 'Drop a binary, or a folder or zip of them'),
-        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, debug files (.dSYM, .debug), universal binaries and archives; a folder or zip (an .ipa, an .app, a build) opens every binary in it, each paired with its debug file. Drop or paste a crash report (.crash, .ips, a tombstone) to symbolicate it.'),
+        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, debug files (.dSYM, .debug, .pdb), universal binaries and archives; a folder or zip (an .ipa, an .app, a build) opens every binary in it, each paired with its debug file. Drop or paste a crash report (.crash, .ips, a tombstone) to symbolicate it.'),
         h('div', { class: 'dropzone-actions' }, choose, chooseFolder),
       ),
       h('div', { class: 'secondary', style: 'margin-top:22px' }, 'Or try a sample:'),
@@ -298,8 +298,9 @@ store.on('crash', () => {
   renderView();
 });
 store.on('diff', () => renderView());
+store.on('patch', () => renderChrome());
 store.on('view', () => renderView());
-store.on('selection', () => {
+store.on('history', () => {
   back.toggleAttribute('disabled', !store.canGoBack());
   forward.toggleAttribute('disabled', !store.canGoForward());
 });
@@ -333,6 +334,22 @@ renderView();
 // --- Opening files -------------------------------------------------------------
 
 async function openFile(file: File) {
+  // A patch is applied to what is open.
+  if (store.file && (PATCH_FILE.test(file.name) || (await startsWith(file, 'PATCH')) || (await startsWith(file, 'UPS1')) || (await startsWith(file, 'BPS1')))) {
+    await store.applyPatch(file.name, file);
+    return;
+  }
+  // A ROM's code/data log and label files go with it.
+  if (store.file?.summary.format === 'rom') {
+    if (/\.cdl$/i.test(file.name) || (await startsWith(file, 'CDLv2'))) {
+      await loadCodeLog(file);
+      return;
+    }
+    if (LABEL_FILE.test(file.name)) {
+      await importLabels(file);
+      return;
+    }
+  }
   // A zip is a folder: every binary in it opens.
   if (await isZip(file)) {
     await openFolder([{ kind: 'zip', name: file.name, blob: file }]);
@@ -380,6 +397,11 @@ async function crashText(file: Blob): Promise<string | null> {
 /** Crash reports found in a dropped folder go with the binaries next to them. */
 const CRASH_FILE = /(\.crash|\.ips|(^|\/)tombstone[^/]*)$/i;
 
+async function startsWith(blob: Blob, magic: string): Promise<boolean> {
+  const b = new Uint8Array(await blob.slice(0, magic.length).arrayBuffer());
+  return b.length === magic.length && [...magic].every((c, i) => b[i] === c.charCodeAt(0));
+}
+
 async function isZip(blob: Blob): Promise<boolean> {
   const b = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
   return b.length === 4 && b[0] === 0x50 && b[1] === 0x4b && ((b[2] === 3 && b[3] === 4) || (b[2] === 5 && b[3] === 6));
@@ -392,10 +414,10 @@ async function openSample(file: string) {
   const res = await fetch(`samples/${file}`);
   if (!res.ok) throw new Error(`sample ${file} not found (run npm run wasm to copy the fixtures)`);
   if (sample.folder) {
-    await store.openFolder([{ kind: 'zip', name: file, blob: await res.blob() }]);
+    await store.openFolder([{ kind: 'zip', name: file, blob: await res.blob() }], { sample: file });
     return;
   }
-  await store.open(file, await res.blob());
+  await store.open(file, await res.blob(), { sample: file, reopen: () => openSample(file) });
   const sources: { path: string; file: File }[] = [];
   for (const src of sample.sources) {
     const r = await fetch(`samples/src/${src}`);
@@ -405,8 +427,14 @@ async function openSample(file: string) {
 }
 
 /**
- * Deep links: `#sample=shapes-pe.exe&goto=total_area&view=code&theme=dark`.
- * `goto` takes anything the Go to box does (address, @offset, symbol, file:line).
+ * What the URL says: `#sample=shapes-pe.exe&view=code&goto=total_area`.
+ * binviz writes it as you go (Back and Forward are the browser's), and a
+ * link or a reload reads it: `sample` opens a bundled sample (`bin`, one of
+ * its binaries); `goto` takes anything the Go to box does (address,
+ * @offset, symbol, file:line); `tab` is a view's tab; `die` a DIE
+ * (unit:offset, or a name), `line` a source line (file:line), `name` a
+ * source file or unit; `search` opens the search box; `theme` forces light
+ * or dark.
  */
 async function applyHash() {
   const params = new URLSearchParams(location.hash.slice(1));
@@ -416,33 +444,73 @@ async function applyHash() {
     applyTheme();
   }
   const sample = params.get('sample');
-  if (sample && store.file?.name !== sample && store.package?.info.name !== sample) await openSample(sample);
-  const view = NAV.find((n) => n.view === params.get('view'))?.view;
-  const tab = params.get('tab');
-  if (view === 'map' && store.file && (tab === 'files' || tab === 'units' || tab === 'coverage')) {
-    store.openMap(tab as MapTab, params.get('file') ?? undefined);
-    return;
+  if (sample && store.sample !== sample) await openSample(sample);
+  const bin = params.get('bin');
+  const pkg = store.package;
+  if (bin && pkg) {
+    const i = pkg.info.binaries.findIndex((b) => b.path === bin);
+    if (i >= 0 && i !== pkg.current) await store.selectBinary(i);
   }
+  if (!store.file) return;
+  let viewParam = params.get('view');
+  let state = params.get('tab') ?? undefined;
+  let name = params.get('name') ?? undefined;
+  // Views that became tabs of others.
+  if (viewParam === 'sections') {
+    viewParam = 'layout';
+    state = 'sections';
+  } else if (viewParam === 'map') {
+    name ??= params.get('file') ?? undefined;
+    if (state === 'coverage') viewParam = 'layout';
+    else {
+      viewParam = 'sources';
+      state = state === 'units' ? 'units' : 'files';
+    }
+  }
+  const view = NAV.find((n) => n.view === viewParam)?.view;
+  let target: Target | undefined;
   const goto = params.get('goto');
-  if (goto && store.file) {
+  if (goto) {
     const r = await store.api.resolve(goto);
-    await store.select(r.kind === 'address' ? { address: r.value } : { offset: r.value }, { view });
-  } else if (view && store.file) {
-    store.setView(view);
+    target = r.kind === 'address' ? { address: r.value } : { offset: r.value };
   }
+  const intent: Intent = {};
+  const die = params.get('die');
+  if (die && store.file.dwarf) {
+    const at = /^(\d+):(0x[0-9a-f]+)$/i.exec(die);
+    if (at) intent.die = { unit: Number(at[1]), offset: BigInt(at[2]) };
+    else {
+      const found = await store.api.dieSearch(die, 50);
+      const match = found.find((d) => d.name === die) ?? found[0];
+      if (match) intent.die = { unit: match.unit, offset: match.offset };
+      else toast(`No DIE named ${die}`, 'error');
+    }
+  }
+  const line = /^(\d+):(\d+)$/.exec(params.get('line') ?? '');
+  if (line) intent.source = { file: Number(line[1]), line: Number(line[2]) };
+  if (name) intent.contributor = name;
+  const shown = intent.die ? 'dwarf' : intent.source || intent.contributor ? 'sources' : view;
+  if (shown || target) await store.goTo({ view: shown, state, target, intent }, 'replace');
   // `search=<query>` opens the search box with results.
   const search = params.get('search');
-  if (search && store.file) palette.focus(search);
-  // `die=<name>` opens the DWARF view on the first DIE with that name.
-  const die = params.get('die');
-  if (die && store.file?.dwarf) {
-    const found = await store.api.dieSearch(die, 50);
-    const match = found.find((d) => d.name === die) ?? found[0];
-    if (match) store.openDie(match.unit, match.offset);
-    else toast(`No DIE named ${die}`, 'error');
-  }
+  if (search) palette.focus(search);
 }
-window.addEventListener('hashchange', () => applyHash().catch((e) => toast(String(e instanceof Error ? e.message : e), 'error')));
+
+/** The fragment last shown: the browser reports it twice (popstate, then hashchange). */
+let shownHash = location.hash;
+window.addEventListener('popstate', (e) => {
+  shownHash = location.hash;
+  void (async () => {
+    // One of binviz's places: shown again. Otherwise the URL says where to go.
+    if (!(await store.popped(e.state))) await applyHash();
+  })().catch((err) => toast(String(err instanceof Error ? err.message : err), 'error'));
+});
+window.addEventListener('hashchange', () => {
+  if (location.hash === shownHash) return;
+  shownHash = location.hash;
+  store.adoptEntry();
+  applyHash().catch((e) => toast(String(e instanceof Error ? e.message : e), 'error'));
+});
 
 fileInput.addEventListener('change', () => {
   const f = fileInput.files?.[0];
@@ -626,12 +694,12 @@ window.addEventListener('keydown', (e) => {
   }
   if (e.altKey && e.key === 'ArrowLeft') {
     e.preventDefault();
-    void store.back();
+    store.back();
     return;
   }
   if (e.altKey && e.key === 'ArrowRight') {
     e.preventDefault();
-    void store.forward();
+    store.forward();
     return;
   }
   if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -650,7 +718,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const nav = NAV.find((n) => n.key === e.key);
-  const ready = nav && (nav.view === 'folder' ? store.package : nav.view === 'crash' ? store.crash : nav.view === 'diff' ? store.file || store.package : store.file);
+  const ready = nav && (nav.view === 'folder' ? store.package : nav.view === 'crash' ? store.crash : nav.view === 'diff' ? store.file || store.package : nav.view === 'patch' ? store.patch : store.file);
   if (nav && ready) store.setView(nav.view);
 });
 

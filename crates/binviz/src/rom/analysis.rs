@@ -4,11 +4,19 @@
 //! until every path ends in a return, a jump through a register or a table,
 //! or bytes that don't decode. What the instructions on the way read, write
 //! and call are the ROM's cross-references.
+//!
+//! A code/data log from an emulator adds what played the game saw: the
+//! subroutines and jump-table targets it marked are entry points too, then
+//! any code it saw run that following the code didn't reach; bytes it only
+//! saw read as data are never decoded; and each instruction runs in the
+//! state it ran in then (the 65816's register widths, ARM or Thumb).
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
 
 use super::Rom;
-use crate::cpu::{self, Flow, State};
+use super::cdl::{CodeDataLog, flag};
+use super::jumptable;
+use crate::cpu::{self, Cpu, Flow, State};
 use crate::model::Section;
 use crate::xrefs::RefKind;
 
@@ -46,13 +54,75 @@ impl crate::binary::Binary {
     }
 }
 
+/// The file offset of one of our addresses.
+fn offset_of(sections: &[Section], address: u64) -> Option<u64> {
+    let s = sections
+        .iter()
+        .find(|s| s.loaded && s.file_offset.is_some() && address >= s.address && address < s.address + s.size)?;
+    Some(s.file_offset? + (address - s.address))
+}
+
+/// The state code the log saw run in: the 65816's register widths, ARM or Thumb.
+fn logged_state(mut state: State, f: u16, cpu: Cpu) -> State {
+    if f & flag::CODE != 0 {
+        match cpu {
+            Cpu::W65816 => {
+                state.m8 = f & flag::M8 != 0;
+                state.x8 = f & flag::X8 != 0;
+            }
+            Cpu::Arm7Tdmi => state.thumb = f & flag::THUMB != 0,
+            _ => {}
+        }
+    }
+    state
+}
+
+/// Code a log saw run: (address, flags). `first` gives the entry points it
+/// marked (subroutines, jump-table targets); otherwise each run of code and
+/// each jump target it marked.
+fn logged_code(log: &CodeDataLog, sections: &[Section], first: bool) -> Vec<(u64, u16)> {
+    let mut out = Vec::new();
+    for s in sections.iter().filter(|s| s.loaded && s.file_size > 0) {
+        let Some(base) = s.file_offset else { continue };
+        let mut prev = 0;
+        for i in 0..s.file_size {
+            let f = log.at(base + i);
+            let code = f & flag::CODE != 0;
+            let entry = f & flag::ENTRY != 0 || f & (flag::JUMP | flag::INDIRECT) == flag::JUMP | flag::INDIRECT;
+            let pick = if first {
+                entry
+            } else {
+                f & flag::JUMP != 0 || prev & flag::CODE == 0
+            };
+            if code && pick {
+                out.push((s.address + i, f));
+            }
+            prev = f;
+        }
+    }
+    out
+}
+
 pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis {
     let bytes_at = |a: u64| code_bytes(data, sections, a);
+    let log = rom.log.as_ref().map(|(l, _)| l.as_ref());
+    let logged = |a: u64| log.and_then(|l| offset_of(sections, a).map(|o| l.at(o))).unwrap_or(0);
     let mut starts: BTreeMap<u64, State> = BTreeMap::new();
     let mut queue: VecDeque<u64> = VecDeque::new();
     for &(_, address) in &rom.vectors {
-        if bytes_at(address).is_some() && starts.insert(address, rom.state).is_none() {
+        if bytes_at(address).is_some()
+            && starts
+                .insert(address, logged_state(rom.state, logged(address), rom.cpu))
+                .is_none()
+        {
             queue.push_back(address);
+        }
+    }
+    if let Some(log) = log {
+        for (a, f) in logged_code(log, sections, true) {
+            if starts.insert(a, logged_state(rom.state, f, rom.cpu)).is_none() {
+                queue.push_back(a);
+            }
         }
     }
     // Which function each decoded instruction belongs to, and its length.
@@ -60,12 +130,27 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
     let mut refs = Vec::new();
     // Jumps and branches within a function: (instruction, target).
     let mut jumps = Vec::new();
-    while let Some(function) = queue.pop_front() {
+    // Code the log saw run that following the code didn't reach, for when the queue is done.
+    let mut later = log
+        .map(|l| logged_code(l, sections, false))
+        .unwrap_or_default()
+        .into_iter();
+    while let Some(function) = queue.pop_front().or_else(|| {
+        let (a, f) = later.find(|(a, _)| !owner.contains_key(a) && !starts.contains_key(a))?;
+        starts.insert(a, logged_state(rom.state, f, rom.cpu));
+        Some(a)
+    }) {
         let mut stack = vec![(function, starts[&function])];
         while let Some((pc, mut state)) = stack.pop() {
             if owner.contains_key(&pc) || owner.len() >= LIMIT {
                 continue;
             }
+            let f = logged(pc);
+            // Only ever read as data: not code, whatever leads here.
+            if f & (flag::CODE | flag::DATA) == flag::DATA {
+                continue;
+            }
+            state = logged_state(state, f, rom.cpu);
             let Some(bytes) = bytes_at(pc) else { continue };
             let Some(insn) = cpu::decode(rom.cpu, bytes, rom.map.cpu(pc), &mut state) else {
                 continue;
@@ -97,6 +182,32 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
                 next += 4;
                 if matches!(insn.flow, Flow::Call(_)) {
                     state.known &= !cpu::mips::CALL_CLOBBERS;
+                }
+            }
+            // An indirect jump (or the 6502's return trick) through a table next to it.
+            if matches!(insn.flow, Flow::Jump(None) | Flow::Call(None) | Flow::Return) {
+                let resolve = |from: u64, t: u64| rom.map.resolve(from, t);
+                let may_be_code = |a: u64| logged(a) & (flag::CODE | flag::DATA) != flag::DATA;
+                let code = jumptable::Code {
+                    bytes_at: &bytes_at,
+                    resolve: &resolve,
+                    may_be_code: &may_be_code,
+                };
+                for (t, thumb) in jumptable::targets(rom.cpu, pc, rom.map.cpu(pc), state.thumb, &code) {
+                    let mut s = state;
+                    if let Some(thumb) = thumb {
+                        s.thumb = thumb;
+                    }
+                    if matches!(insn.flow, Flow::Call(None)) {
+                        refs.push((pc, t, RefKind::Call));
+                        if let std::collections::btree_map::Entry::Vacant(e) = starts.entry(t) {
+                            e.insert(s);
+                            queue.push_back(t);
+                        }
+                    } else {
+                        jumps.push((pc, t));
+                        stack.push((t, s));
+                    }
                 }
             }
             // A target's address, and the state code there runs in (ARM or Thumb).

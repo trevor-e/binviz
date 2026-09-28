@@ -187,7 +187,10 @@ export interface Disassembly {
   supported: boolean;
 }
 
-export interface Member { index: number; name: string; offset: bigint; size: bigint; arch?: string }
+/** `contiguous`: its bytes are `offset..offset + size` of the file (not on a raw CD image). */
+export interface Member { index: number; name: string; offset: bigint; size: bigint; arch?: string; contiguous?: boolean }
+/** A file on a CD image. */
+export interface DiscFile { path: string; lba: bigint; size: bigint; dir: boolean }
 export interface ContainerInfo { kind: string; fileSize: bigint; members: Member[] }
 
 // --- Text in games ------------------------------------------------------------
@@ -197,6 +200,95 @@ export interface RelativeHit { offset: bigint; preview: string; at: number }
 export interface TextEncoding { first: number; letter: string; hits: RelativeHit[] }
 export interface RelativeSearch { word: string; width: number; encodings: TextEncoding[]; total: number }
 export interface TableText { offset: bigint; len: number; text: string }
+
+// --- Emulators ----------------------------------------------------------------
+
+export type LogFormat = 'fceux' | 'mesen' | 'mesen2';
+/** What a code/data log covers (see binviz::rom::cdl). */
+export interface LogSummary {
+  format: LogFormat;
+  bytes: bigint;
+  code: bigint;
+  data: bigint;
+  both: bigint;
+  entries: bigint;
+  jumps: bigint;
+  chrSeen: bigint;
+  crcMatches?: boolean;
+  pagesPlaced: number;
+}
+export type LabelFormat = 'mlb' | 'nl' | 'sym' | 'no-cash';
+export interface LabelImport { format: LabelFormat; labels: Annotation[]; skipped: number; directives: number }
+export interface LabelFile { suffix: string; text: string }
+
+// --- Patches ----------------------------------------------------------------------
+
+export type PatchFormat = 'ips' | 'ups' | 'bps';
+export interface PatchInfo {
+  format: PatchFormat;
+  records: bigint;
+  sourceSize?: bigint;
+  sourceCrc32?: number;
+  targetSize: bigint;
+  targetCrc32?: number;
+  metadata?: string;
+  truncate?: bigint;
+}
+/** What applying a patch file said. */
+export interface Applied {
+  info: PatchInfo;
+  differ: bigint;
+  sourceMatches?: boolean;
+  targetMatches?: boolean;
+  skippedHeader: bigint;
+  reversed: boolean;
+  warnings: string[];
+}
+export type ChangeKind = 'changed' | 'added' | 'removed';
+/** A run of changed bytes, placed: its bank or section, address, function and regions, and its bytes before and after. */
+export interface PatchRow {
+  kind: ChangeKind;
+  offset: bigint;
+  len: bigint;
+  differ: bigint;
+  section?: string;
+  address?: bigint;
+  function?: string;
+  region: string[];
+  before: Uint8Array | number[];
+  after: Uint8Array | number[];
+  beforeText?: string;
+  afterText?: string;
+}
+// --- Functions compared ---------------------------------------------------------------
+
+export interface FnInfo { address: bigint; name: string; size: bigint; instructions?: number }
+export interface FunctionPair {
+  old: FnInfo;
+  new: FnInfo;
+  how: 'name' | 'bytes' | 'instructions' | 'calls' | 'address';
+  status: 'identical' | 'relocated' | 'changed';
+  similarity: number;
+}
+/** Which functions of two versions are which (identical pairs only counted). */
+export interface FunctionDiff {
+  pairs: FunctionPair[];
+  added: FnInfo[];
+  removed: FnInfo[];
+  identical: number;
+  relocated: number;
+  changed: number;
+}
+export interface DiffLine { kind: 'same' | 'changed' | 'removed' | 'added'; old?: Instruction; new?: Instruction }
+
+export interface PatchState {
+  name?: string;
+  applied?: Applied;
+  changes: PatchRow[];
+  total: number;
+  differ: bigint;
+  targetSize: bigint;
+}
 
 /** An object file a Mach-O debug map names (where a binary linked without dsymutil keeps its DWARF). */
 export interface DebugMapObject { index: number; path: string; member?: string; modified: bigint; symbols: number }

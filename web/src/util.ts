@@ -50,6 +50,21 @@ export function hex(v: bigint | number | undefined | null): string {
   return '0x' + v.toString(16);
 }
 
+/** How addresses read: in hex, or as bank:address for a game ROM with banks. */
+let addressStyle: 'hex' | 'banked' = 'hex';
+
+export function setAddressStyle(style: 'hex' | 'banked') {
+  addressStyle = style;
+}
+
+/** An address as the open file's people write them: `0x401000`, or `03:C000` in a banked ROM. */
+export function fmtAddr(v: bigint | number | undefined | null): string {
+  if (v === undefined || v === null) return '—';
+  const a = BigInt(v);
+  if (addressStyle === 'banked' && a <= 0xffffffn) return `${hexPad(a >> 16n, 2).toUpperCase()}:${hexPad(a & 0xffffn, 4).toUpperCase()}`;
+  return hex(a);
+}
+
 /** Zero-padded hex without prefix. */
 export function hexPad(v: bigint | number, width: number): string {
   return v.toString(16).padStart(width, '0');

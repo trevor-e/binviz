@@ -10,11 +10,11 @@ use serde_json::{Value, json};
 use crate::notes;
 
 pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O and PE binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
-Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file) by UUID or build ID; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
-To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
+Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file, a PDB) by UUID, build ID or the name the binary records; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
+Addresses: 0x401000 (or 401000), a symbol, name+0x10, @0x200 for a file offset, and for banked ROMs bank:address (03:C000; $80:8000 on the SNES). To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
 For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. \
 For Objective-C (Mach-O apps and frameworks): objc lists the classes, categories and protocols; given a name it declares one as its header would (ivars, properties, methods with their types and implementations), or for a selector lists the methods implementing it and the functions that send it. The metadata also names a stripped binary's methods (-[Class selector]), its metadata and its selector references (@selector(name)), so those names work everywhere. \
-For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, Game Boy Advance, Mega Drive / Genesis, Nintendo 64, PlayStation PS-X EXE): open_binary recognizes them by their headers (files of no known format open as raw bytes); banks get addresses of their own (bank 3's $C000 is 0x3c000), the hardware registers are named (PPUCTRL, LCDC, INIDISP, DISPCNT, VDP_CTRL, VI_STATUS, GP1), and the code is found by following it from the reset and interrupt vectors, so disassemble, function_info, xrefs (who writes PPUCTRL?) and call_graph work as for any binary. For their text: relative_search finds a word in the game's own encoding, and table_text reads, searches and dumps text with a table file. \
+For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, Game Boy Advance, Mega Drive / Genesis, Nintendo 64, PlayStation PS-X EXE): open_binary recognizes them by their headers (files of no known format open as raw bytes); banks get addresses of their own (bank 3's $C000 is 0x3c000), the hardware registers are named (PPUCTRL, LCDC, INIDISP, DISPCNT, VDP_CTRL, VI_STATUS, GP1), and the code is found by following it from the reset and interrupt vectors, so disassemble, function_info, xrefs (who writes PPUCTRL?) and call_graph work as for any binary. For their text: relative_search finds a word in the game's own encoding, and table_text reads, searches and dumps text with a table file. With emulators: code_log follows the code with an FCEUX or Mesen code/data log (what the game ran when played: code behind jump tables, where an NES game's banks were mapped), and labels imports a Mesen, FCEUX, RGBDS, WLA DX or no$gba label file into the notes, or writes the notes as one for the emulator's debugger. \
 To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
 For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone or a stack trace, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
@@ -53,7 +53,10 @@ fn binary_param() -> Value {
 
 fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&str], read_only: bool) -> Value {
     let mut props = props;
-    if !matches!(name, "open_binary" | "list_binaries" | "symbolicate" | "size_diff") {
+    if !matches!(
+        name,
+        "open_binary" | "list_binaries" | "symbolicate" | "size_diff" | "diff_functions"
+    ) {
         props["binary"] = binary_param();
     }
     json!({
@@ -71,11 +74,11 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "open_binary",
             "Open a binary",
-            "Loads an ELF, Mach-O or PE file (also universal/fat binaries and .a archives) and keeps it in memory for the other tools, or a folder or zip of binaries (an .ipa, an .xcarchive, a build folder; zips inside open too): every binary inside opens under its own id, and its debug file there (a dSYM, a .debug file, paired by UUID or build ID) attaches on first use. Loads notes from <path>.binviz-notes.json (<folder>.<id>.binviz-notes.json) if present. Returns ids and a summary.",
+            "Loads an ELF, Mach-O or PE file (also universal/fat binaries and .a archives) and keeps it in memory for the other tools, or a folder or zip of binaries (an .ipa, an .xcarchive, a build folder; zips inside open too): every binary inside opens under its own id, and its debug file there (a dSYM, a .debug file or a PDB, paired by UUID, build ID or the name the binary records) attaches on first use. Loads notes from <path>.binviz-notes.json (<folder>.<id>.binviz-notes.json) if present. Returns ids and a summary.",
             json!({
                 "path": { "type": "string", "description": "Path to the binary, or to a folder or zip of binaries." },
                 "member": { "type": "string", "description": "For universal binaries or archives: the slice/member index or architecture (e.g. arm64, x86_64). Universal binaries default to arm64." },
-                "debug_file": { "type": "string", "description": "Separate DWARF to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
+                "debug_file": { "type": "string", "description": "Separate debug info to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, a PE's PDB (read as DWARF), or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
             }),
             &["path"],
@@ -105,6 +108,19 @@ pub fn definitions() -> Vec<Value> {
                 "old": { "type": "string", "description": "The earlier build: a binary, or a folder or zip." },
                 "new": { "type": "string", "description": "The later build, of the same kind." },
                 "top": { "type": "integer", "description": "Entries per list (default 30, max 500)." },
+            }),
+            &["old", "new"],
+            true,
+        ),
+        tool(
+            "diff_functions",
+            "Compare two builds function by function",
+            "Which functions of two builds on disk are which, the way BinDiff does it: matched by name, by identical bytes, by the same instructions (code that moved), through the call graph, and for ROMs by address; each pair identical, relocated (only addresses differ) or changed with how similar; and the functions added and removed. Works on stripped builds, and on ROM revisions or a patched copy of a game. With function, that function's instructions next to its match's.",
+            json!({
+                "old": { "type": "string", "description": "The earlier build (a binary or ROM)." },
+                "new": { "type": "string", "description": "The later build." },
+                "function": { "type": "string", "description": "A function of the earlier build (name or address): its code lined up with its match's." },
+                "top": { "type": "integer", "description": "Entries per list (default 40, max 1000)." },
             }),
             &["old", "new"],
             true,
@@ -272,6 +288,39 @@ pub fn definitions() -> Vec<Value> {
             }),
             &["word"],
             true,
+        ),
+        tool(
+            "code_log",
+            "Follow a ROM's code with an emulator's log",
+            "Reads the open game ROM again with a code/data log, which FCEUX's or Mesen's code/data logger writes while the game is played (.cdl): the code the game ran is followed too (code reached only through jump tables and pointers), bytes it only read as data are never taken for code, the 65816's register widths and ARM or Thumb are as they were when each instruction ran, and an NES game's switched banks are placed where they ran (MMC3's 8 KiB pages). Notes are kept. NES (FCEUX, Mesen), SNES, Game Boy and Game Boy Advance (Mesen 2).",
+            json!({ "path": { "type": "string", "description": "The .cdl file." } }),
+            &["path"],
+            false,
+        ),
+        tool(
+            "patch",
+            "What a patch changes",
+            "Applies an IPS, UPS or BPS patch (a ROM hack's, a translation's) to the open file and says what it changes: its format and checks (whether it was made for this file, by CRC-32), and each run of changed bytes placed in its bank or section, address, function and region; `out` writes the patched file (to open_binary next). Or, with `target` (a modified copy of the open file) and `out`, writes the patch that turns the open file into it (.ips, .ups or .bps by out's extension).",
+            json!({
+                "apply": { "type": "string", "description": "The patch file to apply." },
+                "target": { "type": "string", "description": "Or a modified copy of the open file, to make the patch for." },
+                "out": { "type": "string", "description": "Where to write the patched file (with apply), or the patch (with target: .ips, .ups or .bps)." },
+                "limit": { "type": "integer", "description": "Changes to list (default 200, max 5000)." },
+            }),
+            &[],
+            false,
+        ),
+        tool(
+            "labels",
+            "Emulator label files",
+            "Imports an emulator's label file into the notes (Mesen's .mlb, FCEUX's .nl, a .sym from RGBDS, WLA DX or no$gba: names and comments placed at binviz's addresses, banks included), or writes the notes as one for the emulator's debugger: Mesen .mlb, FCEUX .nl (one file per bank, next to the ROM), .sym (RGBDS for the Game Boy, WLA DX for the SNES), no$gba .sym.",
+            json!({
+                "import": { "type": "string", "description": "The label file to import." },
+                "export": { "type": "string", "enum": ["mlb", "nl", "sym", "nocash"], "description": "Or the format to write the notes in." },
+                "to": { "type": "string", "description": "Where to write (default: next to the ROM, named after it as the emulator expects)." },
+            }),
+            &[],
+            false,
         ),
         tool(
             "table_text",
@@ -521,6 +570,10 @@ fn resolve(bin: &Binary, text: &str) -> Result<Loc, String> {
     if let Some(n) = binviz::search::parse_number(t) {
         return Ok(Loc::Address(n));
     }
+    // A ROM's bank:address (03:C000).
+    if let Some(a) = bin.rom_address(t) {
+        return Ok(Loc::Address(a));
+    }
     if let Some((name, off)) = t.rsplit_once('+')
         && let Some(off) = binviz::search::parse_number(off)
         && let Some(s) = bin.symbols().by_name(name.trim())
@@ -535,7 +588,7 @@ fn resolve(bin: &Binary, text: &str) -> Result<Loc, String> {
     ))
 }
 
-fn address_of(bin: &Binary, text: &str) -> Result<u64, String> {
+pub(crate) fn address_of(bin: &Binary, text: &str) -> Result<u64, String> {
     match resolve(bin, text)? {
         Loc::Address(a) => Ok(a),
         Loc::Offset(o) => bin
@@ -555,6 +608,7 @@ impl Server {
             "folder_summary" => self.folder_summary(args).map(finish),
             "symbolicate" => self.symbolicate(args).map(finish),
             "size_diff" => self.size_diff(args).map(finish),
+            "diff_functions" => self.diff_functions(args).map(finish),
             "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
                 let o = self.get(args)?;
@@ -580,6 +634,9 @@ impl Server {
                     "objc" => objc(o, args)?,
                     "relative_search" => relative_search(o, args)?,
                     "table_text" => table_text(o, args)?,
+                    "code_log" => code_log(o, args)?,
+                    "patch" => patch(o, args)?,
+                    "labels" => labels(o, args)?,
                     "dwarf_units" => dwarf_units(o, args)?,
                     "dwarf_search" => dwarf_search(o, args)?,
                     "dwarf_dies" => dwarf_dies(o, args)?,
@@ -1069,10 +1126,10 @@ fn summary(o: &Open) -> String {
             let _ = writeln!(
                 out,
                 "No DWARF debug info{}.",
-                if s.format == binviz::Format::MachO {
-                    " (for Mach-O it usually lives in a .dSYM: pass its DWARF file as debug_file; without one, in the object files the debug map names: pass their folder)"
-                } else {
-                    ""
+                match s.format {
+                    binviz::Format::MachO => " (for Mach-O it usually lives in a .dSYM: pass its DWARF file as debug_file; without one, in the object files the debug map names: pass their folder)".to_string(),
+                    binviz::Format::Pe => pdb_hint(s),
+                    _ => String::new(),
                 }
             );
         }
@@ -1649,6 +1706,207 @@ fn coverage(o: &Open, args: &Value) -> String {
     out
 }
 
+fn code_log(o: &mut Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "path").ok_or("path is required")?;
+    let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let notes = o.bin.annotations().to_vec();
+    let (mut bin, s) = o.bin.with_code_log(&bytes).map_err(|e| format!("{path}: {e}"))?;
+    bin.set_annotations(notes);
+    o.bin = bin;
+    let mut out = format!(
+        "Read with a {} code/data log: {} bytes of code and {} of data seen, of {} ({} both); {} subroutine starts and {} jump targets marked.",
+        s.format.name(),
+        count(s.code),
+        count(s.data),
+        count(s.bytes),
+        count(s.both),
+        count(s.entries),
+        count(s.jumps)
+    );
+    if s.pages_placed > 0 {
+        out.push_str(&format!(" {} PRG pages placed where they ran.", s.pages_placed));
+    }
+    if s.crc_matches == Some(false) {
+        out.push_str(" The log was made for another version of the ROM (its CRC-32 differs): treat it with care.");
+    }
+    let found = o
+        .bin
+        .summary()
+        .properties
+        .iter()
+        .find(|p| p.key == "Code found")
+        .map(|p| p.value.clone());
+    if let Some(f) = found {
+        out.push_str(&format!("\nCode found: {f}."));
+    }
+    Ok(out)
+}
+
+fn patch(o: &mut Open, args: &Value) -> Result<String, String> {
+    use binviz::patch::{ChangeKind, PatchFormat};
+    let data = o.bin.data();
+    if let Some(target) = string(args, "target") {
+        let out = string(args, "out").ok_or("out is required with target (where to write the patch)")?;
+        let format = Path::new(out)
+            .extension()
+            .and_then(|e| PatchFormat::from_name(&e.to_string_lossy()))
+            .ok_or("name the patch .ips, .ups or .bps")?;
+        let modified = std::fs::read(target).map_err(|e| format!("{target}: {e}"))?;
+        let bytes = binviz::patch::create(format, data, &modified).map_err(|e| e.to_string())?;
+        std::fs::write(out, &bytes).map_err(|e| format!("{out}: {e}"))?;
+        return Ok(format!(
+            "Wrote {out}: a {} patch of {} bytes, {} runs of changes.",
+            format.name(),
+            bytes.len(),
+            binviz::patch::changes(data, &modified).len()
+        ));
+    }
+    let path = string(args, "apply").ok_or("apply (a patch file) or target (a modified file) is required")?;
+    let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let applied = binviz::patch::apply(&bytes, data).map_err(|e| format!("{path}: {e}"))?;
+    let i = &applied.info;
+    let mut out = format!(
+        "{} patch: {} records; makes {} bytes. ",
+        i.format.name(),
+        count(i.records),
+        count(i.target_size)
+    );
+    out.push_str(match (applied.source_matches, applied.target_matches) {
+        (Some(true), Some(true)) => "Made for this file, and the result is as promised.",
+        (Some(false), _) => "Made for ANOTHER file (the CRC-32 differs): the result is likely wrong.",
+        (Some(true), Some(false)) => "The result isn't what the patch promises.",
+        _ => "IPS patches carry no checksums.",
+    });
+    if let Some(m) = &i.metadata {
+        out.push_str(&format!("\nMetadata: {m}"));
+    }
+    for w in &applied.warnings {
+        out.push_str(&format!("\nWarning: {w}"));
+    }
+    let limit = args.get("limit").and_then(Value::as_u64).unwrap_or(200).min(5000) as usize;
+    let placed = binviz::patch::place(&o.bin, &applied.changes[..applied.changes.len().min(limit)]);
+    out.push_str(&format!(
+        "\n{} {}, {} {} differ{}:",
+        count(applied.changes.len() as u64),
+        if applied.changes.len() == 1 {
+            "run of changes"
+        } else {
+            "runs of changes"
+        },
+        count(applied.differ),
+        if applied.differ == 1 { "byte" } else { "bytes" },
+        if applied.changes.len() > limit {
+            format!(" (the first {limit})")
+        } else {
+            String::new()
+        }
+    ));
+    for p in &placed {
+        let c = &p.change;
+        let kind = match c.kind {
+            ChangeKind::Changed => "",
+            ChangeKind::Added => " added",
+            ChangeKind::Removed => " removed",
+        };
+        out.push_str(&format!(
+            "\n  {:#x} ({} bytes{kind}) {}{}{}{}",
+            c.offset,
+            c.len,
+            p.section.as_deref().unwrap_or("-"),
+            p.address.map(|a| format!(" {a:#x}")).unwrap_or_default(),
+            p.function.as_ref().map(|f| format!(" in {f}")).unwrap_or_default(),
+            if p.region.is_empty() {
+                String::new()
+            } else {
+                format!(" [{}]", p.region.join(" > "))
+            }
+        ));
+    }
+    if let Some(dest) = string(args, "out") {
+        std::fs::write(dest, &applied.output).map_err(|e| format!("{dest}: {e}"))?;
+        out.push_str(&format!(
+            "\nWrote the patched file to {dest}: open_binary it to explore it."
+        ));
+    }
+    Ok(out)
+}
+
+fn labels(o: &mut Open, args: &Value) -> Result<String, String> {
+    use binviz::rom::labels::LabelFormat;
+    if let Some(path) = string(args, "import") {
+        let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+        let read = o.bin.read_labels(path, &text).map_err(|e| e.to_string())?;
+        let mut list = o.bin.annotations().to_vec();
+        let (mut added, mut updated) = (0, 0);
+        for l in read.labels {
+            match list.iter_mut().find(|a| a.address == l.address && a.size == l.size) {
+                Some(a) => {
+                    if !l.name.is_empty() {
+                        a.name = l.name;
+                    }
+                    if !l.comment.is_empty() {
+                        a.comment = l.comment;
+                    }
+                    updated += 1;
+                }
+                None => {
+                    list.push(l);
+                    added += 1;
+                }
+            }
+        }
+        o.bin.set_annotations(list);
+        let mut out = format!(
+            "From a {} file: {added} notes added, {updated} updated",
+            read.format.name()
+        );
+        if read.skipped > 0 {
+            out.push_str(&format!("; {} lines skipped (places binviz can't place: a switched window's address without its bank, memory it doesn't model)", read.skipped));
+        }
+        if read.directives > 0 {
+            out.push_str(&format!(
+                "; {} directives (.arm, .thumb, data markers) not imported",
+                read.directives
+            ));
+        }
+        out.push_str(&format!(". Notes {}.", save_notes(o)));
+        return Ok(out);
+    }
+    let format = string(args, "export").ok_or("import (a label file) or export (a format) is required")?;
+    let format = LabelFormat::from_name(format)
+        .ok_or_else(|| format!("unknown label format {format}: mlb, nl, sym or nocash"))?;
+    let files = o.bin.write_labels(format).map_err(|e| e.to_string())?;
+    let rom = o.path.to_string_lossy().to_string();
+    let mut written = Vec::new();
+    for f in &files {
+        let target = match string(args, "to") {
+            Some(to) if files.len() == 1 => PathBuf::from(to),
+            Some(to) => PathBuf::from(to).join(format!(
+                "{}.{}",
+                o.path
+                    .file_name()
+                    .map_or("rom".into(), |n| n.to_string_lossy().to_string()),
+                f.suffix
+            )),
+            // FCEUX's name lists take the ROM's whole name (game.nes.0.nl); the others replace its extension.
+            None if format == LabelFormat::Nl => PathBuf::from(format!("{rom}.{}", f.suffix)),
+            None => o.path.with_extension(&f.suffix),
+        };
+        std::fs::write(&target, &f.text).map_err(|e| format!("{}: {e}", target.display()))?;
+        written.push(target.display().to_string());
+    }
+    Ok(format!(
+        "Wrote {} notes as {}: {}",
+        o.bin
+            .annotations()
+            .iter()
+            .filter(|a| !a.name.is_empty() || !a.comment.is_empty())
+            .count(),
+        format.name(),
+        written.join(", ")
+    ))
+}
+
 fn save_notes(o: &Open) -> String {
     match &o.notes {
         Some(path) => match notes::save(path, &o.label, &o.bin.summary().fingerprint, o.bin.annotations()) {
@@ -2218,17 +2476,25 @@ fn call_path(o: &Open, args: &Value) -> Result<String, String> {
 
 fn debug_of(o: &Open) -> Result<&binviz::DebugInfo, String> {
     o.bin.debug_info().ok_or_else(|| {
-        let mach = o.bin.summary().format == binviz::Format::MachO;
+        let s = o.bin.summary();
         format!(
             "{} has no DWARF debug info{}",
             o.label,
-            if mach {
-                "; for Mach-O it usually lives in a .dSYM: open_binary with debug_file pointing at …/Contents/Resources/DWARF/<name>, or for a build without one, at the folder of the object files its debug map names"
-            } else {
-                ""
+            match s.format {
+                binviz::Format::MachO => "; for Mach-O it usually lives in a .dSYM: open_binary with debug_file pointing at …/Contents/Resources/DWARF/<name>, or for a build without one, at the folder of the object files its debug map names".to_string(),
+                binviz::Format::Pe => pdb_hint(s),
+                _ => String::new(),
             }
         )
     })
+}
+
+/// Where a PE's debug info is: the PDB it names, to pass as debug_file.
+fn pdb_hint(s: &binviz::Summary) -> String {
+    match &s.debug_link {
+        Some(pdb) => format!(" (it is in a PDB, {pdb}: open_binary with debug_file pointing at it)"),
+        None => " (MSVC builds keep it in a PDB, which this image doesn't name)".to_string(),
+    }
 }
 
 fn die_line(d: &binviz::dwarf::DieSummary) -> String {

@@ -3,7 +3,7 @@
 // strings and byte patterns, with results grouped by kind.
 import { store, type ViewName } from './store';
 import type { HitKind, SearchHit, SearchResults } from './types';
-import { debounce, formatCount, h, hex } from './util';
+import { debounce, fmtAddr, formatCount, h, hex } from './util';
 
 const GROUPS: Record<HitKind, string> = {
   address: 'Address',
@@ -171,7 +171,7 @@ export class SearchPalette {
         'div',
         { class: 'hit', role: 'option', id: `hit-${idx}` },
         h('div', { class: 'hit-main' }, h('span', { class: 'hit-label' }, highlight(hit.label, needleOf(res.query))), h('span', { class: 'hit-detail' }, hit.detail)),
-        h('span', { class: 'hit-at' }, hit.address !== undefined ? hex(hit.address) : hit.offset !== undefined ? '@' + hex(hit.offset) : ''),
+        h('span', { class: 'hit-at' }, hit.address !== undefined ? fmtAddr(hit.address) : hit.offset !== undefined ? '@' + hex(hit.offset) : ''),
       );
       row.addEventListener('pointermove', () => this.setActive(idx, false));
       row.addEventListener('click', () => this.activate(hit));

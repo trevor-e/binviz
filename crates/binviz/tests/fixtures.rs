@@ -40,6 +40,7 @@ const ALL: &[&str] = &[
     "tiny-pe-x64.exe",
     "shapes-pe.exe",
     "shapes-pe.stripped.exe",
+    "pdbdemo.exe",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -346,6 +347,78 @@ fn split_debug_file() {
             .is_err(),
         "architecture mismatch"
     );
+}
+
+#[test]
+fn pdb_debug_info() {
+    let mut bin = open("pdbdemo.exe");
+    assert!(bin.debug_info().is_none());
+    assert_eq!(bin.summary().debug_link.as_deref(), Some("pdbdemo.pdb"));
+    bin.attach_debug_file("pdbdemo.pdb", fixture("pdbdemo.pdb")).unwrap();
+    assert!(bin.summary().has_dwarf);
+    // Its procedures name the functions, with their sizes.
+    let total = bin.symbols().by_name("pdbdemo::total_area").unwrap();
+    assert!(total.size > 0 && !total.size_inferred);
+    let (address, size) = (total.address, total.size);
+    // Its names were never mangled: the short name finds it too.
+    assert_eq!(bin.symbols().by_name("total_area").unwrap().address, address);
+    // Data is named once, by its debug name (not also by the linker's).
+    let frames: Vec<&str> = bin
+        .symbols()
+        .iter()
+        .map(|s| s.name())
+        .filter(|n| n.ends_with("FRAMES"))
+        .collect();
+    assert_eq!(frames, ["pdbdemo::FRAMES"]);
+    // Line records map the code to its source.
+    let debug = bin.debug_info().unwrap();
+    assert_eq!(
+        debug.location(address).unwrap().line,
+        source_line("pdbdemo.rs", "fn total_area")
+    );
+    assert!(debug.location(address + size - 1).is_some());
+    // Each module is a unit, in the language its compiler names.
+    let unit = debug
+        .units()
+        .iter()
+        .find(|u| u.name.as_deref().is_some_and(|n| n.ends_with("pdbdemo.rs")))
+        .unwrap();
+    assert_eq!(unit.language.as_deref(), Some("Rust"));
+    assert!(unit.code_size > 0);
+    // Its procedures are subprograms.
+    let (u, offset) = debug.function_die_at(address + 1).unwrap();
+    assert_eq!(
+        debug.die(u, offset).unwrap().die.name.as_deref(),
+        Some("pdbdemo::total_area")
+    );
+}
+
+#[test]
+fn pdbs_must_match() {
+    // Another build's PDB: its GUID differs (here, one byte of the binary's record is changed).
+    let mut exe = fixture("pdbdemo.exe");
+    let rsds = exe.windows(4).position(|w| w == b"RSDS").unwrap();
+    exe[rsds + 4] ^= 0xFF;
+    let mut bin = Binary::parse(exe).unwrap();
+    let err = bin
+        .attach_debug_file("pdbdemo.pdb", fixture("pdbdemo.pdb"))
+        .unwrap_err();
+    assert!(err.to_string().contains("GUID"), "{err}");
+    assert!(bin.debug_info().is_none());
+    // A PE that names no PDB, and a binary that isn't PE.
+    for name in ["tiny-pe-x64.exe", "tiny-elf-x64.stripped"] {
+        assert!(
+            open(name)
+                .attach_debug_file("pdbdemo.pdb", fixture("pdbdemo.pdb"))
+                .is_err(),
+            "{name}"
+        );
+    }
+    // On its own a PDB is no binary: opening one says what it is for.
+    let Err(err) = Binary::parse(fixture("pdbdemo.pdb")) else {
+        panic!("a PDB opened as a binary");
+    };
+    assert!(err.to_string().contains("PDB"), "{err}");
 }
 
 #[test]
@@ -1174,6 +1247,41 @@ fn elf_debug_files_pair_through_the_debug_link() {
 }
 
 #[test]
+fn pdbs_pair_through_the_name_their_binary_records() {
+    use binviz::package::{BinaryKind, DiskPackage, header, load_binary, update_loaded};
+    let pdb = fixture("pdbdemo.pdb");
+    let h = header(&pdb[..64 * 1024]).unwrap();
+    assert_eq!((h.format.as_str(), h.kind), ("PDB", BinaryKind::Debug));
+    let dir = std::env::temp_dir().join(format!("binviz-pdb-folder-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("bin")).unwrap();
+    std::fs::create_dir_all(dir.join("symbols")).unwrap();
+    std::fs::write(dir.join("bin/pdbdemo.exe"), fixture("pdbdemo.exe")).unwrap();
+    // Windows ignores case in file names, and so does the pairing.
+    std::fs::write(dir.join("symbols/PDBDEMO.PDB"), &pdb).unwrap();
+    let mut pkg = DiskPackage::open(&dir).unwrap();
+    assert_eq!(pkg.info.binaries.len(), 1);
+    assert_eq!(pkg.info.debug_files.len(), 1);
+    // Its GUID is past the header: it pairs once the binary is read and names it.
+    assert!(pkg.info.binaries[0].debug.is_none());
+    let data = pkg.read_shared(pkg.info.binaries[0].file).unwrap();
+    let (mut bin, _) = load_binary(data.clone()).unwrap();
+    let mut info = pkg.info.clone();
+    update_loaded(&mut info, 0, &data, &bin);
+    assert_eq!(info.binaries[0].debug, Some(0));
+    let debug = &info.debug_files[0];
+    bin.attach_debug_file(&debug.path, pkg.read_shared(debug.file).unwrap())
+        .unwrap();
+    assert!(bin.summary().has_dwarf);
+    // With no binary beside it, a PDB is what there is (to pair with what is open).
+    std::fs::remove_file(dir.join("bin/pdbdemo.exe")).unwrap();
+    let pkg = DiskPackage::open(&dir).unwrap();
+    let b = &pkg.info.binaries[0];
+    assert_eq!((b.format.as_str(), b.kind), ("PDB", BinaryKind::Debug));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn crash_reports_symbolicate() {
     use binviz::crash::{Found, ImageMatch, parse, symbolicate};
     // An Android tombstone frame inside tiny::run, where dot() is inlined.
@@ -1521,6 +1629,191 @@ fn nes_roms_are_followed_from_their_vectors() {
 }
 
 #[test]
+fn a_code_data_log_finds_what_the_game_ran() {
+    let bin = open("tiny.nes");
+    let data = bin.data();
+    // FCEUX's log for tiny.nes: a flag byte per PRG ROM byte, then per CHR ROM byte.
+    let mut log = vec![0u8; 0x10000 + 0x2000];
+    // Bank 1's code, run at $8000 (window 0) after the fixed bank switched it in.
+    log[0x4000..0x4007].fill(0x01);
+    // The fixed bank's reset code, at $C000 (window 2), and the palette read as data.
+    log[0xC000..0xC010].fill(0x01 | 2 << 2);
+    log[0xC041..0xC045].fill(0x02 | 2 << 2);
+    // Bank 2's text, read as data.
+    log[0x8000..0x8040].fill(0x02);
+    let (logged, summary) = bin.with_code_log(&log).unwrap();
+    assert_eq!(summary.format, binviz::rom::cdl::LogFormat::Fceux);
+    assert_eq!(
+        (summary.code, summary.data, summary.pages_placed),
+        (7 + 16, 4 + 0x40, 0)
+    );
+    // Bank 1's code, which nothing static reaches (`jsr $8000` could be any bank), and what it calls.
+    let found: Vec<u64> = functions(&logged).into_iter().map(|f| f.0).collect();
+    assert!(found.contains(&0x1_8000) && found.contains(&0x1_8006), "{found:x?}");
+    assert!(!functions(&bin).iter().any(|f| f.0 == 0x1_8000));
+    // The log's flags, by file offset.
+    assert_eq!(logged.code_log_at(16 + 0xC041), binviz::rom::cdl::flag::DATA);
+    assert!(logged.summary().properties.iter().any(|p| p.key == "Code/data log"));
+    // The same bytes: notes and places still match.
+    assert_eq!(logged.summary().fingerprint, bin.summary().fingerprint);
+    assert_eq!(logged.data(), data);
+}
+
+#[test]
+fn a_code_data_log_places_switched_pages_where_they_ran() {
+    // An MMC3 game: 64 KiB of PRG ROM in 8 KiB pages, the last fixed at $E000.
+    let mut rom = b"NES\x1a".to_vec();
+    rom.extend_from_slice(&[4, 0, 0x40, 0]);
+    rom.extend_from_slice(&[0; 8]);
+    let mut prg = vec![0u8; 0x10000];
+    // Page 3, run at $8000: lda #1 / jsr $8006 / rts, and $8006: rts.
+    prg[0x6000..0x6007].copy_from_slice(&[0xA9, 0x01, 0x20, 0x06, 0x80, 0x60, 0x60]);
+    // The last page: reset at $E000 loops forever.
+    prg[0xE000..0xE003].copy_from_slice(&[0x4C, 0x00, 0xE0]);
+    prg[0xFFFA..].copy_from_slice(&[0x00, 0xE0, 0x00, 0xE0, 0x00, 0xE0]);
+    rom.extend_from_slice(&prg);
+    let bin = Binary::parse(rom).unwrap();
+    // Without a log, page 3 is the second half of 16 KiB bank 1: at $A000.
+    assert!(
+        bin.sections()
+            .iter()
+            .any(|s| s.name == "PRG bank 1" && s.address == 0x1_8000)
+    );
+    let mut log = vec![0u8; 0x10000];
+    log[0x6000..0x6007].fill(0x01);
+    log[0xE000..0xE003].fill(0x01 | 3 << 2);
+    let (logged, summary) = bin.with_code_log(&log).unwrap();
+    assert_eq!(summary.pages_placed, 2);
+    let page = logged
+        .sections()
+        .iter()
+        .find(|s| s.name == "PRG page 3 (at $8000)")
+        .unwrap();
+    assert_eq!((page.address, page.file_offset), (0x3_8000, Some(16 + 0x6000)));
+    let found: Vec<u64> = functions(&logged).into_iter().map(|f| f.0).collect();
+    assert!(found.contains(&0x3_8000) && found.contains(&0x3_8006), "{found:x?}");
+    assert_eq!(logged.summary().entry, Some(0x7_E000));
+}
+
+#[test]
+fn label_files_are_read_and_written() {
+    use binviz::rom::labels::LabelFormat;
+    // Mesen: PRG ROM offsets, RAM offsets, registers; FCEUX: CPU addresses in bank files.
+    let mut nes = open("tiny.nes");
+    let mlb = "P:C000:Reset:Starts here\nP:4000:BankOne\nR:0010:FrameCount:bumped each NMI\\nby one\nG:2000:PpuCtrl\nP:C041-C044:Palette\nSpcRam:0100:NotNes\n";
+    let read = nes.read_labels("game.mlb", mlb).unwrap();
+    assert_eq!(read.format, LabelFormat::Mlb);
+    assert_eq!(read.skipped, 1);
+    let at: Vec<(u64, u64, &str)> = read
+        .labels
+        .iter()
+        .map(|a| (a.address, a.size, a.name.as_str()))
+        .collect();
+    assert_eq!(
+        at,
+        [
+            (0x10, 0, "FrameCount"),
+            (0x2000, 0, "PpuCtrl"),
+            (0x1_8000, 0, "BankOne"),
+            (0x3_C000, 0, "Reset"),
+            (0x3_C041, 4, "Palette")
+        ]
+    );
+    assert_eq!(read.labels[0].comment, "bumped each NMI\nby one");
+    // A bank file's addresses are in that 16 KiB of PRG ROM, wherever it is mapped; RAM's anywhere.
+    let nl = nes
+        .read_labels(
+            "tiny.nes.3.nl",
+            "$C000#Reset#entry\n\\more\n$C041/4#Palette#\n$0010#Frames#\n",
+        )
+        .unwrap();
+    assert_eq!((nl.format, nl.labels.len(), nl.skipped), (LabelFormat::Nl, 3, 0));
+    assert_eq!(
+        (nl.labels[1].address, nl.labels[1].comment.as_str()),
+        (0x3_C000, "entry\nmore")
+    );
+    assert_eq!((nl.labels[2].address, nl.labels[2].size), (0x3_C041, 4));
+    // What binviz writes, the emulators read back to the same places.
+    nes.set_annotations(read.labels.clone());
+    for format in nes.label_formats() {
+        let files = nes.write_labels(format).unwrap();
+        let mut back = Vec::new();
+        for f in &files {
+            back.extend(
+                nes.read_labels(&format!("tiny.nes.{}", f.suffix), &f.text)
+                    .unwrap()
+                    .labels,
+            );
+        }
+        back.sort_by_key(|a| (a.address, a.size));
+        let names: Vec<(u64, &str)> = back.iter().map(|a| (a.address, a.name.as_str())).collect();
+        assert_eq!(
+            names,
+            [
+                (0x10, "FrameCount"),
+                (0x2000, "PpuCtrl"),
+                (0x1_8000, "BankOne"),
+                (0x3_C000, "Reset"),
+                (0x3_C041, "Palette")
+            ],
+            "{format:?}: {:?}",
+            files
+        );
+    }
+    let nl_files = nes.write_labels(LabelFormat::Nl).unwrap();
+    let suffixes: Vec<&str> = nl_files.iter().map(|f| f.suffix.as_str()).collect();
+    assert_eq!(suffixes, ["ram.nl", "1.nl", "3.nl"]);
+
+    // RGBDS: bank:address, lowercase; bare constants are skipped.
+    let mut gb = open("tiny.gb");
+    let sym = "; File generated by rgblink\n00:0150 Main\n00:0150 Main.start\n01:4000 BankedFn\n00:c000 wCounter\n00:ff80 hFrames\n0042 SOME_CONSTANT\n";
+    let read = gb.read_labels("tiny.sym", sym).unwrap();
+    assert_eq!(read.format, LabelFormat::Sym);
+    let at: Vec<(u64, &str)> = read.labels.iter().map(|a| (a.address, a.name.as_str())).collect();
+    assert_eq!(
+        at,
+        [
+            (0x150, "Main"),
+            (0x150, "Main.start"),
+            (0xC000, "wCounter"),
+            (0xFF80, "hFrames"),
+            (0x1_4000, "BankedFn")
+        ]
+    );
+    gb.set_annotations(read.labels[2..].to_vec());
+    let text = &gb.write_labels(LabelFormat::Sym).unwrap()[0].text;
+    assert!(
+        text.contains("01:4000 BankedFn") && text.contains("00:c000 wCounter"),
+        "{text}"
+    );
+
+    // no$gba: addresses, and directives that aren't names.
+    let gba = open("tiny.gba");
+    let read = gba
+        .read_labels(
+            "tiny.sym",
+            "08000000 .arm\n080000C0 start\n03000000 iwram_var\n08000100 .dbl:0010\n",
+        )
+        .unwrap();
+    assert_eq!((read.format, read.directives), (LabelFormat::NoCash, 2));
+    let at: Vec<(u64, &str)> = read.labels.iter().map(|a| (a.address, a.name.as_str())).collect();
+    assert_eq!(at, [(0x0300_0000, "iwram_var"), (0x0800_00C0, "start")]);
+
+    // WLA DX: 24-bit SNES addresses, mirrors folded.
+    let snes = open("tiny.sfc");
+    let read = snes
+        .read_labels(
+            "tiny.sym",
+            "[information]\nversion 3\n\n[labels]\n00:8000 Reset\n80:8010 FastMirror\n7e:0010 wram_var\n",
+        )
+        .unwrap();
+    let at: Vec<(u64, &str)> = read.labels.iter().map(|a| (a.address, a.name.as_str())).collect();
+    assert_eq!(at, [(0x8000, "Reset"), (0x8010, "FastMirror"), (0x7E_0010, "wram_var")]);
+    // Consoles without emulator label files say so.
+    assert!(open("tiny.md").write_labels(LabelFormat::Mlb).is_err());
+}
+
+#[test]
 fn game_boy_and_snes_roms() {
     let gb = open("tiny.gb");
     assert_eq!(gb.summary().arch, "SM83");
@@ -1703,4 +1996,120 @@ fn mega_drive_68000() {
     smd.extend((0..0x2000).map(|i| block[2 * i]));
     let from_smd = Binary::parse(smd).unwrap();
     assert_eq!(functions(&from_smd).len(), 4);
+}
+
+#[test]
+fn functions_are_matched_across_builds() {
+    use binviz::fndiff::{MatchKind, PairStatus};
+    // A ROM and a patched copy: one function changed, the rest the same.
+    let old = open("tiny.nes");
+    let mut bytes = old.data().to_vec();
+    bytes[16 + 0xC006] = 0x01; // reset's `lda #$00` becomes `lda #$01`
+    let new = Binary::parse(bytes).unwrap();
+    let d = old.diff_functions(&new);
+    assert_eq!((d.changed, d.added.len(), d.removed.len()), (1, 0, 0), "{d:#?}");
+    let changed = &d.pairs[0];
+    assert_eq!(
+        (changed.old.name.as_str(), changed.status, changed.how),
+        ("reset", PairStatus::Changed, MatchKind::Name)
+    );
+    let lines = old.diff_function_code(changed.old.address, &new, changed.new.address);
+    let differ: Vec<_> = lines
+        .iter()
+        .filter(|l| l.kind != binviz::fndiff::LineKind::Same)
+        .map(|l| {
+            (
+                l.old.as_ref().map(|i| i.operands.clone()),
+                l.new.as_ref().map(|i| i.operands.clone()),
+            )
+        })
+        .collect();
+    assert_eq!(differ, [(Some("#$00".to_string()), Some("#$01".to_string()))]);
+
+    // A build and its stripped copy: the same code, found by its bytes.
+    let full = open("shapes-pe.exe");
+    let stripped = open("shapes-pe.stripped.exe");
+    let d = full.diff_functions(&stripped);
+    let by_bytes = d.pairs.iter().filter(|p| p.how == MatchKind::Bytes).count();
+    assert!(by_bytes > 20, "{} pairs by bytes of {}", by_bytes, d.pairs.len());
+    assert_eq!(
+        d.changed,
+        0,
+        "{:?}",
+        d.pairs
+            .iter()
+            .filter(|p| p.status == PairStatus::Changed)
+            .map(|p| &p.old.name)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn jump_tables_are_followed() {
+    // NROM: a dispatcher that pushes a table's entry and returns into it (the 6502's return trick).
+    let mut prg = vec![0u8; 0x8000];
+    prg[0..11].copy_from_slice(&[0xA2, 0x00, 0xBD, 0x20, 0x80, 0x48, 0xBD, 0x10, 0x80, 0x48, 0x60]);
+    // lo at $8010, hi at $8020: $8030 and $8040, minus one.
+    prg[0x10..0x12].copy_from_slice(&[0x2F, 0x3F]);
+    prg[0x20..0x22].copy_from_slice(&[0x80, 0x80]);
+    prg[0x30..0x33].copy_from_slice(&[0xA9, 0x01, 0x60]);
+    prg[0x40..0x43].copy_from_slice(&[0xA9, 0x02, 0x60]);
+    prg[0x7FFA..].copy_from_slice(&[0x00, 0x80, 0x00, 0x80, 0x00, 0x80]);
+    let mut rom = b"NES\x1a".to_vec();
+    rom.extend_from_slice(&[2, 0, 0, 0]);
+    rom.extend_from_slice(&[0; 8]);
+    rom.extend_from_slice(&prg);
+    let bin = Binary::parse(rom).unwrap();
+    let found: Vec<u64> = functions(&bin).into_iter().map(|f| f.0).collect();
+    assert!(found.contains(&0x8030) && found.contains(&0x8040), "{found:x?}");
+    // The table itself isn't code.
+    assert!(!found.iter().any(|&a| (0x8010..0x8030).contains(&a)), "{found:x?}");
+}
+
+#[test]
+fn playstation_discs_open_their_executable() {
+    // A raw disc (2352-byte sectors, Mode 2): SYSTEM.CNF boots the executable in DATA.
+    let exe = fixture("tiny-psx.exe");
+    let mut img = vec![0u8; 2352 * (40 + exe.len() / 2048)];
+    let put = |img: &mut Vec<u8>, lba: usize, bytes: &[u8]| {
+        for (i, chunk) in bytes.chunks(2048).enumerate() {
+            let at = (lba + i) * 2352 + 24;
+            img[at..at + chunk.len()].copy_from_slice(chunk);
+        }
+    };
+    let rec = |lba: u32, size: u32, dir: bool, name: &[u8]| {
+        let mut r = vec![0u8; 33 + name.len() + (name.len() + 1) % 2];
+        r[0] = r.len() as u8;
+        r[2..6].copy_from_slice(&lba.to_le_bytes());
+        r[10..14].copy_from_slice(&size.to_le_bytes());
+        r[25] = if dir { 2 } else { 0 };
+        r[32] = name.len() as u8;
+        r[33..33 + name.len()].copy_from_slice(name);
+        r
+    };
+    let mut pvd = vec![0u8; 2048];
+    pvd[0] = 1;
+    pvd[1..6].copy_from_slice(b"CD001");
+    pvd[40..44].copy_from_slice(b"GAME");
+    let root = rec(20, 2048, true, &[0]);
+    pvd[156..156 + root.len()].copy_from_slice(&root);
+    put(&mut img, 16, &pvd);
+    let mut dir = rec(20, 2048, true, &[0]);
+    dir.extend(rec(20, 2048, true, &[1]));
+    dir.extend(rec(22, 36, false, b"SYSTEM.CNF;1"));
+    dir.extend(rec(24, exe.len() as u32, false, b"SLUS_999.99;1"));
+    put(&mut img, 20, &dir);
+    put(&mut img, 22, b"BOOT = cdrom:\\SLUS_999.99;1\r\n");
+    put(&mut img, 24, &exe);
+    assert!(binviz::Container::is_container(&img));
+    let c = binviz::Container::parse(img).unwrap();
+    assert!(c.info().kind.starts_with("CD image (GAME"), "{}", c.info().kind);
+    let first = &c.members()[0];
+    assert_eq!(
+        (first.name.as_str(), first.arch.as_deref(), first.contiguous),
+        ("SLUS_999.99", Some("boots first"), false)
+    );
+    let bin = c.open(0).unwrap();
+    assert_eq!(bin.platform(), Some(binviz::rom::Platform::PlayStation));
+    assert_eq!(bin.data(), &exe[..]);
 }

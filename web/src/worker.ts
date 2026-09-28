@@ -4,12 +4,14 @@
 //
 // Folders and zips of binaries are read here too: zip entries are inflated
 // in the worker (zips inside open like folders), and binaries are streamed
-// straight into WebAssembly memory, one at a time.
+// straight into WebAssembly memory, one at a time. CD images (a PlayStation
+// game's disc, hundreds of megabytes) are read a sector at a time: their
+// folders, then the file opened.
 import init, {
-  Session, crashParse, packageBundle, packageDiscover, packageHeader, packagePlan, zipDecompressZstandard,
-  zipFindDirectory, zipParseDirectory, zipZip64Directory,
+  Session, crashParse, discBoot, discLayout, discPrefix, discRecords, discRoot, discSort, packageBundle, packageDiscover,
+  packageHeader, packagePlan, zipDecompressZstandard, zipFindDirectory, zipParseDirectory, zipZip64Directory,
 } from './pkg/binviz_wasm.js';
-import type { BaselineSource, BinaryHeader, BundleInfo, DebugMapObject, DebugMapReport, PackageBinary, PackageInfo, PackageSource, Summary } from './types';
+import type { BaselineSource, BinaryHeader, BundleInfo, DebugMapObject, DebugMapReport, DiscFile, PackageBinary, PackageInfo, PackageSource, Summary } from './types';
 
 const ready = init();
 let session: Session | null = null;
@@ -38,6 +40,70 @@ async function copyInto(memory: WebAssembly.Memory, ptr: number, blob: Blob, onP
     new Uint8Array(memory.buffer, ptr + off, chunk.length).set(chunk);
     onProgress(Math.min(1, (off + chunk.length) / Math.max(1, blob.size)));
   }
+}
+
+// --- CD images ------------------------------------------------------------------------
+
+interface DiscLayout {
+  sector: bigint;
+  data: bigint;
+}
+
+/** The CD image open, and its files (a member's index is its place here). */
+let disc: { blob: Blob; name: string; layout: DiscLayout; files: DiscFile[] } | null = null;
+
+/** `count` logical sectors from `lba`: 2048 bytes each, wherever the image keeps them. */
+async function readSectors(blob: Blob, layout: DiscLayout, lba: number, count: number): Promise<Uint8Array> {
+  const sector = Number(layout.sector);
+  const data = Number(layout.data);
+  const raw = new Uint8Array(await blob.slice(lba * sector, (lba + count) * sector).arrayBuffer());
+  if (sector === 2048) return raw;
+  const out = new Uint8Array(count * 2048);
+  for (let i = 0; i < count && i * sector + data < raw.length; i++) out.set(raw.subarray(i * sector + data, i * sector + data + 2048), i * 2048);
+  return out;
+}
+
+/** Lists a CD image's files, reading only its folders: a container, what it boots first. */
+async function openDisc(name: string, blob: Blob, layout: DiscLayout) {
+  const root = discRoot(await readSectors(blob, layout, 16, 1)) as [string, DiscFile] | null;
+  if (!root) throw new Error('no ISO 9660 volume on the disc');
+  const [volume, top] = root;
+  const files: DiscFile[] = [];
+  const folders = [top];
+  const seen = new Set<number>();
+  while (folders.length > 0 && files.length < 20_000) {
+    const d = folders.pop()!;
+    const lba = Number(d.lba);
+    if (seen.has(lba)) continue;
+    seen.add(lba);
+    const count = Math.min(64, Math.max(1, Math.ceil(Number(d.size) / 2048)));
+    for (const f of discRecords(await readSectors(blob, layout, lba, count), d.path) as DiscFile[]) {
+      if (f.dir) folders.push(f);
+      files.push(f);
+    }
+  }
+  const cnf = files.find((f) => !f.dir && f.path.toUpperCase() === 'SYSTEM.CNF');
+  const boot = cnf && cnf.size < 4096n ? (discBoot((await readSectors(blob, layout, Number(cnf.lba), 2)).subarray(0, Number(cnf.size))) ?? undefined) : undefined;
+  const sorted = (discSort(files, boot) as DiscFile[]).filter((f) => !f.dir);
+  disc = { blob, name, layout, files: sorted };
+  const members = sorted.map((f, index) => ({
+    index,
+    name: f.path,
+    offset: f.lba * layout.sector + layout.data,
+    size: f.size,
+    arch: boot && boot.toUpperCase() === f.path.toUpperCase() ? 'boots first' : undefined,
+    contiguous: layout.sector === 2048n,
+  }));
+  return { kind: 'container', name, info: { kind: volume ? `CD image (${volume})` : 'CD image', fileSize: BigInt(blob.size), members } };
+}
+
+/** Opens a file of the CD image open: its sectors read, then the binary. */
+async function openDiscFile(index: number) {
+  const d = disc!;
+  const f = d.files[index];
+  if (!f) throw new Error('no such file on the disc');
+  const bytes = await readSectors(d.blob, d.layout, Number(f.lba), Math.max(1, Math.ceil(Number(f.size) / 2048)));
+  return session!.open(`${d.name} [${f.path}]`, bytes.subarray(0, Number(f.size)));
 }
 
 // --- Folders of binaries ------------------------------------------------------
@@ -517,7 +583,15 @@ self.onmessage = async (event: MessageEvent<Request>) => {
     const wasm = await ready;
     session ??= new Session();
     let result: unknown;
-    if (method === 'openBlob' || method === 'attachBlob') {
+    const [discName, discBlob] = args as [string, Blob];
+    const layout =
+      method === 'openBlob' && discBlob.size > discPrefix() ? (discLayout(new Uint8Array(await discBlob.slice(0, discPrefix()).arrayBuffer())) as DiscLayout | null) : null;
+    if (method === 'openBlob') disc = null;
+    if (layout) {
+      result = await exclusive(() => openDisc(discName, discBlob, layout));
+    } else if (method === 'openMember' && disc) {
+      result = await exclusive(() => openDiscFile(args[0] as number));
+    } else if (method === 'openBlob' || method === 'attachBlob') {
       const [name, blob] = args as [string, Blob];
       result = await exclusive(async () => {
         const ptr = method === 'openBlob' ? session!.beginInput(blob.size) : session!.beginDebugInput(blob.size);

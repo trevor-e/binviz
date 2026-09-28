@@ -52,6 +52,11 @@ for (const f of ['tiny.rs', 'shapes.cpp']) {
   copyFileSync(join(root, 'tests', 'fixtures', 'src', f), join(samples, 'src', f));
 }
 writeFileSync(join(samples, 'Shop.xcarchive.zip'), samplePackage());
+// A Windows build with its PDB beside it, as MSVC leaves them: they pair by the PDB's name.
+if (existsSync(join(root, 'tests', 'fixtures', 'bin', 'pdbdemo.pdb'))) {
+  const bin = (f) => readFileSync(join(root, 'tests', 'fixtures', 'bin', f));
+  writeFileSync(join(samples, 'pdbdemo.zip'), zip([['Release/pdbdemo.exe', bin('pdbdemo.exe')], ['Release/pdbdemo.pdb', bin('pdbdemo.pdb')]]));
+}
 console.log('wasm ready');
 
 /**

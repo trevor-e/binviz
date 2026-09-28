@@ -80,10 +80,15 @@ impl Drop for Session {
 
 /// A private copy of a fixture, so notes files land in a temp dir.
 fn fixture_copy(name: &str) -> PathBuf {
+    fixture_copy_for(name, "")
+}
+
+/// A copy of a fixture in a folder of its own for one test (`test`), which may write next to it.
+fn fixture_copy_for(name: &str, test: &str) -> PathBuf {
     let src = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/fixtures/bin")
         .join(name);
-    let dir = std::env::temp_dir().join(format!("binviz-mcp-test-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("binviz-mcp-test-{}-{test}{name}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let dst = dir.join(name);
     std::fs::copy(src, &dst).unwrap();
@@ -353,4 +358,78 @@ fn objective_c_classes_and_senders() {
     assert!(code.contains("-[Greeter hello]"), "{code}");
     let (text, error) = s.call("objc", json!({ "name": "Greet" }));
     assert!(error && text.contains("similar: Greeter"), "{text}");
+}
+
+#[test]
+fn a_rom_with_an_emulators_log_and_labels() {
+    let path = fixture_copy_for("tiny.nes", "emulators-");
+    let dir = path.parent().unwrap().to_path_buf();
+    // FCEUX's log: bank 1's code ran at $8000; Mesen's labels name it and a RAM byte.
+    let mut log = vec![0u8; 0x12000];
+    log[0x4000..0x4007].fill(1);
+    std::fs::write(dir.join("tiny.cdl"), &log).unwrap();
+    std::fs::write(
+        dir.join("tiny.mlb"),
+        "P:4000:BankOne:switched in by reset\nR:0010:FrameCount\n",
+    )
+    .unwrap();
+    let mut s = Session::start();
+    s.ok("open_binary", json!({ "path": path.to_str().unwrap() }));
+    let read = s.ok("code_log", json!({ "path": dir.join("tiny.cdl").to_str().unwrap() }));
+    assert!(read.contains("FCEUX code/data log: 7 bytes of code"), "{read}");
+    let code = s.ok("disassemble", json!({ "at": "0x18000" }));
+    assert!(code.contains("jsr") && code.contains("0x18006"), "{code}");
+    let imported = s.ok("labels", json!({ "import": dir.join("tiny.mlb").to_str().unwrap() }));
+    assert!(imported.contains("2 notes added"), "{imported}");
+    let named = s.ok("disassemble", json!({ "at": "BankOne" }));
+    assert!(named.contains("BankOne"), "{named}");
+    let written = s.ok("labels", json!({ "export": "nl" }));
+    assert!(
+        written.contains("tiny.nes.1.nl") && written.contains("tiny.nes.ram.nl"),
+        "{written}"
+    );
+    let bank = std::fs::read_to_string(dir.join("tiny.nes.1.nl")).unwrap();
+    assert_eq!(bank, "$8000#BankOne#switched in by reset\n");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn what_a_patch_changes() {
+    let path = fixture_copy_for("tiny.nes", "patch-");
+    let dir = path.parent().unwrap().to_path_buf();
+    let mut hacked = std::fs::read(&path).unwrap();
+    hacked[0xC016] = 1;
+    std::fs::write(dir.join("hacked.nes"), &hacked).unwrap();
+    let mut s = Session::start();
+    s.ok("open_binary", json!({ "path": path.to_str().unwrap() }));
+    let ips = dir.join("hack.ips");
+    let made = s.ok(
+        "patch",
+        json!({ "target": dir.join("hacked.nes").to_str().unwrap(), "out": ips.to_str().unwrap() }),
+    );
+    assert!(made.contains("IPS patch"), "{made}");
+    let applied = s.ok("patch", json!({ "apply": ips.to_str().unwrap() }));
+    assert!(
+        applied.contains("1 run of changes, 1 byte differ")
+            && applied.contains("PRG bank 3 (fixed) 0x3c006 in reset+0x6"),
+        "{applied}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn two_builds_function_by_function() {
+    let old = fixture_copy_for("shapes-pe.exe", "functions-");
+    let new = fixture_copy_for("shapes-pe.stripped.exe", "functions-");
+    let mut s = Session::start();
+    let text = s.ok(
+        "diff_functions",
+        json!({ "old": old.to_str().unwrap(), "new": new.to_str().unwrap() }),
+    );
+    assert!(text.contains("identical") && text.contains("0 changed"), "{text}");
+    let code = s.ok(
+        "diff_functions",
+        json!({ "old": old.to_str().unwrap(), "new": new.to_str().unwrap(), "function": "total_area" }),
+    );
+    assert!(code.contains("Identical") && code.contains("= 0x"), "{code}");
 }

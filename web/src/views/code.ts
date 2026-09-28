@@ -2,7 +2,7 @@
 import { store } from '../store';
 import type { Disassembly, Instruction, SourceLoc } from '../types';
 import { emptyState } from '../ui';
-import { basename, debounce, formatCount, formatSize, h, hex } from '../util';
+import { basename, debounce, fmtAddr, formatCount, formatSize, h, hex } from '../util';
 import { VList } from '../vlist';
 import { View } from './base';
 import { objcSelectorOf } from './objc';
@@ -94,7 +94,7 @@ export class CodeView extends View {
       const needle = q.trim().toLowerCase();
       this.shown = [];
       this.sectionList.forEach((f, i) => {
-        if (!needle || f[2].toLowerCase().includes(needle) || hex(f[0]).includes(needle)) this.shown.push(i);
+        if (!needle || f[2].toLowerCase().includes(needle) || (hex(f[0]).includes(needle) || fmtAddr(f[0]).toLowerCase().includes(needle))) this.shown.push(i);
       });
       this.funcList.setCount(this.shown.length);
       return;
@@ -140,11 +140,12 @@ export class CodeView extends View {
     const row = h(
       'div',
       { class: `list-row${cur === addr ? ' selected' : ''}`, title: note?.comment ? `${name}\n${note.comment}` : name },
-      h('span', { class: 'addr' }, hex(addr)),
+      h('span', { class: 'addr' }, fmtAddr(addr)),
       h('span', { class: 'nm' }, name),
       note?.reviewed ? h('span', { class: 'reviewed', title: 'Reviewed' }, '✓') : null,
     );
-    row.addEventListener('click', () => void store.select({ address: addr }, { origin: 'code' }));
+    // Another function is somewhere else: a place Back returns from.
+    row.addEventListener('click', () => void store.select({ address: addr }, { origin: 'code', history: 'push' }));
     return row;
   }
 
@@ -175,6 +176,8 @@ export class CodeView extends View {
       this.rows.push({ kind: 'ins', ins, index });
     });
     this.renderHeader(d);
+    // The list is detached below: it must not draw rows that are gone.
+    if (!d.supported || d.instructions.length === 0) this.asmList.setCount(0);
     if (!d.supported) {
       this.asmHost.replaceChildren(emptyState(`No disassembler for ${store.file?.summary.arch}`, 'binviz decodes x86, x86-64, AArch64 and ARM. The hex view still shows these bytes.'));
       return;
@@ -196,7 +199,7 @@ export class CodeView extends View {
 
   private renderHeader(d: Disassembly) {
     const fn = d.function;
-    const name = fn ? (fn.demangled ?? fn.name) : `${hex(d.start)}`;
+    const name = fn ? (fn.demangled ?? fn.name) : fmtAddr(d.start);
     const btn = (label: string, onClick: () => void) => {
       const b = h('button', { class: 'btn small' }, label);
       b.addEventListener('click', onClick);
@@ -207,7 +210,7 @@ export class CodeView extends View {
     this.header.replaceChildren(
       h('h3', { class: 'mono', style: 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%', title: fn?.name ?? '' }, name),
       ...(note?.reviewed ? [h('span', { class: 'chip ok' }, 'Reviewed')] : []),
-      h('span', { class: 'secondary mono' }, `${hex(d.start)}..${hex(d.end)} · ${formatSize(d.end - d.start)} · ${count}${d.truncated ? '+' : ''} instructions`),
+      h('span', { class: 'secondary mono' }, `${fmtAddr(d.start)}..${fmtAddr(d.end)} · ${formatSize(d.end - d.start)} · ${count}${d.truncated ? '+' : ''} instructions`),
       h('span', { class: 'spacer' }),
       ...[this.callCounts(d)].filter((x): x is HTMLElement => x !== null),
       btn('Hex', () => void store.select({ address: d.start }, { view: 'hex' })),
@@ -262,6 +265,7 @@ export class CodeView extends View {
 
   private asmRow(i: number): HTMLElement {
     const r = this.rows[i];
+    if (!r) return h('div', { class: 'asm-row' });
     if (r.kind === 'src') {
       const lines = this.sourceLines(r.loc.file);
       const text = r.loc.line === 0 ? '(no line: compiler-generated code)' : (lines?.[r.loc.line - 1] ?? '');
@@ -281,7 +285,7 @@ export class CodeView extends View {
     const row = h(
       'div',
       { class: `asm-row${selected ? ' selected' : ''}` },
-      h('span', { class: 'addr' }, hex(ins.address)),
+      h('span', { class: 'addr' }, fmtAddr(ins.address)),
       h('span', { class: 'bytes' }, ins.bytes),
       h('span', { class: `mn${mnCls}` }, ins.mnemonic),
       h('span', { class: 'ops' }, ins.operands),
@@ -293,7 +297,7 @@ export class CodeView extends View {
       const cur = this.current;
       const local = cur && t >= cur.start && t < cur.end;
       const label = local ? `<+${hex(t - cur.start)}>` : ins.targetSymbol ? `<${ins.targetSymbol}>` : '';
-      const link = h('span', { class: 'tgt', title: `${hex(t)}${ins.targetSymbol ? ' ' + ins.targetSymbol : ''}` }, label);
+      const link = h('span', { class: 'tgt', title: `${fmtAddr(t)}${ins.targetSymbol ? ' ' + ins.targetSymbol : ''}` }, label);
       link.addEventListener('click', (e) => {
         e.stopPropagation();
         void store.select({ address: t }, { view: store.file && this.isCode(t) ? 'code' : 'hex' });

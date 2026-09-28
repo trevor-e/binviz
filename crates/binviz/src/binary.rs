@@ -94,6 +94,11 @@ impl Binary {
             }
             Ok(object::FileKind::Archive) => bail!("this is an archive; pick a member first"),
             Ok(object::FileKind::DyldCache) => bail!("dyld shared caches are not supported"),
+            Err(_) if crate::dwarf::pdb::is_pdb(bytes) => {
+                bail!(
+                    "this is a PDB, the debug info of a Windows binary: open the .exe or .dll it belongs to, then attach this file to it as its debug file"
+                )
+            }
             Err(_) => {
                 return match crate::rom::detect(bytes) {
                     Some(rom) => Binary::from_rom(data.clone(), rom),

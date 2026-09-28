@@ -10,7 +10,8 @@
 //! | `annotated`  | inside a user annotation (named range or comment)              |
 //! | `named`      | inside a symbol from the file or its debug info                |
 //! | `structure`  | inside a format structure binviz decodes (import tables...)    |
-//! | `recovered`  | inside a function found from unwind tables / function starts   |
+//! | `recovered`  | inside a function found from unwind tables / function starts,  |
+//! |              | or by following a ROM's code; strings; data a code/data log saw |
 //! | `padding`    | alignment filler (zeros, int3, nops) between the above         |
 //! | `unexplored` | anything else                                                  |
 
@@ -370,6 +371,23 @@ impl Binary {
                             .is_some_and(|t| t.iter().all(|&b| b == 0));
                         let len = s.len() as u64 + if nul { term as u64 } else { 0 };
                         intervals.push((a, a + len, MapStatus::Recovered));
+                    }
+                }
+            }
+            // Data a code/data log saw the game read counts as recovered too.
+            if let Some((log, _)) = self.rom.as_ref().and_then(|r| r.log.as_ref())
+                && let Some(off) = sec.file_offset
+            {
+                let mut run = None;
+                for i in 0..=sec.file_size {
+                    let data = i < sec.file_size && log.at(off + i) & crate::rom::cdl::flag::DATA != 0;
+                    match (data, run) {
+                        (true, None) => run = Some(i),
+                        (false, Some(s)) => {
+                            intervals.push((sec.address + s, sec.address + i, MapStatus::Recovered));
+                            run = None;
+                        }
+                        _ => {}
                     }
                 }
             }

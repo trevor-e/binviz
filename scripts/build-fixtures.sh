@@ -4,8 +4,9 @@
 # Everything is produced with the Rust toolchain's bundled rust-lld, so no
 # platform SDKs are needed. Required rustup targets:
 #   rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl aarch64-apple-darwin
-# Optional: a MinGW g++ on PATH (for the C++ PE fixture) and the llvm-tools
-# component (for the split-debug ELF pair). Python 3 writes the game ROMs.
+# Optional: a MinGW g++ on PATH (for the C++ PE fixture), the llvm-tools
+# component (for the split-debug ELF pair) and the x86_64-pc-windows-msvc
+# target (for the PE with a PDB). Python 3 writes the game ROMs.
 #
 # Pass --large to also build the std-linked "demo" binaries (~5 MB each) into
 # tests/fixtures/large (git-ignored), which are handy for manual testing.
@@ -95,6 +96,14 @@ if [ -x "$objcopy" ] || [ -x "$objcopy.exe" ]; then
     "$objcopy" --strip-all "$tmp/objc-macho-a64.chained" "$out/objc-macho-a64.chained.stripped"
 fi
 rm -rf "$tmp"
+
+if rustup target list --installed 2>/dev/null | grep -qx x86_64-pc-windows-msvc; then
+    echo "pdbdemo: PE x86-64 with its debug info in a PDB (windows-msvc, no C runtime)"
+    rustc "$src/pdbdemo.rs" --target x86_64-pc-windows-msvc -g -C opt-level=0 -C panic=abort \
+        -C linker="$lld" -C linker-flavor=lld-link \
+        -C link-arg=-NODEFAULTLIB -C link-arg=-ENTRY:start -C link-arg=-SUBSYSTEM:CONSOLE \
+        -o "$out/pdbdemo.exe"
+fi
 
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"
 python3 "$src/roms.py" "$out" 2>/dev/null || python "$src/roms.py" "$out"

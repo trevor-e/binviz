@@ -5,6 +5,7 @@ import { store } from '../store';
 import type { CategoryChange, FileCategory, FolderDiff, GroupKind, OwnerChange, SizeDiff } from '../types';
 import { formatCount, formatSize, h, num } from '../util';
 import { View } from './base';
+import { FunctionDiffPanel } from './functions-diff';
 
 const CATEGORY_LABELS: Record<FileCategory, string> = {
   binaries: 'Binaries',
@@ -43,12 +44,18 @@ interface Row {
 }
 
 export class DiffView extends View {
+  /** Functions compared, when two binaries are. */
+  private functions = new FunctionDiffPanel('baseline');
   private fileInput = h('input', { type: 'file', style: 'display:none' });
   private folderInput = h('input', { type: 'file', multiple: true, webkitdirectory: true, style: 'display:none' });
 
   constructor() {
     super('diff');
-    store.on('diff', () => this.invalidate());
+    store.on('diff', () => {
+      this.functions.reset();
+      this.invalidate();
+    });
+    store.on('file', () => this.functions.reset());
     this.fileInput.addEventListener('change', () => {
       const f = this.fileInput.files?.[0];
       this.fileInput.value = '';
@@ -78,9 +85,30 @@ export class DiffView extends View {
       if (d.stale && !d.busy) void store.refreshDiff();
       const r = d.result;
       if (r.kind === 'folder') this.folder(page, r.diff);
-      else this.binary(page, r.diff, true);
+      else {
+        this.binary(page, r.diff, true);
+        page.append(this.functionsCard());
+      }
     }
     this.el.replaceChildren(page);
+  }
+
+  /** The two binaries compared function by function, on demand (it decodes all their code). */
+  private functionsCard(): HTMLElement {
+    const host = h('div', { class: 'fd-host' });
+    const go = h('button', { class: 'btn small primary', type: 'button' }, 'Compare functions');
+    go.addEventListener('click', () => {
+      go.remove();
+      host.replaceChildren(this.functions.el);
+      void this.functions.show();
+    });
+    const card = h(
+      'div',
+      { class: 'card' },
+      h('div', { class: 'card-head' }, h('div', { style: 'flex:1' }, h('h2', null, 'Functions'), h('p', { class: 'sub' }, 'Which function is which in the two builds (by name, identical bytes, the same instructions, the call graph), what changed in each, and what was added or removed. Works on stripped builds too.')), go),
+      host,
+    );
+    return card;
   }
 
   private pick(): HTMLElement {

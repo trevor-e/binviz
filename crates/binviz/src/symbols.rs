@@ -698,25 +698,25 @@ impl SymbolTable {
         self.prepare_names();
         let suffix = format!("::{name}");
         // C++ demangled names carry parameter lists: compare the part before them.
-        let base = |d: &str| -> String {
+        fn base(d: &str) -> &str {
             let mut depth = 0;
             for (i, c) in d.char_indices() {
                 match c {
                     '<' => depth += 1,
                     '>' => depth -= 1,
-                    '(' if depth == 0 && i > 0 => return d[..i].to_string(),
+                    '(' if depth == 0 && i > 0 => return &d[..i],
                     _ => {}
                 }
             }
-            d.to_string()
-        };
+            d
+        }
+        // Demangled names, and names that were never mangled (a PDB's, say).
         let mut found = self.iter().filter(|s| {
-            s.defined
-                && (s
-                    .demangled()
-                    .map(|d| base(&d))
-                    .is_some_and(|d| d == name || d.ends_with(&suffix))
-                    || s.name().strip_prefix('_') == Some(name))
+            s.defined && {
+                let shown = s.display_name();
+                let d = base(&shown);
+                d == name || d.ends_with(&suffix) || s.name().strip_prefix('_') == Some(name)
+            }
         });
         let first = found.next()?;
         // Prefer functions if the suffix is ambiguous.

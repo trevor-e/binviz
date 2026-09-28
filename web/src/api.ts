@@ -1,5 +1,5 @@
 // Typed client for the WebAssembly session running in a worker.
-import type { Annotation, AttributedRange, Attribution, AttributionMode, BaselineSource, BinaryHeader, CallEdge, CallGraph, Comparison, ContainerInfo, Coverage, CrashReport, DebugMapObject, DebugMapReport, DieDetails, DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection, LineProgramInfo, LineRange, LineRow, MapStatus, ObjcCounts, ObjcEntry, ObjcInterface, ObjcKind, Opened, PackageInfo, PackageSource, PathEntry, PathStep, RefCounts, Reference, RefPage, RegionInfo, RegionKind, RelativeSearch, Resolved, ScopeInfo, SearchResults, Section, Segment, SelectorUses, SizeReport, SourceFile, Span, StringPage, Summary, Sym, Symbolicated, SymbolPage, SymbolQuery, TableText, TagCount, UnitInfo } from './types';
+import type { Annotation, AttributedRange, Attribution, AttributionMode, BaselineSource, BinaryHeader, CallEdge, CallGraph, Comparison, ContainerInfo, Coverage, CrashReport, DebugMapObject, DebugMapReport, DieDetails, DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection, LabelFile, LabelFormat, LabelImport, LogSummary, PatchFormat, PatchState, FunctionDiff, DiffLine, LineProgramInfo, LineRange, LineRow, MapStatus, ObjcCounts, ObjcEntry, ObjcInterface, ObjcKind, Opened, PackageInfo, PackageSource, PathEntry, PathStep, RefCounts, Reference, RefPage, RegionInfo, RegionKind, RelativeSearch, Resolved, ScopeInfo, SearchResults, Section, Segment, SelectorUses, SizeReport, SourceFile, Span, StringPage, Summary, Sym, Symbolicated, SymbolPage, SymbolQuery, TableText, TagCount, UnitInfo } from './types';
 
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
 
@@ -145,6 +145,25 @@ export class Api {
   tableDecode(offset: bigint, len: number) { return this.call<TableText>('tableDecode', offset, len); }
   tableFind(text: string, limit: number) { return this.call<TableText[]>('tableFind', text, limit); }
   tableStrings(min: number, limit: number) { return this.call<TableText[]>('tableStrings', min, limit); }
+  /** Reads the open ROM again with a code/data log (FCEUX's or Mesen's). */
+  codeLog(bytes: Uint8Array) { return this.call<LogSummary>('codeLog', bytes); }
+  codeLogSummary() { return this.call<LogSummary | null>('codeLogSummary'); }
+  codeLogFlags(offset: bigint, count: number) { return this.call<Uint16Array>('codeLogFlags', offset, count); }
+  readLabels(name: string, text: string) { return this.call<LabelImport>('readLabels', name, text); }
+  labelFormats() { return this.call<LabelFormat[]>('labelFormats'); }
+  writeLabels(format: LabelFormat) { return this.call<LabelFile[]>('writeLabels', format); }
+  /** Applies a patch file to the open file (replacing any patch or edits). */
+  patchApply(name: string, bytes: Uint8Array, limit: number) { return this.call<PatchState>('patchApply', name, bytes, limit); }
+  /** Writes bytes into the patched file (the open file's, the first time). */
+  patchEdit(offset: bigint, bytes: Uint8Array, limit: number) { return this.call<PatchState>('patchEdit', offset, bytes, limit); }
+  patchState(limit: number) { return this.call<PatchState | null>('patchState', limit); }
+  patchRead(offset: bigint, count: number) { return this.call<Uint8Array>('patchRead', offset, count); }
+  patchTarget() { return this.call<Uint8Array>('patchTarget'); }
+  patchCreate(format: PatchFormat) { return this.call<Uint8Array>('patchCreate', format); }
+  patchClear() { return this.call<void>('patchClear'); }
+  /** Functions compared: the earlier build with the open binary (`baseline`), or the open file with its patched copy (`patch`). */
+  functionDiff(side: 'baseline' | 'patch') { return this.call<FunctionDiff>('functionDiff', side); }
+  functionCode(side: 'baseline' | 'patch', old: bigint, updated: bigint) { return this.call<DiffLine[]>('functionCode', side, old, updated); }
 
   objcCounts() { return this.call<ObjcCounts>('objcCounts'); }
   objcEntries() { return this.call<ObjcEntry[]>('objcEntries'); }

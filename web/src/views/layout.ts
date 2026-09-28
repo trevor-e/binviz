@@ -1,11 +1,87 @@
-// Layout view: the file as a tree of regions, down to fields and table entries.
+// Layout: the file's parts. Its regions as a tree, down to single fields
+// and table entries; its segments and sections, as the loader sees them;
+// and how much of its code and data has been mapped out.
 import { familyOf } from '../colors';
 import { store } from '../store';
 import type { PathEntry, RegionInfo } from '../types';
 import { legend } from '../ui';
 import { formatSize, h, hex, icon, num } from '../util';
 import { VList } from '../vlist';
-import { View } from './base';
+import { type Panel, View } from './base';
+import { CoveragePanel } from './coverage';
+import { SectionsPanel } from './sections';
+
+type Tab = 'regions' | 'sections' | 'coverage';
+
+const TABS: { tab: Tab; label: string; blurb: string }[] = [
+  { tab: 'regions', label: 'Regions', blurb: 'Every byte of the file, nested by containment. Expand headers and tables down to single fields.' },
+  { tab: 'sections', label: 'Sections', blurb: 'Segments and sections: where each part of the file goes in memory.' },
+  { tab: 'coverage', label: 'Coverage', blurb: 'How much of the code and data is mapped out, and the largest stretches nothing explains yet.' },
+];
+
+const isTab = (s: string | undefined): s is Tab => TABS.some((t) => t.tab === s);
+
+export class LayoutView extends View {
+  private tab: Tab = 'regions';
+  private readonly regions = new RegionTree();
+  private readonly panels: Record<Tab, Panel> = { regions: this.regions, sections: new SectionsPanel(), coverage: new CoveragePanel() };
+  private tabs = new Map<Tab, HTMLButtonElement>();
+  private blurb = h('span', { class: 'secondary' });
+  private body = h('div', { class: 'layout-body' });
+
+  constructor() {
+    super('layout', true);
+    store.on('intent', () => {
+      if (this.visible && store.intent.region !== undefined) {
+        this.showTab('regions');
+        void this.regions.reveal(store.intent.region);
+      }
+    });
+  }
+
+  protected render() {
+    for (const p of Object.values(this.panels)) p.reset();
+    const bar = h('div', { class: 'tabs', role: 'tablist' });
+    this.tabs.clear();
+    for (const t of TABS) {
+      const b = h('button', { class: 'tab', type: 'button', role: 'tab', title: t.blurb }, t.label);
+      b.addEventListener('click', () => {
+        this.showTab(t.tab);
+        store.setViewState('layout', t.tab);
+      });
+      this.tabs.set(t.tab, b);
+      bar.appendChild(b);
+    }
+    this.el.replaceChildren(h('div', { class: 'toolbar' }, h('h3', null, 'Layout'), bar, this.blurb), this.body);
+    const want = store.viewState.layout;
+    this.showTab(isTab(want) ? want : this.tab, true);
+  }
+
+  protected onState() {
+    const want = store.viewState.layout;
+    if (isTab(want) && want !== this.tab) this.showTab(want);
+  }
+
+  private showTab(tab: Tab, force = false) {
+    if (tab === this.tab && !force && this.body.firstChild === this.panels[tab].el) return;
+    this.tab = tab;
+    for (const [t, b] of this.tabs) {
+      b.classList.toggle('active', t === tab);
+      b.setAttribute('aria-selected', String(t === tab));
+    }
+    this.blurb.textContent = TABS.find((t) => t.tab === tab)!.blurb;
+    const panel = this.panels[tab];
+    this.body.replaceChildren(panel.el);
+    panel.show();
+    panel.onSelection?.();
+  }
+
+  protected onSelection() {
+    this.panels[this.tab].onSelection?.();
+  }
+}
+
+// --- Regions ------------------------------------------------------------------------
 
 const ENTRY_PAGE = 100;
 
@@ -21,41 +97,39 @@ interface Row {
   open: boolean;
 }
 
-export class LayoutView extends View {
+/** The file as a tree of regions, down to fields and table entries. */
+class RegionTree implements Panel {
+  readonly el = h('div', { class: 'layout-tree' });
   private rows: Row[] = [];
   private list!: VList;
   private selectedKey?: string;
+  private stale = true;
 
-  constructor() {
-    super('layout', true);
-    store.on('intent', () => {
-      // Before the roots load, render() picks the intent up instead.
-      if (this.visible && this.rows.length > 0 && store.intent.region !== undefined) void this.reveal(store.intent.region);
-    });
+  reset() {
+    this.stale = true;
   }
 
-  protected render() {
+  show() {
+    if (!this.stale) return;
+    this.stale = false;
     const f = store.file!;
     this.rows = [];
     this.list = new VList({ rowHeight: 24, renderRow: (i) => this.row(i) });
     const head = h(
       'div',
-      { class: 'tree-row', style: 'font-weight:600;color:var(--text-2);cursor:default;border-bottom:1px solid var(--border);background:var(--surface)' },
+      { class: 'tree-row tree-head' },
       h('span', { class: 'twisty' }),
-      h('span', { class: 'range', style: 'color:var(--text-2);font-family:var(--sans)' }, 'File range'),
-      h('span', { class: 'size', style: 'font-family:var(--sans)' }, 'Size'),
+      h('span', { class: 'range' }, 'File range'),
+      h('span', { class: 'size' }, 'Size'),
       h('span', { class: 'label' }, 'Region = value'),
     );
-    this.el.replaceChildren(
-      h('div', { class: 'toolbar' }, h('h3', null, 'Layout'), h('span', { class: 'secondary' }, 'Every byte of the file, nested by containment. Expand headers and tables down to single fields.'), h('span', { class: 'spacer' }), legend(new Set(f.composition.map(([k]) => familyOf(k))))),
-      head,
-      this.list.el,
-    );
+    this.el.replaceChildren(h('div', { class: 'layout-legend' }, legend(new Set(f.composition.map(([k]) => familyOf(k))))), head, this.list.el);
     void store.api.regions().then((roots) => {
       if (store.file !== f) return;
       this.rows = roots.map((r) => ({ key: `r${r.id}`, depth: 0, type: 'region', region: r, open: false }));
       this.list.setCount(this.rows.length);
       if (store.intent.region !== undefined) void this.reveal(store.intent.region);
+      else this.onSelection();
     });
   }
 
@@ -157,7 +231,9 @@ export class LayoutView extends View {
   }
 
   /** Expands the tree along the path to `offset` and selects the innermost region. */
-  private async reveal(offset: bigint) {
+  async reveal(offset: bigint) {
+    // Still loading: the roots pick the intent up.
+    if (this.rows.length === 0) return;
     store.intent = {};
     const ins = await store.api.inspectOffset(offset);
     const ids = ins.path.map((p) => p.id).filter((id): id is number => id !== undefined);
@@ -175,7 +251,7 @@ export class LayoutView extends View {
     }
   }
 
-  protected onSelection() {
+  onSelection() {
     if (!this.list || store.selection.origin === 'layout') return;
     const off = store.selection.offset;
     if (off === undefined) return;

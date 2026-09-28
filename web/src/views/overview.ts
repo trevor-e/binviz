@@ -1,15 +1,25 @@
 // Overview: identity, byte composition, file map and the file ↔ memory diagram.
-import { FAMILIES, KIND_LABELS, entropyColor, entropyRamp, familyColors, familyOf, type Family } from '../colors';
+import { FAMILIES, KIND_LABELS, STATUS_LABELS, entropyColor, entropyRamp, familyColors, familyOf, statusColors, type Family } from '../colors';
 import { store } from '../store';
-import type { RegionInfo, RegionKind } from '../types';
-import { emptyState, legend, swatch, tooltip } from '../ui';
-import { basename, debounce, formatCount, formatSize, h, hex, num, percent } from '../util';
+import type { LabelFormat, LogSummary, MapStatus, RegionInfo, RegionKind } from '../types';
+import { downloadText, emptyState, legend, swatch, toast, tooltip } from '../ui';
+import { basename, debounce, fmtAddr, formatCount, formatSize, h, hex, num, percent } from '../util';
 import { View } from './base';
+import { statusLegend } from './coverage';
+
+type MapMode = 'regions' | 'entropy' | 'coverage';
+const MAP_MODES: { mode: MapMode; label: string; title: string }[] = [
+  { mode: 'regions', label: 'Regions', title: 'What each part of the file is' },
+  { mode: 'entropy', label: 'Entropy', title: 'How random the bytes are: compressed or encrypted data stands out' },
+  { mode: 'coverage', label: 'Coverage', title: 'How much is mapped out while reverse engineering: named, recovered, still unexplored' },
+];
 
 export class OverviewView extends View {
-  private mapMode: 'regions' | 'entropy' = 'regions';
+  private mapMode: MapMode = 'regions';
   private kinds: RegionKind[] = [];
   private entropy: Float32Array = new Float32Array();
+  /** Coverage per cell, read when first shown (and again when notes change). */
+  private statuses: MapStatus[] = [];
   private buckets = 0;
   private canvas?: HTMLCanvasElement;
   private hover = -1;
@@ -21,6 +31,10 @@ export class OverviewView extends View {
       'resize',
       debounce(() => this.visible && this.canvas && this.loadMap(), 200),
     );
+    store.on('annotations', () => {
+      this.statuses = [];
+      if (this.visible && this.mapMode === 'coverage') void this.loadCoverage();
+    });
   }
 
   protected render() {
@@ -49,7 +63,7 @@ export class OverviewView extends View {
     ];
     if (s.entry !== undefined) {
       const entry = s.entry;
-      const link = h('span', { class: 'link mono' }, hex(entry));
+      const link = h('span', { class: 'link mono' }, fmtAddr(entry));
       link.addEventListener('click', () => void store.select({ address: entry }, { view: 'code' }));
       facts.push(['Entry point', link]);
     }
@@ -104,12 +118,36 @@ export class OverviewView extends View {
     );
   }
 
-  /** A ROM's code: how it was found. */
+  /** A ROM's code: how it was found, and what emulators add (a code/data log, label files). */
   private romCard(): HTMLElement {
     const s = store.file!.summary;
     const found = s.properties.find((p) => p.key === 'Code found')?.value ?? '';
-    const open = h('button', { class: 'btn' }, 'Open the code');
+    const open = h('button', { class: 'btn small' }, 'Open the code');
     open.addEventListener('click', () => store.setView('code'));
+    const logInput = h('input', { type: 'file', accept: '.cdl,application/octet-stream', style: 'display:none' });
+    logInput.addEventListener('change', async () => {
+      const file = logInput.files?.[0];
+      logInput.value = '';
+      if (file) await loadCodeLog(file);
+    });
+    const loadLog = h('button', { class: 'btn small', type: 'button', title: 'A .cdl file from FCEUX’s or Mesen’s code/data logger' }, store.codeLog ? 'Load another log…' : 'Load code/data log…');
+    loadLog.addEventListener('click', () => logInput.click());
+    const labelInput = h('input', { type: 'file', accept: '.mlb,.nl,.sym,.txt', style: 'display:none' });
+    labelInput.addEventListener('change', async () => {
+      const file = labelInput.files?.[0];
+      labelInput.value = '';
+      if (file) await importLabels(file);
+    });
+    const importBtn = h('button', { class: 'btn small', type: 'button', title: 'Mesen’s .mlb, FCEUX’s .nl, a .sym (RGBDS, WLA DX, no$gba): the names become your notes' }, 'Import labels…');
+    importBtn.addEventListener('click', () => labelInput.click());
+    const exports = h('span', { class: 'btn-row' });
+    void store.api.labelFormats().then((formats) => {
+      for (const f of formats) {
+        const b = h('button', { class: 'btn small', type: 'button', title: 'Your notes’ names and comments, for the emulator’s debugger' }, `Export ${LABEL_NAMES[f]}`);
+        b.addEventListener('click', () => void exportLabels(f));
+        exports.appendChild(b);
+      }
+    });
     return h(
       'div',
       { class: 'card' },
@@ -117,6 +155,10 @@ export class OverviewView extends View {
       h('p', { class: 'sub' }, found),
       h('p', { class: 'secondary' }, 'A ROM mixes code with graphics, tables and text. binviz follows the code from the reset and interrupt vectors, each call and branch in turn; what nothing reaches stays unexplored until you name it.'),
       open,
+      h('h3', { class: 'card-sub' }, 'From emulators'),
+      h('p', { class: 'secondary' }, 'Play the game with FCEUX’s or Mesen’s code/data logger on, then load its log (or drop the .cdl here): code only reached through jump tables is followed too, data the game read isn’t taken for code, and an NES game’s switched banks go where they ran.'),
+      h('p', { class: 'sub' }, logLine(store.codeLog)),
+      h('div', { class: 'btn-row' }, loadLog, importBtn, exports, logInput, labelInput),
     );
   }
 
@@ -131,8 +173,8 @@ export class OverviewView extends View {
           ? 'On macOS, DWARF usually lives in a .dSYM bundle (…/Contents/Resources/DWARF/<name>) or in the object files listed by the debug map.'
           : f.summary.format === 'pe'
             ? f.summary.debugLink
-              ? `This image references a PDB (${f.summary.debugLink}). PDB files are not supported yet; binaries built with MinGW or the Rust gnu toolchain carry DWARF.`
-              : 'No DWARF sections. Binaries built with MinGW or the Rust gnu toolchain carry DWARF.'
+              ? `Its debug info is in a PDB (${f.summary.debugLink}). Add it to see its functions, source lines and compilation units.`
+              : 'No debug info. MSVC builds keep it in a PDB (this image names none); MinGW and the Rust gnu toolchain put DWARF in the binary.'
             : f.summary.debugLink
               ? `Debug info was split into ${f.summary.debugLink.split(' ')[0]}. Add it to see source mapping.`
               : 'No DWARF sections in this file. Rebuild with -g, or add a separate debug file.';
@@ -170,13 +212,15 @@ export class OverviewView extends View {
 
   private fileMapCard(): HTMLElement {
     this.canvas = h('canvas', { role: 'img', 'aria-label': 'File map: each cell is a slice of the file, coloured by what it contains' });
+    this.statuses = [];
     const toggle = h('div', { class: 'tabs' });
-    for (const mode of ['regions', 'entropy'] as const) {
-      const b = h('button', { class: `tab${this.mapMode === mode ? ' active' : ''}` }, mode === 'regions' ? 'Regions' : 'Entropy');
+    for (const { mode, label, title } of MAP_MODES) {
+      const b = h('button', { class: `tab${this.mapMode === mode ? ' active' : ''}`, type: 'button', title }, label);
       b.addEventListener('click', () => {
         this.mapMode = mode;
         toggle.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === b));
         keyHost.replaceChildren(this.mapKey());
+        if (mode === 'coverage' && this.statuses.length === 0) void this.loadCoverage();
         this.drawMap();
       });
       toggle.appendChild(b);
@@ -207,6 +251,14 @@ export class OverviewView extends View {
       const present = new Set<Family>(store.file!.composition.map(([k]) => familyOf(k)));
       return legend(present);
     }
+    if (this.mapMode === 'coverage') {
+      const more = h('span', { class: 'link', style: 'font-size:12px' }, 'Sections and unexplored gaps…');
+      more.addEventListener('click', () => {
+        store.viewState.layout = 'coverage';
+        store.setView('layout');
+      });
+      return h('div', { style: 'display:flex;align-items:center;gap:12px;flex-wrap:wrap' }, statusLegend(), more);
+    }
     const ramp = entropyRamp();
     return h('div', { class: 'ramp' }, h('span', null, 'Entropy: 0 (uniform)'), h('div', { class: 'bar', style: `background:linear-gradient(90deg,${ramp.join(',')})` }), h('span', null, '1 (random: compressed or encrypted)'));
   }
@@ -228,6 +280,18 @@ export class OverviewView extends View {
     this.kinds = kinds;
     this.entropy = entropy;
     this.buckets = buckets;
+    this.statuses = [];
+    if (this.mapMode === 'coverage') await this.loadCoverage();
+    this.drawMap();
+  }
+
+  private async loadCoverage() {
+    const f = store.file;
+    const buckets = this.buckets;
+    if (!f || !buckets) return;
+    const statuses = await store.api.coverageMap(buckets);
+    if (store.file !== f || this.buckets !== buckets) return;
+    this.statuses = statuses;
     this.drawMap();
   }
 
@@ -247,12 +311,18 @@ export class OverviewView extends View {
     const g = c.getContext('2d')!;
     g.scale(dpr, dpr);
     const colors = familyColors();
+    const status = statusColors();
     const n = Math.min(this.buckets, this.kinds.length);
     const size = cell - 1;
     for (let i = 0; i < n; i++) {
       const x = (i % cols) * cell;
       const y = Math.floor(i / cols) * cell;
-      g.fillStyle = this.mapMode === 'regions' ? colors[familyOf(this.kinds[i])] : entropyColor(this.entropy[i] ?? 0);
+      g.fillStyle =
+        this.mapMode === 'regions'
+          ? colors[familyOf(this.kinds[i])]
+          : this.mapMode === 'entropy'
+            ? entropyColor(this.entropy[i] ?? 0)
+            : status[this.statuses[i] ?? 'padding'];
       g.fillRect(x, y, size, size);
     }
     const ink = getComputedStyle(document.documentElement).getPropertyValue('--sel-ring').trim();
@@ -287,11 +357,13 @@ export class OverviewView extends View {
     }
     const [start, end] = this.bucketRange(i);
     const kind = this.kinds[i];
+    const st = this.statuses[i];
     tooltip.show(
       e.clientX,
       e.clientY,
       h('div', { class: 't-value' }, `${hex(start)} – ${hex(end)}`),
       h('div', { class: 't-row' }, h('span', { class: 't-key', style: `background:${familyColors()[familyOf(kind)]}` }), `Mostly ${KIND_LABELS[kind].toLowerCase()}`),
+      this.mapMode === 'coverage' && st ? h('div', { class: 't-row' }, h('span', { class: 't-key', style: `background:${statusColors()[st]}` }), STATUS_LABELS[st]) : '',
       h('div', { class: 'muted' }, `Entropy ${(this.entropy[i] ?? 0).toFixed(2)} · ${formatSize(end - start)} per cell`),
     );
   }
@@ -482,7 +554,7 @@ export class OverviewView extends View {
           (e as PointerEvent).clientX,
           (e as PointerEvent).clientY,
           h('div', { class: 't-value' }, b.label),
-          h('div', null, `file ${hex(b.fo)}..${hex(b.fo + b.fs)} → memory ${hex(b.addr)}..${hex(b.addr + b.size)}`),
+          h('div', null, `file ${hex(b.fo)}..${hex(b.fo + b.fs)} → memory ${fmtAddr(b.addr)}..${fmtAddr(b.addr + b.size)}`),
           h('div', { class: 'muted' }, `${formatSize(b.fs)} of file data${BigInt(b.fs) < b.size ? `, plus ${formatSize(b.size - BigInt(b.fs))} zero-filled` : ''}`),
         ),
       );
@@ -526,7 +598,7 @@ export class OverviewView extends View {
       box(
         xM, memY[i], colW, memH[i], m.kind, m.label, `${m.perms} ${formatSize(span)}`,
         () => void store.select({ address: m.start }, { view: m.perms.includes('x') ? 'code' : 'hex' }),
-        () => [h('div', { class: 't-value' }, m.label), h('div', null, `${hex(m.start)}..${hex(m.end)} (${m.perms})`), h('div', { class: 'muted' }, `${formatSize(span)}${zeroFill > 0 ? ` · ${formatSize(span - m.fileBacked)} zero-filled at load time` : ''}`)],
+        () => [h('div', { class: 't-value' }, m.label), h('div', null, `${fmtAddr(m.start)}..${fmtAddr(m.end)} (${m.perms})`), h('div', { class: 'muted' }, `${formatSize(span)}${zeroFill > 0 ? ` · ${formatSize(span - m.fileBacked)} zero-filled at load time` : ''}`)],
         zeroFill,
       );
     });
@@ -545,4 +617,43 @@ function quantile(values: number[], q: number): number {
 function fit(label: string, px: number): string {
   const max = Math.max(4, Math.floor(px / 6.2));
   return label.length > max ? label.slice(0, max - 1) + '…' : label;
+}
+
+const LABEL_NAMES: Record<LabelFormat, string> = { mlb: 'for Mesen', nl: 'for FCEUX', sym: '.sym', 'no-cash': 'for no$gba' };
+
+function logLine(s: LogSummary | null): string {
+  if (!s) return 'No code/data log loaded.';
+  const pct = (n: bigint) => percent(num(n), num(s.bytes));
+  const parts = [`${s.format === 'fceux' ? 'FCEUX' : s.format === 'mesen' ? 'Mesen' : 'Mesen 2'} log: ${formatSize(s.code)} of code (${pct(s.code)}), ${formatSize(s.data)} of data (${pct(s.data)})`];
+  if (s.pagesPlaced > 0) parts.push(`${s.pagesPlaced} PRG pages placed where they ran`);
+  if (s.crcMatches === false) parts.push('made for another version of the ROM');
+  return parts.join(' · ');
+}
+
+/** Loads a code/data log for the open ROM, and says what it covers. */
+export async function loadCodeLog(file: File) {
+  const s = await store.loadCodeLog(file.name, file);
+  if (s) toast(logLine(s), s.crcMatches === false ? 'error' : 'info');
+}
+
+/** Imports an emulator's label file into the notes. */
+export async function importLabels(file: File) {
+  try {
+    const r = await store.importLabels(file.name, await file.text());
+    if (!r) return;
+    const extra = [r.skipped ? `${formatCount(r.skipped)} for places binviz can’t place (a switched bank’s address without its bank)` : '', r.directives ? `${formatCount(r.directives)} directives` : ''].filter(Boolean);
+    toast(`Imported ${formatCount(r.labels.length)} labels from ${file.name}${extra.length ? `; skipped ${extra.join(' and ')}` : ''}`);
+  } catch (e) {
+    toast(e instanceof Error ? e.message : String(e), 'error');
+  }
+}
+
+async function exportLabels(format: LabelFormat) {
+  try {
+    const files = await store.exportLabels(format);
+    if (store.annotations.length === 0) toast('No notes to export yet: name functions and places first (N, or the inspector).', 'error');
+    for (const f of files) downloadText(f.name, f.text);
+  } catch (e) {
+    toast(e instanceof Error ? e.message : String(e), 'error');
+  }
 }

@@ -1,9 +1,12 @@
-// Hex view: every byte, tinted by the structure it belongs to.
+// Hex view: every byte, tinted by the structure it belongs to. With a patch
+// (or edits) the patched bytes show, those that changed marked; in edit mode
+// hex digits typed over a byte (or text typed in the text column, read
+// through the table file when there is one) change it.
 import { familyColors, familyOf, type Family } from '../colors';
 import { store } from '../store';
 import type { Span } from '../types';
 import { legend, tooltip } from '../ui';
-import { debounce, escapeHtml, h, hex, hexPad, num } from '../util';
+import { debounce, escapeHtml, fmtAddr, h, hex, hexPad, num } from '../util';
 import { VList } from '../vlist';
 import { View } from './base';
 
@@ -29,10 +32,25 @@ export class HexView extends View {
   private selRange: { start: bigint; end: bigint } | null = null;
   private status!: HTMLElement;
   private offWidth = 8;
+  /** The open file's bytes where a patch changes them (a page's worth), to mark changed bytes. */
+  private originals = new Map<number, Uint8Array>();
+  /** Typing changes bytes. */
+  private editing = false;
+  /** Where typing goes: the byte column (hex digits) or the text column. */
+  private column: 'hex' | 'text' = 'hex';
+  /** The first hex digit typed for the selected byte. */
+  private nibble: number | null = null;
+  private editBtn?: HTMLButtonElement;
 
   constructor() {
     super('hex', true);
     window.addEventListener('themechange', () => this.visible && this.drawMinimap());
+    // Patched and edited bytes show as they are now.
+    store.on('patch', () => {
+      this.pages.clear();
+      this.originals.clear();
+      if (this.list) this.list.refresh();
+    });
     // Text read through a game's table file, when there is one.
     store.on('table', () => {
       if (this.list) {
@@ -47,7 +65,9 @@ export class HexView extends View {
     this.spans.clear();
     this.loading.clear();
     this.pages.clear();
+    this.originals.clear();
     this.pageLoading.clear();
+    this.nibble = null;
     this.offWidth = Math.max(8, num(f.summary.fileSize).toString(16).length);
     const hasVA = f.segments.some((s) => s.mapped) || f.sections.some((s) => s.loaded && s.fileOffset !== undefined);
     this.showVA = hasVA;
@@ -60,6 +80,8 @@ export class HexView extends View {
     });
     this.status = h('span', { class: 'mono secondary' });
     const present = new Set<Family>(f.composition.map(([k]) => familyOf(k)));
+    this.editBtn = h('button', { class: `btn small${this.editing ? ' primary' : ''}`, type: 'button', title: 'Type over bytes: hex digits in the byte column, text in the text column (through the table file, when there is one). Edits collect in the Patch view, to save as a patch.' }, this.editing ? 'Editing' : 'Edit');
+    this.editBtn.addEventListener('click', () => this.setEditing(!this.editing));
     const toolbar = h(
       'div',
       { class: 'toolbar' },
@@ -68,6 +90,7 @@ export class HexView extends View {
       h('span', { class: 'spacer' }),
       legend(present),
       h('label', { class: 'secondary', style: 'display:flex;gap:4px;align-items:center' }, vaToggle, 'Addresses'),
+      this.editBtn,
     );
     const header = h('div', { class: 'hex-header' }, ...this.headerCells());
     this.header = header;
@@ -76,6 +99,8 @@ export class HexView extends View {
     this.list.setCount(Math.ceil(num(f.summary.fileSize) / ROW));
     this.list.el.addEventListener('click', (e) => {
       const o = this.offsetFromEvent(e);
+      this.column = (e.target as HTMLElement).closest('.ascii') ? 'text' : 'hex';
+      this.nibble = null;
       if (o !== undefined) void store.select({ offset: o }, { origin: 'hex' });
     });
     this.list.el.addEventListener('mouseover', (e) => this.onHover(e));
@@ -133,7 +158,7 @@ export class HexView extends View {
     return undefined;
   }
 
-  /** A page of the file's bytes, or undefined while it is being read. */
+  /** A page of the file's bytes (patched, with a patch), or undefined while it is being read. */
   private pageBytes(page: number): Uint8Array | undefined {
     const cached = this.pages.get(page);
     if (cached) return cached;
@@ -141,11 +166,19 @@ export class HexView extends View {
     if (!this.pageLoading.has(page)) {
       this.pageLoading.add(page);
       const start = page * PAGE;
-      void store.readBytes(start, start + PAGE).then((bytes) => {
+      const patched = store.patch !== null;
+      const read = patched
+        ? Promise.all([store.readPatched(BigInt(start), PAGE), store.readBytes(start, start + PAGE)])
+        : store.readBytes(start, start + PAGE).then((b) => [b, null] as const);
+      void read.then(([bytes, original]) => {
         this.pageLoading.delete(page);
         if (store.file?.name !== f.name || store.file.summary.fingerprint !== f.summary.fingerprint) return;
-        if (this.pages.size >= MAX_PAGES) this.pages.clear();
+        if (this.pages.size >= MAX_PAGES) {
+          this.pages.clear();
+          this.originals.clear();
+        }
         this.pages.set(page, bytes);
+        if (original) this.originals.set(page, original);
         this.list.refresh();
       }, (e) => {
         this.pageLoading.delete(page);
@@ -161,6 +194,7 @@ export class HexView extends View {
     const end = Math.min(off + ROW, num(f.summary.fileSize));
     const page = Math.floor(off / PAGE);
     const bytes = this.pageBytes(page);
+    const original = this.originals.get(page);
     const base = page * PAGE;
     const spans = this.blockSpans(Math.floor(off / BLOCK)) ?? [];
     let si = 0;
@@ -187,9 +221,11 @@ export class HexView extends View {
       }
       const b = bytes[o - base];
       let extra = b === 0 ? ' zero' : '';
-      if (o === sel) extra += ' sel';
+      if (original && original[o - base] !== b) extra += ' changed';
+      if (o === sel) extra += this.editing ? ` sel cursor-${this.column}` : ' sel';
       if ((hl && big >= hl.start && big < hl.end) || (hov && big >= hov.start && big < hov.end)) extra += ' hl';
-      hexHtml += `<span class="b${gap} ${cls}${extra}" data-o="${o}">${hexPad(b, 2)}</span>`;
+      const shown = o === sel && this.nibble !== null ? `${this.nibble.toString(16).toUpperCase()}_` : hexPad(b, 2);
+      hexHtml += `<span class="b${gap} ${cls}${extra}" data-o="${o}">${shown}</span>`;
       let ch: string;
       if (table) {
         // As the table reads it: one character per byte (longer entries by their first).
@@ -204,7 +240,7 @@ export class HexView extends View {
     let va = '';
     if (this.showVA) {
       const a = store.addressOf(BigInt(off));
-      va = `<span class="va">${a !== undefined ? '0x' + hexPad(a, 16).replace(/^0{1,12}(?=[0-9a-f]{4})/, '') : ''}</span>`;
+      va = `<span class="va">${a === undefined ? '' : store.file?.summary.format === 'rom' ? fmtAddr(a) : '0x' + hexPad(a, 16).replace(/^0{1,12}(?=[0-9a-f]{4})/, '')}</span>`;
     }
     const row = document.createElement('div');
     row.className = 'hex-row';
@@ -227,7 +263,7 @@ export class HexView extends View {
     const leaf = ins.path[ins.path.length - 1];
     this.setHover(leaf ? { start: leaf.start, end: leaf.end } : null);
     const colors = familyColors();
-    const rows: Node[] = [h('div', { class: 't-value' }, `${hex(o)}${ins.address !== undefined ? ` · ${hex(ins.address)}` : ''}`)];
+    const rows: Node[] = [h('div', { class: 't-value' }, `${hex(o)}${ins.address !== undefined ? ` · ${fmtAddr(ins.address)}` : ''}`)];
     ins.path.slice(-4).forEach((p) =>
       rows.push(h('div', { class: 't-row' }, h('span', { class: 't-key', style: `background:${colors[familyOf(p.kind)]}` }), h('span', null, p.name, p.value ? h('span', { class: 'muted' }, ` = ${truncate(p.value, 60)}`) : null))),
     );
@@ -242,9 +278,71 @@ export class HexView extends View {
     this.list.refresh();
   }
 
+  private setEditing(on: boolean) {
+    this.editing = on;
+    this.nibble = null;
+    if (this.editBtn) {
+      this.editBtn.textContent = on ? 'Editing' : 'Edit';
+      this.editBtn.classList.toggle('primary', on);
+    }
+    this.list?.refresh();
+    this.list?.el.focus();
+    this.onSelection();
+  }
+
+  /** Edit mode: a hex digit or a character typed over the selected byte. */
+  private edit(e: KeyboardEvent, sel: bigint): boolean {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      void store.undoEdit();
+      return true;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return false;
+    if (e.key === 'Escape') {
+      this.nibble = null;
+      this.setEditing(false);
+      return true;
+    }
+    const write = (value: number) => {
+      e.preventDefault();
+      this.nibble = null;
+      void store.editBytes(sel, new Uint8Array([value])).then(() => {
+        const next = sel + 1n < store.file!.summary.fileSize ? sel + 1n : sel;
+        void store.select({ offset: next }, { origin: 'hex' });
+      });
+    };
+    if (this.column === 'hex') {
+      if (!/^[0-9a-f]$/i.test(e.key)) return false;
+      const d = parseInt(e.key, 16);
+      if (this.nibble === null) {
+        e.preventDefault();
+        this.nibble = d;
+        this.list.refresh();
+      } else write((this.nibble << 4) | d);
+      return true;
+    }
+    if (e.key.length !== 1) return false;
+    // Text: through the table file's one-byte entries, else ASCII.
+    const table = store.table?.chars;
+    const value = table ? table.findIndex((c) => c === e.key) : e.key.charCodeAt(0) < 0x7f ? e.key.charCodeAt(0) : -1;
+    if (value < 0) {
+      e.preventDefault();
+      this.status.textContent = table ? `“${e.key}” isn’t a one-byte entry of the table file` : `“${e.key}” isn’t ASCII`;
+      return true;
+    }
+    write(value);
+    return true;
+  }
+
   private onKey(e: KeyboardEvent) {
     const sel = store.selection.offset;
     if (sel === undefined) return;
+    if (this.editing && this.edit(e, sel)) {
+      // Typed over a byte: not a shortcut too.
+      e.stopPropagation();
+      return;
+    }
+    this.nibble = null;
     const size = store.file!.summary.fileSize;
     const page = BigInt(Math.max(1, this.list.visibleCount() - 2) * ROW);
     const moves: Record<string, bigint> = { ArrowLeft: -1n, ArrowRight: 1n, ArrowUp: -16n, ArrowDown: 16n, PageUp: -page, PageDown: page };
@@ -256,7 +354,7 @@ export class HexView extends View {
     e.preventDefault();
     next = next < 0n ? 0n : next >= size ? size - 1n : next;
     this.list.scrollToIndex(num(next / 16n));
-    void store.select({ offset: next }, { origin: 'hex', history: false });
+    void store.select({ offset: next }, { origin: 'hex' });
   }
 
   protected onSelection() {
@@ -265,7 +363,8 @@ export class HexView extends View {
     this.selRange = leaf ? { start: leaf.start, end: leaf.end } : null;
     if (sel.offset !== undefined && sel.origin !== 'hex') this.list.scrollToIndex(num(sel.offset / 16n), 'center');
     this.list.refresh();
-    this.status.textContent = sel.offset !== undefined ? `offset ${hex(sel.offset)}${sel.address !== undefined ? ` · address ${hex(sel.address)}` : ''}` : sel.address !== undefined ? `address ${hex(sel.address)} has no file bytes` : '';
+    this.status.textContent = sel.offset !== undefined ? `offset ${hex(sel.offset)}${sel.address !== undefined ? ` · address ${fmtAddr(sel.address)}` : ''}` : sel.address !== undefined ? `address ${fmtAddr(sel.address)} has no file bytes` : '';
+    if (this.editing) this.status.textContent += this.column === 'hex' ? ' · type hex digits, Ctrl+Z undoes, Esc stops' : ` · type text${store.table ? ' (through the table file)' : ''}, Ctrl+Z undoes, Esc stops`;
   }
 
   private onRange(first: number, last: number) {

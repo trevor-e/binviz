@@ -88,6 +88,10 @@ impl Binary {
     /// `.debug` file (from `objcopy --only-keep-debug`), or an unstripped copy.
     pub fn attach_debug_file(&mut self, name: &str, data: impl Into<Arc<[u8]>>) -> Result<()> {
         let mut data: Arc<[u8]> = data.into();
+        // A PDB: read into DWARF.
+        if dwarf::pdb::is_pdb(&data) {
+            return self.attach_pdb(name, &data);
+        }
         // dSYMs of universal binaries are universal too: pick our architecture.
         if let Ok(object::FileKind::MachOFat32 | object::FileKind::MachOFat64) = object::FileKind::parse(&*data) {
             let Machine::MachO(cputype) = self.machine else {
@@ -145,6 +149,51 @@ impl Binary {
         }
         if debug.is_none() && syms.recs.is_empty() {
             bail!("{name} contains neither DWARF nor symbols");
+        }
+        self.debug_symbols = syms;
+        if let Some(debug) = debug {
+            self.summary.has_dwarf = true;
+            self.debug = Some(debug);
+        }
+        self.rebuild_static_symbols();
+        Ok(())
+    }
+
+    /// Attaches a PDB (Microsoft's debug info): its modules, functions, globals
+    /// and line records read into DWARF, its procedures and public symbols
+    /// naming what the binary doesn't.
+    fn attach_pdb(&mut self, name: &str, data: &[u8]) -> Result<()> {
+        if self.summary.format != crate::model::Format::Pe {
+            bail!("{name} is a PDB, the debug info of Windows binaries; this binary isn't one");
+        }
+        let converted = dwarf::pdb::convert(data, self.image_base)?;
+        // The GUID says which build a PDB is for (its age only how often it was written).
+        let Some(ours) = &self.summary.build_id else {
+            bail!("this binary names no PDB (it has no CodeView record), so {name} can't be matched to it");
+        };
+        if ours.get(..32) != converted.id.get(..32) {
+            bail!(
+                "{name} does not match this binary (its GUID differs: this binary wants {ours}, the PDB is {})",
+                converted.id
+            );
+        }
+        let debug = if converted.modules > 0 {
+            Some(DebugInfo::from_sections(
+                converted.sections,
+                gimli::RunTimeEndian::Little,
+                name,
+                &self.sections,
+                self.arch,
+            )?)
+        } else {
+            None
+        };
+        let mut syms = DebugSymbols::default();
+        for (n, address, size, kind) in &converted.symbols {
+            syms.push(n, *address, *size, *kind);
+        }
+        if debug.is_none() && syms.recs.is_empty() {
+            bail!("{name} contains neither modules nor symbols for this binary");
         }
         self.debug_symbols = syms;
         if let Some(debug) = debug {

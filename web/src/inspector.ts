@@ -2,7 +2,7 @@
 import { familyOf } from './colors';
 import { store } from './store';
 import type { Annotation, Inspection, PathEntry, RefCounts, RefKind, Reference } from './types';
-import { basename, copyText, formatCount, formatSize, h, hex, icon, num } from './util';
+import { basename, copyText, fmtAddr, formatCount, formatSize, h, hex, icon, num } from './util';
 import { objcSelectorOf, selectorUses } from './views/objc';
 
 const REF_LABELS: Record<RefKind, [string, string]> = {
@@ -61,7 +61,7 @@ export class Inspector {
     const row = (k: string, v: string, extra?: Node) => rows.push(h('div', { class: 'k' }, k), h('div', { class: 'v' }, v, extra ? ' ' : null, extra));
     if (ins.offset !== undefined) row('File offset', hex(ins.offset), copy(hex(ins.offset)));
     else row('File offset', 'none — not backed by file bytes');
-    if (ins.address !== undefined) row('Address', hex(ins.address), copy(hex(ins.address)));
+    if (ins.address !== undefined) row('Address', fmtAddr(ins.address), copy(fmtAddr(ins.address)));
     else row('Address', 'not mapped into memory');
     if (ins.byte !== undefined) {
       const b = ins.byte;
@@ -105,7 +105,7 @@ export class Inspector {
     if (!seg && !sec && !ins.symbol) return null;
     const rows: Node[] = [];
     const row = (k: string, ...v: (Node | string)[]) => rows.push(h('div', { class: 'k' }, k), h('div', { class: 'v' }, ...v));
-    if (seg) row('Segment', `${seg.name} `, h('span', { class: 'muted' }, `${seg.perms} ${hex(seg.address)}..${hex(seg.address + seg.memSize)}`));
+    if (seg) row('Segment', `${seg.name} `, h('span', { class: 'muted' }, `${seg.perms} ${fmtAddr(seg.address)}..${fmtAddr(seg.address + seg.memSize)}`));
     if (sec) row('Section', `${sec.segmentName ? sec.segmentName + ',' : ''}${sec.name}`);
     if (ins.symbol) {
       const s = ins.symbol;
@@ -191,9 +191,9 @@ export class Inspector {
     const inCode = store.file!.sections.some((s) => s.kind === 'code' && s.loaded && r.source >= s.address && r.source < s.address + s.size);
     const row = h(
       'div',
-      { class: 'ref-row', title: `${REF_LABELS[r.kind][0]} at ${hex(r.source)}${hi - lo > 1n && r.target !== lo ? ` (to +${hex(r.target - lo)})` : ''}` },
+      { class: 'ref-row', title: `${REF_LABELS[r.kind][0]} at ${fmtAddr(r.source)}${hi - lo > 1n && r.target !== lo ? ` (to +${hex(r.target - lo)})` : ''}` },
       h('span', { class: `ref-kind k-${r.kind}` }, r.kind),
-      h('span', { class: 'link mono' }, r.from ?? hex(r.source)),
+      h('span', { class: 'link mono' }, r.from ?? fmtAddr(r.source)),
     );
     row.addEventListener('click', () => void store.select({ address: r.source }, { view: inCode ? 'code' : 'hex' }));
     return row;
@@ -226,7 +226,7 @@ export class Inspector {
           { class: 'note' },
           a.name ? h('div', { class: 'note-name mono' }, a.name) : null,
           a.comment ? h('div', { class: 'note-comment' }, a.comment) : null,
-          h('div', { class: 'note-meta' }, a.reviewed ? h('span', { class: 'chip ok' }, 'Reviewed') : null, h('span', { class: 'muted mono' }, a.size > 0n ? `${hex(a.address)}..${hex(a.address + a.size)}` : `at ${hex(a.address)}`)),
+          h('div', { class: 'note-meta' }, a.reviewed ? h('span', { class: 'chip ok' }, 'Reviewed') : null, h('span', { class: 'muted mono' }, a.size > 0n ? `${fmtAddr(a.address)}..${fmtAddr(a.address + a.size)}` : `at ${fmtAddr(a.address)}`)),
         ),
         h(
           'div',
@@ -255,11 +255,11 @@ export class Inspector {
     const a = ins.annotation;
     const sym = ins.symbol;
     const targets: { label: string; address: bigint; size: bigint }[] = [];
-    if (a) targets.push({ label: `This note (${a.size > 0n ? `${hex(a.address)}, ${formatSize(a.size)}` : hex(a.address)})`, address: a.address, size: a.size });
+    if (a) targets.push({ label: `This note (${a.size > 0n ? `${fmtAddr(a.address)}, ${formatSize(a.size)}` : fmtAddr(a.address)})`, address: a.address, size: a.size });
     else {
       if (sym && sym.size > 0n) targets.push({ label: `Function ${short(sym.demangled ?? sym.name)} (${formatSize(sym.size)})`, address: sym.address, size: sym.size });
-      if (ins.instruction) targets.push({ label: `This instruction (${hex(ins.instruction.address)})`, address: ins.instruction.address, size: BigInt(ins.instruction.len) });
-      else targets.push({ label: `This byte (${hex(ins.address!)})`, address: ins.address!, size: 1n });
+      if (ins.instruction) targets.push({ label: `This instruction (${fmtAddr(ins.instruction.address)})`, address: ins.instruction.address, size: BigInt(ins.instruction.len) });
+      else targets.push({ label: `This byte (${fmtAddr(ins.address!)})`, address: ins.address!, size: 1n });
     }
     const target = h('select', { class: 'field small', 'aria-label': 'Applies to' }, targets.map((t, i) => h('option', { value: String(i) }, t.label)));
     const name = h('input', { class: 'field small', placeholder: 'Name, e.g. parse_header', value: a?.name ?? '', 'aria-label': 'Name', spellcheck: 'false' });
@@ -396,7 +396,7 @@ export class Inspector {
   private instruction(ins: Inspection): HTMLElement | null {
     const i = ins.instruction;
     if (!i) return null;
-    const target = i.target !== undefined ? h('span', { class: 'link' }, i.targetSymbol ? `<${i.targetSymbol}>` : hex(i.target)) : null;
+    const target = i.target !== undefined ? h('span', { class: 'link' }, i.targetSymbol ? `<${i.targetSymbol}>` : fmtAddr(i.target)) : null;
     if (target && i.target !== undefined) {
       const t = i.target;
       target.addEventListener('click', () => void store.select({ address: t }, { view: 'code' }));
@@ -407,7 +407,7 @@ export class Inspector {
       h('h3', null, 'Instruction'),
       h('div', { class: 'mono' }, h('strong', null, i.mnemonic), ' ', i.operands),
       target ? h('div', { class: 'mono', style: 'margin-top:2px' }, i.flow === 'call' ? 'calls ' : i.flow.includes('jump') ? 'jumps to ' : 'refers to ', target) : null,
-      h('div', { class: 'muted mono', style: 'margin-top:4px' }, `${i.bytes}  (${i.len} bytes at ${hex(i.address)})`),
+      h('div', { class: 'muted mono', style: 'margin-top:4px' }, `${i.bytes}  (${i.len} bytes at ${fmtAddr(i.address)})`),
     );
   }
 

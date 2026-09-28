@@ -3,13 +3,16 @@
 import { Api } from './api';
 import { parseAnnotations, serializeAnnotations } from './notes';
 import type {
-  Annotation, ContainerInfo, DwarfSummary, Inspection, Opened, PackageInfo, PackageSource, RefCounts, RegionKind, Section,
-  Segment, SizeReport, SourceFile, Summary, Symbolicated, BaselineSource, Comparison,
+  Annotation, ContainerInfo, DwarfSummary, Inspection, LabelFile, LabelFormat, LabelImport, LogSummary, Opened, PackageInfo,
+  PackageSource, PatchFormat, PatchState, RefCounts, RegionKind, Section, Segment, SizeReport, SourceFile, Summary, Symbolicated,
+  BaselineSource, Comparison,
 } from './types';
-import { basename } from './util';
+import { basename, setAddressStyle } from './util';
 
-export type ViewName = 'folder' | 'crash' | 'diff' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map' | 'text' | 'tiles';
-export type MapTab = 'files' | 'units' | 'coverage';
+export type ViewName = 'folder' | 'crash' | 'diff' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'dwarf' | 'sources' | 'text' | 'tiles' | 'patch';
+
+/** How a navigation is recorded: a new place in history, an update of the current one, or neither. */
+export type HistoryMode = 'push' | 'replace' | 'none';
 
 export interface Loaded {
   name: string;
@@ -59,9 +62,16 @@ export interface Target {
   address?: bigint;
 }
 
-interface HistoryEntry {
+/** A place in the app: what Back and Forward move between, and what the URL says. */
+export interface Place {
   view: ViewName;
   target: Target;
+  /** The view's own state: its tab. */
+  state?: string;
+  /** What the view was asked to reveal: a DIE, a source line, a region. */
+  intent?: Intent;
+  /** The binary shown (its fingerprint). */
+  file?: string;
 }
 
 type Events = {
@@ -80,6 +90,12 @@ type Events = {
   diff: [];
   error: [string];
   status: [string];
+  /** Back or Forward became possible or impossible. */
+  history: [];
+  /** The patch or the edits changed. */
+  patch: [];
+  /** History restored a view's state (its tab…) while it was shown. */
+  viewstate: [ViewName];
 };
 
 /** A request for a view to reveal something specific when it is next shown. */
@@ -87,7 +103,34 @@ export interface Intent {
   die?: { unit: number; offset: bigint };
   source?: { file: number; line: number };
   region?: bigint;
-  map?: { tab: MapTab; name?: string };
+  /** A source file or compilation unit to pick in the Sources view, by name. */
+  contributor?: string;
+}
+
+/** The tab each view with tabs starts on: places record it, URLs leave it out. */
+const DEFAULT_STATE: Partial<Record<ViewName, string>> = { layout: 'regions', symbols: 'symbols', sources: 'files', dwarf: 'dies' };
+
+const hexOf = (n: bigint) => `0x${n.toString(16)}`;
+/** URL-encodes, keeping the characters addresses and paths read better with. */
+const enc = (s: string) => encodeURIComponent(s).replace(/%3A/gi, ':').replace(/%40/g, '@').replace(/%2F/gi, '/');
+
+function hasIntent(i: Intent): boolean {
+  return i.die !== undefined || i.source !== undefined || i.region !== undefined || i.contributor !== undefined;
+}
+
+function samePlace(a: Place, b: Place): boolean {
+  return (
+    a.view === b.view &&
+    a.file === b.file &&
+    a.state === b.state &&
+    a.target.address === b.target.address &&
+    a.target.offset === b.target.offset &&
+    a.intent?.die?.offset === b.intent?.die?.offset &&
+    a.intent?.source?.file === b.intent?.source?.file &&
+    a.intent?.source?.line === b.intent?.source?.line &&
+    a.intent?.region === b.intent?.region &&
+    a.intent?.contributor === b.intent?.contributor
+  );
 }
 
 class Store {
@@ -113,8 +156,25 @@ class Store {
   xrefs: 'none' | 'building' | 'ready' | 'unsupported' = 'none';
   xrefCounts: RefCounts | null = null;
   private xrefsBuild: Promise<boolean> | null = null;
-  private history: HistoryEntry[] = [];
-  private cursor = -1;
+  /** Each view's own state (its tab), kept in places. */
+  viewState: Partial<Record<ViewName, string>> = {};
+  /** The bundled sample open, if any: the URL names it, so that it reopens. */
+  sample: string | null = null;
+  /** Every place recorded, by id: a browser history entry holds its place's id. */
+  private places: Place[] = [];
+  /** The ids of the browser's history entries as far as we know them, and where we are in them. */
+  private stack: number[] = [];
+  private pos = -1;
+  /** Tells this page's history entries from earlier pages' (their places are gone). */
+  private readonly session = Math.random().toString(36).slice(2);
+  /** While history is restoring a place: nothing is recorded. */
+  private restoring = false;
+  /** The browser made the current history entry (the URL was edited): the next place goes into it. */
+  private adopting = false;
+  /** What was last asked to be selected: places keep it as asked. */
+  private target: Target = {};
+  /** How to reopen the last few files, for Back and Forward to them (by fingerprint). */
+  private reopeners = new Map<string, () => Promise<void>>();
   private seq = 0;
   private listeners = new Map<keyof Events, Set<(...a: unknown[]) => void>>();
 
@@ -153,13 +213,19 @@ class Store {
     this.emit('error', e instanceof Error ? e.message : String(e));
   }
 
-  async open(name: string, blob: Blob) {
+  /**
+   * Opens a binary. `sample` names a bundled sample (the URL then reopens
+   * it); `reopen` opens it again for Back and Forward, when opening it
+   * involves more than its bytes.
+   */
+  async open(name: string, blob: Blob, opts: { sample?: string; reopen?: () => Promise<void> } = {}) {
     this.emit('status', `Opening ${name}…`);
     try {
       // Drop our references to the old file first so its memory can go.
       this.file = null;
       this.container = null;
       this.dropPackage();
+      this.sample = opts.sample ?? null;
       const opened = await this.api.open(name, blob);
       if (opened.kind === 'container') {
         this.container = { name, info: opened.info, blob };
@@ -167,6 +233,7 @@ class Store {
         this.emit('status', '');
         return;
       }
+      this.remember(opened.summary.fingerprint, opts.reopen ?? (() => this.open(name, blob, opts)));
       await this.loaded(opened.name, opened.summary, blob);
       void this.resymbolicate();
       this.diffChanged();
@@ -174,6 +241,13 @@ class Store {
       this.emit('status', '');
       this.error(e);
     }
+  }
+
+  /** Keeps how to reopen a file for Back and Forward (the last eight). */
+  private remember(fingerprint: string, reopen: () => Promise<void>) {
+    this.reopeners.delete(fingerprint);
+    this.reopeners.set(fingerprint, reopen);
+    if (this.reopeners.size > 8) this.reopeners.delete(this.reopeners.keys().next().value!);
   }
 
   /** Reads an earlier build to compare sizes with, and compares. */
@@ -259,7 +333,8 @@ class Store {
     if (!c || !member) return;
     try {
       const opened = await this.api.openMember(index);
-      const blob = c.blob.slice(Number(member.offset), Number(member.offset + member.size));
+      // A raw CD image keeps a file's bytes sector by sector: the worker has them.
+      const blob = member.contiguous === false ? null : c.blob.slice(Number(member.offset), Number(member.offset + member.size));
       if (opened.kind === 'binary') await this.loaded(opened.name, opened.summary, blob);
     } catch (e) {
       this.error(e);
@@ -280,7 +355,7 @@ class Store {
    * join the open folder, or the one matching the open binary is attached.
    * Returns false when nothing in them is a binary.
    */
-  async openFolder(sources: PackageSource[]): Promise<boolean> {
+  async openFolder(sources: PackageSource[], opts: { sample?: string } = {}): Promise<boolean> {
     const name = sources.map((s) => s.name).join(' + ');
     this.emit('status', `Looking through ${name}…`);
     try {
@@ -298,6 +373,7 @@ class Store {
       } else if (debugOnly && this.file) {
         await this.attachMatching(info);
       } else {
+        this.sample = opts.sample ?? null;
         await this.openScanned(sources);
       }
     } catch (e) {
@@ -318,6 +394,7 @@ class Store {
     if (!(this.crash && this.view === 'crash')) this.view = 'folder';
     this.emit('package');
     if (opened?.kind === 'binary') {
+      this.rememberBinary(this.package, 0, opened.summary.fingerprint);
       await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[0].file));
     } else {
       this.emit('status', '');
@@ -334,12 +411,17 @@ class Store {
     if (n > 0 && n <= AUTO_ANALYZE_COUNT && analysisBytes(info) < AUTO_ANALYZE_BYTES) void this.analyzePackage();
   }
 
-  /** Attaches the one of the scanned debug files that matches the open binary. */
+  /**
+   * Attaches the one of the scanned debug files that matches the open binary:
+   * by build ID, or by the name its debug link or PDB path gives.
+   */
   private async attachMatching(info: PackageInfo) {
     const f = this.file!;
     const want = f.summary.buildId ? buildIdKey(f.summary.buildId) : '';
+    const linked = f.summary.debugLink?.split(' (crc ')[0].split(/[\\/]/).pop()?.toLowerCase();
     const match =
       info.binaries.find((b) => want && b.ids.some((x) => x.id && buildIdKey(x.id) === want)) ??
+      info.binaries.find((b) => linked && basename(b.path).toLowerCase() === linked) ??
       (info.binaries.length === 1 ? info.binaries[0] : undefined);
     if (!match) {
       throw new Error(`None of the ${info.binaries.length} debug files matches ${basename(f.name)}${f.summary.buildId ? ` (${f.summary.buildId})` : ''}`);
@@ -359,7 +441,10 @@ class Store {
         p.info = info;
         p.current = index;
         this.emit('package');
-        if (opened.kind === 'binary') await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[index].file));
+        if (opened.kind === 'binary') {
+          this.rememberBinary(p, index, opened.summary.fingerprint);
+          await this.loaded(opened.name, opened.summary, await this.api.packageFileBlob(info.binaries[index].file));
+        }
         // A binary compared with a binary: now another one.
         if (this.diff?.result?.kind === 'binary') this.diffChanged();
       } catch (e) {
@@ -368,6 +453,18 @@ class Store {
       }
     }
     if (view) this.setView(view);
+  }
+
+  /** Keeps how to reopen a binary of a folder: the folder too, if another opened since. */
+  private rememberBinary(p: OpenPackage, index: number, fingerprint: string) {
+    const path = p.info.binaries[index]?.path;
+    const sources = p.sources;
+    const sample = this.sample ?? undefined;
+    this.remember(fingerprint, async () => {
+      if (this.package?.sources !== sources) await this.openFolder(sources, { sample });
+      const i = this.package?.info.binaries.findIndex((b) => b.path === path) ?? -1;
+      if (i >= 0) await this.selectBinary(i);
+    });
   }
 
   /** Size reports for every binary of the folder, each with its debug file attached. */
@@ -398,6 +495,7 @@ class Store {
   }
 
   private async loaded(name: string, summary: Summary, blob: Blob | null) {
+    setAddressStyle(banked(summary) ? 'banked' : 'hex');
     const [sections, segments, dwarf, sourceFiles, composition] = await Promise.all([
       this.api.sections(),
       this.api.segments(),
@@ -418,19 +516,22 @@ class Store {
       }
     }
     this.selection = {};
-    this.history = [];
-    this.cursor = -1;
+    this.target = {};
+    this.codeLog = null;
+    // Edits made to this very file before (the same bytes) are still there.
+    this.undo = [];
+    this.patch = await this.api.patchState(PATCH_ROWS);
     this.sources.clear();
     this.sourceOrigin.clear();
     this.resetXrefs();
     this.emit('status', '');
     this.emit('file');
     this.emit('sources');
-    const entry = summary.entry;
-    if (entry !== undefined) void this.select({ address: entry }, { history: true });
-    else void this.select({ offset: 0n }, { history: true });
     // Small files are indexed right away; large ones when references are first asked for.
     if (summary.fileSize < 32n * 1024n * 1024n) void this.ensureXrefs();
+    // The file's first place: done before whoever opened it goes on (a link's own place replaces it).
+    const entry = summary.entry;
+    await this.select(entry !== undefined ? { address: entry } : { offset: 0n });
   }
 
   private resetXrefs() {
@@ -556,16 +657,27 @@ class Store {
     return serializeAnnotations(this.annotations, this.file?.name ?? '', this.file?.summary.fingerprint ?? '');
   }
 
-  /** Merges annotations from a binviz export or a symbol list (CSV, nm, IDA/Ghidra exports). */
-  async importAnnotations(text: string): Promise<number> {
+  /**
+   * Merges annotations from a binviz export or a symbol list (CSV, nm,
+   * IDA/Ghidra exports); for a ROM, from an emulator's label file too (by
+   * its `name`: .mlb, .nl, .sym).
+   */
+  async importAnnotations(text: string, name = ''): Promise<number> {
     if (!this.file) return 0;
     const f = this.file;
+    if (f.summary.format === 'rom' && LABEL_FILE.test(name)) return (await this.importLabels(name, text))?.labels.length ?? 0;
     const mapped = (a: bigint) => f.sections.some((s) => s.loaded && a >= s.address && a < s.address + (s.size > 0n ? s.size : 1n));
     const incoming = parseAnnotations(text).map((a) => {
       // Lists of RVAs: rebase when that is the only reading that lands in the image.
       const base = f.summary.imageBase;
       return base !== undefined && base > 0n && !mapped(a.address) && mapped(a.address + base) ? { ...a, address: a.address + base } : a;
     });
+    await this.mergeAnnotations(incoming);
+    return incoming.length;
+  }
+
+  /** Adds notes, merged into those at the same place. */
+  private async mergeAnnotations(incoming: Annotation[]) {
     const byKey = new Map(this.annotations.map((a) => [`${a.address}:${a.size}`, a]));
     for (const a of incoming) {
       // A size-less entry (a symbol list) merges into whatever note starts there.
@@ -575,18 +687,165 @@ class Store {
       byKey.set(key, old ? { ...old, name: a.name || old.name, comment: a.comment || old.comment, reviewed: a.reviewed || old.reviewed } : a);
     }
     await this.setAnnotations([...byKey.values()]);
-    return incoming.length;
   }
 
-  /** Opens the map view on a tab (and a source file or unit by name). */
-  openMap(tab: MapTab, name?: string) {
-    this.intent = { map: { tab, name } };
-    this.setView('map');
-    this.emit('intent');
+  // --- Emulators: code/data logs and label files --------------------------------
+
+  /** What the code/data log the open ROM was read with covers. */
+  codeLog: LogSummary | null = null;
+
+  /**
+   * Reads the open ROM again with a code/data log (FCEUX's or Mesen's): the
+   * code the game ran is followed too, the data it read isn't taken for
+   * code, and an NES game's switched banks go where they ran.
+   */
+  async loadCodeLog(name: string, blob: Blob): Promise<LogSummary | null> {
+    if (!this.file) return null;
+    try {
+      const summary = await this.api.codeLog(new Uint8Array(await blob.arrayBuffer()));
+      this.codeLog = summary;
+      await this.reread();
+      return summary;
+    } catch (e) {
+      this.error(e instanceof Error ? new Error(`${name}: ${e.message}`) : e);
+      return null;
+    }
   }
 
-  /** Selects a location and refreshes the inspection. */
-  async select(target: Target, opts: { origin?: ViewName; view?: ViewName; history?: boolean } = {}) {
+  /** The open file was read again: its sections (a ROM's banks), functions and references may have changed. */
+  private async reread() {
+    if (!this.file) return;
+    const [summary, sections, segments, composition] = await Promise.all([this.api.summary(), this.api.sections(), this.api.segments(), this.api.composition()]);
+    this.file = { ...this.file, summary, sections, segments, composition };
+    const had = this.xrefs === 'ready';
+    this.resetXrefs();
+    this.emit('file');
+    if (had || summary.fileSize < 32n * 1024n * 1024n) void this.ensureXrefs();
+    // Banks may have moved: the same byte, wherever it is now.
+    const { offset, address } = this.selection;
+    if (offset !== undefined || address !== undefined) await this.select(offset !== undefined ? { offset } : { address }, { history: 'none' });
+  }
+
+  // --- Patches ----------------------------------------------------------------------
+
+  /** A patched version of the open file (a patch file applied, bytes edited), and what it changes. */
+  patch: PatchState | null = null;
+  /** Edits in the hex view, newest last: where, and the bytes there before. */
+  private undo: { offset: bigint; before: Uint8Array }[] = [];
+
+  /** Applies an IPS, UPS or BPS patch to the open file: the Patch view shows what it changes. */
+  async applyPatch(name: string, blob: Blob) {
+    if (!this.file) return;
+    try {
+      this.patch = await this.api.patchApply(name, new Uint8Array(await blob.arrayBuffer()), PATCH_ROWS);
+      this.undo = [];
+      this.emit('patch');
+      this.setView('patch');
+    } catch (e) {
+      this.error(e instanceof Error ? new Error(`${name}: ${e.message}`) : e);
+    }
+  }
+
+  /** Writes bytes over the open file's: edits, which the Patch view shows and saves as a patch. */
+  async editBytes(offset: bigint, bytes: Uint8Array) {
+    if (!this.file) return;
+    try {
+      const before = await this.readPatched(offset, bytes.length);
+      this.patch = await this.api.patchEdit(offset, bytes, PATCH_ROWS);
+      this.undo.push({ offset, before });
+      this.emit('patch');
+    } catch (e) {
+      this.error(e);
+    }
+  }
+
+  canUndoEdit() {
+    return this.undo.length > 0;
+  }
+
+  /** Takes the last edit back. */
+  async undoEdit() {
+    const last = this.undo.pop();
+    if (!last) return;
+    this.patch = await this.api.patchEdit(last.offset, last.before, PATCH_ROWS);
+    this.emit('patch');
+  }
+
+  /** Reads the changes again (the table file changed, say). */
+  async refreshPatch() {
+    if (!this.patch) return;
+    this.patch = await this.api.patchState(PATCH_ROWS);
+    this.emit('patch');
+  }
+
+  /** Drops the patch and the edits. */
+  async clearPatch() {
+    await this.api.patchClear();
+    this.patch = null;
+    this.undo = [];
+    this.emit('patch');
+    if (this.view === 'patch') this.setView('hex');
+  }
+
+  /** Bytes of the patched file (the open file's, with no patch). */
+  async readPatched(offset: bigint, count: number): Promise<Uint8Array> {
+    if (!this.patch) return this.readBytes(Number(offset), Number(offset) + count);
+    return this.api.patchRead(offset, count);
+  }
+
+  /** A patch file (IPS, UPS or BPS) that turns the open file into the patched one. */
+  async patchFile(format: PatchFormat): Promise<Blob> {
+    return new Blob([(await this.api.patchCreate(format)) as Uint8Array<ArrayBuffer>]);
+  }
+
+  /** The patched file. */
+  async patchedFile(): Promise<Blob> {
+    return new Blob([(await this.api.patchTarget()) as Uint8Array<ArrayBuffer>]);
+  }
+
+  /** What to call the patched file: the game's name, patched. */
+  patchedName(): string {
+    const name = basename(this.file?.name ?? 'file');
+    const dot = name.lastIndexOf('.');
+    return dot > 0 ? `${name.slice(0, dot)} (patched)${name.slice(dot)}` : `${name} (patched)`;
+  }
+
+  /** Opens the patched file in place of the open one, with the notes carried over. */
+  async openPatched() {
+    const f = this.file;
+    if (!f || !this.patch) return;
+    const notes = this.annotations;
+    const blob = await this.patchedFile();
+    await this.open(this.patchedName(), blob);
+    if (this.file && this.file !== f && this.annotations.length === 0 && notes.length > 0) await this.setAnnotations(notes);
+  }
+
+  /** Reads an emulator's label file (Mesen, FCEUX, RGBDS, WLA DX, no$gba) into the notes. */
+  async importLabels(name: string, text: string): Promise<LabelImport | null> {
+    if (!this.file) return null;
+    const read = await this.api.readLabels(name, text);
+    await this.mergeAnnotations(read.labels);
+    return read;
+  }
+
+  /** The notes as label files an emulator reads, named after the ROM. */
+  async exportLabels(format: LabelFormat): Promise<{ name: string; text: string }[]> {
+    const f = this.file;
+    if (!f) return [];
+    const files: LabelFile[] = await this.api.writeLabels(format);
+    const base = basename(f.name);
+    // FCEUX's name lists go by the ROM's whole name (game.nes.0.nl); the others replace its extension.
+    const stem = format === 'nl' ? base : base.replace(/\.[^.]+$/, '');
+    return files.map((x) => ({ name: `${stem}.${x.suffix}`, text: x.text }));
+  }
+
+  /**
+   * Selects a location and refreshes the inspection. A selection that goes
+   * somewhere (to another view, or from a link) is a new place in history;
+   * one made within a view (`origin` without `view`: a click on a byte or a
+   * row) moves the current place along.
+   */
+  async select(target: Target, opts: { origin?: ViewName; view?: ViewName; history?: HistoryMode } = {}) {
     if (!this.file) return;
     const mine = ++this.seq;
     try {
@@ -601,8 +860,11 @@ class Store {
         inspection,
         origin: opts.origin,
       };
-      if (opts.history !== false) this.push({ view: opts.view ?? this.view, target });
-      if (opts.view && opts.view !== this.view) this.setView(opts.view, false);
+      this.target = target.address !== undefined ? { address: target.address } : { offset: target.offset ?? 0n };
+      const moved = opts.view !== undefined && opts.view !== this.view;
+      if (moved) this.view = opts.view!;
+      this.record(opts.history ?? (opts.view !== undefined || opts.origin === undefined ? 'push' : 'replace'));
+      if (moved) this.emit('view');
       this.emit('selection');
     } catch (e) {
       this.error(e);
@@ -611,73 +873,202 @@ class Store {
 
   private async reselect() {
     const { address, offset } = this.selection;
-    if (address !== undefined || offset !== undefined) await this.select(address !== undefined ? { address } : { offset }, { history: false });
+    if (address !== undefined || offset !== undefined) await this.select(address !== undefined ? { address } : { offset }, { history: 'none' });
   }
 
-  setView(view: ViewName, record = true) {
+  setView(view: ViewName, history: HistoryMode = 'push') {
     if (view === this.view) return;
     this.view = view;
-    if (record && this.cursor >= 0) {
-      const cur = this.history[this.cursor];
-      if (cur && cur.view !== view) this.push({ view, target: cur.target });
-    }
+    this.record(history);
     this.emit('view');
   }
 
-  private push(entry: HistoryEntry) {
-    const cur = this.history[this.cursor];
-    if (cur && cur.view === entry.view && cur.target.address === entry.target.address && cur.target.offset === entry.target.offset) return;
-    this.history = this.history.slice(0, this.cursor + 1);
-    this.history.push(entry);
-    if (this.history.length > 200) this.history.shift();
-    this.cursor = this.history.length - 1;
+  /** Changes a view's own state (its tab…): a new place in history when it is the view shown. */
+  setViewState(view: ViewName, value: string, history: HistoryMode = 'push') {
+    if (this.viewState[view] === value) return;
+    this.viewState[view] = value;
+    if (view === this.view) this.record(history);
+  }
+
+  /** Shows a view asked to reveal something: a new place in history. */
+  private navigate(view: ViewName, intent: Intent, state?: string) {
+    this.intent = intent;
+    if (state !== undefined) this.viewState[view] = state;
+    const moved = view !== this.view;
+    this.view = view;
+    this.record('push');
+    if (moved) this.emit('view');
+    else if (state !== undefined) this.emit('viewstate', view);
+    this.emit('intent');
   }
 
   /** Opens the DWARF view on a DIE. */
   openDie(unit: number, offset: bigint) {
-    this.intent = { die: { unit, offset } };
-    this.setView('dwarf');
-    this.emit('intent');
+    this.navigate('dwarf', { die: { unit, offset } }, 'dies');
   }
 
   /** Opens the source view on a line. */
   openSource(file: number, line: number) {
-    this.intent = { source: { file, line } };
-    this.setView('sources');
-    this.emit('intent');
+    this.navigate('sources', { source: { file, line } }, 'files');
+  }
+
+  /** Opens the Sources view on a source file or compilation unit (by name): where its code and data are. */
+  openContributor(mode: 'files' | 'units', name: string) {
+    this.navigate('sources', { contributor: name }, mode);
   }
 
   /** Opens the layout view with the region containing `offset` revealed. */
   revealRegion(offset: bigint) {
-    this.intent = { region: offset };
-    this.setView('layout');
-    this.emit('intent');
+    this.navigate('layout', { region: offset }, 'regions');
+  }
+
+  // --- History ------------------------------------------------------------------
+
+  /**
+   * Records where the app is: a new place (a browser history entry), or the
+   * current place updated. The URL follows, so that it can be shared (a
+   * sample reopens from it) and Back and Forward work as in any web page.
+   */
+  private record(mode: HistoryMode, intent = this.intent) {
+    if (mode === 'none' || this.restoring || typeof history === 'undefined') return;
+    const cur = this.pos >= 0 ? this.places[this.stack[this.pos]] : undefined;
+    const place: Place = {
+      view: this.view,
+      target: this.target,
+      state: this.viewState[this.view] ?? DEFAULT_STATE[this.view],
+      intent: hasIntent(intent) ? { ...intent } : undefined,
+      file: this.file?.summary.fingerprint,
+    };
+    // Views consume their intents: a place moved along keeps the one it was opened with.
+    if (!place.intent && mode === 'replace' && cur?.view === place.view && cur.file === place.file) place.intent = cur.intent;
+    // Another file is always a new place, but for the first (it replaces the landing page).
+    if (cur && cur.file !== place.file) mode = cur.file ? 'push' : 'replace';
+    if (cur && mode === 'push' && samePlace(cur, place)) return;
+    const url = `${location.pathname}${location.search}${this.hashOf(place)}`;
+    if (this.adopting || this.pos < 0 || mode === 'replace') {
+      // Into the current entry: as a new place if the browser made it, else in place of ours.
+      const fresh = this.adopting || this.pos < 0;
+      const id = fresh ? this.places.push(place) - 1 : this.stack[this.pos];
+      this.places[id] = place;
+      if (fresh) {
+        this.stack = [...this.stack.slice(0, this.pos + 1), id];
+        this.pos = this.stack.length - 1;
+      }
+      this.adopting = false;
+      history.replaceState({ binviz: { session: this.session, id } }, '', url);
+    } else {
+      const id = this.places.push(place) - 1;
+      this.stack = [...this.stack.slice(0, this.pos + 1), id];
+      this.pos = this.stack.length - 1;
+      history.pushState({ binviz: { session: this.session, id } }, '', url);
+    }
+    this.emit('history');
+  }
+
+  /** The URL fragment for a place: `#sample=…&view=code&goto=0x401000`. */
+  private hashOf(p: Place): string {
+    const q: string[] = [];
+    if (this.sample) q.push(`sample=${enc(this.sample)}`);
+    const pkg = this.package;
+    if (this.sample && pkg && pkg.current > 0) q.push(`bin=${enc(pkg.info.binaries[pkg.current]?.path ?? '')}`);
+    q.push(`view=${p.view}`);
+    if (p.state !== undefined && p.state !== DEFAULT_STATE[p.view]) q.push(`tab=${enc(p.state)}`);
+    if (p.target.address !== undefined) q.push(`goto=${hexOf(p.target.address)}`);
+    else if (p.target.offset !== undefined) q.push(`goto=@${hexOf(p.target.offset)}`);
+    if (p.intent?.die) q.push(`die=${p.intent.die.unit}:${hexOf(p.intent.die.offset)}`);
+    if (p.intent?.source) q.push(`line=${p.intent.source.file}:${p.intent.source.line}`);
+    if (p.intent?.contributor) q.push(`name=${enc(p.intent.contributor)}`);
+    return `#${q.join('&')}`;
+  }
+
+  /**
+   * The browser went back or forward to one of its history entries: shows
+   * its place. False when the entry isn't one of this page's: the URL says
+   * where to go, and that place goes into the entry.
+   */
+  async popped(state: unknown): Promise<boolean> {
+    const s = (state as { binviz?: { session?: string; id?: number } } | null)?.binviz;
+    const id = s && s.session === this.session ? s.id : undefined;
+    const place = id !== undefined ? this.places[id] : undefined;
+    if (id === undefined || !place) {
+      this.adopting = true;
+      return false;
+    }
+    const at = this.stack.indexOf(id);
+    if (at >= 0) this.pos = at;
+    else {
+      this.stack = [...this.stack.slice(0, this.pos + 1), id];
+      this.pos = this.stack.length - 1;
+    }
+    await this.restore(place);
+    this.emit('history');
+    return true;
+  }
+
+  /** Shows a place again: its file (reopened if need be), view, state, intent and selection. */
+  private async restore(p: Place) {
+    if (p.file && p.file !== this.file?.summary.fingerprint) {
+      const reopen = this.reopeners.get(p.file);
+      if (!reopen) {
+        this.error('That place is in a file that is no longer open.');
+        return;
+      }
+      this.restoring = true;
+      try {
+        await reopen();
+      } finally {
+        this.restoring = false;
+      }
+      if (this.file?.summary.fingerprint !== p.file) return;
+    }
+    await this.goTo(p, 'none');
+  }
+
+  /**
+   * Shows a place (a URL's, or one from history): its view with its state
+   * (a tab…), what the view is to reveal, and the selection; recorded once.
+   */
+  async goTo(p: { view?: ViewName; state?: string; target?: Target; intent?: Intent }, history: HistoryMode) {
+    const view = p.view ?? this.view;
+    // A view named without its tab is on its first.
+    const state = p.state ?? (p.view !== undefined ? DEFAULT_STATE[view] : undefined);
+    if (state !== undefined) this.viewState[view] = state;
+    const intent: Intent = p.intent ? { ...p.intent } : {};
+    this.intent = { ...intent };
+    const moved = view !== this.view;
+    this.view = view;
+    this.restoring = true;
+    try {
+      if (moved) this.emit('view');
+      else if (state !== undefined) this.emit('viewstate', view);
+      if (p.target && (p.target.address !== undefined || p.target.offset !== undefined)) await this.select(p.target, { history: 'none' });
+    } finally {
+      this.restoring = false;
+    }
+    // The view may have acted on the intent already: the place keeps it.
+    this.record(history, intent);
+    if (hasIntent(this.intent)) this.emit('intent');
+  }
+
+  /** The browser made the current history entry (the URL was edited): the place shown next goes into it. */
+  adoptEntry() {
+    this.adopting = true;
   }
 
   canGoBack() {
-    return this.cursor > 0;
+    return this.pos > 0;
   }
 
   canGoForward() {
-    return this.cursor < this.history.length - 1;
+    return this.pos < this.stack.length - 1;
   }
 
-  async back() {
-    if (!this.canGoBack()) return;
-    await this.go(this.history[--this.cursor]);
+  back() {
+    history.back();
   }
 
-  async forward() {
-    if (!this.canGoForward()) return;
-    await this.go(this.history[++this.cursor]);
-  }
-
-  private async go(entry: HistoryEntry) {
-    if (entry.view !== this.view) {
-      this.view = entry.view;
-      this.emit('view');
-    }
-    await this.select(entry.target, { history: false });
+  forward() {
+    history.forward();
   }
 
   /** Matches dropped/selected files to DWARF source paths by longest suffix. */
@@ -743,6 +1134,20 @@ class Store {
 }
 
 export const store = new Store();
+
+/** A game ROM whose CPU sees banks (NES, Game Boy) or 24-bit addresses (SNES): addresses read as bank:address. */
+function banked(s: Summary): boolean {
+  return s.format === 'rom' && s.bits <= 16;
+}
+
+/** Changes the Patch view lists (the first, when a patch changes more). */
+const PATCH_ROWS = 5000;
+
+/** Patch files, by name. */
+export const PATCH_FILE = /\.(ips|ups|bps)$/i;
+
+/** Emulators' label files, by name. */
+export const LABEL_FILE = /\.(mlb|nl|sym)$/i;
 
 const NOTES_KEY = (fingerprint: string) => `binviz-notes:${fingerprint}`;
 

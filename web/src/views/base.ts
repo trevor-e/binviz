@@ -18,6 +18,9 @@ export abstract class View {
     store.on('selection', () => {
       if (this.visible && !this.dirty) this.onSelection();
     });
+    store.on('viewstate', (view) => {
+      if (view === this.name && this.visible && !this.dirty) this.onState();
+    });
   }
 
   get visible(): boolean {
@@ -28,7 +31,7 @@ export abstract class View {
     if (this.dirty) {
       this.dirty = false;
       this.render();
-    }
+    } else this.onState();
     this.onSelection();
   }
 
@@ -38,9 +41,23 @@ export abstract class View {
     if (this.visible) this.show();
   }
 
-  /** Builds the view for the current file. */
+  /** Builds the view for the current file (its state, `store.viewState[name]`, included). */
   protected abstract render(): void;
 
   /** Reacts to the global selection. */
   protected onSelection(): void {}
+
+  /** Shows the view's state as history left it (`store.viewState[name]`): a tab… */
+  protected onState(): void {}
+}
+
+/** Part of a view (a tab): built when first shown, and again after a new file. */
+export interface Panel {
+  readonly el: HTMLElement;
+  /** A new file: what was shown is gone. */
+  reset(): void;
+  /** Shown: builds what is missing. */
+  show(): void;
+  /** The selection changed while shown. */
+  onSelection?(): void;
 }

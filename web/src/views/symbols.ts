@@ -2,7 +2,7 @@
 import { store } from '../store';
 import type { Export, FoundString, Import, ObjcCounts, ObjcEntry, ObjcKind, Sym, SymbolQuery } from '../types';
 import { emptyState } from '../ui';
-import { debounce, formatCount, h, hex, num } from '../util';
+import { debounce, fmtAddr, formatCount, h, hex, num } from '../util';
 import { VList } from '../vlist';
 import { View } from './base';
 import { selectorUses } from './objc';
@@ -11,6 +11,8 @@ const PAGE = 200;
 const COLS = 'grid-template-columns:19ch 9ch 9ch 8ch 8ch minmax(0,1fr)';
 
 type Tab = 'symbols' | 'classes' | 'imports' | 'exports' | 'strings';
+const TABS: Tab[] = ['symbols', 'classes', 'imports', 'exports', 'strings'];
+const isTab = (s: string | undefined): s is Tab => TABS.includes(s as Tab);
 
 const OBJC_KINDS: [ObjcKind | '', string][] = [
   ['', 'All'],
@@ -67,7 +69,10 @@ export class SymbolsView extends View {
     const tabs = h('div', { class: 'tabs' });
     const tab = (t: Tab, label: string) => {
       const b = h('button', { class: `tab${this.tab === t ? ' active' : ''}`, title: t === 'classes' ? 'Objective-C classes, categories and protocols' : '' }, label);
-      b.addEventListener('click', () => this.showTab(t));
+      b.addEventListener('click', () => {
+        this.showTab(t);
+        store.setViewState('symbols', t);
+      });
       b.dataset.tab = t;
       return b;
     };
@@ -78,7 +83,11 @@ export class SymbolsView extends View {
     this.objc = undefined;
     this.objcEntries = undefined;
     this.objcSelected = undefined;
-    if (this.tab === 'classes') this.tab = 'symbols';
+    const want = store.viewState.symbols;
+    if (isTab(want)) this.tab = want;
+    // Classes wait for the Objective-C metadata to be read.
+    const classes = this.tab === 'classes';
+    if (classes) this.tab = 'symbols';
     void Promise.all([store.api.imports(), store.api.exports()]).then(([i, e]) => {
       this.imports = i;
       this.exports = e;
@@ -89,8 +98,15 @@ export class SymbolsView extends View {
       if (store.file !== file || c.classes + c.categories + c.protocols === 0) return;
       this.objc = c;
       tabs.firstElementChild!.after(tab('classes', 'Classes'));
+      if (classes && this.tab === 'symbols') this.showTab('classes');
     });
+    this.el.querySelectorAll<HTMLElement>('.tabs .tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === this.tab));
     this.renderBody();
+  }
+
+  protected onState() {
+    const want = store.viewState.symbols;
+    if (isTab(want) && want !== this.tab) this.showTab(want);
   }
 
   /** Shows a tab: `classes` only when the binary has Objective-C classes. */
@@ -167,7 +183,7 @@ export class SymbolsView extends View {
     const row = h(
       'div',
       { class: `list-row${selected ? ' selected' : ''}`, style: `display:grid;${COLS}`, title: s.demangled ? s.name : '' },
-      h('span', { class: 'addr' }, s.defined ? hex(s.address) : '—'),
+      h('span', { class: 'addr' }, s.defined ? fmtAddr(s.address) : '—'),
       h('span', { class: 'mono secondary' }, s.size > 0n ? `${num(s.size)}${s.sizeInferred ? '~' : ''}` : ''),
       h('span', { class: 'secondary' }, s.kind),
       h('span', { class: 'secondary' }, s.binding),
@@ -251,7 +267,7 @@ export class SymbolsView extends View {
     }
     const open = (address: bigint, view: 'code' | 'hex') => void store.select({ address }, { view });
     const head = h('div', { class: 'pane-head' }, h('span', { class: `objc-kind k-${e.kind}` }, e.kind === 'class' ? 'C' : e.kind === 'category' ? '+' : 'P'), h('b', { class: 'nm' }, i.name), h('span', { class: 'muted' }, e.kind === 'class' && e.swift ? 'Swift class' : e.kind), h('span', { class: 'spacer' }));
-    const meta = h('span', { class: 'addr link', title: 'Its metadata' }, hex(i.address));
+    const meta = h('span', { class: 'addr link', title: 'Its metadata' }, fmtAddr(i.address));
     meta.addEventListener('click', () => open(i.address, 'hex'));
     head.appendChild(meta);
     const lines = i.lines.map((l) => {
@@ -279,7 +295,7 @@ export class SymbolsView extends View {
       }
       if (l.address !== undefined) {
         const a = l.address;
-        const addr = h('span', { class: 'addr link' }, hex(a));
+        const addr = h('span', { class: 'addr link' }, fmtAddr(a));
         addr.addEventListener('click', () => open(a, 'code'));
         line.appendChild(addr);
       }
@@ -391,7 +407,7 @@ export class SymbolsView extends View {
     const row = h(
       'div',
       { class: 'list-row', style: `display:grid;${cols}`, title: s.text },
-      h('span', { class: 'addr' }, s.address !== undefined ? hex(s.address) : `@${hex(s.offset)}`),
+      h('span', { class: 'addr' }, s.address !== undefined ? fmtAddr(s.address) : `@${hex(s.offset)}`),
       h('span', { class: 'mono secondary' }, sec?.name ?? ''),
       h('span', { class: 'muted' }, s.wide ? 'UTF-16' : 'ASCII'),
       h('span', { class: 'nm' }, s.text),

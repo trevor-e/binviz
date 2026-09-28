@@ -3,7 +3,9 @@
 //! graphics (CHR ROM, which only the PPU sees). Mappers switch PRG banks in
 //! and out of the CPU's view; the common arrangement is modelled: 16 KiB
 //! banks switched at `$8000`, the last one fixed at `$C000` (with the
-//! vectors), or whole 32 KiB banks for the mappers that switch those.
+//! vectors), or whole 32 KiB banks for the mappers that switch those. A
+//! code/data log that saw banks elsewhere (MMC3's 8 KiB pages at `$A000`...)
+//! places each 8 KiB page where it ran.
 
 use super::{Area, Map, Platform, RomParts, Window, prop};
 use crate::cpu::{Cpu, State};
@@ -55,16 +57,16 @@ fn switches_32k(mapper: u16) -> bool {
     matches!(mapper, 7 | 11 | 34 | 38 | 66 | 140)
 }
 
-struct Header {
+pub(super) struct Header {
     nes2: bool,
     mapper: u16,
-    prg_offset: u64,
-    prg_size: u64,
+    pub prg_offset: u64,
+    pub prg_size: u64,
     chr_offset: u64,
-    chr_size: u64,
+    pub chr_size: u64,
 }
 
-fn header(data: &[u8]) -> Option<Header> {
+pub(super) fn header(data: &[u8]) -> Option<Header> {
     if data.len() < 16 || &data[..4] != b"NES\x1A" {
         return None;
     }
@@ -103,10 +105,29 @@ fn kib(n: u64) -> String {
 }
 
 pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
+    detect_with(data, None).map(|(parts, _)| parts)
+}
+
+/// The CPU window each 8 KiB page of PRG ROM is in, as the usual arrangement
+/// has it: the last 16 KiB fixed at `$C000`, the others switched in at `$8000`.
+fn usual_window(page: u64, pages: u64) -> u64 {
+    if page + 2 >= pages {
+        0xC000 + (page + 2 - pages) * 0x2000
+    } else {
+        0x8000 + (page % 2) * 0x2000
+    }
+}
+
+/// Reads a ROM; with `logged` (the window each 8 KiB page of PRG ROM ran in,
+/// from a code/data log), switched banks are placed as 8 KiB pages where the
+/// log saw them, when that isn't the usual arrangement. Returns how many
+/// pages were placed from the log.
+pub(super) fn detect_with(data: &[u8], logged: Option<&[Option<u64>]>) -> Option<(RomParts, u32)> {
     let h = header(data)?;
     if h.prg_size == 0 {
         return None;
     }
+    let mut placed = 0;
     let mut areas = vec![
         Area::ram("RAM", 0x0000, 0x800),
         Area::io("PPU registers", 0x2000, 8),
@@ -129,8 +150,49 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         Window::fixed(0x4000, 0x4020, 0x4000),
         Window::fixed(0x6000, 0x8000, 0x6000),
     ];
+    // Pages the log saw somewhere the usual arrangement doesn't put them.
+    let pages = h.prg_size / 0x2000;
+    let paged = logged.filter(|l| {
+        h.prg_size > 0x8000
+            && !switches_32k(h.mapper)
+            && (0..pages).any(|p| {
+                l.get(p as usize)
+                    .copied()
+                    .flatten()
+                    .is_some_and(|w| w != usual_window(p, pages))
+            })
+    });
     // Where each PRG bank sits, and where the vectors are.
-    let vectors_at = if h.prg_size <= 0x8000 {
+    let vectors_at = if let Some(logged) = paged {
+        let mut at: [Vec<u64>; 4] = Default::default();
+        for p in 0..pages {
+            let seen = logged.get(p as usize).copied().flatten();
+            placed += seen.is_some() as u32;
+            let w = seen.unwrap_or_else(|| usual_window(p, pages));
+            let base = p << 16 | w;
+            areas.push(Area::rom(
+                format!("PRG page {p} (at ${w:04X})"),
+                base,
+                0x2000,
+                h.prg_offset + p * 0x2000,
+            ));
+            at[((w - 0x8000) / 0x2000) as usize].push(base);
+        }
+        for (i, banks) in at.into_iter().enumerate() {
+            if !banks.is_empty() {
+                let lo = 0x8000 + i as u64 * 0x2000;
+                windows.push(Window {
+                    lo,
+                    hi: lo + 0x2000,
+                    size: 0x2000,
+                    banks,
+                });
+            }
+        }
+        let last = pages - 1;
+        let w = logged.get(last as usize).copied().flatten().unwrap_or(0xE000);
+        last << 16 | (w + 0x1FFA)
+    } else if h.prg_size <= 0x8000 {
         let window = h.prg_size.max(0x4000).next_power_of_two().min(0x8000);
         let base = 0x10000 - window;
         areas.push(Area::rom("PRG ROM", base, h.prg_size, h.prg_offset));
@@ -244,7 +306,7 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         prop("Mirroring", mirroring),
         prop("Battery", if data[6] & 2 != 0 { "yes" } else { "no" }),
     ];
-    Some(RomParts {
+    let parts = RomParts {
         platform: Platform::Nes,
         cpu: Cpu::Mos6502,
         format_name: if h.nes2 { "NES 2.0" } else { "iNES" }.into(),
@@ -259,7 +321,8 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         data: None,
         state: State::default(),
         layout,
-    })
+    };
+    Some((parts, placed))
 }
 
 fn flags6(v: u64) -> String {

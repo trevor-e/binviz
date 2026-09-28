@@ -274,9 +274,23 @@ impl Bytes<'_> {
     }
 }
 
-/// Recognises a binary from its first bytes: Mach-O (thin or universal), ELF or PE.
+/// Recognises a binary from its first bytes: Mach-O (thin or universal), ELF
+/// or PE, or a PDB (a Windows binary's debug file).
 pub fn header(prefix: &[u8]) -> Option<Header> {
-    mach_o(prefix).or_else(|| elf(prefix)).or_else(|| pe(prefix))
+    mach_o(prefix)
+        .or_else(|| elf(prefix))
+        .or_else(|| pe(prefix))
+        .or_else(|| pdb(prefix))
+}
+
+/// A PDB. Its GUID is in a stream its directory places, usually near the end
+/// of the file: out of reach here, so it pairs by the name its binary records.
+fn pdb(b: &[u8]) -> Option<Header> {
+    crate::dwarf::pdb::is_pdb(b).then(|| Header {
+        format: "PDB".into(),
+        kind: BinaryKind::Debug,
+        ids: Vec::new(),
+    })
 }
 
 fn mach_arch(cputype: u32, subtype: u32) -> String {
@@ -732,7 +746,8 @@ pub fn discover(
             });
         }
     }
-    // Nothing but debug files (a zip of dSYMs, say): they are what there is to explore.
+    // Nothing but debug files (a zip of dSYMs, say): they are what there is to
+    // explore, or to pair with what is open.
     if binaries.is_empty() {
         binaries = debug_files
             .drain(..)
@@ -910,7 +925,7 @@ pub fn match_debug(info: &mut PackageInfo) {
 /// After binary `index` has been read in full (`bytes`, parsed into `bin`):
 /// the build IDs of all its slices (a universal binary's later ones lie past
 /// the header read at discovery), and, if nothing pairs with it by build ID,
-/// the debug file its `.gnu_debuglink` names.
+/// the debug file its `.gnu_debuglink` names, or for a PE, its PDB.
 pub fn update_loaded(info: &mut PackageInfo, index: u32, bytes: &[u8], bin: &crate::Binary) {
     let Some(b) = info.binaries.get_mut(index as usize) else {
         return;
@@ -925,16 +940,29 @@ pub fn update_loaded(info: &mut PackageInfo, index: u32, bytes: &[u8], bin: &cra
     if b.debug.is_some() {
         return;
     }
-    // "name (crc 0x…)" for ELF; a PE's PDB path names no file here.
+    // "name (crc 0x…)" for ELF; for PE, where the PDB was written (often a
+    // Windows path), its file name compared as Windows does, ignoring case.
     let Some(link) = bin.summary().debug_link.as_deref() else {
         return;
     };
-    let wanted = link.split(" (crc ").next().unwrap_or(link);
+    let pe = bin.summary().format == crate::model::Format::Pe;
+    let wanted = if pe {
+        link.rsplit(['\\', '/']).next().unwrap_or(link)
+    } else {
+        link.split(" (crc ").next().unwrap_or(link)
+    };
+    let named = |n: &str| {
+        if pe {
+            n.eq_ignore_ascii_case(wanted)
+        } else {
+            n == wanted
+        }
+    };
     let dir = parent(&b.path);
     let found = info
         .debug_files
         .iter()
-        .filter(|d| d.binary.is_none() && file_name(&d.path) == wanted)
+        .filter(|d| d.binary.is_none() && named(file_name(&d.path)))
         .min_by_key(|d| parent(&d.path) != dir)
         .map(|d| d.index);
     if let Some(d) = found {

@@ -71,3 +71,29 @@ export function kindLabel(kind: RegionKind): string {
 export function emptyState(title: string, body?: string, ...extra: Node[]): HTMLElement {
   return h('div', { class: 'empty-state' }, h('strong', null, title), body ? h('div', null, body) : null, ...extra);
 }
+
+/** A figure with its label and a line under it. */
+export function tile(label: string, value: string, sub: string, tone = ''): HTMLElement {
+  return h('div', { class: `tile ${tone}` }, h('div', { class: 'tile-label' }, label), h('div', { class: 'tile-value' }, value), h('div', { class: 'tile-sub' }, sub));
+}
+
+export function smallButton(label: string, title: string, onClick: () => void): HTMLButtonElement {
+  const b = h('button', { class: 'btn small', type: 'button', title }, label);
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+/** Saves text as a file. */
+export function downloadText(name: string, text: string, type = 'text/plain') {
+  downloadBlob(name, new Blob([text], { type }));
+}
+
+/** Saves bytes as a file. */
+export function downloadBlob(name: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: name });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

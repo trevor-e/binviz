@@ -74,6 +74,51 @@ pub struct Session {
     debug_objects: std::collections::HashMap<String, Vec<u8>>,
     /// The table file text is read with (see `tableSet`).
     table: Option<binviz::tables::Table>,
+    /// A patched version of the open file: from a patch file, bytes edited, or both.
+    patched: Option<Patched>,
+    /// The earlier binary compared with (see `baselineBinary`), whole: its functions are compared too.
+    baseline_full: Option<Binary>,
+    /// The last function diff: what it compared (`with`, and both fingerprints), and the result.
+    function_diff: Option<(String, binviz::fndiff::FunctionDiff)>,
+}
+
+struct Patched {
+    /// The file it patches (its fingerprint): another file open means no patch.
+    fingerprint: String,
+    /// The patched file's bytes.
+    target: Vec<u8>,
+    /// What the patch file said (its bytes moved to `target`), when there was one.
+    applied: Option<binviz::patch::Applied>,
+    /// Its name.
+    name: Option<String>,
+    /// The patched file read, to compare its functions (read again after edits).
+    parsed: Option<Binary>,
+}
+
+/// A change a patch makes, placed, with its bytes before and after.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PatchRow {
+    #[serde(flatten)]
+    placed: binviz::patch::Placed,
+    before: Vec<u8>,
+    after: Vec<u8>,
+    /// Both read with the table file, when there is one.
+    before_text: Option<String>,
+    after_text: Option<String>,
+}
+
+/// Where a patch stands: what the patch file said, and the changes.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PatchState<'a> {
+    name: Option<&'a str>,
+    applied: Option<&'a binviz::patch::Applied>,
+    changes: Vec<PatchRow>,
+    /// All the runs of changes (only the first `limit` are placed).
+    total: u32,
+    differ: u64,
+    target_size: u64,
 }
 
 enum Baseline {
@@ -127,6 +172,52 @@ pub fn zip_parse_directory(cd: &[u8]) -> Result<JsValue, JsError> {
 #[wasm_bindgen(js_name = zipDecompressZstandard)]
 pub fn zip_decompress_zstandard(data: &[u8], max: u64) -> Result<Vec<u8>, JsError> {
     binviz::zip::decompress_zstandard(data, max).map_err(err)
+}
+
+// --- CD images (read by the worker a sector at a time) --------------------------------
+
+/// How a CD image lays its sectors out (`{sector, data}`), from its first
+/// bytes (`discPrefix` of them), or null if it isn't one.
+#[wasm_bindgen(js_name = discLayout)]
+pub fn disc_layout(prefix: &[u8]) -> Result<JsValue, JsError> {
+    match binviz::disc::layout(prefix) {
+        Some(l) => to_js(&l),
+        None => Ok(JsValue::NULL),
+    }
+}
+
+#[wasm_bindgen(js_name = discPrefix)]
+pub fn disc_prefix() -> u32 {
+    binviz::disc::PREFIX as u32
+}
+
+/// The volume's name and root folder, from logical sector 16: `[name, {path, lba, size, dir}]`.
+#[wasm_bindgen(js_name = discRoot)]
+pub fn disc_root(pvd: &[u8]) -> Result<JsValue, JsError> {
+    match binviz::disc::root(pvd) {
+        Some(r) => to_js(&r),
+        None => Ok(JsValue::NULL),
+    }
+}
+
+/// The files and folders in a folder's sectors.
+#[wasm_bindgen(js_name = discRecords)]
+pub fn disc_records(bytes: &[u8], parent: &str) -> Result<JsValue, JsError> {
+    to_js(&binviz::disc::records(bytes, parent))
+}
+
+/// What `SYSTEM.CNF` boots.
+#[wasm_bindgen(js_name = discBoot)]
+pub fn disc_boot(cnf: &[u8]) -> Option<String> {
+    binviz::disc::boot_path(cnf)
+}
+
+/// Files, what the disc boots first.
+#[wasm_bindgen(js_name = discSort)]
+pub fn disc_sort(files: JsValue, boot: Option<String>) -> Result<JsValue, JsError> {
+    let mut files: Vec<binviz::disc::DiscFile> = serde_wasm_bindgen::from_value(files).map_err(err)?;
+    binviz::disc::sort(&mut files, boot.as_deref());
+    to_js(&files)
 }
 
 // --- Crash reports ----------------------------------------------------------------
@@ -487,6 +578,7 @@ impl Session {
         let data = self.take_input()?;
         let (bin, _) = binviz::package::load_binary(data).map_err(err)?;
         self.baseline = Some(Baseline::Binary(bin.size_snapshot(name)));
+        self.baseline_full = Some(bin);
         Ok(())
     }
 
@@ -549,6 +641,78 @@ impl Session {
     pub fn baseline_clear(&mut self) {
         self.baseline = None;
         self.baseline_bin = None;
+        self.baseline_full = None;
+    }
+
+    // --- Comparing functions -------------------------------------------------------
+
+    /// Reads the patched file, the first time a function diff needs it.
+    fn prepare_sides(&mut self, with: &str) -> Result<(), JsError> {
+        let fingerprint = self.bin()?.summary().fingerprint.clone();
+        if with != "baseline"
+            && let Some(p) = self.patched.as_mut().filter(|p| p.fingerprint == fingerprint)
+            && p.parsed.is_none()
+        {
+            let (bin, _) = binviz::package::load_binary(p.target.clone().into()).map_err(err)?;
+            p.parsed = Some(bin);
+        }
+        Ok(())
+    }
+
+    /// The two binaries a function diff compares: `baseline` (the earlier
+    /// build, and the open binary) or `patch` (the open file, and the patched
+    /// one, once `prepare_sides` read it).
+    fn sides(&self, with: &str) -> Result<(&Binary, &Binary), JsError> {
+        let current = self.bin()?;
+        match with {
+            "baseline" => Ok((
+                self.baseline_full
+                    .as_ref()
+                    .ok_or_else(|| JsError::new("no earlier binary to compare with"))?,
+                current,
+            )),
+            _ => {
+                let p = self
+                    .patched
+                    .as_ref()
+                    .filter(|p| p.fingerprint == current.summary().fingerprint)
+                    .and_then(|p| p.parsed.as_ref())
+                    .ok_or_else(|| JsError::new("no patch"))?;
+                Ok((current, p))
+            }
+        }
+    }
+
+    /// Which functions of the two sides (`baseline` or `patch`) are which:
+    /// the counts, the pairs that aren't identical, the added and removed.
+    #[wasm_bindgen(js_name = functionDiff)]
+    pub fn function_diff(&mut self, with: &str) -> Result<JsValue, JsError> {
+        self.prepare_sides(with)?;
+        let key = {
+            let (old, new) = self.sides(with)?;
+            format!(
+                "{with}:{}:{}:{}",
+                old.summary().fingerprint,
+                new.summary().fingerprint,
+                new.data().len()
+            )
+        };
+        if !matches!(&self.function_diff, Some((k, _)) if *k == key) {
+            let (old, new) = self.sides(with)?;
+            let mut d = old.diff_functions(new);
+            // Identical ones are counted, not listed.
+            d.pairs.retain(|p| p.status != binviz::fndiff::PairStatus::Identical);
+            self.function_diff = Some((key, d));
+        }
+        to_js(&self.function_diff.as_ref().unwrap().1)
+    }
+
+    /// Two matched functions' instructions lined up (see `functionDiff`).
+    #[wasm_bindgen(js_name = functionCode)]
+    pub fn function_code(&mut self, with: &str, old_address: u64, new_address: u64) -> Result<JsValue, JsError> {
+        self.prepare_sides(with)?;
+        let (old, new) = self.sides(with)?;
+        to_js(&old.diff_function_code(old_address, new, new_address))
     }
 
     /// Starts the open folder's snapshot (its files, `[{path, size, …}]`);
@@ -686,7 +850,7 @@ impl Session {
             .ok_or_else(|| JsError::new("no DWARF debug info"))
     }
 
-    /// Loads DWARF from a companion file (dSYM DWARF file, `.debug`, unstripped copy).
+    /// Loads debug info from a companion file (dSYM DWARF file, `.debug`, PDB, unstripped copy).
     #[wasm_bindgen(js_name = attachDebug)]
     pub fn attach_debug(&mut self, name: String, bytes: Vec<u8>) -> Result<JsValue, JsError> {
         let b = self.binary.as_mut().ok_or_else(|| JsError::new("no binary open"))?;
@@ -867,6 +1031,12 @@ impl Session {
                 value: off,
                 label: format!("file offset {off:#x}"),
             }
+        } else if let Some(addr) = b.rom_address(q) {
+            Resolved {
+                kind: "address",
+                value: addr,
+                label: format!("{q} ({addr:#x})"),
+            }
         } else if let Some(addr) = parse(q) {
             if b.segment_at(addr).is_some() || b.section_at(addr).is_some() {
                 Resolved {
@@ -1045,6 +1215,179 @@ impl Session {
     }
 
     // --- Text in games: relative search and table files -----------------
+
+    // --- Emulators: code/data logs and label files ---------------------------------
+
+    /// Reads the open ROM again with a code/data log (FCEUX's or Mesen's),
+    /// keeping the notes: what the log covers. The views then show the ROM
+    /// as the log saw it run.
+    #[wasm_bindgen(js_name = codeLog)]
+    pub fn code_log(&mut self, bytes: &[u8]) -> Result<JsValue, JsError> {
+        let b = self.bin()?;
+        let notes = b.annotations().to_vec();
+        let (mut logged, summary) = b.with_code_log(bytes).map_err(err)?;
+        logged.set_annotations(notes);
+        self.binary = Some(logged);
+        to_js(&summary)
+    }
+
+    /// What the code/data log the ROM was read with covers, or null.
+    #[wasm_bindgen(js_name = codeLogSummary)]
+    pub fn code_log_summary(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.code_log())
+    }
+
+    /// The code/data log's flags for `count` bytes from a file offset (1 code, 2 data, 4 a subroutine's start…).
+    #[wasm_bindgen(js_name = codeLogFlags)]
+    pub fn code_log_flags(&self, offset: u64, count: u32) -> Result<Vec<u16>, JsError> {
+        let b = self.bin()?;
+        Ok((offset..offset + count as u64).map(|o| b.code_log_at(o)).collect())
+    }
+
+    /// Reads a label file (Mesen's .mlb, FCEUX's .nl, RGBDS / WLA DX / no$gba
+    /// .sym) into notes: `{format, labels, skipped, directives}`.
+    #[wasm_bindgen(js_name = readLabels)]
+    pub fn read_labels(&self, name: &str, text: &str) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.read_labels(name, text).map_err(err)?)
+    }
+
+    /// The label formats this ROM's emulators read (`mlb`, `nl`, `sym`, `nocash`).
+    #[wasm_bindgen(js_name = labelFormats)]
+    pub fn label_formats(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.label_formats())
+    }
+
+    /// The notes as label files in a format: `[{suffix, text}]`.
+    #[wasm_bindgen(js_name = writeLabels)]
+    pub fn write_labels(&self, format: &str) -> Result<JsValue, JsError> {
+        let format =
+            binviz::rom::labels::LabelFormat::from_name(format).ok_or_else(|| JsError::new("unknown label format"))?;
+        to_js(&self.bin()?.write_labels(format).map_err(err)?)
+    }
+
+    // --- Patches ------------------------------------------------------------------
+
+    fn patched(&self) -> Option<&Patched> {
+        let b = self.binary.as_ref()?;
+        self.patched
+            .as_ref()
+            .filter(|p| p.fingerprint == b.summary().fingerprint)
+    }
+
+    /// Applies an IPS, UPS or BPS patch (named `name`) to the open file, replacing
+    /// any patch or edits before: where it stands (see `patchState`).
+    #[wasm_bindgen(js_name = patchApply)]
+    pub fn patch_apply(&mut self, name: String, patch: &[u8], limit: u32) -> Result<JsValue, JsError> {
+        let b = self.bin()?;
+        let mut applied = binviz::patch::apply(patch, b.data()).map_err(err)?;
+        let target = std::mem::take(&mut applied.output);
+        // Changes are worked out again as the patched file is edited.
+        applied.changes = Vec::new();
+        self.patched = Some(Patched {
+            fingerprint: b.summary().fingerprint.clone(),
+            target,
+            applied: Some(applied),
+            name: Some(name),
+            parsed: None,
+        });
+        self.patch_state(limit)
+    }
+
+    /// Writes bytes at a file offset of the patched file (the open file, the
+    /// first time): where the patch stands.
+    #[wasm_bindgen(js_name = patchEdit)]
+    pub fn patch_edit(&mut self, offset: u64, bytes: &[u8], limit: u32) -> Result<JsValue, JsError> {
+        let b = self.binary.as_ref().ok_or_else(|| JsError::new("no binary open"))?;
+        let fingerprint = b.summary().fingerprint.clone();
+        if self.patched.as_ref().is_none_or(|p| p.fingerprint != fingerprint) {
+            self.patched = Some(Patched {
+                fingerprint,
+                target: b.data().to_vec(),
+                applied: None,
+                name: None,
+                parsed: None,
+            });
+        }
+        let p = self.patched.as_mut().unwrap();
+        p.parsed = None;
+        let (start, end) = (offset as usize, offset as usize + bytes.len());
+        if end > p.target.len() {
+            return Err(JsError::new("past the end of the file"));
+        }
+        p.target[start..end].copy_from_slice(bytes);
+        self.patch_state(limit)
+    }
+
+    /// Where the patch stands: what the patch file said, the changed runs
+    /// (the first `limit` placed in banks, functions and regions, with their
+    /// bytes before and after), or null with none.
+    #[wasm_bindgen(js_name = patchState)]
+    pub fn patch_state(&self, limit: u32) -> Result<JsValue, JsError> {
+        let b = self.bin()?;
+        let Some(p) = self.patched() else {
+            return Ok(JsValue::NULL);
+        };
+        let original = b.data();
+        let changes = binviz::patch::changes(original, &p.target);
+        let differ = changes.iter().map(|c| c.differ).sum();
+        let shown = &changes[..changes.len().min(limit as usize)];
+        let slice = |data: &[u8], c: &binviz::patch::Change| -> Vec<u8> {
+            let start = (c.offset as usize).min(data.len());
+            data[start..(start + c.len.min(32) as usize).min(data.len())].to_vec()
+        };
+        let read = |bytes: &[u8]| self.table.as_ref().map(|t| t.decode(bytes, false).text);
+        let rows = binviz::patch::place(b, shown)
+            .into_iter()
+            .map(|placed| {
+                let before = slice(original, &placed.change);
+                let after = slice(&p.target, &placed.change);
+                PatchRow {
+                    before_text: read(&before),
+                    after_text: read(&after),
+                    before,
+                    after,
+                    placed,
+                }
+            })
+            .collect();
+        to_js(&PatchState {
+            name: p.name.as_deref(),
+            applied: p.applied.as_ref(),
+            changes: rows,
+            total: changes.len() as u32,
+            differ,
+            target_size: p.target.len() as u64,
+        })
+    }
+
+    /// Bytes of the patched file.
+    #[wasm_bindgen(js_name = patchRead)]
+    pub fn patch_read(&self, offset: u64, count: u32) -> Result<Vec<u8>, JsError> {
+        let p = self.patched().ok_or_else(|| JsError::new("no patch"))?;
+        let start = (offset as usize).min(p.target.len());
+        Ok(p.target[start..(start + count as usize).min(p.target.len())].to_vec())
+    }
+
+    /// The patched file, whole.
+    #[wasm_bindgen(js_name = patchTarget)]
+    pub fn patch_target(&self) -> Result<Vec<u8>, JsError> {
+        Ok(self.patched().ok_or_else(|| JsError::new("no patch"))?.target.clone())
+    }
+
+    /// A patch file (`ips`, `ups` or `bps`) that turns the open file into the patched one.
+    #[wasm_bindgen(js_name = patchCreate)]
+    pub fn patch_create(&self, format: &str) -> Result<Vec<u8>, JsError> {
+        let p = self.patched().ok_or_else(|| JsError::new("no patch"))?;
+        let format =
+            binviz::patch::PatchFormat::from_name(format).ok_or_else(|| JsError::new("unknown patch format"))?;
+        binviz::patch::create(format, self.bin()?.data(), &p.target).map_err(err)
+    }
+
+    /// Drops the patch and the edits.
+    #[wasm_bindgen(js_name = patchClear)]
+    pub fn patch_clear(&mut self) {
+        self.patched = None;
+    }
 
     /// Relative search in the open file: `word` in any encoding that keeps its
     /// letters in order (`width` 1, or 2 for 16-bit characters).

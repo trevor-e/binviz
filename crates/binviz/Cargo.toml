@@ -22,3 +22,4 @@ memchr.workspace = true
 flate2.workspace = true
 ruzstd.workspace = true
 serde_json.workspace = true
+pdb.workspace = true
