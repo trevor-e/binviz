@@ -22,7 +22,17 @@ fields, and maps machine code back to source through **DWARF** debug info.
   output) can be attached. Relocatable objects (`.o`) get synthetic addresses and
   relocated DWARF so they work too.
 - **Disassembly** for x86/x86-64 (iced-x86) and AArch64/ARM (yaxpeax-arm), with
-  branch targets resolved to symbols and source lines interleaved.
+  branch targets resolved to symbols, the strings and globals an instruction
+  uses named inline (AArch64 `adrp` pairs included), and source lines
+  interleaved.
+- **Call graph and cross-references.** Who calls a function, what it calls, a
+  path of calls from one function to another, and every reference to an
+  address: calls, tail calls, reads, writes, address-taken, and pointers stored
+  in data (vtables, Objective-C metadata, callbacks). Import stubs, PLT entries
+  and GOT/IAT slots are named after what they import (`_objc_msgSend`,
+  `printf@plt`, `__imp_CreateFileW`), so calls into libraries read as such.
+  Pointers are found however the loader relocates them: Mach-O chained fixups,
+  ELF `RELATIVE`/RELR relocations, or plain addresses.
 - **One search box for everything**: addresses, file offsets, symbols (raw and
   demangled), imports/exports, sections, source files and `file:line`, DWARF
   functions/types/variables, strings, and byte patterns with wildcards.
@@ -52,7 +62,8 @@ inlined frames.
 | Overview | Format facts, exact byte composition, a file map (by region or entropy), and a diagram of how the file's bytes land in the address space |
 | Layout | The region tree, expandable down to single fields and table entries |
 | Hex | Every byte tinted by the structure that owns it; hover for the full path, minimap to navigate |
-| Code | Functions and their disassembly with source lines (and source text, once loaded) interleaved |
+| Code | Functions and their disassembly with source lines (and source text, once loaded) interleaved; how many callers and callees each function has |
+| Call graph | Callers and callees of the selected function, a few levels each way, with the complete lists below; find a path of calls from another function (`main`, an entry point) |
 | Symbols | Symbols, imports, exports and strings; filter, sort, jump |
 | Sections | Segments and sections |
 | DWARF | Units, the DIE tree, attributes with clickable references, line tables |
@@ -60,8 +71,9 @@ inlined frames.
 | Map | Code and data per source file or compilation unit, drawn onto each section; reverse-engineering coverage with the largest unexplored gaps |
 
 The inspector on the right always shows everything known about the current
-selection, including your notes about it. Views are on keys `1`–`9`;
-`Alt+←/→` walks the history.
+selection: its place in the file, what refers to it (callers, reads and
+writes, pointers in data), and your notes about it. Views are on keys `1`–`9`
+and `0`; `Alt+←/→` walks the history.
 
 ### Search
 
@@ -147,6 +159,9 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `strings <file> [filter]` | Strings in the data sections |
 | `attribution <file> [unit]` · `attributed <file> <id> [unit]` | Code and data per source file (or unit), and one file's ranges |
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
+| `xrefs <file> <addr\|symbol>` · `refs-from <file> <addr\|symbol>` | References to an address, and the references a function makes |
+| `callers` · `callees` · `func <file> <addr\|symbol>` | Call sites in and out of a function; its callers, callees, strings and data |
+| `callgraph <file> <addr\|symbol> [up] [down]` · `callpath <file> <from> <to>` | The call graph around a function; a shortest chain of calls |
 | `check <file>` | Verify every byte is covered by the layout |
 
 `--debug <file>` attaches a separate debug file; `--member <n>` picks a slice of
@@ -178,6 +193,9 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `search` | The UI's search: names, strings, addresses, byte patterns, "text", file:line |
 | `inspect` | Everything about an address or file offset |
 | `disassemble` | A function, with source lines and your comments |
+| `function_info` | A function at a glance: callers, callees, the strings it uses, the globals it reads and writes |
+| `callers` · `callees` · `call_graph` · `call_path` | Follow calls: who calls what, the tree around a function, how one function reaches another |
+| `xrefs` | Every reference to an address, symbol or string: calls, reads, writes, address-taken, pointers in data |
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
@@ -187,8 +205,9 @@ the web UI imports and exports (Map → Coverage → Import), so an agent can ma
 out a binary and you can look at the result in the UI, or the other way round.
 
 Things to ask: *"Open ~/Downloads/MyApp and tell me why it's so big"*, *"Find
-the code that parses deep links and name what you find"*, *"What haven't we
-looked at yet?"*.
+the code that parses deep links and name what you find"*, *"Which functions
+use this error string, and how are they reached from main?"*, *"What haven't
+we looked at yet?"*.
 
 ## The library
 
@@ -226,6 +245,14 @@ let hits = bin.search("area", 10, None);
 let files = bin.attribution(binviz::AttributionMode::File);
 let coverage = bin.coverage(20);
 println!("{} bytes unexplored in {} gaps", coverage.totals.unexplored, coverage.gap_count);
+
+// Calls and references (the index is built on first use).
+let main = bin.symbols().by_name("main").unwrap().address;
+for caller in bin.callers(main) {
+    println!("{} calls main {} times", caller.name, caller.calls);
+}
+let graph = bin.call_graph(main, 1, 2, 8);
+let refs = bin.references_to(main, main + 1, 0, 100);
 ```
 
 All model types implement `serde::Serialize`. Universal binaries and archives
@@ -241,6 +268,12 @@ functions). Measured in the browser (WebAssembly, Edge) and natively:
 | 1.0 GB iOS-style Mach-O, 2.6M functions and symbols, 5M strings | 1.4 s | 1.5 GB WASM, 11 MB JS | 60–130 ms | 250 ms |
 | 333 MB `msedge.dll`, 1M functions recovered from `.pdata` | 0.5 s | 440 MB WASM | 10–75 ms | 180 ms |
 
+The cross-reference index is built the first time references are asked for
+(right away for files under 32 MB): 2.0 s in the browser (0.9 s natively) for
+the 316 MB `rustc_driver.dll`, whose ~100 MB of x86-64 code yields 3M
+references in 23 MB. After that, callers, callees, call graphs and reference
+lists take about a millisecond.
+
 How it stays fast:
 
 - The file is streamed into WebAssembly memory once, in chunks; the page never
@@ -254,6 +287,10 @@ How it stays fast:
 - Lists (functions, symbols, strings, table entries) are paged from the
   worker, and variable-size tables get an entry index built on first use.
 - Search indexes are built in the background when the search box is focused.
+- References are packed 8 bytes each into one sorted list per kind, so "who
+  refers to X" is a binary search; what a function refers to is found by
+  decoding just that function again. AArch64 code is scanned as raw
+  instruction words, without full disassembly.
 
 To measure a file yourself:
 
@@ -278,6 +315,9 @@ crates/binviz        the library
   src/coverage.rs    reverse-engineering coverage and gap hints
   src/discover.rs    function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS
   src/strings.rs     strings in data sections
+  src/xrefs.rs       cross-references and the call graph
+  src/pointers.rs    pointers stored in data: chained fixups, ELF relocations, plain addresses
+  src/stubs.rs       names for import stubs, PLT entries, GOT and IAT slots
   src/size.rs        where the bytes go: sections, symbols, owners (Swift, ObjC, C++, C)
   src/dwarf/attribution.rs   code and globals per source file / unit
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
@@ -303,5 +343,9 @@ cargo test
 - Split DWARF (`.dwo`/`.dwp`) and the Mach-O debug map (DWARF left in `.o`
   files) are detected but not followed; use a dSYM.
 - `.eh_frame`, dyld opcode streams and chained fixups are shown as regions but
-  not decoded entry by entry.
-- Disassembly covers x86, x86-64, AArch64 and ARM (A32).
+  not decoded entry by entry (chained fixups are walked to find pointers).
+- Disassembly covers x86, x86-64, AArch64 and ARM (A32); cross-references and
+  the call graph x86, x86-64 and AArch64.
+- Calls through registers are followed only when the register was just loaded
+  from a pointer slot (`ldr x16, [got]; blr x16`, `call r14`); virtual calls and
+  `objc_msgSend` selectors are not resolved to their targets yet.

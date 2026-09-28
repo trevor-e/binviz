@@ -212,6 +212,8 @@ impl Binary {
         let sections = std::mem::take(&mut self.sections);
         self.symbols.set_static(extra, &sections);
         self.sections = sections;
+        // Function boundaries shape the references found in code.
+        self.xrefs = std::sync::OnceLock::new();
         self.rebuild_user_symbols();
     }
 

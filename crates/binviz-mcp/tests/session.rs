@@ -140,6 +140,22 @@ fn an_agent_session() {
     let hex = s.ok("hexdump", json!({ "at": "@0x0", "length": 16 }));
     assert!(hex.contains("4d 5a"), "{hex}");
 
+    // Following the code.
+    let info = s.ok("function_info", json!({ "at": "main" }));
+    assert!(info.contains("Indexed") && info.contains("total_area"), "{info}");
+    assert!(info.contains("%s: %d shapes") && info.contains("g_counter"), "{info}");
+    let callers = s.ok("callers", json!({ "at": "total_area" }));
+    assert!(
+        callers.contains("called by 1 function") && callers.contains("main"),
+        "{callers}"
+    );
+    let graph = s.ok("call_graph", json!({ "at": "main", "up": 1, "down": 1 }));
+    assert!(graph.contains("→ total_area") && graph.contains("← "), "{graph}");
+    let chain = s.ok("call_path", json!({ "from": "main", "to": "total_area" }));
+    assert!(chain.starts_with("1 call:"), "{chain}");
+    let refs = s.ok("xrefs", json!({ "at": "g_counter", "kind": "read" }));
+    assert!(refs.contains("from main+"), "{refs}");
+
     // Map something out; the name becomes a symbol and is saved.
     let sub = s.ok(
         "annotate",

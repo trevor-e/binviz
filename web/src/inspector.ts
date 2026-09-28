@@ -1,8 +1,23 @@
 // The right-hand panel: everything known about the current selection.
 import { familyOf } from './colors';
 import { store } from './store';
-import type { Annotation, Inspection, PathEntry } from './types';
-import { basename, copyText, formatSize, h, hex, icon, num } from './util';
+import type { Annotation, Inspection, PathEntry, RefCounts, RefKind, Reference } from './types';
+import { basename, copyText, formatCount, formatSize, h, hex, icon, num } from './util';
+
+const REF_LABELS: Record<RefKind, [string, string]> = {
+  call: ['call', 'calls'],
+  jump: ['tail call', 'tail calls'],
+  read: ['read', 'reads'],
+  write: ['write', 'writes'],
+  address: ['address taken', 'addresses taken'],
+  pointer: ['pointer in data', 'pointers in data'],
+};
+
+/** "3 calls · 1 pointer in data". */
+export function describeRefs(c: RefCounts): string {
+  const parts = (Object.keys(REF_LABELS) as RefKind[]).filter((k) => c[k] > 0).map((k) => `${formatCount(c[k])} ${REF_LABELS[k][c[k] === 1 ? 0 : 1]}`);
+  return parts.join(' · ');
+}
 
 export class Inspector {
   readonly el = h('aside', { class: 'inspector', 'aria-label': 'Inspector' });
@@ -19,6 +34,7 @@ export class Inspector {
       this.render();
     });
     store.on('sources', () => this.render());
+    store.on('xrefs', () => this.render());
     this.render();
   }
 
@@ -30,7 +46,7 @@ export class Inspector {
       this.el.replaceChildren(head, h('div', { class: 'insp-section muted' }, 'Click a byte, instruction, symbol or line to see what it is.'));
       return;
     }
-    const sections = [this.location(ins), this.path(ins), this.placement(ins), this.notes(ins), this.source(ins), this.instruction(ins), this.actions(ins)];
+    const sections = [this.location(ins), this.path(ins), this.placement(ins), this.references(ins), this.notes(ins), this.source(ins), this.instruction(ins), this.actions(ins)];
     this.el.replaceChildren(head, ...sections.filter((s): s is HTMLElement => s !== null));
   }
 
@@ -98,6 +114,82 @@ export class Inspector {
       row('Symbol', link, s.offset > 0n ? h('span', { class: 'muted' }, ` + ${hex(s.offset)}`) : '', h('span', { class: 'muted' }, s.size > 0n ? `  (${num(s.size)} bytes)` : ''));
     }
     return h('div', { class: 'insp-section' }, h('h3', null, 'Placement'), h('div', { class: 'loc-grid' }, rows));
+  }
+
+  /** Who calls, reads, writes or points to the selection. */
+  private references(ins: Inspection): HTMLElement | null {
+    if (ins.address === undefined || store.xrefs === 'unsupported') return null;
+    const section = h('div', { class: 'insp-section' }, h('h3', null, 'References'));
+    if (store.xrefs !== 'ready') {
+      const building = store.xrefs === 'building';
+      const b = h('button', { class: 'btn small', type: 'button', disabled: building }, building ? 'Indexing…' : 'Find references');
+      b.addEventListener('click', () => void store.ensureXrefs());
+      section.append(h('div', { class: 'muted', style: 'margin-bottom:6px' }, building ? 'Finding every call, data reference and stored pointer…' : 'Who calls this, reads it, or points to it?'), b);
+      return section;
+    }
+    const body = h('div', { class: 'refs' }, h('div', { class: 'muted' }, 'Looking…'));
+    section.appendChild(body);
+    void this.fillReferences(ins, body);
+    return section;
+  }
+
+  private async fillReferences(ins: Inspection, body: HTMLElement) {
+    const sym = ins.symbol;
+    // A function's callers refer to its start; data is referred to anywhere inside.
+    let lo = ins.address!;
+    let hi = lo + 1n;
+    let what = 'this address';
+    const code = ins.instruction !== undefined;
+    if (sym && code) {
+      lo = sym.address;
+      hi = lo + 1n;
+      what = sym.demangled ?? sym.name;
+    } else if (sym && sym.size > 0n) {
+      lo = sym.address;
+      hi = sym.address + sym.size;
+      what = sym.demangled ?? sym.name;
+    }
+    const page = await store.api.referencesTo(lo, hi, 0, 12);
+    if (store.selection.inspection !== ins) return;
+    const rows: HTMLElement[] = [];
+    const list = h('div', { class: 'ref-list' });
+    const add = (refs: Reference[]) => {
+      for (const r of refs) list.appendChild(this.refRow(r, lo, hi));
+    };
+    add(page.refs);
+    rows.push(h('div', { class: 'ref-sum', title: what }, page.total ? describeRefs(page.counts) : `Nothing refers to ${what.length > 40 ? 'it' : what} directly.`));
+    if (page.total === 0) rows.push(h('div', { class: 'muted', style: 'font-size:12px' }, code ? 'It may be called indirectly: through a register, a vtable or a callback set up at run time.' : 'It may be reached through a computed address.'));
+    rows.push(list);
+    let shown = page.refs.length;
+    if (page.total > shown) {
+      const more = h('button', { class: 'btn small', type: 'button' }, `Show more (${formatCount(page.total - shown)} left)`);
+      more.addEventListener('click', async () => {
+        const next = await store.api.referencesTo(lo, hi, shown, 100);
+        add(next.refs);
+        shown += next.refs.length;
+        if (shown >= page.total) more.remove();
+        else more.textContent = `Show more (${formatCount(page.total - shown)} left)`;
+      });
+      rows.push(h('div', { class: 'btn-row' }, more));
+    }
+    if (code) {
+      const graph = h('button', { class: 'btn small', type: 'button', title: 'Callers and callees, a few levels each way (0)' }, 'Call graph');
+      graph.addEventListener('click', () => store.setView('calls'));
+      rows.push(h('div', { class: 'btn-row', style: 'margin-top:6px' }, graph));
+    }
+    body.replaceChildren(...rows);
+  }
+
+  private refRow(r: Reference, lo: bigint, hi: bigint): HTMLElement {
+    const inCode = store.file!.sections.some((s) => s.kind === 'code' && s.loaded && r.source >= s.address && r.source < s.address + s.size);
+    const row = h(
+      'div',
+      { class: 'ref-row', title: `${REF_LABELS[r.kind][0]} at ${hex(r.source)}${hi - lo > 1n && r.target !== lo ? ` (to +${hex(r.target - lo)})` : ''}` },
+      h('span', { class: `ref-kind k-${r.kind}` }, r.kind),
+      h('span', { class: 'link mono' }, r.from ?? hex(r.source)),
+    );
+    row.addEventListener('click', () => void store.select({ address: r.source }, { view: inCode ? 'code' : 'hex' }));
+    return row;
   }
 
   /** Opens the note form for the current selection (the N key). */

@@ -219,6 +219,12 @@ pub fn demangle(name: &str) -> Option<String> {
     if let Some(rest) = name.strip_prefix("__imp_") {
         return demangle(rest).map(|d| format!("__imp_{d}"));
     }
+    // Import stubs and slots: `<name>@plt`, `<name>@got`.
+    for suffix in ["@plt", "@got"] {
+        if let Some(rest) = name.strip_suffix(suffix) {
+            return demangle(rest).map(|d| format!("{d}{suffix}"));
+        }
+    }
     // Mach-O and 32-bit Windows prefix C symbols with an underscore.
     let stripped = name.strip_prefix('_').unwrap_or(name);
     for candidate in [name, stripped] {

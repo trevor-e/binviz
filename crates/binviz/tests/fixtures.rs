@@ -40,6 +40,10 @@ const ALL: &[&str] = &[
     "tiny-pe-x64.exe",
     "shapes-pe.exe",
     "shapes-pe.stripped.exe",
+    "imports-elf-x64",
+    "imports-elf-a64",
+    "imports-macho-a64",
+    "imports-macho-a64.chained",
 ];
 
 #[test]
@@ -487,7 +491,15 @@ fn stripped_binaries_recover_functions() {
     let cov = bin.coverage(10);
     let text = cov.sections.iter().find(|s| s.name == ".text").unwrap();
     assert!(text.bytes.recovered * 10 > text.size * 9, "{:?}", text.bytes);
-    assert_eq!(text.bytes.named, 0);
+    // The only names left in the code are the import thunks' (`jmp [__imp_…]`).
+    let thunks: u64 = bin
+        .symbols()
+        .functions()
+        .filter(|s| s.source == SymbolSource::Import)
+        .map(|s| s.size)
+        .sum();
+    assert!(thunks > 0);
+    assert_eq!(text.bytes.named, thunks);
 }
 
 fn total(b: &StatusBytes) -> u64 {
@@ -609,4 +621,120 @@ fn strings_in_data_sections() {
     assert!(page.strings.iter().any(|s| s.text == "circle" && s.address.is_some()));
     let all = bin.strings("", 0, 10);
     assert!(all.total > 100 && all.strings.len() == 10);
+}
+
+#[test]
+fn callers_callees_and_the_data_a_function_uses() {
+    let bin = open("shapes-pe.exe");
+    let main = bin.symbols().by_name("main").unwrap().address;
+    let total_area = bin.symbols().by_name("total_area").unwrap().address;
+    let callers = bin.callers(total_area);
+    assert!(
+        callers.iter().any(|c| c.address == main && c.name == "main"),
+        "{callers:?}"
+    );
+    assert!(bin.callees(main).iter().any(|c| c.address == total_area));
+
+    let f = bin.function_summary(main, 50).unwrap();
+    let format = f
+        .strings
+        .iter()
+        .find(|s| s.text.starts_with("%s: %d shapes"))
+        .unwrap_or_else(|| panic!("{:?}", f.strings));
+    assert!(
+        f.data.iter().any(|r| r.to.as_deref() == Some("g_counter")),
+        "{:?}",
+        f.data
+    );
+    let refs = bin.references_to(format.address, format.address + 1, 0, 10);
+    assert_eq!((refs.total, refs.refs[0].function), (1, Some(main)));
+    assert_eq!(refs.refs[0].source, format.site);
+
+    // From the entry point down to total_area, through main.
+    let entry = bin.summary().entry.unwrap();
+    let path = bin.call_path(entry, total_area, 8).expect("a path");
+    assert_eq!(path.first().map(|s| s.address), Some(entry));
+    assert!(path.iter().any(|s| s.address == main), "{path:?}");
+    let last = path.last().unwrap();
+    assert_eq!(last.address, total_area);
+    assert!(
+        bin.references_to(total_area, total_area + 1, 0, 10)
+            .refs
+            .iter()
+            .any(|r| Some(r.source) == last.site)
+    );
+
+    let g = bin.call_graph(main, 1, 1, 20);
+    assert!(g.nodes.iter().any(|n| n.address == total_area && n.depth == 1));
+    assert!(g.nodes.iter().any(|n| n.depth == -1));
+    assert!(g.edges.iter().any(|e| e.from == main && e.to == total_area));
+
+    // Stripped, the same edges connect recovered functions, and calls into
+    // the C runtime go through named import thunks.
+    let stripped = open("shapes-pe.stripped.exe");
+    assert!(stripped.callers(total_area).iter().any(|c| c.address == main));
+    let imports: Vec<String> = stripped
+        .callees(main)
+        .iter()
+        .flat_map(|c| stripped.callees(c.address))
+        .filter(|c| c.kind == binviz::NodeKind::Import)
+        .map(|c| c.name.clone())
+        .collect();
+    assert!(!imports.is_empty(), "no calls into imports below main");
+}
+
+#[test]
+fn aarch64_calls() {
+    for name in ["tiny-elf-a64", "tiny-macho-a64", "libtiny.dylib"] {
+        let bin = open(name);
+        let run = bin.symbols().by_name("tiny::run").unwrap().address;
+        let callees: Vec<String> = bin.callees(run).into_iter().map(|c| c.name).collect();
+        assert!(callees.iter().any(|c| c == "tiny::fib"), "{name}: {callees:?}");
+        assert!(callees.iter().any(|c| c.ends_with("checksum")), "{name}: {callees:?}");
+        let fib = bin.symbols().by_name("tiny::fib").unwrap().address;
+        assert!(bin.callers(fib).iter().any(|c| c.address == run), "{name}");
+        // adr of a static: an address reference.
+        let points = bin.symbols().by_name("tiny::POINTS").unwrap();
+        let refs = bin.references_to(points.address, points.address + points.size, 0, 10);
+        assert!(refs.refs.iter().any(|r| r.function == Some(run)), "{name}: {refs:?}");
+    }
+}
+
+#[test]
+fn imports_and_pointers_in_data() {
+    for name in [
+        "imports-elf-x64",
+        "imports-elf-a64",
+        "imports-macho-a64",
+        "imports-macho-a64.chained",
+    ] {
+        let bin = open(name);
+        let main = bin.symbols().by_name("main").unwrap().address;
+        // PLT entries, Mach-O stubs, or (x86-64 without a PLT) the GOT slot itself.
+        let callees = bin.callees(main);
+        assert!(
+            callees
+                .iter()
+                .any(|c| c.kind == binviz::NodeKind::Import && c.name.contains("puts")),
+            "{name}: {callees:?}"
+        );
+        // The loader relocates the pointers in MESSAGES: RELA, RELR, dyld info, chained fixups.
+        let messages = bin.symbols().by_name("imports::MESSAGES").unwrap();
+        let pointers: Vec<_> = bin
+            .references_from(messages.address, messages.address + messages.size)
+            .into_iter()
+            .filter(|r| r.kind == binviz::RefKind::Pointer)
+            .collect();
+        let texts: Vec<&str> = pointers.iter().map(|r| r.to.as_deref().unwrap_or("")).collect();
+        assert_eq!(
+            texts,
+            ["\"hello from binviz\"", "\"goodbye\"", "\"unused message\""],
+            "{name}"
+        );
+        let hello = pointers[0].target;
+        let to = bin.references_to(hello, hello + 1, 0, 10);
+        assert_eq!(to.counts.pointer, 1, "{name}: {:?}", to.counts);
+        assert!(to.counts.address >= 1, "{name}: {:?}", to.counts);
+        assert_eq!(bin.pointer_at(messages.address), Some(hello), "{name}");
+    }
 }

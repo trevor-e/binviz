@@ -212,6 +212,53 @@ fn main() {
         });
     }
 
+    if bin.xrefs_supported() {
+        println!("references / call graph");
+        time("xref index", || bin.prepare_xrefs());
+        let c = bin.xref_counts();
+        println!("    {} references: {c:?}", c.total());
+        // The most-referenced of a sample of functions.
+        let busiest = time("reference counts (2000 functions)", || {
+            bin.symbols()
+                .functions()
+                .step_by((funcs / 2000).max(1))
+                .map(|f| {
+                    (
+                        bin.reference_counts(f.address, f.address + f.size.max(1)).total(),
+                        f.address,
+                    )
+                })
+                .max()
+                .map(|(_, a)| a)
+        });
+        if let Some(b) = busiest {
+            println!(
+                "    busiest: {}",
+                bin.symbols()
+                    .at(b)
+                    .map(|s| s.display_name().into_owned())
+                    .unwrap_or_default()
+            );
+            time("callers (busiest)", || bin.callers(b).len());
+            time("references_to (busiest, 200)", || {
+                bin.references_to(b, b + 1, 0, 200).refs.len()
+            });
+            time("function_summary (busiest)", || {
+                bin.function_summary(b, 30).map(|f| f.caller_count)
+            });
+        }
+        if let Some(e) = entry {
+            time("callees (entry)", || bin.callees(e).len());
+            time("call_graph (entry, 2 up, 2 down)", || {
+                bin.call_graph(e, 2, 2, 12).nodes.len()
+            });
+            if let Some(b) = busiest {
+                let path = time("call_path (entry -> busiest)", || bin.call_path(e, b, 8));
+                println!("    path: {:?}", path.map(|p| p.len()));
+            }
+        }
+    }
+
     println!("annotations");
     let notes: Vec<Annotation> = bin
         .symbols()

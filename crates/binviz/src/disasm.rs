@@ -126,12 +126,12 @@ impl Binary {
                             FlowControl::Interrupt | FlowControl::Exception => FlowKind::Interrupt,
                         }
                     };
-                    let target = if !invalid && ins.near_branch_target() != 0 {
-                        Some(ins.near_branch_target())
+                    let (target, data) = if !invalid && ins.near_branch_target() != 0 {
+                        (Some(ins.near_branch_target()), false)
                     } else if !invalid && ins.is_ip_rel_memory_operand() {
-                        Some(ins.ip_rel_memory_address())
+                        (Some(ins.ip_rel_memory_address()), true)
                     } else {
-                        None
+                        (None, false)
                     };
                     let address = ins.ip();
                     out.instructions.push(Instruction {
@@ -142,7 +142,7 @@ impl Binary {
                         mnemonic,
                         operands,
                         flow,
-                        target_symbol: target.and_then(|t| self.symbol_name(t)),
+                        target_symbol: target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }),
                         target,
                         source: source_for(address),
                     });
@@ -150,6 +150,8 @@ impl Binary {
             }
             Isa::A64 => {
                 let decoder = yaxpeax_arm::armv8::a64::InstDecoder::default();
+                // Registers holding a page address from `adrp`.
+                let mut pages = [None::<u64>; 32];
                 let mut pos = 0;
                 while pos + 4 <= bytes.len() {
                     if out.instructions.len() >= limit {
@@ -159,7 +161,7 @@ impl Binary {
                     let address = start + pos as u64;
                     let word = &bytes[pos..pos + 4];
                     let mut reader = yaxpeax_arch::U8Reader::new(word);
-                    let (mnemonic, operands, flow, target) = match decoder.decode(&mut reader) {
+                    let (mnemonic, operands, flow, mut target) = match decoder.decode(&mut reader) {
                         Ok(ins) => a64_parts(&ins, address),
                         Err(_) => (
                             ".word".to_string(),
@@ -167,6 +169,35 @@ impl Binary {
                             FlowKind::Invalid,
                             None,
                         ),
+                    };
+                    let w = u32::from_le_bytes(word.try_into().unwrap_or([0; 4]));
+                    let mut data = matches!(flow, FlowKind::Normal);
+                    if w & 0x9F00_0000 == 0x9000_0000 {
+                        // adrp: the page alone names nothing.
+                        pages[(w & 31) as usize] = target;
+                        data = false;
+                    } else {
+                        let page = pages[((w >> 5) & 31) as usize];
+                        let ldst = crate::xrefs::a64_ldst(w);
+                        if let Some(page) = page {
+                            if w & 0xFF80_0000 == 0x9100_0000 {
+                                target = Some(page + ((((w >> 10) & 0xFFF) as u64) << (12 * ((w >> 22) & 1))));
+                            } else if let Some((scale, _)) = ldst {
+                                target = Some(page + ((w >> 10) & 0xFFF) as u64 * scale);
+                            }
+                        }
+                        // The destination register no longer holds a page (stores only read theirs).
+                        if !ldst.is_some_and(|(_, store)| store) {
+                            pages[(w & 31) as usize] = None;
+                        }
+                        if flow == FlowKind::Call {
+                            pages[..19].fill(None);
+                        }
+                    }
+                    let target_symbol = match target {
+                        Some(t) if data => self.name_for(t),
+                        Some(t) if w & 0x9F00_0000 != 0x9000_0000 => self.symbol_name(t),
+                        _ => None,
                     };
                     out.instructions.push(Instruction {
                         address,
@@ -176,7 +207,7 @@ impl Binary {
                         mnemonic,
                         operands,
                         flow,
-                        target_symbol: target.and_then(|t| self.symbol_name(t)),
+                        target_symbol,
                         target,
                         source: source_for(address),
                     });

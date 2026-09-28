@@ -602,6 +602,7 @@ impl Binary {
                     SymbolSource::Discovered => parts.push("recovered".into()),
                     SymbolSource::User => parts.push("your name".into()),
                     SymbolSource::Dwarf => parts.push("from DWARF".into()),
+                    SymbolSource::Import => parts.push("import stub".into()),
                     _ => {}
                 }
                 if s.demangled().is_some() {

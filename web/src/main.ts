@@ -5,6 +5,7 @@ import { store, type MapTab, type ViewName } from './store';
 import { toast } from './ui';
 import { basename, formatSize, h, icon } from './util';
 import type { View } from './views/base';
+import { CallsView } from './views/calls';
 import { CodeView } from './views/code';
 import { DwarfView } from './views/dwarf';
 import { HexView } from './views/hex';
@@ -31,6 +32,7 @@ const NAV: { view: ViewName; label: string; key: string }[] = [
   { view: 'layout', label: 'Layout', key: '2' },
   { view: 'hex', label: 'Hex', key: '3' },
   { view: 'code', label: 'Code', key: '4' },
+  { view: 'calls', label: 'Call graph', key: '0' },
   { view: 'symbols', label: 'Symbols', key: '5' },
   { view: 'sections', label: 'Sections', key: '6' },
   { view: 'dwarf', label: 'DWARF', key: '7' },
@@ -78,6 +80,7 @@ const views: Record<ViewName, View> = {
   layout: new LayoutView(),
   hex: new HexView(),
   code: new CodeView(),
+  calls: new CallsView(),
   symbols: new SymbolsView(),
   sections: new SectionsView(),
   dwarf: new DwarfView(),

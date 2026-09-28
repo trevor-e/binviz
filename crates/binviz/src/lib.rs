@@ -34,11 +34,14 @@ mod error;
 mod inspect;
 mod layout;
 pub mod model;
+mod pointers;
 pub mod search;
 pub mod size;
 mod strings;
+mod stubs;
 mod symbols;
 mod util;
+pub mod xrefs;
 
 pub use binary::Binary;
 pub use container::{Container, ContainerInfo, Member};
@@ -54,6 +57,10 @@ pub use size::{GroupKind, SizeReport};
 pub use strings::{FoundString, StringPage};
 pub use symbols::{Binding, FunctionPage, Sym, SymbolPage, SymbolQuery, SymbolTable};
 pub use util::demangle;
+pub use xrefs::{
+    CallEdge, CallGraph, FunctionSummary, GraphEdge, GraphNode, NodeKind, PathStep, RefCounts, RefKind, RefPage,
+    Reference, StringUse,
+};
 
 /// Reads a file straight into shared storage: a large binary is never held
 /// twice while it is parsed.

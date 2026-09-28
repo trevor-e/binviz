@@ -28,6 +28,14 @@ COMMANDS:
                                    patterns (48 8b ?? 08), \"text\", file:line
     strings <file> [filter]        Printable strings in the data sections
     coverage <file>                How much of the code and data is mapped out
+    xrefs <file> <addr|symbol>     References to an address, symbol or string
+    refs-from <file> <addr|symbol> References made by a function (or data)
+    callers <file> <addr|symbol>   Functions that call a function
+    callees <file> <addr|symbol>   Functions a function calls
+    callgraph <file> <addr|symbol> [up] [down]
+                                   Call graph around a function
+    callpath <file> <from> <to>    A shortest chain of calls between two functions
+    func <file> <addr|symbol>      Callers, callees, strings and data of a function
     attribution <file> [unit]      Code and data per source file (or unit)
     attributed <file> <id> [unit]  Address ranges of one source file (or unit)
     json <file>                    Summary as JSON
@@ -418,6 +426,124 @@ fn run(args: &[String], debug: Option<&str>, member: Option<&str>, notes: Option
                     if r.data { "data" } else { "code" },
                     r.line,
                     r.label.as_deref().unwrap_or("")
+                );
+            }
+        }
+        "xrefs" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let (lo, hi) = match bin.symbols().at(addr) {
+                Some(s) if s.size > 0 => (addr, addr + s.size),
+                _ => (addr, addr + 1),
+            };
+            let t = std::time::Instant::now();
+            bin.prepare_xrefs();
+            eprintln!("index: {:?} in {:.0?}", bin.xref_counts(), t.elapsed());
+            let page = bin.references_to(lo, hi, 0, 200);
+            println!("{} references to {lo:#x}..{hi:#x}: {:?}", page.total, page.counts);
+            for r in &page.refs {
+                println!(
+                    "  {:<8} {:#x} {:<40} -> {:#x} {}",
+                    r.kind.as_str(),
+                    r.source,
+                    r.from.as_deref().unwrap_or("?"),
+                    r.target,
+                    r.to.as_deref().unwrap_or("")
+                );
+            }
+        }
+        "refs-from" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let (lo, hi) = match bin.symbols().function_containing(addr) {
+                Some(f) => (f.address, f.address + f.size.max(1)),
+                None => (addr, addr + 64),
+            };
+            for r in bin.references_from(lo, hi) {
+                println!(
+                    "  {:#x} {:<8} {:#x} {}",
+                    r.source,
+                    r.kind.as_str(),
+                    r.target,
+                    r.to.as_deref().unwrap_or("")
+                );
+            }
+        }
+        "callers" | "callees" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let list = if cmd == "callers" {
+                bin.callers(addr)
+            } else {
+                bin.callees(addr)
+            };
+            for e in &list {
+                println!(
+                    "  {:>4}x {:#x} {:<9} {} (first at {:#x})",
+                    e.calls,
+                    e.address,
+                    format!("{:?}", e.kind).to_lowercase(),
+                    e.name,
+                    e.site
+                );
+            }
+            eprintln!("{} {cmd}", list.len());
+        }
+        "callgraph" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let up = arg(3).map(num).transpose()?.unwrap_or(1) as u32;
+            let down = arg(4).map(num).transpose()?.unwrap_or(2) as u32;
+            let g = bin.call_graph(addr, up, down, 12);
+            for n in &g.nodes {
+                println!(
+                    "{:>3} {:#x} {:<9} {}",
+                    n.depth,
+                    n.address,
+                    format!("{:?}", n.kind).to_lowercase(),
+                    n.name
+                );
+            }
+            for e in &g.edges {
+                println!("  {:#x} -> {:#x} ({}x)", e.from, e.to, e.calls);
+            }
+            println!("{} hidden", g.hidden);
+        }
+        "callpath" => {
+            let from = resolve_address(&bin, arg(2).ok_or("missing from")?)?;
+            let to = resolve_address(&bin, arg(3).ok_or("missing to")?)?;
+            match bin.call_path(from, to, 12) {
+                Some(steps) => {
+                    for s in steps {
+                        let site = s.site.map(|a| format!(" (called at {a:#x})")).unwrap_or_default();
+                        println!("  {:#x} {}{site}", s.address, s.name);
+                    }
+                }
+                None => println!("no path within 12 calls"),
+            }
+        }
+        "func" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let f = bin.function_summary(addr, 30).ok_or("not in a function")?;
+            println!(
+                "{} at {:#x}, {} bytes; referenced by {:?}",
+                f.name, f.address, f.size, f.referenced_by
+            );
+            println!("{} callers:", f.caller_count);
+            for e in &f.callers {
+                println!("  {:>4}x {}", e.calls, e.name);
+            }
+            println!("{} callees:", f.callee_count);
+            for e in &f.callees {
+                println!("  {:>4}x {}", e.calls, e.name);
+            }
+            println!("strings:");
+            for s in &f.strings {
+                println!("  {:#x} {:?}", s.address, s.text);
+            }
+            println!("data:");
+            for r in &f.data {
+                println!(
+                    "  {:<8} {:#x} {}",
+                    r.kind.as_str(),
+                    r.target,
+                    r.to.as_deref().unwrap_or("")
                 );
             }
         }

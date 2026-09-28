@@ -11,6 +11,7 @@ use crate::notes;
 
 pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O and PE binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
 Start with open_binary (a path; universal binaries pick arm64 unless you pass member). Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
+To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
 
@@ -127,6 +128,77 @@ pub fn definitions() -> Vec<Value> {
                 "max_instructions": { "type": "integer", "description": "Default 400, max 5000." },
             }),
             &["at"],
+            true,
+        ),
+        tool(
+            "function_info",
+            "Understand a function",
+            "One-stop summary of the function containing an address: size, source file (DWARF), who calls it, what it calls (functions and imports), the strings it uses, the globals it reads and writes, and how many pointers to it are stored in data (vtables, callbacks).",
+            json!({
+                "at": address("A function or address inside it"),
+                "limit": { "type": "integer", "description": "Entries per list (default 25, max 500)." },
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "xrefs",
+            "References to an address",
+            "Every reference to an address, a symbol (its whole extent) or a string: calls and tail calls, code reading, writing or taking its address, and pointers to it stored in data. Each with the function (or data) it comes from.",
+            json!({
+                "at": address("What is referenced"),
+                "kind": { "type": "string", "enum": ["call", "jump", "read", "write", "address", "pointer"], "description": "Only this kind of reference." },
+                "offset": { "type": "integer" },
+                "limit": { "type": "integer", "description": "Default 100, max 2000." },
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "callers",
+            "Who calls this function",
+            "Functions that call (or tail-call) the function containing an address, most call sites first, with the first call site of each.",
+            json!({
+                "at": address("A function or address inside it"),
+                "limit": { "type": "integer", "description": "Default 100, max 2000." },
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "callees",
+            "What this function calls",
+            "Functions and imports that the function containing an address calls (directly, through stubs/PLT/GOT/IAT, or as tail calls), most call sites first.",
+            json!({
+                "at": address("A function or address inside it"),
+                "limit": { "type": "integer", "description": "Default 100, max 2000." },
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "call_graph",
+            "Call graph around a function",
+            "The call tree around a function: callers up to `up` levels and callees down to `down` levels, keeping the `fanout` neighbours with the most call sites per function.",
+            json!({
+                "at": address("The function at the centre"),
+                "up": { "type": "integer", "description": "Levels of callers (default 1, max 4)." },
+                "down": { "type": "integer", "description": "Levels of callees (default 2, max 4)." },
+                "fanout": { "type": "integer", "description": "Neighbours per function (default 8, max 30)." },
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "call_path",
+            "How does A reach B?",
+            "A shortest chain of calls from one function to another (e.g. from main or an entry point to an interesting function), with each call site.",
+            json!({
+                "from": address("Where the path starts"),
+                "to": address("Where it should end"),
+                "max_depth": { "type": "integer", "description": "Longest chain to consider (default 10, max 20)." },
+            }),
+            &["from", "to"],
             true,
         ),
         tool(
@@ -342,6 +414,12 @@ impl Server {
                     "annotate" => annotate(o, args)?,
                     "remove_annotation" => remove_annotation(o, args)?,
                     "list_annotations" => list_annotations(o, args),
+                    "function_info" => function_info(o, args)?,
+                    "xrefs" => xrefs(o, args)?,
+                    "callers" => call_list(o, args, true)?,
+                    "callees" => call_list(o, args, false)?,
+                    "call_graph" => call_graph(o, args)?,
+                    "call_path" => call_path(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -925,6 +1003,14 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
             ins.bytes
         );
     }
+    if let Some(address) = i.address
+        && o.bin.xrefs_ready()
+    {
+        let c = o.bin.reference_counts(address, address + 1);
+        if c.total() > 0 {
+            let _ = writeln!(out, "Referenced by: {} (see xrefs)", ref_counts(&c));
+        }
+    }
     if let Some(a) = &i.annotation {
         let _ = writeln!(
             out,
@@ -1333,4 +1419,433 @@ fn list_annotations(o: &Open, args: &Value) -> String {
         );
     }
     out
+}
+
+// --- Cross-references and the call graph ----------------------------------------------
+
+/// Builds the reference index if needed; says so when that took a while.
+fn ensure_xrefs(o: &Open) -> Result<String, String> {
+    if !o.bin.xrefs_supported() {
+        return Err(format!(
+            "references can't be found in {} code yet (x86, x86-64 and AArch64 are supported)",
+            o.bin.summary().arch
+        ));
+    }
+    if o.bin.xrefs_ready() {
+        return Ok(String::new());
+    }
+    let t = Instant::now();
+    o.bin.prepare_xrefs();
+    let c = o.bin.xref_counts();
+    Ok(format!(
+        "(Indexed {} references in {:.1} s.)\n",
+        count(c.total()),
+        t.elapsed().as_secs_f64()
+    ))
+}
+
+fn ref_counts(c: &binviz::RefCounts) -> String {
+    let parts: Vec<String> = [
+        (c.call, "call"),
+        (c.jump, "tail call/jump"),
+        (c.read, "read"),
+        (c.write, "write"),
+        (c.address, "address taken"),
+        (c.pointer, "pointer in data"),
+    ]
+    .iter()
+    .filter(|(n, _)| *n > 0)
+    .map(|(n, what)| {
+        format!(
+            "{} {what}{}",
+            count(*n),
+            if *n == 1 || what.ends_with("data") || what.ends_with("taken") {
+                ""
+            } else {
+                "s"
+            }
+        )
+    })
+    .collect();
+    if parts.is_empty() {
+        "nothing".into()
+    } else {
+        parts.join(", ")
+    }
+}
+
+fn node_kind(k: binviz::NodeKind) -> &'static str {
+    match k {
+        binviz::NodeKind::Function => "",
+        binviz::NodeKind::Import => " [import]",
+        binviz::NodeKind::Code => " [code]",
+        binviz::NodeKind::Data => " [data]",
+    }
+}
+
+/// The function containing an address, as (start, name), or an error that says what is there instead.
+fn function_at(bin: &Binary, at: &str) -> Result<u64, String> {
+    let address = address_of(bin, at)?;
+    match bin.symbols().function_containing(address) {
+        Some(f) => Ok(f.address),
+        None => Err(format!(
+            "{address:#x} is not inside a known function{}",
+            bin.sections()
+                .iter()
+                .find(|s| s.loaded && address >= s.address && address < s.address + s.size)
+                .map(|s| format!(" (it is in {})", s.name))
+                .unwrap_or_default()
+        )),
+    }
+}
+
+fn function_info(o: &Open, args: &Value) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let start = function_at(&o.bin, at)?;
+    let mut out = ensure_xrefs(o)?;
+    let limit = int(args, "limit", 25, 500) as usize;
+    let f = o.bin.function_summary(start, limit).ok_or("not in a function")?;
+    let _ = writeln!(
+        out,
+        "{}  [{:#x}..{:#x}, {} bytes]",
+        f.name,
+        f.address,
+        f.address + f.size,
+        count(f.size)
+    );
+    let i = o.bin.inspect(Target::Address(f.address));
+    if let Some(src) = &i.source {
+        let _ = writeln!(out, "Source: {}:{}", src.path, src.line);
+    }
+    if let Some(a) = &i.annotation {
+        let _ = writeln!(
+            out,
+            "Your note{}: {}",
+            if a.reviewed { " (reviewed)" } else { "" },
+            clip(&a.comment, 300)
+        );
+    }
+    let _ = writeln!(out, "Referenced by: {}", ref_counts(&f.referenced_by));
+    let _ = writeln!(
+        out,
+        "\nCalled by {} function{}:",
+        count(f.caller_count),
+        if f.caller_count == 1 { "" } else { "s" }
+    );
+    for c in &f.callers {
+        let _ = writeln!(
+            out,
+            "  {:#x}  {}{}  ({}x, first at {:#x})",
+            c.address,
+            clip(&c.name, 120),
+            node_kind(c.kind),
+            c.calls,
+            c.site
+        );
+    }
+    if f.caller_count as usize > f.callers.len() {
+        let _ = writeln!(out, "  … {} more (callers)", f.caller_count as usize - f.callers.len());
+    }
+    let _ = writeln!(out, "\nCalls {}:", count(f.callee_count));
+    for c in &f.callees {
+        let _ = writeln!(
+            out,
+            "  {:#x}  {}{}  ({}x, first at {:#x})",
+            c.address,
+            clip(&c.name, 120),
+            node_kind(c.kind),
+            c.calls,
+            c.site
+        );
+    }
+    if f.callee_count as usize > f.callees.len() {
+        let _ = writeln!(out, "  … {} more (callees)", f.callee_count as usize - f.callees.len());
+    }
+    if !f.strings.is_empty() {
+        let _ = writeln!(out, "\nStrings:");
+        for s in &f.strings {
+            let _ = writeln!(out, "  {:#x}  {:?}  (at {:#x})", s.address, clip(&s.text, 200), s.site);
+        }
+    }
+    if !f.data.is_empty() {
+        let _ = writeln!(out, "\nData:");
+        for r in &f.data {
+            let _ = writeln!(
+                out,
+                "  {:#x}  {:<8} {}  (at {:#x})",
+                r.target,
+                r.kind.as_str(),
+                clip(r.to.as_deref().unwrap_or(""), 160),
+                r.source
+            );
+        }
+    }
+    Ok(out)
+}
+
+fn xrefs(o: &Open, args: &Value) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let address = address_of(&o.bin, at)?;
+    let mut out = ensure_xrefs(o)?;
+    // A symbol's whole extent; otherwise the one address.
+    let (lo, hi, what) = match o.bin.symbols().at(address) {
+        Some(s) if s.size > 0 => (
+            address,
+            address + s.size,
+            format!("{} ({} bytes)", s.display_name(), s.size),
+        ),
+        _ => (address, address + 1, format!("{address:#x}")),
+    };
+    let only = match string(args, "kind") {
+        Some(k) => Some(serde_json::from_value::<binviz::RefKind>(json!(k)).map_err(|_| format!("unknown kind {k}"))?),
+        None => None,
+    };
+    let limit = int(args, "limit", 100, 2000) as u32;
+    let offset = int(args, "offset", 0, u32::MAX as u64) as u32;
+    let page = o.bin.references_to(
+        lo,
+        hi,
+        if only.is_some() { 0 } else { offset },
+        if only.is_some() { u32::MAX } else { limit },
+    );
+    let _ = writeln!(out, "References to {what}: {}", ref_counts(&page.counts));
+    let refs: Vec<&binviz::Reference> = page
+        .refs
+        .iter()
+        .filter(|r| only.is_none_or(|k| r.kind == k))
+        .skip(if only.is_some() { offset as usize } else { 0 })
+        .take(limit as usize)
+        .collect();
+    for r in &refs {
+        let target = if hi - lo > 1 && r.target != lo {
+            format!("  → +{:#x}", r.target - lo)
+        } else {
+            String::new()
+        };
+        let _ = writeln!(
+            out,
+            "  {:#x}  {:<8} from {}{target}",
+            r.source,
+            r.kind.as_str(),
+            clip(r.from.as_deref().unwrap_or("?"), 140)
+        );
+    }
+    let total = match only {
+        Some(k) => page.refs.iter().filter(|r| r.kind == k).count(),
+        None => page.total as usize,
+    };
+    if offset as usize + refs.len() < total {
+        let _ = writeln!(
+            out,
+            "  … {} more (offset {})",
+            total - offset as usize - refs.len(),
+            offset as usize + refs.len()
+        );
+    }
+    if page.total == 0 {
+        out.push_str("  (none found: it may only be reached indirectly, through computed addresses or registers)\n");
+    }
+    Ok(out)
+}
+
+fn call_list(o: &Open, args: &Value, callers: bool) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let address = address_of(&o.bin, at)?;
+    let mut out = ensure_xrefs(o)?;
+    let limit = int(args, "limit", 100, 2000) as usize;
+    let name = o
+        .bin
+        .symbols()
+        .function_containing(address)
+        .map(|f| f.display_name().into_owned())
+        .unwrap_or_else(|| format!("{address:#x}"));
+    let list = if callers {
+        o.bin.callers(address)
+    } else {
+        o.bin.callees(address)
+    };
+    let sites: u32 = list.iter().map(|c| c.calls).sum();
+    let _ = writeln!(
+        out,
+        "{name} {} {} function{} ({} call site{}):",
+        if callers { "is called by" } else { "calls" },
+        count(list.len() as u64),
+        if list.len() == 1 { "" } else { "s" },
+        count(sites),
+        if sites == 1 { "" } else { "s" }
+    );
+    for c in list.iter().take(limit) {
+        let _ = writeln!(
+            out,
+            "  {:#x}  {}{}  ({}x, first at {:#x})",
+            c.address,
+            clip(&c.name, 140),
+            node_kind(c.kind),
+            c.calls,
+            c.site
+        );
+    }
+    if list.len() > limit {
+        let _ = writeln!(out, "  … {} more", list.len() - limit);
+    }
+    if callers {
+        let start = o
+            .bin
+            .symbols()
+            .function_containing(address)
+            .map_or(address, |f| f.address);
+        let c = o.bin.reference_counts(start, start + 1);
+        if c.pointer + c.address > 0 {
+            let _ = writeln!(
+                out,
+                "Also: {} — it may be called indirectly (see xrefs).",
+                ref_counts(&binviz::RefCounts {
+                    call: 0,
+                    jump: 0,
+                    read: 0,
+                    write: 0,
+                    ..c
+                })
+            );
+        }
+    }
+    Ok(out)
+}
+
+fn call_graph(o: &Open, args: &Value) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let start = function_at(&o.bin, at)?;
+    let mut out = ensure_xrefs(o)?;
+    let up = int(args, "up", 1, 4) as u32;
+    let down = int(args, "down", 2, 4) as u32;
+    let fanout = int(args, "fanout", 8, 30) as usize;
+    let g = o.bin.call_graph(start, up, down, fanout);
+    let node = |a: u64| g.nodes.iter().find(|n| n.address == a);
+    let label = |a: u64| {
+        node(a).map_or_else(
+            || format!("{a:#x}"),
+            |n| format!("{} ({:#x}){}", clip(&n.name, 100), n.address, node_kind(n.kind)),
+        )
+    };
+    let center = node(g.center).expect("the centre is a node");
+    let _ = writeln!(
+        out,
+        "{}: {} callers, {} callees",
+        label(g.center),
+        center.callers.map_or("?".into(), count),
+        center.callees.map_or("?".into(), count)
+    );
+    // Callers, as an upside-down tree.
+    if up > 0 {
+        let _ = writeln!(out, "\nCalled by:");
+        let mut seen = std::collections::HashSet::from([g.center]);
+        fn walk_up(
+            g: &binviz::CallGraph,
+            n: u64,
+            depth: usize,
+            seen: &mut std::collections::HashSet<u64>,
+            out: &mut String,
+            label: &dyn Fn(u64) -> String,
+        ) {
+            let mut parents: Vec<&binviz::GraphEdge> = g.edges.iter().filter(|e| e.to == n && e.from != n).collect();
+            parents.sort_by_key(|e| std::cmp::Reverse(e.calls));
+            for e in parents {
+                let is_parent = g.nodes.iter().any(|x| x.address == e.from && x.depth < 0);
+                if !is_parent {
+                    continue;
+                }
+                let again = !seen.insert(e.from);
+                let _ = writeln!(
+                    out,
+                    "{}← {} [{}x]{}",
+                    "  ".repeat(depth + 1),
+                    label(e.from),
+                    e.calls,
+                    if again { " (see above)" } else { "" }
+                );
+                if !again {
+                    walk_up(g, e.from, depth + 1, seen, out, label);
+                }
+            }
+        }
+        walk_up(&g, g.center, 0, &mut seen, &mut out, &label);
+    }
+    if down > 0 {
+        let _ = writeln!(out, "\nCalls:");
+        let mut seen = std::collections::HashSet::from([g.center]);
+        fn walk_down(
+            g: &binviz::CallGraph,
+            n: u64,
+            depth: usize,
+            seen: &mut std::collections::HashSet<u64>,
+            out: &mut String,
+            label: &dyn Fn(u64) -> String,
+        ) {
+            let mut children: Vec<&binviz::GraphEdge> = g.edges.iter().filter(|e| e.from == n && e.to != n).collect();
+            children.sort_by_key(|e| std::cmp::Reverse(e.calls));
+            for e in children {
+                let is_child = g.nodes.iter().any(|x| x.address == e.to && x.depth > 0);
+                if !is_child {
+                    continue;
+                }
+                let again = !seen.insert(e.to);
+                let _ = writeln!(
+                    out,
+                    "{}→ {} [{}x]{}",
+                    "  ".repeat(depth + 1),
+                    label(e.to),
+                    e.calls,
+                    if again { " (see above)" } else { "" }
+                );
+                if !again {
+                    walk_down(g, e.to, depth + 1, seen, out, label);
+                }
+            }
+        }
+        walk_down(&g, g.center, 0, &mut seen, &mut out, &label);
+    }
+    if g.hidden > 0 {
+        let _ = writeln!(
+            out,
+            "\n({} more neighbours not shown; raise fanout, or use callers/callees on a node.)",
+            count(g.hidden)
+        );
+    }
+    Ok(out)
+}
+
+fn call_path(o: &Open, args: &Value) -> Result<String, String> {
+    let from = function_at(&o.bin, string(args, "from").ok_or("from is required")?)?;
+    let to = function_at(&o.bin, string(args, "to").ok_or("to is required")?)?;
+    let mut out = ensure_xrefs(o)?;
+    let depth = int(args, "max_depth", 10, 20) as u32;
+    match o.bin.call_path(from, to, depth) {
+        Some(steps) => {
+            let _ = writeln!(
+                out,
+                "{} call{}:",
+                steps.len() - 1,
+                if steps.len() == 2 { "" } else { "s" }
+            );
+            for (i, s) in steps.iter().enumerate() {
+                let site = s.site.map(|a| format!("   (called at {a:#x})")).unwrap_or_default();
+                let _ = writeln!(
+                    out,
+                    "{}{} {:#x} {}{site}",
+                    "  ".repeat(i),
+                    if i == 0 { " " } else { "→" },
+                    s.address,
+                    clip(&s.name, 140)
+                );
+            }
+        }
+        None => {
+            let _ = writeln!(
+                out,
+                "No chain of direct calls within {depth} calls. The target may only be reached indirectly \
+                 (virtual calls, callbacks, function pointers): try xrefs on it to find pointers to it."
+            );
+        }
+    }
+    Ok(out)
 }

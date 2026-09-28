@@ -2,7 +2,7 @@
 import { store } from '../store';
 import type { Disassembly, Instruction, SourceLoc } from '../types';
 import { emptyState } from '../ui';
-import { basename, debounce, formatSize, h, hex } from '../util';
+import { basename, debounce, formatCount, formatSize, h, hex } from '../util';
 import { VList } from '../vlist';
 import { View } from './base';
 
@@ -41,6 +41,10 @@ export class CodeView extends View {
       const at = this.current?.function?.address ?? this.current?.start;
       this.current = undefined;
       if (at !== undefined) void this.load(store.selection.address ?? at);
+    });
+    // Caller and callee counts appear once references are indexed.
+    store.on('xrefs', () => {
+      if (this.visible && this.current) this.renderHeader(this.current);
     });
   }
 
@@ -204,6 +208,7 @@ export class CodeView extends View {
       ...(note?.reviewed ? [h('span', { class: 'chip ok' }, 'Reviewed')] : []),
       h('span', { class: 'secondary mono' }, `${hex(d.start)}..${hex(d.end)} · ${formatSize(d.end - d.start)} · ${count}${d.truncated ? '+' : ''} instructions`),
       h('span', { class: 'spacer' }),
+      ...[this.callCounts(d)].filter((x): x is HTMLElement => x !== null),
       btn('Hex', () => void store.select({ address: d.start }, { view: 'hex' })),
     );
     if (store.file?.dwarf) {
@@ -214,6 +219,21 @@ export class CodeView extends View {
         }),
       );
     }
+  }
+
+  /** "Called by 3 · Calls 12", filled in when references are indexed; opens the call graph. */
+  private callCounts(d: Disassembly): HTMLElement | null {
+    const fn = d.function;
+    if (!fn || !d.supported || store.xrefs === 'unsupported' || store.xrefs === 'none') return null;
+    const el = h('button', { class: 'btn small', type: 'button', title: 'Call graph (0)' }, store.xrefs === 'building' ? 'Indexing calls…' : 'Calls…');
+    el.addEventListener('click', () => store.setView('calls'));
+    if (store.xrefs === 'ready') {
+      void Promise.all([store.api.callers(fn.address), store.api.callees(fn.address)]).then(([callers, callees]) => {
+        if (this.current !== d) return;
+        el.textContent = `Called by ${formatCount(callers.length)} · Calls ${formatCount(callees.length)}`;
+      });
+    }
+    return el;
   }
 
   private revealInstruction(addr: bigint, scroll: boolean) {

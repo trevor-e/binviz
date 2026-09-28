@@ -90,6 +90,42 @@ export function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number)
   };
 }
 
+/**
+ * A compact form of a (demangled) function name for tight spaces: no parameter
+ * list, template arguments folded, and at most the last two scopes.
+ * `geo::Rect::area(double) const` → `Rect::area`.
+ */
+export function shortName(name: string): string {
+  let s = name;
+  // Objective-C method names are already short and have no scopes.
+  if (s.startsWith('-[') || s.startsWith('+[')) return s;
+  // The parameter list: the last top-level parenthesised group.
+  const trimmed = s.replace(/\s+const$/, '');
+  if (trimmed.endsWith(')')) {
+    let depth = 0;
+    for (let i = trimmed.length - 1; i >= 0; i--) {
+      const c = trimmed[i];
+      if (c === ')') depth++;
+      else if (c === '(' && --depth === 0) {
+        if (i > 0) s = trimmed.slice(0, i);
+        break;
+      }
+    }
+  }
+  // Template arguments.
+  let out = '';
+  let depth = 0;
+  for (const c of s) {
+    if (c === '<') {
+      if (depth++ === 0) out += '<…';
+    } else if (c === '>' && depth > 0) {
+      if (--depth === 0) out += '>';
+    } else if (depth === 0) out += c;
+  }
+  const parts = out.split('::');
+  return parts.length > 2 ? parts.slice(-2).join('::') : out;
+}
+
 export function basename(path: string): string {
   const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
   return i >= 0 ? path.slice(i + 1) : path;

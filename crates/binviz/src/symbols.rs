@@ -40,6 +40,9 @@ const DEFINED: u8 = 1;
 const SIZE_INFERRED: u8 = 2;
 /// The name is never mangled (recovered `sub_` names, names from DWARF).
 const PLAIN: u8 = 4;
+/// An ARM mapping symbol (`$x`, `$d.12`): it marks code or data but names
+/// nothing, so address lookups skip it.
+const MAPPING: u8 = 8;
 const NO_SECTION: u32 = u32::MAX;
 
 #[derive(Clone, Copy, Debug)]
@@ -215,7 +218,8 @@ fn lookup_rank(r: &Rec) -> (u8, u8, u8, u8, u8) {
         SymbolSource::Dynsym => 2,
         SymbolSource::Export => 3,
         SymbolSource::Dwarf => 4,
-        SymbolSource::Discovered => 5,
+        SymbolSource::Import => 5,
+        SymbolSource::Discovered => 6,
     };
     (user, kind, sized, binding, source)
 }
@@ -228,6 +232,7 @@ fn is_addressable(r: &Rec) -> bool {
         )
         && (r.address != 0 || r.section != NO_SECTION)
         && r.name_len > 0
+        && r.flags & MAPPING == 0
 }
 
 /// `lookup_rank` packed into one number with the same order.
@@ -302,6 +307,19 @@ impl Builder {
         push_rec(&mut self.recs, &mut self.names, s);
     }
 
+    /// Addresses of the named, defined symbols so far, sorted.
+    pub fn defined_addresses(&self) -> Vec<u64> {
+        let mut v: Vec<u64> = self
+            .recs
+            .iter()
+            .filter(|r| is_addressable(r))
+            .map(|r| r.address)
+            .collect();
+        v.sort_unstable();
+        v.dedup();
+        v
+    }
+
     /// The file's symbols as a table (recovered and user symbols come later).
     pub fn finish(self, sections: &[Section]) -> SymbolTable {
         let mut table = self.finish_unindexed();
@@ -349,6 +367,10 @@ fn push_rec(recs: &mut Vec<Rec>, names: &mut String, s: NewSym<'_>) {
     }
     if s.plain || !util::looks_mangled(s.name) {
         flags |= PLAIN;
+    }
+    let b = s.name.as_bytes();
+    if b.len() >= 2 && b[0] == b'$' && matches!(b[1], b'a' | b'd' | b't' | b'x') && (b.len() == 2 || b[2] == b'.') {
+        flags |= MAPPING;
     }
     recs.push(Rec {
         address: s.address,
@@ -698,6 +720,56 @@ impl SymbolTable {
             .iter()
             .filter(|&&i| self.recs[i as usize].kind == SymbolKind::Function)
             .map(|&i| self.sym(i))
+    }
+
+    /// The function in `order` whose extent contains `address`, looking back
+    /// past labels and data symbols inside it.
+    fn containing_in(&self, order: &[u32], address: u64) -> Option<u32> {
+        let pos = order.partition_point(|&i| self.recs[i as usize].address <= address);
+        for &i in order[..pos].iter().rev().take(64) {
+            let r = &self.recs[i as usize];
+            if r.kind == SymbolKind::Function {
+                return (address - r.address < r.size.max(1)).then_some(i);
+            }
+        }
+        None
+    }
+
+    /// The function whose extent contains `address` (the user's included).
+    pub fn function_containing(&self, address: u64) -> Option<Sym<'_>> {
+        self.containing_in(&self.by_addr, address).map(|i| self.sym(i))
+    }
+
+    /// Like [`Self::function_containing`], over the file's and recovered
+    /// functions only (analyses built once must not depend on the user's names):
+    /// the function's start and end.
+    pub(crate) fn static_function_containing(&self, address: u64) -> Option<(u64, u64)> {
+        let r = &self.recs[self.containing_in(&self.base_by_addr, address)? as usize];
+        Some((r.address, r.address + r.size.max(1)))
+    }
+
+    /// Whether a file or recovered function starts at `address`.
+    pub(crate) fn is_static_function_start(&self, address: u64) -> bool {
+        let pos = self
+            .base_by_addr
+            .partition_point(|&i| self.recs[i as usize].address < address);
+        self.base_by_addr.get(pos).is_some_and(|&i| {
+            let r = &self.recs[i as usize];
+            r.address == address && r.kind == SymbolKind::Function
+        })
+    }
+
+    /// File and recovered functions starting in `lo..hi`: (start, end), in order.
+    pub(crate) fn static_functions_in(&self, lo: u64, hi: u64) -> impl Iterator<Item = (u64, u64)> + '_ {
+        let first = self
+            .base_by_addr
+            .partition_point(|&i| self.recs[i as usize].address < lo);
+        self.base_by_addr[first..]
+            .iter()
+            .map(|&i| &self.recs[i as usize])
+            .take_while(move |r| r.address < hi)
+            .filter(|r| r.kind == SymbolKind::Function)
+            .map(|r| (r.address, r.address + r.size.max(1)))
     }
 
     /// Functions whose name (or hex address) contains `filter`, in address

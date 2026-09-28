@@ -466,6 +466,65 @@ impl Session {
         to_js(self.bin()?.annotations())
     }
 
+    // --- Cross-references and the call graph -------------------------------
+
+    /// Whether references can be found in this binary's code (x86, AArch64).
+    #[wasm_bindgen(js_name = xrefsSupported)]
+    pub fn xrefs_supported(&self) -> Result<bool, JsError> {
+        Ok(self.bin()?.xrefs_supported())
+    }
+
+    #[wasm_bindgen(js_name = xrefsReady)]
+    pub fn xrefs_ready(&self) -> Result<bool, JsError> {
+        Ok(self.bin()?.xrefs_ready())
+    }
+
+    /// Builds the reference index; returns the number of references by kind.
+    #[wasm_bindgen(js_name = prepareXrefs)]
+    pub fn prepare_xrefs(&self) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.xref_counts())
+    }
+
+    /// References to `lo..hi`: `{total, offset, counts, refs}`.
+    #[wasm_bindgen(js_name = referencesTo)]
+    pub fn references_to(&self, lo: u64, hi: u64, offset: u32, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.references_to(lo, hi, offset, limit))
+    }
+
+    #[wasm_bindgen(js_name = referenceCounts)]
+    pub fn reference_counts(&self, lo: u64, hi: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.reference_counts(lo, hi))
+    }
+
+    /// References made by the code or data in `lo..hi`.
+    #[wasm_bindgen(js_name = referencesFrom)]
+    pub fn references_from(&self, lo: u64, hi: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.references_from(lo, hi))
+    }
+
+    pub fn callers(&self, address: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.callers(address))
+    }
+
+    pub fn callees(&self, address: u64) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.callees(address))
+    }
+
+    #[wasm_bindgen(js_name = callGraph)]
+    pub fn call_graph(&self, center: u64, up: u32, down: u32, fanout: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.call_graph(center, up, down, fanout as usize))
+    }
+
+    #[wasm_bindgen(js_name = callPath)]
+    pub fn call_path(&self, from: u64, to: u64, max_depth: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.call_path(from, to, max_depth))
+    }
+
+    #[wasm_bindgen(js_name = functionSummary)]
+    pub fn function_summary(&self, address: u64, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.function_summary(address, limit as usize))
+    }
+
     // --- DWARF -------------------------------------------------------------
 
     #[wasm_bindgen(js_name = dwarfSummary)]

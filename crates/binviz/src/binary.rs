@@ -38,6 +38,10 @@ pub struct Binary {
     pub(crate) strings: std::sync::OnceLock<crate::strings::StringIndex>,
     /// Coverage runs, rebuilt when symbols or annotations change.
     pub(crate) coverage: std::sync::OnceLock<crate::coverage::CoverageRuns>,
+    /// Cross-references, built on first use.
+    pub(crate) xrefs: std::sync::OnceLock<crate::xrefs::XrefIndex>,
+    /// How pointers in data are stored (plain, chained fixups, relocations).
+    pub(crate) pointers: std::sync::OnceLock<crate::pointers::Scheme>,
 }
 
 fn arch_name(a: Architecture) -> String {
@@ -313,7 +317,7 @@ impl Binary {
                             .iter()
                             .position(|s| addr >= s.address && addr < s.address + s.size)
                             .map(|i| i as u32),
-                        source: SymbolSource::Export,
+                        source: SymbolSource::Import,
                         defined: true,
                         plain: false,
                     });
@@ -390,6 +394,31 @@ impl Binary {
             }
         }
         let discovered = crate::discover::discover(&file, format, &b, &sections, &segments, image_base, is64);
+        // Import stubs and slots, where the file's own symbols name nothing.
+        let named = symbols.defined_addresses();
+        for stub in crate::stubs::import_stubs(&file, format, &b, &sections, &imports, is64) {
+            if named.binary_search(&stub.address).is_ok() {
+                continue;
+            }
+            symbols.push(NewSym {
+                name: &stub.name,
+                address: stub.address,
+                size: stub.size,
+                kind: if stub.code {
+                    SymbolKind::Function
+                } else {
+                    SymbolKind::Data
+                },
+                binding: Binding::Global,
+                section: sections
+                    .iter()
+                    .position(|s| s.loaded && stub.address >= s.address && stub.address < s.address + s.size)
+                    .map(|i| i as u32),
+                source: SymbolSource::Import,
+                defined: true,
+                plain: false,
+            });
+        }
         let symbols = symbols.finish_unindexed();
 
         // Summary.
@@ -466,6 +495,8 @@ impl Binary {
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),
             coverage: std::sync::OnceLock::new(),
+            xrefs: std::sync::OnceLock::new(),
+            pointers: std::sync::OnceLock::new(),
         };
         drop(file);
         // DWARF first: it may add functions, and the symbol index is built once.

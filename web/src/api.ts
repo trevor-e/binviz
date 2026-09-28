@@ -1,9 +1,10 @@
 // Typed client for the WebAssembly session running in a worker.
 import type {
-  Annotation, Attribution, AttributedRange, AttributionMode, ContainerInfo, Coverage, DieDetails, DieSummary,
-  Disassembly, DwarfSummary, Export, FunctionPage, HitKind, Import, Inspection, LineProgramInfo, LineRange, LineRow, MapStatus,
-  Opened, PathEntry, RegionInfo, RegionKind, Resolved, SearchResults, Section, Segment, SourceFile, Span,
-  StringPage, Summary, SymbolPage, SymbolQuery, Sym, UnitInfo,
+  Annotation, Attribution, AttributedRange, AttributionMode, CallEdge, CallGraph, ContainerInfo, Coverage, DieDetails,
+  DieSummary, Disassembly, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection,
+  LineProgramInfo, LineRange, LineRow, MapStatus, Opened, PathEntry, PathStep, RefCounts, Reference, RefPage,
+  RegionInfo, RegionKind, Resolved, SearchResults, Section, Segment, SourceFile, Span, StringPage, Summary,
+  SymbolPage, SymbolQuery, Sym, UnitInfo,
 } from './types';
 
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
@@ -87,6 +88,19 @@ export class Api {
   coverageMap(buckets: number) { return this.call<MapStatus[]>('coverageMap', buckets); }
   setAnnotations(list: Annotation[]) { return this.call<Summary>('setAnnotations', list); }
   annotations() { return this.call<Annotation[]>('annotations'); }
+
+  xrefsSupported() { return this.call<boolean>('xrefsSupported'); }
+  xrefsReady() { return this.call<boolean>('xrefsReady'); }
+  /** Builds the reference index (once per file); returns counts by kind. */
+  prepareXrefs() { return this.call<RefCounts>('prepareXrefs'); }
+  referencesTo(lo: bigint, hi: bigint, offset: number, limit: number) { return this.call<RefPage>('referencesTo', lo, hi, offset, limit); }
+  referenceCounts(lo: bigint, hi: bigint) { return this.call<RefCounts>('referenceCounts', lo, hi); }
+  referencesFrom(lo: bigint, hi: bigint) { return this.call<Reference[]>('referencesFrom', lo, hi); }
+  callers(address: bigint) { return this.call<CallEdge[]>('callers', address); }
+  callees(address: bigint) { return this.call<CallEdge[]>('callees', address); }
+  callGraph(center: bigint, up: number, down: number, fanout: number) { return this.call<CallGraph>('callGraph', center, up, down, fanout); }
+  callPath(from: bigint, to: bigint, maxDepth: number) { return this.call<PathStep[] | undefined>('callPath', from, to, maxDepth); }
+  functionSummary(address: bigint, limit: number) { return this.call<FunctionSummary | undefined>('functionSummary', address, limit); }
 
   dwarfSummary() { return this.call<DwarfSummary | null>('dwarfSummary'); }
   dwarfUnits() { return this.call<UnitInfo[]>('dwarfUnits'); }

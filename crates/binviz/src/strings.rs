@@ -96,6 +96,40 @@ impl Binary {
         }
     }
 
+    /// The text of a string starting at `address` (possibly inside a longer
+    /// one), read straight from the file: at least 2 printable characters ending
+    /// in NUL, or 4 without one (not every language NUL-terminates). ASCII or
+    /// UTF-16LE; at most `max` characters, and `None` for anything else.
+    pub(crate) fn string_preview(&self, address: u64, max: usize) -> Option<String> {
+        let sec = self.section_at(address)?;
+        if !matches!(sec.kind, RegionKind::Rodata | RegionKind::Data | RegionKind::Tls) {
+            return None;
+        }
+        let off = self.address_to_offset(address)? as usize;
+        let end = (sec.file_offset? + sec.file_size.min(sec.size)) as usize;
+        let bytes = self.data.get(off..end.min(off + 2 * max + 2).min(self.data.len()))?;
+        let text_byte = |b: u8| printable(b) || b == b'\n' || b == b'\r';
+        let (text, terminated): (String, bool) = if bytes.len() >= 4 && bytes[1] == 0 && text_byte(bytes[0]) {
+            let units = bytes.as_chunks::<2>().0;
+            let n = units.iter().take_while(|u| u[1] == 0 && text_byte(u[0])).count();
+            let terminated = units.get(n).is_some_and(|u| *u == [0, 0]);
+            (units[..n.min(max)].iter().map(|u| u[0] as char).collect(), terminated)
+        } else {
+            let n = bytes.iter().take_while(|&&b| text_byte(b)).count();
+            let terminated = bytes.get(n) == Some(&0);
+            (String::from_utf8_lossy(&bytes[..n.min(max)]).into_owned(), terminated)
+        };
+        let len = text.chars().count();
+        if len < 4 && !(len >= 2 && terminated) {
+            return None;
+        }
+        // A pointer's low bytes can look like a short string (0x100003f20 is " ?").
+        if !crate::pointers::stringy(&sec.name) && self.holds_pointer(address) {
+            return None;
+        }
+        Some(text)
+    }
+
     pub(crate) fn string_address(&self, r: &StrRec) -> Option<u64> {
         let s = self.sections.get(r.section as usize)?;
         let off = s.file_offset?;

@@ -3,10 +3,10 @@
 import { Api } from './api';
 import { parseAnnotations, serializeAnnotations } from './notes';
 import type {
-  Annotation, ContainerInfo, DwarfSummary, Inspection, RegionKind, Section, Segment, SourceFile, Summary,
+  Annotation, ContainerInfo, DwarfSummary, Inspection, RefCounts, RegionKind, Section, Segment, SourceFile, Summary,
 } from './types';
 
-export type ViewName = 'overview' | 'layout' | 'hex' | 'code' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map';
+export type ViewName = 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'sections' | 'dwarf' | 'sources' | 'map';
 export type MapTab = 'files' | 'units' | 'coverage';
 
 export interface Loaded {
@@ -47,6 +47,7 @@ type Events = {
   sources: [];
   intent: [];
   annotations: [];
+  xrefs: [];
   error: [string];
   status: [string];
 };
@@ -73,6 +74,10 @@ class Store {
   annotations: Annotation[] = [];
   /** Annotations by start address, for inline display. */
   notesAt = new Map<bigint, Annotation>();
+  /** The cross-reference index: built on demand (right away for small files). */
+  xrefs: 'none' | 'building' | 'ready' | 'unsupported' = 'none';
+  xrefCounts: RefCounts | null = null;
+  private xrefsBuild: Promise<boolean> | null = null;
   private history: HistoryEntry[] = [];
   private cursor = -1;
   private seq = 0;
@@ -153,12 +158,56 @@ class Store {
     this.cursor = -1;
     this.sources.clear();
     this.sourceOrigin.clear();
+    this.resetXrefs();
     this.emit('status', '');
     this.emit('file');
     this.emit('sources');
     const entry = summary.entry;
     if (entry !== undefined) void this.select({ address: entry }, { history: true });
     else void this.select({ offset: 0n }, { history: true });
+    // Small files are indexed right away; large ones when references are first asked for.
+    if (summary.fileSize < 32n * 1024n * 1024n) void this.ensureXrefs();
+  }
+
+  private resetXrefs() {
+    this.xrefs = 'none';
+    this.xrefCounts = null;
+    this.xrefsBuild = null;
+  }
+
+  /** Builds the cross-reference index if needed; false if this architecture has none. */
+  ensureXrefs(): Promise<boolean> {
+    if (!this.file) return Promise.resolve(false);
+    if (this.xrefsBuild) return this.xrefsBuild;
+    const file = this.file;
+    const build = (async () => {
+      try {
+        if (!(await this.api.xrefsSupported())) {
+          if (this.file === file) {
+            this.xrefs = 'unsupported';
+            this.emit('xrefs');
+          }
+          return false;
+        }
+        this.xrefs = 'building';
+        this.emit('xrefs');
+        const counts = await this.api.prepareXrefs();
+        if (this.file !== file) return false;
+        this.xrefCounts = counts;
+        this.xrefs = 'ready';
+        this.emit('xrefs');
+        return true;
+      } catch (e) {
+        if (this.file === file) {
+          this.xrefsBuild = null;
+          this.xrefs = 'none';
+        }
+        this.error(e);
+        return false;
+      }
+    })();
+    this.xrefsBuild = build;
+    return build;
   }
 
   async attachDebug(name: string, blob: Blob) {
@@ -168,7 +217,11 @@ class Store {
       if (opened.kind !== 'binary') return;
       const [dwarf, sourceFiles] = await Promise.all([this.api.dwarfSummary(), this.api.sourceFiles()]);
       this.file = { ...this.file, summary: opened.summary, dwarf, sourceFiles };
+      // DWARF may add function boundaries: references are found again.
+      const had = this.xrefs === 'ready';
+      this.resetXrefs();
       this.emit('file');
+      if (had) void this.ensureXrefs();
       this.emit('sources');
       await this.reselect();
     } catch (e) {

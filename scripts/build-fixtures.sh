@@ -51,6 +51,30 @@ rustc "$src/tiny.rs" "${tiny_flags[@]}" --target x86_64-pc-windows-gnu -o "$out/
 "$lld" -flavor gnu -m i386pep --entry=_start --subsystem=console -o "$out/tiny-pe-x64.exe" "$out/tiny-pe-x64.o"
 rm -f "$out/tiny-pe-x64.o"
 
+echo "imports: calls through PLT entries, GOT slots and Mach-O stubs; pointers in data"
+tmp="$(mktemp -d)"
+imports_flags=(-C opt-level=1 -C panic=abort --emit=obj)
+for target in x86_64-unknown-linux-musl aarch64-unknown-linux-musl; do
+    arch="${target%%-*}"
+    [ "$arch" = aarch64 ] && name=a64 || name=x64
+    rustc "$src/libstub.rs" "${imports_flags[@]}" --target "$target" -C relocation-model=pic \
+        -o "$tmp/libstub-$name.o" 2>/dev/null
+    "$lld" -flavor gnu -shared -soname libstub.so -o "$tmp/libstub-$name.so" "$tmp/libstub-$name.o"
+    rustc "$src/imports.rs" "${imports_flags[@]}" --target "$target" -C relocation-model=pic \
+        -o "$tmp/imports-$name.o" 2>/dev/null
+done
+# x86-64: RELA relocations; AArch64: packed RELR relocations.
+"$lld" -flavor gnu -pie -e main -o "$out/imports-elf-x64" "$tmp/imports-x64.o" "$tmp/libstub-x64.so"
+"$lld" -flavor gnu -pie -z pack-relative-relocs -e main -o "$out/imports-elf-a64" \
+    "$tmp/imports-a64.o" "$tmp/libstub-a64.so"
+rustc "$src/imports.rs" "${imports_flags[@]}" --target aarch64-apple-darwin -o "$tmp/imports-macho.o" 2>/dev/null
+# Mach-O with dyld info (plain pointers), and with chained fixups.
+"$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -e _main \
+    -o "$out/imports-macho-a64" "$tmp/imports-macho.o" "$src/libSystem.tbd"
+"$lld" -flavor darwin -arch arm64 -platform_version macos 12.0 12.0 -fixup_chains -e _main \
+    -o "$out/imports-macho-a64.chained" "$tmp/imports-macho.o" "$src/libSystem.tbd"
+rm -rf "$tmp"
+
 if command -v g++ >/dev/null 2>&1; then
     echo "C++: PE x86-64 (MinGW g++, DWARF 5)"
     g++ -g -O1 -static -o "$out/shapes-pe.exe" "$src/shapes.cpp"

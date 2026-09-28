@@ -63,6 +63,8 @@ export interface Segment {
 
 export type SymbolKind = 'function' | 'data' | 'section' | 'file' | 'label' | 'tls' | 'debug' | 'unknown';
 
+export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import';
+
 export interface Sym {
   index: number;
   name: string;
@@ -73,7 +75,7 @@ export interface Sym {
   kind: SymbolKind;
   binding: string;
   section?: number;
-  source: 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user';
+  source: SymbolSource;
   defined: boolean;
 }
 
@@ -346,4 +348,57 @@ export interface Coverage {
   functions: { named: number; recovered: number; user: number };
   annotations: number;
   reviewed: number;
+}
+
+// --- Cross-references and the call graph ------------------------------------
+
+export type RefKind = 'call' | 'jump' | 'read' | 'write' | 'address' | 'pointer';
+export type RefCounts = Record<RefKind, number>;
+
+export interface Reference {
+  source: bigint;
+  target: bigint;
+  kind: RefKind;
+  /** Start of the function containing the source. */
+  function?: bigint;
+  /** Where the source is: `main+0x1c`, `__data+0x40`. */
+  from?: string;
+  /** What the target is: a string, `symbol+offset`, `-> pointee`. */
+  to?: string;
+}
+
+export interface RefPage { total: number; offset: number; counts: RefCounts; refs: Reference[] }
+
+export type NodeKind = 'function' | 'import' | 'code' | 'data';
+
+export interface CallEdge { address: bigint; name: string; kind: NodeKind; calls: number; site: bigint }
+
+export interface GraphNode {
+  address: bigint;
+  name: string;
+  kind: NodeKind;
+  source?: SymbolSource;
+  size: bigint;
+  /** 0 for the centre, negative for callers, positive for callees. */
+  depth: number;
+  callers?: number;
+  callees?: number;
+}
+
+export interface GraphEdge { from: bigint; to: bigint; calls: number }
+export interface CallGraph { center: bigint; nodes: GraphNode[]; edges: GraphEdge[]; hidden: number }
+export interface PathStep { address: bigint; name: string; site?: bigint }
+export interface StringUse { address: bigint; text: string; site: bigint }
+
+export interface FunctionSummary {
+  address: bigint;
+  name: string;
+  size: bigint;
+  callerCount: number;
+  callers: CallEdge[];
+  calleeCount: number;
+  callees: CallEdge[];
+  strings: StringUse[];
+  data: Reference[];
+  referencedBy: RefCounts;
 }

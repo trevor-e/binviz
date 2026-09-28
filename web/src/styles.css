@@ -2148,6 +2148,266 @@ th.right {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Call graph
+--------------------------------------------------------------------------- */
+.cg-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 38%;
+}
+
+.cg-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.cg-from {
+  width: 190px;
+}
+
+.cg-path {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 12.5px;
+  flex: none;
+}
+
+.cg-path[hidden] {
+  display: none;
+}
+
+.cg-path .spacer {
+  flex: 1;
+}
+
+.cg-arrow {
+  color: var(--muted);
+}
+
+.cg-host {
+  flex: 1 1 auto;
+  min-height: 180px;
+  overflow: auto;
+  position: relative;
+  background: var(--bg);
+}
+
+.cg-canvas {
+  position: relative;
+}
+
+.cg-edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.cg-edge {
+  fill: none;
+  stroke: var(--axis);
+  pointer-events: stroke;
+  transition: stroke 0.12s;
+}
+
+.cg-edge.back {
+  stroke-dasharray: 5 4;
+}
+
+.cg-edge.hl {
+  stroke: var(--text-2);
+}
+
+.cg-edge.on-path {
+  stroke: var(--focus);
+}
+
+.cg-caption {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.cg-node {
+  position: absolute;
+  width: 220px;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 4px 9px 4px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.cg-node::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--fam);
+}
+
+.cg-node .n {
+  font: 12px/16px var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+
+.cg-node .m {
+  font: 11px/14px var(--mono);
+  color: var(--muted);
+  display: flex;
+  gap: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cg-node:hover,
+.cg-node:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
+
+.cg-node.import {
+  border-style: dashed;
+}
+
+.cg-node.center {
+  border-color: var(--sel-ring);
+  box-shadow: 0 0 0 1px var(--sel-ring);
+}
+
+.cg-node.on-path {
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.cg-node .reviewed {
+  color: #0ca30c;
+}
+
+.cg-hidden {
+  position: absolute;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cg-lists {
+  flex: 0 0 34%;
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cg-lists[hidden] {
+  display: none;
+}
+
+.cg-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cg-list + .cg-list {
+  border-left: 1px solid var(--border);
+}
+
+.cg-list-head {
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.cg-calls {
+  font: 11.5px var(--mono);
+  color: var(--text-2);
+  min-width: 4ch;
+  text-align: right;
+  flex: none;
+}
+
+.cg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--fam);
+  flex: none;
+}
+
+.list-row .spacer {
+  flex: 1;
+}
+
+/* Inspector: references */
+.ref-sum {
+  margin-bottom: 6px;
+}
+
+.ref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 6px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.ref-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12.5px;
+  min-width: 0;
+}
+
+.ref-row:hover {
+  background: var(--hover-wash);
+}
+
+.ref-row .link {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ref-kind {
+  font: 10.5px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+  min-width: 7.5ch;
+  flex: none;
+}
+
 /* Code and data must show exactly what is there: no `->` → `→` ligatures.
    Kept last because the `font` shorthand above resets these properties. */
 .mono,
@@ -2163,6 +2423,8 @@ th.right {
 .tree-row *,
 .mapping text,
 .tooltip *,
+.cg-node *,
+.ref-row *,
 .hit-label,
 .c-name,
 .note-name {

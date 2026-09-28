@@ -169,6 +169,10 @@ pub enum SymbolSource {
     /// Function boundaries recovered from unwind tables or function-start lists
     /// (named `sub_<address>`).
     Discovered,
+    /// Import stubs and slots, named after what they import: Mach-O stubs
+    /// (`_printf`) and pointers (`_printf@got`), ELF PLT entries (`printf@plt`)
+    /// and GOT slots, PE import thunks and address table slots (`__imp_printf`).
+    Import,
     /// The user's own annotations.
     User,
 }
