@@ -734,6 +734,76 @@ impl UnitMatch {
     }
 }
 
+/// How one build of a unit (its source compiled with some flags, or by
+/// some compiler) matches the original.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BuildScore {
+    /// The flags, or whatever tells this build from the others.
+    pub label: String,
+    pub functions: u32,
+    pub exact: u32,
+    /// The functions' percents weighted by their size.
+    pub percent: f32,
+    /// Why it couldn't be matched (it didn't compile, or isn't an object).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+impl Binary {
+    /// Ranks several builds of one unit against the original, best first:
+    /// the flags (or the compiler) a matching decompilation should use for
+    /// it are those of the first. Each build is (label, object file).
+    pub fn rank_builds(&self, builds: &[(String, Result<Vec<u8>>)]) -> Vec<BuildScore> {
+        let mut out: Vec<BuildScore> = builds
+            .iter()
+            .map(|(label, object)| {
+                let unit = object.as_ref().map_err(|e| e.to_string()).and_then(|bytes| {
+                    self.match_unit(label, bytes).map_err(|e| e.to_string())
+                });
+                match unit {
+                    Ok(u) => BuildScore {
+                        label: label.clone(),
+                        functions: u.functions.len() as u32,
+                        exact: u.exact(),
+                        percent: u.fuzzy_percent(),
+                        error: None,
+                    },
+                    Err(e) => BuildScore {
+                        label: label.clone(),
+                        functions: 0,
+                        exact: 0,
+                        percent: 0.0,
+                        error: Some(e),
+                    },
+                }
+            })
+            .collect();
+        out.sort_by(|a, b| {
+            b.exact
+                .cmp(&a.exact)
+                .then(b.percent.total_cmp(&a.percent))
+                .then(a.label.cmp(&b.label))
+        });
+        out
+    }
+}
+
+/// Builds ranked, one line each.
+pub fn builds_text(scores: &[BuildScore]) -> String {
+    let mut out = String::new();
+    for s in scores {
+        match &s.error {
+            Some(e) => out.push_str(&format!("   —                         {}: {e}\n", s.label)),
+            None => out.push_str(&format!(
+                "{:>5.1}%  {:>4} of {:>4} exact  {}\n",
+                s.percent, s.exact, s.functions, s.label
+            )),
+        }
+    }
+    out
+}
+
 /// A project's objects matched against the original (see [`Binary::match_project`]).
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1021,10 +1091,60 @@ fn explain(a: u32, b: u32, otherwise: &str) -> String {
     otherwise.to_string()
 }
 
+/// What to try in the C for a kind of difference (a count's name in
+/// [`MatchResult::differences`]): the rewrites that usually fix it, as
+/// decompilers apply them by hand, and as rule-based rewriting does before
+/// asking a model.
+pub fn rewrite_hint(kind: &str) -> Option<&'static str> {
+    let hints: &[(&str, &str)] = &[
+        ("registers differ", "reorder the declarations or the statements computing them, reuse a temporary where the original does (or split one), inline or pull out a subexpression, or give a variable another type (a pointer, a char, an unsigned): register allocation follows the code's shape, and decomp-permuter searches these"),
+        ("stack slot offset differs", "arguments read in another order are operands swapped (a - b for b - a, the parameters' order); locals in another order or size: reorder their declarations, merge two into one or split one, or give one another type or array size"),
+        ("stack frame size differs", "the frame holds other locals: remove or add a temporary, size an array as the original does, or keep a value from living across a call"),
+        ("stack alignment differs", "the frame is aligned otherwise: a double or an aligned local, or other compiler flags"),
+        ("arguments popped differ", "the call passes other arguments: check the callee's prototype (a parameter missing or extra, a double for a float, a structure by value)"),
+        ("immediate differs", "a constant differs: check the literal (a #define, an enum, a sizeof), and what the compiler folded (x + 1 written as x - -1, a multiply as shifts)"),
+        ("shift amount differs", "a constant differs: check the literal, and what the compiler folded (a multiply or divide by a power of two)"),
+        ("offset differs", "another field or element: check the structure's layout (a member's type or order) or the index (off by one, a pointer stepped by another size)"),
+        ("condition inverted", "swap the if and else branches, negate the test (if (!x) for if (x)), or turn a while into a do-while (or back): the compiler lays out branches in the order it is given them"),
+        ("condition differs", "another comparison: < for <=, signed for unsigned, or the operands swapped (a > b for b < a)"),
+        ("signedness differs", "make the variable or the cast unsigned where the original's is, or signed (s32/u32, char/unsigned char, int/unsigned)"),
+        ("operand size differs", "a variable of another width: a short for an int, a char for a short"),
+        ("short vs near jump", "the code jumped over is a different length: this follows from the other differences"),
+        ("branch offset differs", "the code between is a different length: this follows from the other differences"),
+        ("branch target differs", "the control flow differs: an else missing, a break or continue, a goto, a loop tested at the top rather than the bottom, or a switch's cases in another order"),
+        ("jump target differs", "the control flow differs: a tail call the original makes (or doesn't), a goto, or a switch's cases in another order"),
+        ("jump table differs", "the switch's cases lead elsewhere: cases in another order, merged or split, or the default placed otherwise"),
+        ("call target differs", "another function is called: check which one the original calls, and whether one was inlined (or a macro expanded) on either side"),
+        ("global differs", "another global: check which variable the original uses, or a static placed otherwise"),
+        ("reordered", "the same instructions in another order: move a statement above or below its neighbour (often an assignment across a call); the compiler schedules within what a statement allows"),
+        ("missing in the rebuild", "the rebuild lacks code the original has: a statement, a check (a NULL test, a bound), or an expression the rebuild's compiler folded away"),
+        ("extra in the rebuild", "the rebuild has code the original doesn't: a statement too many, a check the original skips, or an expression the original's compiler folded"),
+        ("nop missing in the rebuild", "MIPS: the rebuild fills a delay slot the original leaves empty: move a statement across the branch or call, or check the optimization level and the assembler's reordering"),
+        ("an instruction in the original, nop in the rebuild", "MIPS: the original fills a delay slot the rebuild leaves empty: move a statement next to the branch or call"),
+        ("nop in the original, an instruction in the rebuild", "MIPS: the rebuild fills a delay slot the original leaves empty: move a statement across the branch or call"),
+        ("uses a register in the original, a constant in the rebuild", "the original keeps the value in a variable: use one (the compiler didn't fold it), or pass it in"),
+        ("uses a constant in the original, a register in the rebuild", "the original uses the constant itself: write it as a literal (or a #define) rather than a variable"),
+        ("reads memory in the original, a constant in the rebuild", "the original reads a global the rebuild doesn't: make it a variable the code reads, not a #define or a const"),
+        ("encoding differs", "the same instruction in other bytes: another assembler or compiler version (check the compiler the Rich header or the SDK release names)"),
+        ("alignment padding differs", "padding only: it follows from the length of the code before it"),
+        ("instruction differs", "another instruction: often another operator or expression (a shift for a multiply, an lea for an add, a load of another width)"),
+    ];
+    hints.iter().find(|(k, _)| kind.starts_with(k)).map(|(_, h)| *h)
+}
+
 impl MatchResult {
-    /// The result as text: the score, the kinds of difference, then the
-    /// instructions lined up (`=` the same, `~` changed, `-` only in the
-    /// original, `+` only in the rebuild) with each difference explained.
+    /// For each kind of difference found, what to try in the C.
+    pub fn hints(&self) -> Vec<(String, &'static str)> {
+        self.differences
+            .iter()
+            .filter_map(|(k, _)| Some((k.clone(), rewrite_hint(k)?)))
+            .collect()
+    }
+
+    /// The result as text: the score, the kinds of difference and what to
+    /// try for each, then the instructions lined up (`=` the same, `~`
+    /// changed, `-` only in the original, `+` only in the rebuild) with each
+    /// difference explained.
     pub fn to_text(&self) -> String {
         let mut out = format!(
             "{}: {:.1}% ({} of {} instructions match; original {}, rebuilt {})\n",
@@ -1040,6 +1160,13 @@ impl MatchResult {
         }
         if self.percent >= 100.0 {
             return out;
+        }
+        let hints = self.hints();
+        if !hints.is_empty() {
+            out.push_str("To try:\n");
+            for (kind, hint) in hints {
+                out.push_str(&format!("  {kind}: {hint}\n"));
+            }
         }
         out.push('\n');
         for l in &self.lines {

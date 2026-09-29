@@ -910,9 +910,23 @@ impl Match<'_> {
                             Register::ESP | Register::RSP | Register::EBP | Register::RBP
                         ) && a.memory_index() == Register::None;
                         return if stack {
-                            format!(
-                                "stack slot offset differs: {ma} in the original, {mb} in the rebuild (another local or argument)"
-                            )
+                            // Named from the original's frame: arguments used in another order show as such.
+                            let at = self.start + x.at as u64;
+                            let frame = self.bin.stack_frame(self.start);
+                            let names = frame.as_ref().and_then(|f| {
+                                Some((f.slot_at(at)?, f.slot_moved(at, db as i64 - da as i64)?))
+                            });
+                            match names {
+                                Some((na, nb)) if na.starts_with("arg") && nb.starts_with("arg") => format!(
+                                    "stack slot offset differs: {ma} ({na}) in the original, {mb} ({nb}) in the rebuild (the arguments used in another order?)"
+                                ),
+                                Some((na, nb)) => format!(
+                                    "stack slot offset differs: {ma} ({na}) in the original, {mb} ({nb}) in the rebuild (another local or argument)"
+                                ),
+                                None => format!(
+                                    "stack slot offset differs: {ma} in the original, {mb} in the rebuild (another local or argument)"
+                                ),
+                            }
                         } else {
                             format!(
                                 "offset differs: {ma} in the original, {mb} in the rebuild (another structure field or array element?)"
@@ -1549,7 +1563,7 @@ pub(crate) mod tests {
             "{notes:?}"
         );
         assert!(
-            has("stack slot offset differs: [ebp+0x8] in the original, [ebp+0xc] in the rebuild"),
+            has("stack slot offset differs: [ebp+0x8] (arg1) in the original, [ebp+0xc] (arg2) in the rebuild"),
             "{notes:?}"
         );
         assert!(has("signedness differs: movzx in the original, movsx"), "{notes:?}");

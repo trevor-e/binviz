@@ -107,6 +107,10 @@ COMMANDS:
                                    function (relocations masked), each difference explained;
                                    with a name, that function only; with a folder of objects,
                                    the whole project, unit by unit, worst first
+    flags <file> <source> <command> <flags>...
+                                   The source compiled with each set of flags (the command's
+                                   {src}, {out} and {flags} filled in) and matched against the
+                                   file, best first: the flags a unit is built with
     report <file> <report.json>    objdiff's report placed on the file's functions
     progress <file> [json]         Where the decompilation stands (the notes' statuses), by unit;
                                    json: as objdiff's report, which decomp.dev shows
@@ -1444,6 +1448,43 @@ fn run(
                 }
             }
         }
+        "flags" => {
+            let usage = "binviz flags <file> <source> \"<command with {src} {out} {flags}>\" \"<flags>\"...";
+            let (Some(src), Some(command)) = (arg(2), arg(3)) else {
+                return Err(usage.into());
+            };
+            let sets = args.get(4..).unwrap_or(&[]);
+            if sets.is_empty() || !command.contains("{out}") {
+                return Err(format!("{usage}\n(the command compiles {{src}} with {{flags}} into the object {{out}})"));
+            }
+            let dir = std::env::temp_dir().join(format!("binviz-flags-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+            let mut builds = Vec::new();
+            for (i, flags) in sets.iter().enumerate() {
+                let out = dir.join(format!("build-{i}.o"));
+                let line = command
+                    .replace("{src}", &shell_quote(src))
+                    .replace("{out}", &shell_quote(&out.to_string_lossy()))
+                    .replace("{flags}", flags);
+                let ran = if cfg!(windows) {
+                    std::process::Command::new("cmd").args(["/C", &line]).output()
+                } else {
+                    std::process::Command::new("sh").args(["-c", &line]).output()
+                };
+                let object = match ran {
+                    Ok(o) if o.status.success() => std::fs::read(&out).map_err(|e| binviz::Error::new(e.to_string())),
+                    Ok(o) => {
+                        let err = String::from_utf8_lossy(&o.stderr);
+                        Err(binviz::Error::new(format!("didn't compile: {}", err.lines().next().unwrap_or(""))))
+                    }
+                    Err(e) => Err(binviz::Error::new(e.to_string())),
+                };
+                eprintln!("{flags}: {}", if object.is_ok() { "compiled" } else { "failed" });
+                builds.push((flags.clone(), object));
+            }
+            let _ = std::fs::remove_dir_all(&dir);
+            print!("{}", binviz::matching::builds_text(&bin.rank_builds(&builds)));
+        }
         "progress" => {
             let report = bin.progress_report();
             if arg(2) == Some("json") {
@@ -1483,6 +1524,15 @@ fn run(
         _ => return Err(format!("unknown command {cmd}\n\n{USAGE}")),
     }
     Ok(())
+}
+
+/// `s` as one word of a shell command.
+fn shell_quote(s: &str) -> String {
+    if cfg!(windows) {
+        format!("\"{s}\"")
+    } else {
+        format!("'{}'", s.replace('\'', "'\\''"))
+    }
 }
 
 /// An objdiff report's totals and units, one line each.

@@ -544,6 +544,17 @@ pub fn definitions() -> Vec<Value> {
             false,
         ),
         tool(
+            "rank_builds",
+            "Rank builds of a unit",
+            "Several builds of one unit — its source compiled with different flags (-O1, -O2, -fno-inline…) or by different compilers, each an object file — matched against the original and ranked, best first: the flags the unit was built with are the first's. Compile them yourself, then pass the objects; label each with its flags.",
+            json!({
+                "objects": { "type": "array", "items": { "type": "string" }, "description": "The object files, one per build." },
+                "labels": { "type": "array", "items": { "type": "string" }, "description": "What tells each build apart (its flags), in the same order; the file names otherwise." },
+            }),
+            &["objects"],
+            true,
+        ),
+        tool(
             "locate",
             "Find a disc file in memory",
             "For a PlayStation memory image (2 MiB of RAM an emulator dumped): where a file from the disc (an overlay) is loaded; for an archive of files in a format binviz doesn't read (stored uncompressed), each stretch of it loaded there, with its offset in the archive, its address and how much of it is still the same. Open a stretch as an overlay at its address (open_binary's overlay_at) to work on it.",
@@ -895,6 +906,7 @@ impl Server {
                     "source_counterparts" => source_counterparts(o, args)?,
                     "export_progress" => export_progress(o, args)?,
                     "locate" => locate(o, args)?,
+                    "rank_builds" => rank_builds(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -2714,6 +2726,33 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
         let (added, updated) = merge_notes(o, notes);
         let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
     }
+    Ok(out)
+}
+
+fn rank_builds(o: &Open, args: &Value) -> Result<String, String> {
+    let objects: Vec<&str> = args
+        .get("objects")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
+    if objects.is_empty() {
+        return Err("objects is required: the builds' object files".into());
+    }
+    let labels: Vec<&str> = args
+        .get("labels")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
+    let builds: Vec<(String, binviz::Result<Vec<u8>>)> = objects
+        .iter()
+        .enumerate()
+        .map(|(i, path)| {
+            let label = labels.get(i).map_or_else(|| path.to_string(), |l| l.to_string());
+            (label, std::fs::read(path).map_err(|e| binviz::Error::new(format!("{path}: {e}"))))
+        })
+        .collect();
+    let mut out = ensure_xrefs(o)?;
+    out.push_str(&binviz::matching::builds_text(&o.bin.rank_builds(&builds)));
     Ok(out)
 }
 

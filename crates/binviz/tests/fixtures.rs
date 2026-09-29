@@ -1856,6 +1856,34 @@ fn x86_64_elf_objects_are_matched_too() {
 }
 
 #[test]
+fn builds_of_a_unit_rank_by_how_they_match_and_differences_say_what_to_try() {
+    // Functions are found by the names the PDB gives them.
+    let mut bin = open("x86match.exe");
+    bin.attach_debug_file("x86match.pdb", fixture("x86match.pdb")).unwrap();
+    let builds = vec![
+        ("-O2 -DEDITED".to_string(), Ok(fixture("x86match-edited.obj"))),
+        ("-O2".to_string(), Ok(fixture("x86match.obj"))),
+        ("broken".to_string(), Err(binviz::Error::new("didn't compile"))),
+        ("not an object".to_string(), Ok(b"hello".to_vec())),
+    ];
+    let ranked = bin.rank_builds(&builds);
+    let order: Vec<&str> = ranked.iter().map(|b| b.label.as_str()).collect();
+    assert_eq!(order, ["-O2", "-O2 -DEDITED", "broken", "not an object"]);
+    assert_eq!((ranked[0].exact, ranked[0].functions, ranked[0].percent), (15, 15, 100.0));
+    assert!(ranked[2].error.as_deref() == Some("didn't compile") && ranked[3].error.is_some());
+    // What to try for each kind of difference in the edited build.
+    let edited = bin.match_unit("x86match-edited.obj", &fixture("x86match-edited.obj")).unwrap();
+    let below = edited.functions.iter().find(|m| m.name == "below").unwrap();
+    let hints = below.hints();
+    assert!(hints.iter().any(|(k, h)| k == "condition differs" && h.contains("< for <=")), "{hints:?}");
+    assert!(below.to_text().contains("To try:\n"), "{}", below.to_text());
+    let diff = edited.functions.iter().find(|m| m.name == "diff").unwrap();
+    let note = diff.lines.iter().find_map(|l| l.note.as_deref()).unwrap();
+    assert!(note.contains("(arg1) in the original, [esp+0x8] (arg2) in the rebuild (the arguments used in another order?)"), "{note}");
+    assert!(binviz::matching::rewrite_hint("nop missing in the rebuild (a delay slot?)").is_some());
+}
+
+#[test]
 fn msvc_x64_jump_tables_match_by_where_their_entries_lead() {
     // Entries (and the code reading them) hold offsets from the image base.
     let bin = open("switch64.dll");

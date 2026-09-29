@@ -1178,6 +1178,17 @@ impl Frame {
             .filter(|s| s.0 == address)
             .map(|s| self.slot_name(s.1))
     }
+
+    /// The slot the instruction at `address` would use `delta` bytes past
+    /// the one it uses: what another build's instruction there reaches.
+    pub(crate) fn slot_moved(&self, address: u64, delta: i64) -> Option<String> {
+        let i = self.slots.partition_point(|s| s.0 < address);
+        let (_, slot) = self.slots.get(i).filter(|s| s.0 == address)?;
+        Some(self.slot_name(Slot {
+            at: slot.at.add(delta),
+            address: slot.address,
+        }))
+    }
 }
 
 #[cfg(test)]
