@@ -226,7 +226,7 @@ below too.
 
 ## Shared: project bookkeeping and porting
 
-- [x] **Function status in notes** (2026-09-29). Each function's state rides
+- [x] **Function status in notes** (2026-09-29, 8e208bc). Each function's state rides
       on its note (`decomp`: todo, in-progress with who and since, matched
       with its source file, nonmatching, skipped, library; tries and best
       percent), in the notes file the web UI keeps too. MCP `mark` sets it,
@@ -234,7 +234,7 @@ below too.
       matching), `identify_sdk` marks library code; `coverage`,
       `binary_summary`, `inspect`, `function_info` and `disassemble` report
       it. Not yet: a colour for it on the web UI's coverage map.
-- [x] **Work queue and look-alikes** (2026-09-29, `queue.rs`, `similar.rs`;
+- [x] **Work queue and look-alikes** (2026-09-29, 8e208bc, `queue.rs`, `similar.rs`;
       MCP `next_functions`, `mark`, `similar_functions`). What to decompile
       next, best first: near-copies of a matched function (90 % of the same
       instruction shapes, 8 instructions or more), then functions whose
@@ -269,7 +269,7 @@ below too.
 - 2026-09-28: plan written; no implementation yet.
 - 2026-09-29: function status in notes, the work queue (`next_functions`,
   claims, `mark`) and look-alikes (`similar_functions`, worked examples in
-  `decomp_context`); `place_report` records objdiff's verdicts and
+  `decomp_context`) landed in 8e208bc; `place_report` records objdiff's verdicts and
   `identify_sdk` marks library code. Closes the matched-status and
   similar-function-examples notes above.
 - 2026-09-29 (last): A1 Psy-Q signatures from LIB/OBJ files and A7 name proposals by shared
