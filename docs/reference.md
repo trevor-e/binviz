@@ -785,9 +785,11 @@ cargo test
   not decoded entry by entry (chained fixups are walked to find pointers).
 - Disassembly covers x86, x86-64, AArch64, ARM (A32) and WebAssembly;
   cross-references and the call graph x86, x86-64, AArch64 and WebAssembly.
-- Matching x86 objects: relocations other than absolute and relative ones
-  (through the GOT, section-relative) are masked but not checked (offsets
-  from the image base, MSVC x64's, are checked),
+- Matching x86 objects: a reference through the GOT is masked but not
+  checked (calls through a shared library's PLT are checked as calls to the
+  function; a reference to the object's own statics, float constants and
+  strings is checked by name, value and text; offsets from the image base,
+  MSVC x64's, are checked),
   and an instruction a linker rewrote (a `mov` from the GOT relaxed into a
   `lea`) reads as a difference.
 - Calls through registers are followed only when the register was just loaded

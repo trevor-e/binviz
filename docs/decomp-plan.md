@@ -416,6 +416,20 @@ Tests still to run (none can run without the games and agents; not done):
 
 ## Progress log
 
+- 2026-09-29 (the loop, for real): Yamagi Quake II 5.34's game code, its constants changed at
+  random (1 536 of them, blind, so recalling id's code doesn't match), built by clang as an
+  x86-64 `game.so`. Ten functions picked at random (44 to 526 bytes) were decompiled from
+  binviz's `context` and the headers alone, without reading the source: all ten, and the four
+  functions the compiler inlined into them, compile to the same code (binviz `match`: 100%; and
+  checked apart from binviz, byte for byte with every reference resolved to the same symbol,
+  string or constant), eight of the ten on the first try. The control (the compiler's own
+  objects) exposed matcher bugs, fixed: calls through the PLT and loads through the GOT read as
+  differences (493 of 965 functions matched their own objects; now 965), and a reference to a
+  static, a float constant or a string was never compared, so a wrong constant or string scored
+  100%: they are now checked by name, value and text (`picmatch` fixtures). Two things the
+  single-function setup needs, and a decompiled file has anyway: a static the function reads
+  must be written somewhere in the file (else it folds to 0), and functions the original inlines
+  must be in the file too.
 - 2026-09-29 (real binaries): Yamagi Quake II 5.34's Windows build (MinGW GCC; its DWARF as the
   answer key, stripped copies as the target) and numpy's 32-bit core extension (Visual C++ 2019,
   5 768 functions). Stripped `rogue/game.dll`: 1 545 of 1 546 DWARF functions found (the other is

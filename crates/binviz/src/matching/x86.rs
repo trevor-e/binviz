@@ -456,7 +456,8 @@ fn rebuilt_items(func: &ObjectFunction, start: u64, bits: u32) -> Vec<Item> {
 /// refers into the function itself (a jump table after its code, a case).
 fn target_in_function(func: &ObjectFunction, r: &Reloc, field: usize, ins_end: usize) -> Option<usize> {
     let (section, offset) = r.defined?;
-    if section != func.section {
+    // Through the GOT (and other forms), a reference is to a slot holding the address, not the bytes there.
+    if section != func.section || (r.form == RelocForm::Other && !r.image_offset) {
         return None;
     }
     let at = offset as i64 + reference_offset(&func.code, r, field, ins_end) - func.offset as i64;
@@ -772,6 +773,56 @@ impl Match<'_> {
 
     /// A relocation of the rebuild's (at `at` in its instruction `j`):
     /// whether the original points where its symbol is in the binary.
+    /// A reference to a section of the object (a static, a string, a
+    /// constant), which the binary can't know by that name: the named data
+    /// there against the original's symbol at `original`, else the bytes
+    /// there against the original's.
+    fn check_section_reference(&self, r: &Reloc, offset: i64, original: u64) -> Option<String> {
+        let (section, base) = r.defined?;
+        let at = base.wrapping_add(offset as u64);
+        let data = &self.func.data;
+        if let Some((name, into)) = data.symbol_at(section, at) {
+            // A stripped original doesn't say what is there.
+            let there = self.bin.symbols().lookup(original)?;
+            if there.name == name && there.offset == into {
+                return None;
+            }
+            return Some(format!(
+                "global differs: {} in the rebuild; the original refers to {}",
+                with_offset(name, into as i64),
+                self.describe(original)
+            ));
+        }
+        let (ours, string) = data.bytes_at(section, at)?;
+        let theirs = self
+            .bin
+            .address_to_offset(original)
+            .and_then(|o| self.bin.data().get(o as usize..))?;
+        let same = theirs.starts_with(ours) && (!string || theirs.get(ours.len()) == Some(&0));
+        if same {
+            return None;
+        }
+        Some(if string {
+            let end = theirs.iter().position(|&b| b == 0).unwrap_or(theirs.len().min(80));
+            format!(
+                "string differs: {:?} in the rebuild; the original's is {:?}",
+                String::from_utf8_lossy(ours),
+                String::from_utf8_lossy(&theirs[..end])
+            )
+        } else {
+            let value = |b: &[u8]| match b.len() {
+                4 => format!("{} (f32)", f32::from_le_bytes([b[0], b[1], b[2], b[3]])),
+                8 => format!("{} (f64)", f64::from_le_bytes(b[..8].try_into().unwrap_or_default())),
+                _ => b.iter().map(|x| format!("{x:02x}")).collect(),
+            };
+            format!(
+                "constant differs: {} in the rebuild; the original's is {}",
+                value(ours),
+                value(&theirs[..ours.len().min(theirs.len())])
+            )
+        })
+    }
+
     fn check_reloc(&self, i: usize, j: usize, at: usize, r: &Reloc) -> Option<String> {
         if r.form == RelocForm::Other && !r.image_offset {
             return None;
@@ -788,7 +839,10 @@ impl Match<'_> {
         let offset = reference_offset(&self.func.code, r, b.at + at, b.end());
         let (expected, rebuilt) = match target_in_function(self.func, r, b.at + at, b.end()) {
             Some(t) => (self.lined_up(t)?, format!("{}+{t:#x}", self.name)),
-            None if r.section_symbol => return None,
+            // A section, or an assembler's local label in one (`.LCPI0_0`, `.L.str`): no name the binary has.
+            None if r.section_symbol || (r.symbol.starts_with(".L") && r.defined.is_some()) => {
+                return self.check_section_reference(r, offset, original);
+            }
             None => (
                 self.bin
                     .cached_symbol_address(self.lookups, &r.symbol)?
@@ -806,7 +860,14 @@ impl Match<'_> {
             _ if r.image_offset => original == expected,
             _ => (original ^ expected) & mask == 0,
         };
-        if same {
+        // A shared library calls its own exported functions through the PLT: `X@plt` is `X`.
+        let through_plt = || {
+            self.bin
+                .symbols()
+                .at(original)
+                .is_some_and(|s| s.name().strip_suffix("@plt") == Some(r.symbol.as_str()))
+        };
+        if same || (r.form == RelocForm::Relative && through_plt()) {
             return None;
         }
         let original = if r.form == RelocForm::Relative || r.image_offset {

@@ -49,6 +49,95 @@ pub struct ObjectFunction {
     /// The functions of its section (offset, name), for a call the assembler
     /// resolved itself, with no relocation.
     pub(crate) neighbours: Arc<[(u64, String)]>,
+    /// The object's data, for what a reference to a section of it (a static,
+    /// a string, a constant) reaches.
+    pub(crate) data: Arc<ObjectData>,
+}
+
+/// What an object holds besides its code.
+#[derive(Debug, Default)]
+pub(crate) struct ObjectData {
+    /// Its data sections by index: name and bytes (none for zero-filled ones).
+    pub sections: std::collections::HashMap<usize, (String, Vec<u8>)>,
+    /// Its named data: (section, offset, size, name).
+    pub symbols: Vec<(usize, u64, u64, String)>,
+    /// Where in its data sections the linker writes (a jump table's entries):
+    /// those bytes aren't the object's to compare.
+    pub relocated: std::collections::HashMap<usize, Vec<u64>>,
+}
+
+impl ObjectData {
+    fn read(file: &object::File) -> ObjectData {
+        let mut out = ObjectData::default();
+        for section in file.sections() {
+            if matches!(
+                section.kind(),
+                object::SectionKind::Text | object::SectionKind::Metadata | object::SectionKind::Debug
+            ) || section
+                .name()
+                .is_ok_and(|n| n.starts_with(".debug") || n.starts_with(".rela"))
+            {
+                continue;
+            }
+            let bytes = section.uncompressed_data().map(|d| d.into_owned()).unwrap_or_default();
+            out.sections
+                .insert(section.index().0, (section.name().unwrap_or("").to_string(), bytes));
+            let mut at: Vec<u64> = section.relocations().map(|(o, _)| o).collect();
+            at.sort_unstable();
+            out.relocated.insert(section.index().0, at);
+        }
+        for s in file.symbols() {
+            let (Some(x), Ok(name)) = (s.section_index(), s.name()) else {
+                continue;
+            };
+            // An assembler's local labels (`.LCPI0_0`, `.L.str`) name no data the binary knows.
+            if name.is_empty()
+                || name.starts_with(".L")
+                || s.kind() == object::SymbolKind::Section
+                || !out.sections.contains_key(&x.0)
+            {
+                continue;
+            }
+            let base = file.section_by_index(x).map_or(0, |sec| sec.address());
+            out.symbols
+                .push((x.0, s.address().wrapping_sub(base), s.size(), name.to_string()));
+        }
+        out
+    }
+
+    /// The named data at `offset` in section `section`: its name and the offset into it.
+    pub(crate) fn symbol_at(&self, section: usize, offset: u64) -> Option<(&str, u64)> {
+        self.symbols
+            .iter()
+            .filter(|s| s.0 == section && s.1 <= offset && offset < s.1 + s.2.max(1))
+            .min_by_key(|s| s.2)
+            .map(|s| (s.3.as_str(), offset - s.1))
+    }
+
+    /// The anonymous data at `offset` in section `section` as the code reads
+    /// it: a string (to its NUL) in a string section, a constant (its size
+    /// from a `.rodata.cst8`-style name, else 8 bytes) otherwise.
+    pub(crate) fn bytes_at(&self, section: usize, offset: u64) -> Option<(&[u8], bool)> {
+        let (name, bytes) = self.sections.get(&section)?;
+        let rest = bytes.get(offset as usize..)?;
+        if name.contains(".str") {
+            let n = rest.iter().position(|&b| b == 0)?;
+            return Some((&rest[..n], true));
+        }
+        let size = name
+            .rsplit("cst")
+            .next()
+            .filter(|_| name.contains(".cst"))
+            .and_then(|n| n.parse::<usize>().ok())
+            .unwrap_or(8);
+        let ours = rest.get(..size).unwrap_or(rest);
+        // Bytes the linker writes aren't known here.
+        let written = self.relocated.get(&section).is_some_and(|r| {
+            let i = r.partition_point(|&o| o + 8 <= offset);
+            r.get(i).is_some_and(|&o| o < offset + ours.len() as u64)
+        });
+        (!written).then_some((ours, false))
+    }
 }
 
 /// The instruction set an object's code is for.
@@ -185,6 +274,7 @@ pub(crate) fn file_functions(file: &object::File) -> Result<Vec<ObjectFunction>>
         }
     };
     let mut out = Vec::new();
+    let object_data = Arc::new(ObjectData::read(file));
     for section in file.sections() {
         if section.kind() != object::SectionKind::Text {
             continue;
@@ -250,6 +340,7 @@ pub(crate) fn file_functions(file: &object::File) -> Result<Vec<ObjectFunction>>
                 relocs,
                 section: section.index().0,
                 neighbours: neighbours.clone(),
+                data: object_data.clone(),
             });
         }
     }

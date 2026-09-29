@@ -59,6 +59,7 @@ const ALL: &[&str] = &[
     "x86match.obj",
     "x86match-x64",
     "x86match-x64.o",
+    "picmatch.so",
     "switch64.dll",
     "switch64-msvc.obj",
     "switch64-elf",
@@ -1853,6 +1854,40 @@ fn x86_64_elf_objects_are_matched_too() {
             && note.ends_with("(g_player+0x4)"),
         "{note}"
     );
+}
+
+#[test]
+fn a_shared_librarys_objects_are_matched_by_what_their_code_refers_to() {
+    // Calls through the PLT and globals through the GOT are the object's own functions and globals.
+    let bin = open("picmatch.so");
+    let unit = bin.match_unit("picmatch.o", &fixture("picmatch.o")).unwrap();
+    assert_eq!(unit.functions.len(), 7);
+    assert!(unit.functions.iter().all(|m| m.percent == 100.0), "{unit:?}");
+    // The same instructions reaching another static, constant or string don't match.
+    let edited = bin
+        .match_unit("picmatch-edited.o", &fixture("picmatch-edited.o"))
+        .unwrap();
+    let note = |name: &str| {
+        let m = edited.functions.iter().find(|m| m.name == name).unwrap();
+        m.lines.iter().find_map(|l| l.note.clone()).unwrap_or_default()
+    };
+    assert!(
+        note("which_sound").starts_with("global differs: sound_close in the rebuild")
+            && note("which_sound").ends_with("(sound_open)"),
+        "{}",
+        note("which_sound")
+    );
+    assert_eq!(
+        note("scaled"),
+        "constant differs: 0.75 (f32) in the rebuild; the original's is 0.5 (f32)"
+    );
+    assert_eq!(
+        note("open_door"),
+        "string differs: \"door/open2.wav\" in the rebuild; the original's is \"door/open1.wav\""
+    );
+    for same in ["set_sounds", "both_sounds", "count", "step"] {
+        assert_eq!(differences(&edited, same), Vec::<String>::new(), "{same}");
+    }
 }
 
 #[test]

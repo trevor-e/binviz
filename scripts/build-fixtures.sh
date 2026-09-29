@@ -135,7 +135,7 @@ if command -v clang >/dev/null 2>&1; then
 
     echo "x86match: PE32 with a PDB, the objects a decompilation compiles for it (one edited), a static library"
     tmp="$(mktemp -d)"
-    cp "$src/x86match.cpp" "$src/x86lib-a.c" "$src/x86lib-b.c" "$src/kernel32.def" "$src/x86match-x64.c" "$tmp"
+    cp "$src/x86match.cpp" "$src/x86lib-a.c" "$src/x86lib-b.c" "$src/kernel32.def" "$src/x86match-x64.c" "$src/picmatch.c" "$tmp"
     ln -s "$lld" "$tmp/lld-link"
     (
         cd "$tmp"
@@ -158,9 +158,14 @@ if command -v clang >/dev/null 2>&1; then
         clang "${flags[@]}" -c x86match-x64.c -o x86match-x64.o
         clang "${flags[@]}" -DEDITED -c x86match-x64.c -o x86match-x64-edited.o
         "$lld" -flavor gnu -static -no-pie -e start -o x86match-x64 x86match-x64.o
+        echo "picmatch: a position-independent shared library (PLT, GOT), its object and an edited one"
+        flags=(-target x86_64-unknown-linux-gnu -O2 -fPIC -fno-asynchronous-unwind-tables -ffreestanding)
+        clang "${flags[@]}" -c picmatch.c -o picmatch.o
+        clang "${flags[@]}" -DEDITED -c picmatch.c -o picmatch-edited.o
+        "$lld" -flavor gnu -shared -o picmatch.so picmatch.o
     )
     for f in x86match.exe x86match.pdb x86match.obj x86match-edited.obj x86lib.lib x86lib-a.obj x86lib-b.obj \
-        x86match-x64 x86match-x64.o x86match-x64-edited.o; do
+        x86match-x64 x86match-x64.o x86match-x64-edited.o picmatch.so picmatch.o picmatch-edited.o; do
         cp "$tmp/$f" "$out"
     done
     rm -rf "$tmp"
