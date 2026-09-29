@@ -2367,3 +2367,18 @@ fn playstation_discs_open_their_executable() {
     assert_eq!(bin.platform(), Some(binviz::rom::Platform::PlayStation));
     assert_eq!(bin.data(), &exe[..]);
 }
+
+#[test]
+fn a_call_through_an_import_slot_names_the_import() {
+    // 32-bit code names the slot by its address: call dword ptr [0x4021b4].
+    let bin = open("x86demo-fixed.exe");
+    let exit = bin.imports().iter().find(|i| i.name == "ExitProcess").unwrap();
+    let slot = exit.address.unwrap();
+    bin.prepare_xrefs();
+    let site = bin.references_to(slot, slot + 4, 0, 1).refs[0].source;
+    let call = bin.instruction_at(site).unwrap();
+    assert_eq!(
+        (call.mnemonic.as_str(), call.target, call.target_symbol.as_deref()),
+        ("call", Some(slot), Some("__imp_ExitProcess"))
+    );
+}
