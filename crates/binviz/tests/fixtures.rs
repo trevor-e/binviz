@@ -424,6 +424,80 @@ fn pdbs_must_match() {
 }
 
 #[test]
+fn pdb_types_are_read_into_dwarf() {
+    let mut bin = open("x86demo.exe");
+    bin.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    let d = bin.debug_info().unwrap();
+    // The types are a unit of their own, after the modules', which the
+    // modules' functions and variables refer to across units.
+    let types = d.units().last().unwrap();
+    assert_eq!(types.name.as_deref(), Some("(types)"));
+    assert_eq!(types.code_size, 0);
+    let check = d.check();
+    assert_eq!((check.errors, check.warnings), (0, 0), "{:?}", check.problems);
+    // A class: its base and members where the DIE view's layout says, forward
+    // references resolved to the definition.
+    let square = d
+        .search("Square", 10)
+        .into_iter()
+        .find(|h| h.tag == "DW_TAG_structure_type")
+        .expect("struct Square");
+    let det = d.die(square.unit, square.offset).unwrap();
+    let layout: Vec<(String, &str, Option<u64>)> = det
+        .layout
+        .iter()
+        .map(|m| (m.name.clone().unwrap_or_default(), m.kind.as_str(), m.offset))
+        .collect();
+    assert_eq!(layout, [("".into(), "base", Some(0)), ("s".into(), "member", Some(8))]);
+    assert_eq!(det.byte_size, Some(12));
+    // Where a class's vtable pointer is.
+    let shape = d.search("Shape", 10);
+    let shape = shape.iter().find(|h| h.tag == "DW_TAG_structure_type").unwrap();
+    let vfptr = &d.die(shape.unit, shape.offset).unwrap().layout[0];
+    assert_eq!((vfptr.name.as_deref(), vfptr.artificial), (Some("__vfptr"), true));
+    // A function's return type, calling convention and named parameters.
+    let mix = bin.symbols().by_name("mix").unwrap().address;
+    let (u, o) = d.function_die_at(mix).unwrap();
+    let det = d.die(u, o).unwrap();
+    assert_eq!(det.type_name.as_deref(), Some("int"));
+    let cc = det
+        .attributes
+        .iter()
+        .find(|a| a.name == "DW_AT_calling_convention")
+        .unwrap();
+    assert_eq!(cc.value, "DW_CC_BORLAND_stdcall");
+    let params: Vec<(Option<String>, Option<String>)> = d
+        .die_children(u, Some(o))
+        .into_iter()
+        .map(|c| (c.name, c.detail))
+        .collect();
+    assert_eq!(
+        params,
+        [
+            (Some("a".into()), Some("int".into())),
+            (Some("b".into()), Some("int".into()))
+        ]
+    );
+    // A method takes its object as `this`.
+    let scaled = bin.symbols().by_name("Shape::scaled").unwrap().address;
+    let (u, o) = d.function_die_at(scaled).unwrap();
+    let this = &d.die_children(u, Some(o))[0];
+    assert_eq!(this.name.as_deref(), Some("this"));
+    assert_eq!(this.detail.as_deref(), Some("const Shape * const"));
+    // A variable's type (lld keeps only statics in the modules), and a pointer
+    // to a function spelled as one.
+    let ops = d.search("unary_ops", 5);
+    let ops = ops.iter().find(|h| h.tag == "DW_TAG_variable").unwrap();
+    assert_eq!(ops.detail.as_deref(), Some("int (*)(int) const[3]"));
+    let callback = d.search("TlsCallback", 5);
+    let callback = callback.iter().find(|h| h.tag == "DW_TAG_typedef").unwrap();
+    assert_eq!(
+        callback.detail.as_deref(),
+        Some("void (*)(void *, unsigned long, void *)")
+    );
+}
+
+#[test]
 fn disassembly() {
     let bin = open("tiny-elf-x64");
     let run = bin.symbols().by_name("tiny::run").unwrap();

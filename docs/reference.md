@@ -29,8 +29,10 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   address you get the variables in scope and where each one's value is.
   Separate debug files (`.dSYM` DWARF, `objcopy --only-keep-debug` output) can
   be attached, and so can a Windows binary's PDB: its modules, functions,
-  globals and line records are read into DWARF, so everything above works
-  for MSVC, clang-cl and Rust `-msvc` builds too. A Mach-O binary linked without dsymutil gets its DWARF from the
+  globals, line records and type records are read into DWARF (the types in a
+  unit of their own, which the modules' functions and variables refer to), so
+  everything above works for MSVC, clang-cl and Rust `-msvc` builds too,
+  structure layouts and function signatures included. A Mach-O binary linked without dsymutil gets its DWARF from the
   object files its debug map names, moved to the binary's addresses as
   dsymutil would move it (functions reordered or dead-stripped included); the
   objects are found where they were built, next to the binary, anywhere in a
@@ -536,7 +538,7 @@ crates/binviz        the library
   src/dwarf/explore.rs       DIEs by tag, by offset and by name; variables in scope
   src/dwarf/check.rs         the DWARF checker
   src/dwarf/debugmap.rs      Mach-O debug maps: the objects' DWARF, linked to the binary
-  src/dwarf/pdb.rs           PDBs: modules, procedures and line records, written as DWARF
+  src/dwarf/pdb.rs           PDBs: modules, procedures, line records and types, written as DWARF
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
 crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents
@@ -561,9 +563,12 @@ cargo test
   through `xcrun`); the web UI shows them mangled. Their owners (Swift
   modules) are found either way.
 
-- From a PDB, binviz reads modules, procedures, globals, public symbols and
-  line records, not types or local variables (its type records aren't turned
-  into DWARF types), so variables in scope and structure layouts need DWARF.
+- From a PDB, binviz reads modules, procedures (with their parameters),
+  globals, public symbols, line records and types, not local variables or
+  their locations, so variables in scope need DWARF. Global data that lld
+  moves to the PDB's global stream names symbols but has no DWARF variable;
+  a class's methods and its vtable's shape aren't read (the vtable pointer
+  is).
 - Split DWARF (`.dwo`/`.dwp`) is detected but not followed.
 - `.eh_frame`, dyld opcode streams and chained fixups are shown as regions but
   not decoded entry by entry (chained fixups are walked to find pointers).
