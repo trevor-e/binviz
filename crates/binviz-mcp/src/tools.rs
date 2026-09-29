@@ -533,14 +533,26 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "propose_names",
             "Propose names from another build",
-            "Names from another build of the game (a port with its source, a symbolized build): a JSON list of its functions, each with the string literals it uses and the functions it calls ([{\"name\": \"InitField\", \"strings\": [\"field.bin\"], \"calls\": [\"LoadFile\"]}, …]). Functions here using the same strings are proposed as the same functions, then their neighbours through the calls, each with a confidence and the evidence. With apply, proposals at or above min_confidence become notes.",
+            "Names from another build of the game (a port with its source, a symbolized build): a JSON list of its functions, each with the string literals it uses and the functions it calls ([{\"name\": \"InitField\", \"strings\": [\"field.bin\"], \"calls\": [\"LoadFile\"]}, …]), or the build itself with its names (its symbols, debug info, or the PDB it names beside it; debug_file to give another). Functions here with the same bytes, the same instructions or the same place in the call graph take its functions' names, the rest those using the same strings, then their neighbours through the calls; data takes the name the same instructions use in the other build. Each proposal has a confidence and the evidence, and the other build's functions with no counterpart here are listed. With apply, proposals at or above min_confidence become notes.",
             json!({
-                "path": { "type": "string", "description": "Path to the candidates JSON." },
+                "path": { "type": "string", "description": "Path to the candidates JSON, or to the other build." },
+                "debug_file": { "type": "string", "description": "The other build's debug file (a PDB), when it isn't beside it under the name the build records." },
                 "apply": { "type": "boolean", "description": "Name the functions in the notes (default false: report only)." },
                 "min_confidence": { "type": "number", "description": "0 to 1; proposals below it aren't applied (default 0.6)." },
             }),
             &["path"],
             false,
+        ),
+        tool(
+            "source_counterparts",
+            "Compare with a source tree",
+            "The binary set against the C or C++ source it may be built from (a folder, headers too): the functions named here that the source defines nowhere and the strings the code uses that the source doesn't have (signs of another version, or code from elsewhere), and the source's functions nothing here is named after yet (inlined, unused, not named, or not in this version). Library code the notes mark is left out. For two builds, use diff_functions or propose_names.",
+            json!({
+                "path": { "type": "string", "description": "The source folder." },
+                "limit": { "type": "integer", "description": "Entries per list (default 100)." },
+            }),
+            &["path"],
+            true,
         ),
         tool(
             "list_symbols",
@@ -860,6 +872,7 @@ impl Server {
                     "import_symbol_addrs" => import_symbol_addrs(o, args)?,
                     "identify_sdk" => identify_sdk(o, args)?,
                     "propose_names" => propose_names(o, args)?,
+                    "source_counterparts" => source_counterparts(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -2646,9 +2659,29 @@ fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
 
 fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
     let path = string(args, "path").ok_or("path is required")?;
-    let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
-    let candidates = binviz::names::parse_candidates(&json).map_err(|e| e.to_string())?;
-    let p = o.bin.propose_names(&candidates);
+    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let p = match binviz::names::parse_candidates(&data) {
+        Ok(candidates) => o.bin.propose_names(&candidates),
+        Err(_) => {
+            // Another build with names: its functions paired with these by their code.
+            let mut other = binviz::Binary::parse(data).map_err(|e| format!("{path}: {e}"))?;
+            let debug = match string(args, "debug_file") {
+                Some(d) => Some(PathBuf::from(d)),
+                None => other.summary().debug_link.as_deref().map(|link| {
+                    let name = link.rsplit(['\\', '/']).next().unwrap_or(link);
+                    Path::new(path).with_file_name(name.split(" (crc ").next().unwrap_or(name))
+                }),
+            };
+            if let Some(d) = debug.filter(|d| d.is_file()) {
+                let bytes = std::fs::read(&d).map_err(|e| format!("{}: {e}", d.display()))?;
+                other
+                    .attach_debug_file(&d.to_string_lossy(), bytes)
+                    .map_err(|e| format!("{}: {e}", d.display()))?;
+            }
+            ensure_xrefs(o)?;
+            o.bin.port_names(&other)
+        }
+    };
     let mut out = p.to_text();
     if args.get("apply").and_then(Value::as_bool).unwrap_or(false) {
         let min = args.get("min_confidence").and_then(Value::as_f64).unwrap_or(0.6) as f32;
@@ -2657,6 +2690,18 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
         let (added, updated) = merge_notes(o, notes);
         let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
     }
+    Ok(out)
+}
+
+fn source_counterparts(o: &Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "path").ok_or("path is required")?;
+    let files = binviz::csource::read_source_tree(Path::new(path)).map_err(|e| format!("{path}: {e}"))?;
+    if files.is_empty() {
+        return Err(format!("{path}: no C or C++ files"));
+    }
+    let mut out = ensure_xrefs(o)?;
+    let limit = int(args, "limit", 100, 10_000) as usize;
+    out.push_str(&o.bin.source_counterparts(&files).to_text(limit));
     Ok(out)
 }
 

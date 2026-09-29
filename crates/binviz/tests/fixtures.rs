@@ -15,6 +15,14 @@ fn open(name: &str) -> Binary {
     Binary::parse(fixture(name)).unwrap_or_else(|e| panic!("{name}: {e}"))
 }
 
+/// A fixture's source file.
+fn fixture_src(name: &str) -> Vec<u8> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/src")
+        .join(name);
+    std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
+}
+
 /// Line number (1-based) of the first line of a fixture source containing `needle`.
 fn source_line(file: &str, needle: &str) -> u32 {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -1307,6 +1315,58 @@ fn a_context_keeps_its_lists_short_and_says_where_a_callback_is_stored() {
     assert!(text.contains("Its address is taken or stored at (a callback"), "{text}");
     assert!(text.contains(&format!("  {:#x} address sub_", c.taken_from[0].source)), "{text}");
     assert!(text.contains("it may be passed some it ignores"), "{text}");
+}
+
+#[test]
+fn names_port_from_a_symbolized_build() {
+    // The same code linked /FIXED, stripped: every function pairs up, copies of one code included.
+    let mut named = open("x86demo.exe");
+    named.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    let bin = open("x86demo-fixed.exe");
+    let d = named.diff_functions(&bin);
+    assert_eq!((d.identical, d.added.len(), d.removed.len()), (45, 0, 0));
+    let p = bin.port_names(&named);
+    let name_at = |a: u64| p.proposals.iter().find(|x| x.address == a).map(|x| x.proposed.as_str());
+    let at = |n: &str| named.symbols().by_name(n).unwrap_or_else(|| panic!("{n}")).address;
+    for n in ["sum3", "Square::sides", "Rect::sides", "_quit", "dispatch"] {
+        assert_eq!(name_at(at(n)), Some(n), "{n}");
+    }
+    let sum3 = p.proposals.iter().find(|x| x.proposed == "sum3").unwrap();
+    assert_eq!((sum3.confidence, sum3.evidence.as_str()), (1.0, "the same bytes"));
+    // Data by the instructions using it; as notes, named functions and data.
+    let unary = p.proposals.iter().find(|x| x.proposed == "unary_ops").unwrap();
+    assert!(unary.data && unary.address == at("unary_ops"), "{unary:?}");
+    assert!(p.unmatched.is_empty(), "{:?}", p.unmatched);
+    let notes = p.annotations(0.9);
+    assert!(notes.iter().any(|n| n.name == "unary_ops" && n.kind.as_deref() == Some("data")));
+    // A WebAssembly build stripped of its names.
+    let p = open("wasmdemo.bare.wasm").port_names(&open("wasmdemo.wasm"));
+    assert!(p.proposals.iter().any(|x| x.proposed == "check" && x.confidence == 1.0), "{}", p.to_text());
+}
+
+#[test]
+fn a_binary_is_set_against_its_source() {
+    let (_, named) = gamedemo();
+    let src = String::from_utf8(fixture_src("gamedemo.c")).unwrap();
+    let c = named.source_counterparts(&[("gamedemo.c".into(), src.clone())]);
+    // What gamedemo-msvc.s defines, not the C.
+    let only: Vec<&str> = c.only_here.iter().map(|(_, n)| n.as_str()).collect();
+    assert_eq!(
+        only,
+        ["GetGameAPI", "_spawn_messages", "_find_char", "_sqrt_either", "__CIsqrt_either", "_vec_length", "_debris_die"]
+    );
+    let strings: Vec<&str> = c.strings_only_here.iter().map(|s| s.1.as_str()).collect();
+    assert_eq!(strings, ["spawned\n", "%i entities\n"]);
+    assert!(c.only_in_source.is_empty(), "{:?}", c.only_in_source);
+    // An older source: a function and a string the binary has aren't in it, and the other way round.
+    let older = src
+        .replace("__declspec(noinline) void G_RunFrame(void) {", "void G_RunFrame_old(void) {")
+        .replace("\"soldier/death1.wav\"", "\"soldier/death2.wav\"");
+    let c = named.source_counterparts(&[("gamedemo.c".into(), older)]);
+    assert!(c.only_here.iter().any(|(_, n)| n == "G_RunFrame"));
+    assert!(c.only_in_source.iter().any(|f| f.name == "G_RunFrame_old" && f.file == "gamedemo.c"));
+    assert!(c.strings_only_here.iter().any(|s| s.1 == "soldier/death1.wav"));
+    assert!(c.to_text(10).contains("defined nowhere in the source (8)"), "{}", c.to_text(10));
 }
 
 /// What an instruction's operand names, in the disassembly of the function holding it.

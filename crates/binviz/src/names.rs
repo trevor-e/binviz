@@ -7,7 +7,9 @@
 //! callee does is proposed too, with less confidence.
 //!
 //! The candidates come as JSON: `[{"name": "InitField", "strings":
-//! ["field.bin", "%s: %d"], "calls": ["LoadFile"]}, …]`.
+//! ["field.bin", "%s: %d"], "calls": ["LoadFile"]}, …]`, or from another
+//! binary that has names ([`Binary::port_names`]): there, functions pair up
+//! by their code first, and data by the instructions that use it.
 
 use std::collections::{HashMap, HashSet};
 
@@ -15,7 +17,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::binary::Binary;
 use crate::error::{Error, Result};
-use crate::model::Annotation;
+use crate::fndiff::{LineKind, MatchKind, PairStatus};
+use crate::model::{Annotation, SymbolKind, SymbolSource};
 
 /// A function of the other build.
 #[derive(Debug, Clone, Deserialize)]
@@ -37,6 +40,15 @@ pub struct NameProposal {
     /// 1 when every string of the candidate is used here and nowhere else.
     pub confidence: f32,
     pub evidence: String,
+    /// It names data (of `size` bytes), not a function.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub data: bool,
+    #[serde(skip_serializing_if = "is_zero")]
+    pub size: u64,
+}
+
+fn is_zero(n: &u64) -> bool {
+    *n == 0
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -116,6 +128,8 @@ impl Binary {
                 proposed: candidates[i].name.clone(),
                 confidence,
                 evidence,
+                data: false,
+                size: 0,
             });
         }
         // Through the calls: a matched candidate's only unmatched callee, where the
@@ -158,6 +172,8 @@ impl Binary {
                     proposed: name,
                     confidence: 0.4,
                     evidence: format!("the only unmatched function {via} calls"),
+                    data: false,
+                    size: 0,
                 });
             }
         }
@@ -166,6 +182,117 @@ impl Binary {
             proposals,
             candidates: candidates.len() as u32,
             unmatched,
+        }
+    }
+
+    /// Names for this binary's functions and data from another build that
+    /// has them (its symbols, its debug info, its notes): a stripped release
+    /// named from a symbolized one, an older build from a newer. Functions
+    /// pair up by their code first (the same bytes, the same instructions,
+    /// their place in the call graph: [`Binary::diff_functions`]), then by
+    /// the strings they use and the functions they call; data takes the name
+    /// the other build gives what the same instruction of a function with
+    /// the same instructions uses. `unmatched` lists the other build's named
+    /// functions that have no counterpart here.
+    pub fn port_names(&self, from: &Binary) -> NameProposals {
+        let diff = from.diff_functions(self);
+        let mut proposals = Vec::new();
+        let mut placed: HashSet<u64> = HashSet::new();
+        let mut used: HashSet<String> = HashSet::new();
+        let mut paired: HashSet<u64> = HashSet::new();
+        for p in &diff.pairs {
+            paired.insert(p.old.address);
+            let (Some(name), None) = (real_name(from, p.old.address), real_name(self, p.new.address)) else {
+                continue;
+            };
+            let alike = p.similarity * 100.0;
+            let (confidence, evidence) = match p.how {
+                MatchKind::Name => continue,
+                MatchKind::Bytes => (1.0, "the same bytes".to_string()),
+                MatchKind::Instructions => (0.95, "the same instructions, at other addresses".to_string()),
+                MatchKind::Calls => (
+                    0.5 + 0.4 * p.similarity,
+                    format!("where the calls put it, {alike:.0}% alike"),
+                ),
+                MatchKind::Address => (0.4 * p.similarity, format!("at the same address, {alike:.0}% alike")),
+            };
+            if placed.insert(p.new.address) && used.insert(name.clone()) {
+                proposals.push(NameProposal {
+                    address: p.new.address,
+                    current: p.new.name.clone(),
+                    proposed: name,
+                    confidence,
+                    evidence,
+                    data: false,
+                    size: 0,
+                });
+            }
+        }
+        // Data: what the same instructions use.
+        let mut data: std::collections::BTreeMap<u64, (String, u64)> = std::collections::BTreeMap::new();
+        for p in diff.pairs.iter().filter(|p| p.status != PairStatus::Changed) {
+            for line in from.diff_function_code(p.old.address, self, p.new.address) {
+                let (LineKind::Same, Some(a), Some(b)) = (line.kind, &line.old, &line.new) else {
+                    continue;
+                };
+                let (Some(ta), Some(tb)) = (a.target, b.target) else { continue };
+                let Some(r) = from.symbols().lookup(ta) else { continue };
+                let Some(s) = from.symbols().get(r.index) else { continue };
+                if s.kind != SymbolKind::Data || s.source == SymbolSource::Discovered || is_made_up(&r.name) {
+                    continue;
+                }
+                let Some(start) = tb.checked_sub(r.offset) else { continue };
+                if real_name(self, start).is_some() {
+                    continue;
+                }
+                data.entry(start).or_insert((r.name.clone(), r.size));
+            }
+        }
+        for (address, (name, size)) in data {
+            if placed.insert(address) && used.insert(name.clone()) {
+                proposals.push(NameProposal {
+                    address,
+                    current: String::new(),
+                    proposed: name,
+                    confidence: 0.9,
+                    evidence: "used by the same instructions of a function with the same code".into(),
+                    data: true,
+                    size,
+                });
+            }
+        }
+        // The rest by the strings they use and the functions they call.
+        let named: Vec<(u64, String)> = from
+            .symbols()
+            .functions()
+            .filter(|f| f.size > 0)
+            .filter_map(|f| Some((f.address, real_name(from, f.address)?)))
+            .collect();
+        let candidates: Vec<Candidate> = named
+            .iter()
+            .filter(|(a, n)| !paired.contains(a) && !used.contains(n))
+            .filter_map(|(a, name)| {
+                let s = from.function_summary(*a, 64)?;
+                let strings: Vec<String> = s.strings.into_iter().map(|u| u.text).collect();
+                let calls = s.callees.iter().filter_map(|e| real_name(from, e.address)).collect();
+                (!strings.is_empty()).then(|| Candidate {
+                    name: name.clone(),
+                    strings,
+                    calls,
+                })
+            })
+            .collect();
+        for p in self.propose_names(&candidates).proposals {
+            if real_name(self, p.address).is_none() && placed.insert(p.address) && used.insert(p.proposed.clone()) {
+                proposals.push(p);
+            }
+        }
+        proposals.sort_by(|a, b| b.confidence.total_cmp(&a.confidence).then(a.address.cmp(&b.address)));
+        let unmatched = named.iter().filter(|(_, n)| !used.contains(n)).filter(|(a, _)| !paired.contains(a));
+        NameProposals {
+            unmatched: unmatched.map(|(_, n)| n.clone()).collect(),
+            candidates: named.len() as u32,
+            proposals,
         }
     }
 }
@@ -178,20 +305,24 @@ impl NameProposals {
             .filter(|p| p.confidence >= min_confidence)
             .map(|p| Annotation {
                 address: p.address,
-                size: 0,
+                size: p.size,
                 name: p.proposed.clone(),
                 comment: format!("named from another build: {} ({:.0}%)", p.evidence, p.confidence * 100.0),
                 reviewed: false,
-                kind: Some("function".into()), decomp: None, ctype: None,
+                kind: Some(if p.data { "data" } else { "function" }.into()),
+                decomp: None,
+                ctype: None,
             })
             .collect()
     }
 
     pub fn to_text(&self) -> String {
+        let data = self.proposals.iter().filter(|p| p.data).count();
         let mut out = format!(
-            "{} of {} candidates placed; {} had strings not found here.\n",
-            self.proposals.len(),
+            "{} of {} functions placed{}; {} not found here.\n",
+            self.proposals.len() - data,
             self.candidates,
+            if data > 0 { format!(", and {data} data") } else { String::new() },
             self.unmatched.len()
         );
         for p in &self.proposals {
@@ -283,4 +414,19 @@ mod tests {
         assert_eq!(p.unmatched, ["Nowhere"]);
         assert_eq!(p.annotations(0.5).len(), 2);
     }
+}
+
+/// The name `bin` gives what starts at `address`, if it is one of its own
+/// (its symbols, debug info or notes), not one binviz made up: as it has it
+/// (mangled, which reads demangled wherever it is shown).
+fn real_name(bin: &Binary, address: u64) -> Option<String> {
+    let s = bin.symbols().at(address)?;
+    (s.source != SymbolSource::Discovered && !is_made_up(s.name())).then(|| s.name().to_string())
+}
+
+/// A name binviz (or a disassembler) makes up: `sub_401000`, `func[12]`.
+fn is_made_up(name: &str) -> bool {
+    ["sub_", "func[", "FUN_", "loc_", "unk_", "dword_", "byte_", "word_", "flt_", "dbl_", "off_", "stru_"]
+        .iter()
+        .any(|p| name.starts_with(p))
 }

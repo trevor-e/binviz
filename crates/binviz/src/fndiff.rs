@@ -222,7 +222,10 @@ impl Matcher<'_> {
         }
     }
 
-    /// Pairs the functions whose key is unique among the unmatched on both sides.
+    /// Pairs the functions whose key is unique among the unmatched on both
+    /// sides. Copies of the same code (the same bytes or instructions, as
+    /// many on each side) are as good as one another: each pairs with the
+    /// one at its address, the rest in address order.
     fn by_unique_key(&mut self, how: MatchKind, key: &mut dyn FnMut(&mut Side, usize) -> Option<u64>) {
         let mut keys_a: HashMap<u64, Vec<usize>> = HashMap::new();
         for i in 0..self.a.funcs.len() {
@@ -240,13 +243,26 @@ impl Matcher<'_> {
                 keys_b.entry(k).or_default().push(j);
             }
         }
-        let mut found: Vec<(usize, usize)> = keys_a
-            .iter()
-            .filter_map(|(k, is)| match (is.as_slice(), keys_b.get(k).map(Vec::as_slice)) {
-                ([i], Some([j])) => Some((*i, *j)),
-                _ => None,
-            })
-            .collect();
+        let mut found: Vec<(usize, usize)> = Vec::new();
+        for (k, is) in &keys_a {
+            let Some(js) = keys_b.get(k) else { continue };
+            match (is.as_slice(), js.as_slice()) {
+                ([i], [j]) => found.push((*i, *j)),
+                (is, js) if how != MatchKind::Name && is.len() == js.len() && is.len() <= 32 => {
+                    let mut rest_b = js.to_vec();
+                    let mut rest_a = Vec::new();
+                    for &i in is {
+                        let address = self.a.funcs[i].address;
+                        match rest_b.iter().position(|&j| self.b.funcs[j].address == address) {
+                            Some(p) => found.push((i, rest_b.remove(p))),
+                            None => rest_a.push(i),
+                        }
+                    }
+                    found.extend(rest_a.into_iter().zip(rest_b));
+                }
+                _ => {}
+            }
+        }
         found.sort_unstable();
         for (i, j) in found {
             self.pair(i, j, how);

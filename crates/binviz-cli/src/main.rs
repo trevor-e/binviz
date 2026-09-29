@@ -120,11 +120,20 @@ COMMANDS:
                                    notes JSON
     locate <ram.bin> <file>        Where a file from the disc (an overlay) sits in a PlayStation
                                    memory image
-    names <file> <candidates.json> [min%]
-                                   Names from another build (each function with the strings
-                                   it uses and the functions it calls) proposed for the
-                                   file's functions; min%: as notes JSON for those at or
-                                   above that confidence
+    counterparts <file> <source folder> [n]
+                                   The file set against the source it may be built from (C,
+                                   C++): functions named here the source doesn't define and
+                                   strings the code uses the source doesn't have (another
+                                   version), and the source's functions nothing here is named
+                                   after; the other way, for two builds: names and diff
+    names <file> <candidates.json | named build> [min%]
+                                   Names from another build proposed for the file's functions:
+                                   its functions with the strings they use and the functions
+                                   they call (JSON), or the build itself (its symbols, debug
+                                   info or PDB beside it): functions paired by their code, then
+                                   strings and calls, data by the instructions using it; lists
+                                   its functions with no counterpart here. min%: as notes JSON
+                                   for those at or above that confidence
 
 Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
                          PDB; for WebAssembly, a source map or the module with
@@ -1414,11 +1423,26 @@ fn run(
                 None => println!("{path} is not in this image"),
             }
         }
+        "counterparts" => {
+            let dir = arg(2).ok_or("which source? binviz counterparts <file> <source folder> [n]")?;
+            let files = binviz::csource::read_source_tree(std::path::Path::new(dir)).map_err(|e| format!("{dir}: {e}"))?;
+            if files.is_empty() {
+                return Err(format!("{dir}: no C or C++ files"));
+            }
+            if bin.xrefs_supported() {
+                bin.prepare_xrefs();
+            }
+            let n = arg(3).map(num).transpose()?.unwrap_or(100) as usize;
+            print!("{}", bin.source_counterparts(&files).to_text(n));
+        }
         "names" => {
-            let path = arg(2).ok_or("which candidates? binviz names <file> <candidates.json> [min%]")?;
-            let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
-            let candidates = binviz::names::parse_candidates(&json).map_err(|e| e.to_string())?;
-            let p = bin.propose_names(&candidates);
+            let path = arg(2).ok_or("which names? binviz names <file> <candidates.json|named build> [min%]")?;
+            let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+            let p = match binviz::names::parse_candidates(&data) {
+                Ok(candidates) => bin.propose_names(&candidates),
+                // Another build with names: its functions paired with these by their code.
+                Err(_) => bin.port_names(&open_with_its_debug_file(path, data)?),
+            };
             match arg(3) {
                 Some(min) => {
                     let min = num(min.trim_end_matches('%'))? as f32 / 100.0;
@@ -1430,6 +1454,20 @@ fn run(
         _ => return Err(format!("unknown command {cmd}\n\n{USAGE}")),
     }
     Ok(())
+}
+
+/// Another build, with the debug file it names when that is beside it (a PE's PDB).
+fn open_with_its_debug_file(path: &str, data: Vec<u8>) -> Result<Binary, String> {
+    let mut bin = Binary::parse(data).map_err(|e| format!("{path}: {e}"))?;
+    let named = bin.summary().debug_link.clone();
+    if let Some(link) = named {
+        let name = link.rsplit(['\\', '/']).next().unwrap_or(&link).split(" (crc ").next().unwrap_or(&link).to_string();
+        let beside = std::path::Path::new(path).with_file_name(&name);
+        if let Ok(bytes) = std::fs::read(&beside) {
+            let _ = bin.attach_debug_file(&beside.to_string_lossy(), bytes);
+        }
+    }
+    Ok(bin)
 }
 
 fn resolve_address(bin: &Binary, s: &str) -> Result<u64, String> {
