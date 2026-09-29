@@ -22,19 +22,20 @@ import { TextView } from './views/text';
 import { TilesView } from './views/tiles';
 
 /** Bundled samples (copied from tests/fixtures by scripts/build-wasm.mjs) and their sources. */
-const SAMPLES: { file: string; label: string; sources: string[]; folder?: boolean }[] = [
-  { file: 'tiny-elf-x64', label: 'ELF · x86-64', sources: ['tiny.rs'] },
-  { file: 'tiny-elf-a64', label: 'ELF · AArch64', sources: ['tiny.rs'] },
-  { file: 'tiny-macho-a64', label: 'Mach-O · arm64', sources: ['tiny.rs'] },
-  { file: 'tiny-macho-a64.o', label: 'Mach-O object', sources: ['tiny.rs'] },
-  { file: 'tiny-pe-x64.exe', label: 'PE · x86-64', sources: ['tiny.rs'] },
-  { file: 'shapes-pe.exe', label: 'PE · C++ with DWARF 5', sources: ['shapes.cpp'] },
-  { file: 'shapes-pe.stripped.exe', label: 'PE · stripped (reverse engineering)', sources: [] },
-  { file: 'pdbdemo.zip', label: 'PE · MSVC-style, debug info in a PDB', sources: [], folder: true },
-  { file: 'objc-macho-a64.chained.stripped', label: 'Mach-O · stripped Objective-C', sources: [] },
-  { file: 'tiny.nes', label: 'NES ROM (6502, text, tiles)', sources: [] },
-  { file: 'tiny.gba', label: 'Game Boy Advance ROM (ARM and Thumb)', sources: [] },
-  { file: 'Shop.xcarchive.zip', label: 'Zipped iOS app archive (3 binaries + dSYM)', sources: [], folder: true },
+const SAMPLES: { file: string; label: string; sources: string[]; folder?: boolean; more?: boolean }[] = [
+  { file: 'tiny-psx.exe', label: 'PlayStation EXE (MIPS)', sources: [] },
+  { file: 'tiny.gba', label: 'Game Boy Advance ROM', sources: [] },
+  { file: 'tiny.nes', label: 'NES ROM', sources: [] },
+  { file: 'shapes-pe.stripped.exe', label: 'Stripped PE', sources: [] },
+  { file: 'pdbdemo.zip', label: 'PE with a PDB', sources: [], folder: true },
+  { file: 'tiny-elf-x64', label: 'ELF · x86-64', sources: ['tiny.rs'], more: true },
+  { file: 'tiny-elf-a64', label: 'ELF · AArch64', sources: ['tiny.rs'], more: true },
+  { file: 'tiny-macho-a64', label: 'Mach-O · arm64', sources: ['tiny.rs'], more: true },
+  { file: 'tiny-macho-a64.o', label: 'Mach-O object', sources: ['tiny.rs'], more: true },
+  { file: 'tiny-pe-x64.exe', label: 'PE · x86-64', sources: ['tiny.rs'], more: true },
+  { file: 'shapes-pe.exe', label: 'PE · C++ with DWARF 5', sources: ['shapes.cpp'], more: true },
+  { file: 'objc-macho-a64.chained.stripped', label: 'Mach-O · stripped Objective-C', sources: [], more: true },
+  { file: 'Shop.xcarchive.zip', label: 'Zipped iOS app archive (3 binaries + dSYM)', sources: [], folder: true, more: true },
 ];
 
 const NAV: { view: ViewName; label: string; key: string }[] = [
@@ -259,29 +260,95 @@ function renderLanding() {
   const chooseFolder = h('button', { class: 'btn', type: 'button', title: 'Every binary in it opens, with its debug file (an .app, an .xcarchive, a build folder…)' }, 'Choose a folder');
   chooseFolder.addEventListener('click', () => packageInput.click());
   const samples = h('div', { class: 'samples' });
+  const extra: HTMLElement[] = [];
   for (const s of SAMPLES) {
     const b = h('button', { class: 'btn small', type: 'button', title: s.file }, s.label);
     b.addEventListener('click', () => openSample(s.file).catch((e) => toast(e instanceof Error ? e.message : String(e), 'error')));
+    if (s.more) {
+      b.hidden = true;
+      extra.push(b);
+    }
     samples.appendChild(b);
   }
+  const more = h('button', { class: 'btn small ghost', type: 'button' }, 'More…');
+  more.addEventListener('click', () => {
+    for (const b of extra) b.hidden = false;
+    more.remove();
+  });
+  samples.appendChild(more);
+  const repo = 'https://github.com/trevor-e/binviz';
+  const link = (href: string, text: string) => h('a', { href, target: '_blank', rel: 'noopener' }, text);
   landing.replaceChildren(
     h(
       'div',
       { class: 'landing-card' },
-      h('h1', null, 'See what every byte of a binary is'),
-      h('p', { class: 'lead' }, 'ELF, Mach-O and PE: headers down to single fields, sections and segments, symbols, disassembly, and DWARF mapped back to source.'),
+      h(
+        'header',
+        { class: 'landing-hero' },
+        h('h1', null, 'Decomp at agent speed'),
+        h('p', { class: 'lead' }, 'Your agent writes the C. Decompilation Kit tells it, byte for byte, how close it got.'),
+      ),
       h(
         'div',
         { class: 'dropzone' },
-        h('div', { class: 'big' }, 'Drop a binary, or a folder or zip of them'),
-        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'executables, shared libraries, object files, debug files (.dSYM, .debug, .pdb), universal binaries and archives; a folder or zip (an .ipa, an .app, a build) opens every binary in it, each paired with its debug file. Drop or paste a crash report (.crash, .ips, a tombstone) to symbolicate it.'),
+        h('div', { class: 'big' }, 'Drop a binary, disc image or ROM'),
+        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'PlayStation, console ROMs, PE, ELF, Mach-O, with PDB or DWARF'),
         h('div', { class: 'dropzone-actions' }, choose, chooseFolder),
       ),
-      h('div', { class: 'secondary', style: 'margin-top:22px' }, 'Or try a sample:'),
+      h('div', { class: 'secondary', style: 'margin-top:18px' }, 'Or try a sample:'),
       samples,
-      h('p', { class: 'privacy' }, 'Everything runs locally in your browser via WebAssembly. Files never leave your machine.'),
+      h('p', { class: 'privacy' }, 'Runs entirely in your browser. Files never leave your machine.'),
+
+      h(
+        'section',
+        { class: 'landing-section' },
+        h('h2', null, 'The loop'),
+        h(
+          'ol',
+          { class: 'loop-steps' },
+          loopStep('Map', ['open_binary', 'identify_sdk', 'propose_names'], 'Functions, SDK calls and borrowed names.'),
+          loopStep('Brief', ['decomp_context'], 'One function, everything around it, one call.'),
+          loopStep('Compile', [], 'The agent’s C, through the game’s own compiler.'),
+          loopStep('Score', ['match_function'], 'Byte-matched, with each difference explained.'),
+        ),
+        h('p', { class: 'secondary' }, 'The binary stays loaded, so every answer takes milliseconds. Matching works today for MIPS (PS1, N64); x86 is next.'),
+      ),
+
+      h(
+        'section',
+        { class: 'landing-section' },
+        h('h2', null, 'Plug in your agent'),
+        codeBlock(`git clone ${repo} && cd binviz\ncargo build --release -p binviz-mcp\nclaude mcp add decompkit -- "$PWD/target/release/binviz-mcp"`),
+        h('p', { class: 'secondary' }, 'Any MCP client works. ', link(`${repo}/tree/main/samples/psx`, 'Try the sample loop'), ' · ', link(`${repo}/blob/main/docs/reference.md`, 'All tools')),
+      ),
+
+      h('footer', { class: 'landing-footer' }, link(repo, 'GitHub'), ' · MIT'),
     ),
   );
+}
+
+function loopStep(title: string, tools: string[], body: string): HTMLElement {
+  return h(
+    'li',
+    null,
+    h('div', { class: 'loop-title' }, title),
+    tools.length ? h('div', { class: 'loop-tools' }, tools.map((t) => h('code', null, t))) : null,
+    h('p', null, body),
+  );
+}
+
+function codeBlock(text: string): HTMLElement {
+  const copy = h('button', { class: 'btn small ghost code-copy', type: 'button' }, 'Copy');
+  copy.addEventListener('click', () => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        copy.textContent = 'Copied';
+        setTimeout(() => (copy.textContent = 'Copy'), 1500);
+      },
+      () => toast('Couldn’t copy to the clipboard', 'error'),
+    );
+  });
+  return h('div', { class: 'code-block' }, h('pre', null, h('code', null, text)), copy);
 }
 
 store.on('file', () => {

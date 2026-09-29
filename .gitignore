@@ -10,3 +10,5 @@ node_modules
 
 # The sample program, built
 samples/psx/build/
+# Wrangler's local cache
+.wrangler
