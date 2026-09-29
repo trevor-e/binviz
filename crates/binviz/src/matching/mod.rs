@@ -16,6 +16,10 @@
 
 mod x86;
 
+pub(crate) use x86::padding_only;
+#[cfg(test)]
+pub(crate) use x86::tests as x86_tests;
+
 use std::collections::BTreeMap;
 use std::sync::Arc;
 

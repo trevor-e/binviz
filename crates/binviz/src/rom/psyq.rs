@@ -3,7 +3,8 @@
 //! functions' bytes, with the places the linker patches masked, are
 //! signatures: found in a game, they name the SDK's code (`GsSortObject4`,
 //! `CdRead`, `SpuSetKey`) so that a decompilation can leave it be, and say
-//! which libraries the game was linked with.
+//! which libraries the game was linked with (see [`crate::sigs`], which
+//! reads MSVC's COFF libraries too, and matches them).
 //!
 //! The `LNK` format is a stream of records: sections, code bytes and zeroes
 //! for the current section, exported and local symbols at offsets in
@@ -13,11 +14,9 @@
 
 use std::collections::HashMap;
 
-use serde::Serialize;
-
-use crate::binary::Binary;
 use crate::error::{Error, Result};
-use crate::model::{Annotation, Decomp, DecompState};
+
+pub use crate::sigs::{SdkMatch, SdkReport, Signature, SignatureSet};
 
 /// A function from an object file: its bytes, and which of them the linker
 /// fills in (1 bits in `mask` are compared, 0 bits are not).
@@ -294,191 +293,11 @@ pub fn parse_lib(bytes: &[u8]) -> Result<Vec<(String, Vec<ObjFunction>)>> {
     Ok(out)
 }
 
-/// A function's bytes to look for.
-#[derive(Debug, Clone)]
-pub struct Signature {
-    pub name: String,
-    /// `LIBGPU.LIB/gpu` : the library file and the module.
-    pub library: String,
-    pub code: Vec<u8>,
-    pub mask: Vec<u8>,
-}
-
-/// Signatures from a set of libraries and objects.
-#[derive(Debug, Clone, Default)]
-pub struct SignatureSet {
-    pub signatures: Vec<Signature>,
-    pub files: u32,
-}
-
-/// Signatures shorter than this, or with fewer compared bytes, match by chance.
-const MIN_BYTES: usize = 16;
-
-impl SignatureSet {
-    /// Adds a `.LIB` or `.OBJ` file's functions.
-    pub fn add_file(&mut self, name: &str, bytes: &[u8]) -> Result<u32> {
-        let modules = if bytes.starts_with(b"LIB") {
-            parse_lib(bytes)?
-        } else {
-            vec![(String::new(), parse_obj(bytes)?)]
-        };
-        let file = std::path::Path::new(name)
-            .file_name()
-            .map_or(name.to_string(), |n| n.to_string_lossy().into_owned());
-        let mut n = 0;
-        for (module, functions) in modules {
-            for f in functions {
-                let compared = f.mask.iter().filter(|&&m| m != 0).count();
-                if f.code.len() < MIN_BYTES || compared * 2 < f.code.len() {
-                    continue;
-                }
-                self.signatures.push(Signature {
-                    name: f.name,
-                    library: if module.is_empty() { file.clone() } else { format!("{file}/{module}") },
-                    code: f.code,
-                    mask: f.mask,
-                });
-                n += 1;
-            }
-        }
-        self.files += 1;
-        Ok(n)
-    }
-}
-
-/// A function of the binary that is one of the SDK's.
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SdkMatch {
-    pub address: u64,
-    pub name: String,
-    pub library: String,
-    pub size: u64,
-    /// Other signatures with the same bytes (aliases, or identical functions).
-    pub also: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SdkReport {
-    pub matches: Vec<SdkMatch>,
-    /// Functions matched per library file, most first.
-    pub libraries: Vec<(String, u32)>,
-    pub functions_checked: u32,
-    pub signatures: u32,
-}
-
-impl Binary {
-    /// The SDK functions in this binary: each function's start compared with
-    /// every signature (the linker's fields aside).
-    pub fn identify_sdk(&self, sigs: &SignatureSet) -> SdkReport {
-        let mut matches = Vec::new();
-        let mut checked = 0;
-        for f in self.symbols().functions() {
-            let Some(bytes) = self.code_bytes(f.address) else { continue };
-            checked += 1;
-            let mut found: Vec<&Signature> = sigs
-                .signatures
-                .iter()
-                .filter(|s| {
-                    bytes.len() >= s.code.len()
-                        && (f.size == 0 || f.size + 8 >= s.code.len() as u64)
-                        && s.code
-                            .iter()
-                            .zip(&s.mask)
-                            .zip(bytes)
-                            .all(|((c, m), b)| (c & m) == (b & m))
-                })
-                .collect();
-            if found.is_empty() {
-                continue;
-            }
-            // The longest signature is the surest; the others with the same length are aliases.
-            found.sort_by(|a, b| b.code.len().cmp(&a.code.len()).then(a.name.cmp(&b.name)));
-            let best = found[0];
-            let also = found[1..]
-                .iter()
-                .filter(|s| s.code.len() == best.code.len() && s.name != best.name)
-                .map(|s| s.name.clone())
-                .collect();
-            matches.push(SdkMatch {
-                address: f.address,
-                name: best.name.clone(),
-                library: best.library.clone(),
-                size: best.code.len() as u64,
-                also,
-            });
-        }
-        let mut per: HashMap<String, u32> = HashMap::new();
-        for m in &matches {
-            let file = m.library.split('/').next().unwrap_or(&m.library).to_string();
-            *per.entry(file).or_default() += 1;
-        }
-        let mut libraries: Vec<(String, u32)> = per.into_iter().collect();
-        libraries.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
-        SdkReport {
-            matches,
-            libraries,
-            functions_checked: checked,
-            signatures: sigs.signatures.len() as u32,
-        }
-    }
-}
-
-impl SdkReport {
-    /// The matches as notes: each function named, with an `sdk:` comment
-    /// saying which library it is from, and marked library code, so that a
-    /// decompilation skips it (and its callers don't wait on it).
-    pub fn annotations(&self) -> Vec<Annotation> {
-        self.matches
-            .iter()
-            .map(|m| Annotation {
-                address: m.address,
-                size: m.size,
-                name: m.name.clone(),
-                comment: format!("sdk: {}", m.library),
-                reviewed: true,
-                kind: Some("function".into()),
-                decomp: Some(Decomp {
-                    state: DecompState::Library,
-                    source: m.library.clone(),
-                    ..Default::default()
-                }),
-            })
-            .collect()
-    }
-
-    pub fn to_text(&self) -> String {
-        let mut out = format!(
-            "{} of {} functions are the SDK's ({} signatures from the libraries).\n",
-            self.matches.len(),
-            self.functions_checked,
-            self.signatures
-        );
-        for (lib, n) in &self.libraries {
-            out.push_str(&format!("  {n:>5}  {lib}\n"));
-        }
-        for m in &self.matches {
-            out.push_str(&format!(
-                "{:#x}  {}  ({}, {} bytes){}\n",
-                m.address,
-                m.name,
-                m.library,
-                m.size,
-                if m.also.is_empty() {
-                    String::new()
-                } else {
-                    format!("  also: {}", m.also.join(", "))
-                }
-            ));
-        }
-        out
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::binary::Binary;
+    use crate::model::Annotation;
 
     /// An LNK object with one section holding `code`, symbols at offsets,
     /// and 2-byte relocations at `patches`.

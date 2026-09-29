@@ -51,6 +51,7 @@ pub mod queue;
 pub mod rom;
 pub mod search;
 pub mod signature;
+pub mod sigs;
 pub mod similar;
 pub mod size;
 pub mod splat;

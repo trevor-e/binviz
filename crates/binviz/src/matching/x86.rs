@@ -49,6 +49,11 @@ pub(super) fn code_len(code: &[u8], bits: u32) -> usize {
     end
 }
 
+/// Whether `bytes` (what follows a function's code in its extent) are only padding.
+pub(crate) fn padding_only(bytes: &[u8], bits: u32) -> bool {
+    code_len(bytes, bits) == 0
+}
+
 fn is_padding(ins: &Instruction, bytes: &[u8]) -> bool {
     matches!(ins.mnemonic(), Mnemonic::Nop | Mnemonic::Int3) || bytes.iter().all(|&b| b == 0)
 }
@@ -1681,7 +1686,8 @@ pub(crate) mod tests {
         // mov eax, 1; ret; then int3 and nop padding.
         let code = [0xB8, 1, 0, 0, 0, 0xC3, 0xCC, 0xCC, 0x90, 0x0F, 0x1F, 0x00];
         assert_eq!(code_len(&code, 32), 6);
-        assert_eq!(code_len(&code[6..], 32), 0);
+        assert!(padding_only(&code[6..], 32));
+        assert!(!padding_only(&code[5..], 32));
         let _ = ObjectIsa::X86 { bits: 32 };
     }
 }
