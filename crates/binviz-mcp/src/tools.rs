@@ -12,7 +12,7 @@ use crate::notes;
 pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O and PE binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
 Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file, a PDB) by UUID, build ID or the name the binary records; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
 Addresses: 0x401000 (or 401000), a symbol, name+0x10, @0x200 for a file offset, and for banked ROMs bank:address (03:C000; $80:8000 on the SNES). To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
-For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. \
+For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. c_header writes the types (all, or those named with what they need) and the functions' prototypes as a C header whose layout checks itself when compiled, from DWARF or a PDB; struct_field says which member of a structure an offset is ([esi+0x21c] with esi an edict_t *: edict_t.enemy). \
 For Objective-C (Mach-O apps and frameworks): objc lists the classes, categories and protocols; given a name it declares one as its header would (ivars, properties, methods with their types and implementations), or for a selector lists the methods implementing it and the functions that send it. The metadata also names a stripped binary's methods (-[Class selector]), its metadata and its selector references (@selector(name)), so those names work everywhere. \
 For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, Game Boy Advance, Mega Drive / Genesis, Nintendo 64, PlayStation PS-X EXE): open_binary recognizes them by their headers (files of no known format open as raw bytes); banks get addresses of their own (bank 3's $C000 is 0x3c000), the hardware registers are named (PPUCTRL, LCDC, INIDISP, DISPCNT, VDP_CTRL, VI_STATUS, GP1), and the code is found by following it from the reset and interrupt vectors, so disassemble, function_info, xrefs (who writes PPUCTRL?) and call_graph work as for any binary. For their text: relative_search finds a word in the game's own encoding, and table_text reads, searches and dumps text with a table file. With emulators: code_log follows the code with an FCEUX or Mesen code/data log (what the game ran when played: code behind jump tables, where an NES game's banks were mapped), and labels imports a Mesen, FCEUX, RGBDS, WLA DX or no$gba label file into the notes, or writes the notes as one for the emulator's debugger. \
 To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
@@ -408,6 +408,27 @@ pub fn definitions() -> Vec<Value> {
             true,
         ),
         tool(
+            "c_header",
+            "C header of the types",
+            "A C header of the types the debug info describes (DWARF, or a PDB read into it): structures, unions, enums and typedefs in an order C accepts, and prototypes of the external functions with their calling conventions. The layout is explicit, so compiling the header checks it on any compiler: every gap is a padding member (char _pad_1c[4];), each structure is followed by _Static_assert on its size and member offsets, bit fields sit in storage units Microsoft's and System V's rules place alike, members a PDB flattened out of an anonymous union are a union again, and #pragma pack appears only where natural alignment can't give the layout. C++ classes are structures, bases embedded first, the vtable pointer void **__vftable; qualified names are flattened (geo::Rect is geo__Rect). With names, only those types and functions, with the types they hold defined and those they only point at declared (a large program's whole header is cut at the output limit: name what you need).",
+            json!({
+                "names": { "type": "array", "items": { "type": "string" }, "description": "Types and functions to write: a name in the source (geo::Rect, or Rect when only one type has it), in the header (geo__Rect), or a typedef (edict_t). Omit for everything." },
+            }),
+            &[],
+            true,
+        ),
+        tool(
+            "struct_field",
+            "The member at an offset",
+            "Which member of a structure is at a byte offset, the way c_header declares it: the path through nested structures, unions and arrays (enemy, s.origin[1], base_Shape.id), its C type, and how far into it the offset is (edict_t.health+0x2), or that it is padding. For reading [esi+0x21c] when esi points at one.",
+            json!({
+                "type": { "type": "string", "description": "The structure, class or union: its name (edict_s, geo::Rect), a typedef of it (edict_t), or a type spelled in full (struct edict_s *)." },
+                "offsets": { "type": "array", "items": { "type": "string" }, "description": "Byte offsets into it: 0x21c, or 540." },
+            }),
+            &["type", "offsets"],
+            true,
+        ),
+        tool(
             "decomp_context",
             "Everything needed to decompile a function",
             "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, and the notes on it. MIPS (PlayStation, Nintendo 64) for the prototype; the rest for any binary.",
@@ -789,6 +810,8 @@ impl Server {
                     "dwarf_die" => dwarf_die(o, args)?,
                     "dwarf_at" => dwarf_at(o, args)?,
                     "dwarf_check" => dwarf_check(o, args)?,
+                    "c_header" => c_header(o, args)?,
+                    "struct_field" => struct_field(o, args)?,
                     "decomp_context" => decomp_context(o, args)?,
                     "function_signature" => function_signature(o, args)?,
                     "match_function" => match_function(o, args)?,
@@ -3434,6 +3457,90 @@ fn dwarf_check(o: &Open, args: &Value) -> Result<String, String> {
     }
     if c.problems.len() > limit || c.truncated {
         let _ = writeln!(out, "  … more (raise limit)");
+    }
+    Ok(out)
+}
+
+/// Strings from an argument that is a list of them, or one.
+fn strings(args: &Value, key: &str) -> Vec<String> {
+    match args.get(key) {
+        Some(Value::Array(a)) => a
+            .iter()
+            .filter_map(|v| match v {
+                Value::String(s) => Some(s.trim().to_string()),
+                Value::Number(n) => Some(n.to_string()),
+                _ => None,
+            })
+            .filter(|s| !s.is_empty())
+            .collect(),
+        Some(Value::String(s)) if !s.trim().is_empty() => vec![s.trim().to_string()],
+        Some(Value::Number(n)) => vec![n.to_string()],
+        _ => Vec::new(),
+    }
+}
+
+fn c_header(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let names = strings(args, "names");
+    let names: Vec<&str> = names.iter().map(String::as_str).collect();
+    let h = d.c_header(&names);
+    if !names.is_empty() && h.not_found.len() == names.len() {
+        return Err(format!(
+            "no type or function named {}; dwarf_search finds names",
+            h.not_found.join(", ")
+        ));
+    }
+    let mut out = format!(
+        "{} structures and unions, {} enums, {} typedefs, {} functions{}.\n\n",
+        count(h.structs),
+        count(h.enums),
+        count(h.typedefs),
+        count(h.functions),
+        if h.not_found.is_empty() {
+            String::new()
+        } else {
+            format!("; not found: {}", h.not_found.join(", "))
+        }
+    );
+    out.push_str(&h.text);
+    Ok(out)
+}
+
+fn struct_field(o: &Open, args: &Value) -> Result<String, String> {
+    let d = debug_of(o)?;
+    let ty = string(args, "type").ok_or("type is required")?;
+    let st = d.find_struct(ty).ok_or_else(|| {
+        format!("no structure, class or union named {ty:?} is defined in the debug info; dwarf_search finds names")
+    })?;
+    let offsets = strings(args, "offsets");
+    if offsets.is_empty() {
+        return Err("offsets is required: byte offsets into it, 0x21c or 540".into());
+    }
+    let mut out = format!(
+        "{} {} ({:#x} bytes{}):\n",
+        st.kind,
+        st.name,
+        st.size,
+        if st.c_name != st.name {
+            format!(", {} in c_header", st.c_name)
+        } else {
+            String::new()
+        }
+    );
+    for text in &offsets {
+        let offset = parse_number(text).ok_or_else(|| format!("not an offset: {text}"))?;
+        let line = match d.field_at(&st, offset) {
+            None => format!("past its end ({:#x} bytes)", st.size),
+            Some(f) if f.padding => format!("{} (padding)", f.label(&st.name)),
+            Some(f) => {
+                let bits = f
+                    .bits
+                    .map(|(first, width)| format!(", bits {first}..{}", first + width))
+                    .unwrap_or_default();
+                format!("{}: {}{bits}", f.label(&st.name), f.type_name)
+            }
+        };
+        let _ = writeln!(out, "  {offset:#x}  {line}");
     }
     Ok(out)
 }

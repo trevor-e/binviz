@@ -55,6 +55,10 @@ COMMANDS:
     dwarf <file> at <addr|symbol>  Scopes and variables in scope at an address
     dwarf <file> lines <unit> [first] [count] | sources | file <id>
                                    A unit's line table; the source files; one file's lines
+    header <file> [name...]        The debug info's types and functions as a C header (a PDB's
+                                   with --debug) that checks its own layout when compiled:
+                                   explicit padding, _Static_assert on sizes and offsets;
+                                   with names, those and the types they need
     attribution <file> [unit] [id] Code and data per source file (or unit); with an id,
                                    the address ranges of that one
     crash <file> <report>          Symbolicate a crash report (Apple .crash or .ips, Android
@@ -1001,6 +1005,21 @@ fn run(
                     r.to.as_deref().unwrap_or("")
                 );
             }
+        }
+        "header" => {
+            let d = bin
+                .debug_info()
+                .ok_or("no debug info (DWARF, or a PDB passed with --debug)")?;
+            let names: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+            let h = d.c_header(&names);
+            if !names.is_empty() && h.not_found.len() == names.len() {
+                return Err(format!("no type or function named {}", h.not_found.join(", ")));
+            }
+            print!("{}", h.text);
+            eprintln!(
+                "{} structures and unions, {} enums, {} typedefs, {} functions",
+                h.structs, h.enums, h.typedefs, h.functions
+            );
         }
         "objc" => {
             let objc = bin.objc();

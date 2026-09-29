@@ -299,6 +299,7 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
 | `objc <file> [name]` | Objective-C classes, categories and protocols; with a name, one declared as its header would, or a selector's implementations and senders |
 | `dwarf <file> [check \| find \| die \| offset \| list \| at \| lines \| sources \| file]` | DWARF units, and: everything wrong with it; DIEs by name, a DIE, the DIE at a `.debug_info` offset, a unit's DIEs by tag; scopes and variables at an address; line tables, source files and their address ranges |
+| `header <file> [name...]` | The debug info's types and external functions as a C header that checks its own layout (a PDB's with `--debug`); with names, those and the types they need |
 | `attribution <file> [unit] [id]` | Code and data per source file (or unit); with an id, that one's address ranges |
 | `crash <file> <report>` | Symbolicate a crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace) with a binary or a folder's binaries |
 | `diff <old> <new>` · `diff <old> <new> functions [name]` | What changed in size between two builds (binaries, or folders or zips); which functions are which, and one function's code next to its match's |
@@ -366,6 +367,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `dwarf_units` · `dwarf_search` · `dwarf_dies` · `dwarf_die` | Browse the DWARF: units, DIEs by name or tag, one DIE with its attributes, source, code lines and layout |
 | `dwarf_at` | At an address: the source line, the inlined call stack, and the variables in scope with where each value lives |
 | `dwarf_check` | Everything in the DWARF that can't be read or doesn't add up — start here with a customer's broken build |
+| `c_header` · `struct_field` | The types (all, or those named with what they need) and function prototypes as a C header whose layout checks itself when compiled, from DWARF or a PDB; which member of a structure is at an offset (`edict_t.enemy`, `entity.matrix[1][2]`) |
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
