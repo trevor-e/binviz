@@ -179,7 +179,7 @@ export class CodeView extends View {
     // The list is detached below: it must not draw rows that are gone.
     if (!d.supported || d.instructions.length === 0) this.asmList.setCount(0);
     if (!d.supported) {
-      this.asmHost.replaceChildren(emptyState(`No disassembler for ${store.file?.summary.arch}`, 'binviz decodes x86, x86-64, AArch64 and ARM. The hex view still shows these bytes.'));
+      this.asmHost.replaceChildren(emptyState(`No disassembler for ${store.file?.summary.arch}`, 'Disassembly covers x86, x86-64, AArch64 and ARM. The hex view still shows these bytes.'));
       return;
     }
     if (d.instructions.length === 0) {

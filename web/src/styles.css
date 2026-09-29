@@ -1900,6 +1900,9 @@ th.right {
   .fileinfo .chip {
     display: none;
   }
+  .brand-name {
+    display: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------
