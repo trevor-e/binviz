@@ -108,6 +108,25 @@ impl Binary {
         }
     }
 
+    /// The import slot a 32-bit instruction names by its address, with no
+    /// register (`call dword ptr [0x4021b4]`; `mov eax, [slot]` for a kernel
+    /// variable an XBE imports): 64-bit code names its slots RIP-relative,
+    /// which the instruction's target covers already.
+    fn import_slot_operand(&self, ins: &iced_x86::Instruction) -> Option<u64> {
+        use iced_x86::{OpKind, Register};
+        if !(0..ins.op_count()).any(|i| ins.op_kind(i) == OpKind::Memory)
+            || ins.memory_base() != Register::None
+            || ins.memory_index() != Register::None
+        {
+            return None;
+        }
+        let slot = ins.memory_displacement64();
+        self.symbols
+            .at(slot)
+            .is_some_and(|s| s.source == crate::model::SymbolSource::Import && s.kind == crate::model::SymbolKind::Data)
+            .then_some(slot)
+    }
+
     /// [`Self::float_operand`] for the instruction at `site`.
     pub(crate) fn float_operand_at(&self, site: u64) -> Option<String> {
         let Isa::X86(bits) = self.isa() else { return None };
@@ -171,13 +190,14 @@ impl Binary {
                     .and_then(|f| self.stack_frame(f.address));
                 // An image loaded well above zero: numbers in it that fall inside it are its addresses
                 // (`push offset string`, `mov eax, [global]`), as the reference index takes them.
-                let absolute = self
-                    .sections
-                    .iter()
-                    .filter(|s| s.loaded && s.size > 0)
-                    .map(|s| s.address)
-                    .min()
-                    .is_some_and(|lo| lo >= 0x10_0000);
+                let absolute = self.summary.format == crate::model::Format::Xbe
+                    || self
+                        .sections
+                        .iter()
+                        .filter(|s| s.loaded && s.size > 0)
+                        .map(|s| s.address)
+                        .min()
+                        .is_some_and(|lo| lo >= 0x10_0000);
                 let inside = |a: u64| self.section_at(a).is_some();
                 let mut decoder = iced_x86::Decoder::with_ip(bits, bytes, start, iced_x86::DecoderOptions::NONE);
                 let mut formatter = iced_x86::IntelFormatter::new();
@@ -252,6 +272,11 @@ impl Binary {
                         (Some(ins.near_branch_target()), false)
                     } else if !invalid && ins.is_ip_rel_memory_operand() {
                         (Some(ins.ip_rel_memory_address()), true)
+                    } else if !invalid
+                        && bits == 32
+                        && let Some(slot) = self.import_slot_operand(&ins)
+                    {
+                        (Some(slot), true)
                     } else if absolute
                         && memory
                         && ins.memory_base() == iced_x86::Register::None

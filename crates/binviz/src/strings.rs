@@ -280,9 +280,9 @@ impl Binary {
                 }
             }
             // UTF-16LE runs: printable low byte, zero high byte. They live in PE
-            // resources and data, and in Mach-O `__ustring`; elsewhere the pass
-            // would double the scan for nothing.
-            let wide = matches!(self.summary.format, Format::Pe | Format::Coff) || s.name == "__ustring";
+            // (and XBE) resources and data, and in Mach-O `__ustring`; elsewhere
+            // the pass would double the scan for nothing.
+            let wide = matches!(self.summary.format, Format::Pe | Format::Coff | Format::Xbe) || s.name == "__ustring";
             for parity in 0..if wide { 2 } else { 0 } {
                 let mut i = parity;
                 while i + 1 < bytes.len() {

@@ -57,6 +57,7 @@ const ALL: &[&str] = &[
     "tiny-psx.exe",
     "tiny.gba",
     "tiny.md",
+    "tiny.xbe",
 ];
 
 #[test]
@@ -2619,4 +2620,281 @@ fn playstation_discs_open_their_executable() {
     let bin = c.open(0).unwrap();
     assert_eq!(bin.platform(), Some(binviz::rom::Platform::PlayStation));
     assert_eq!(bin.data(), &exe[..]);
+}
+
+#[test]
+fn a_call_through_an_import_slot_names_the_import() {
+    // 32-bit code names the slot by its address: call dword ptr [0x4021b4].
+    let bin = open("x86demo-fixed.exe");
+    let exit = bin.imports().iter().find(|i| i.name == "ExitProcess").unwrap();
+    let slot = exit.address.unwrap();
+    bin.prepare_xrefs();
+    let site = bin.references_to(slot, slot + 4, 0, 1).refs[0].source;
+    let call = bin.instruction_at(site).unwrap();
+    assert_eq!(
+        (call.mnemonic.as_str(), call.target, call.target_symbol.as_deref()),
+        ("call", Some(slot), Some("__imp_ExitProcess"))
+    );
+}
+
+// --- Original Xbox executables (XBE) ---------------------------------------------------
+// tiny.xbe: tests/fixtures/src/xbe.py says what is where.
+
+fn xbe_property<'a>(bin: &'a Binary, key: &str) -> &'a str {
+    let p = bin.summary().properties.iter().find(|p| p.key == key);
+    p.map(|p| p.value.as_str()).unwrap_or_else(|| panic!("no {key}"))
+}
+
+#[test]
+fn xbe_headers_sections_and_libraries() {
+    let bin = open("tiny.xbe");
+    let s = bin.summary();
+    assert_eq!(
+        (
+            s.format,
+            s.format_name.as_str(),
+            s.kind.as_str(),
+            s.arch.as_str(),
+            s.bits
+        ),
+        (binviz::Format::Xbe, "XBE", "Executable (retail)", "x86", 32)
+    );
+    assert_eq!((s.entry, s.image_base), (Some(0x11000), Some(0x10000)));
+    assert_eq!(xbe_property(&bin, "Title"), "Tiny");
+    assert_eq!(xbe_property(&bin, "Title ID"), "42560001 (BV-001)");
+    assert!(xbe_property(&bin, "Build").starts_with("retail (its keys decode"));
+    // Which XDK built it, from XAPILIB's build, and every library linked.
+    assert_eq!(xbe_property(&bin, "Built with"), "XDK 5849 (from XAPILIB 1.0.5849)");
+    assert_eq!(
+        xbe_property(&bin, "Libraries"),
+        "XAPILIB 1.0.5849, XBOXKRNL 1.0.5849, LIBCMT 1.0.5849, D3D8 1.0.5849 (QFE 1), DSOUND 1.0.5849"
+    );
+    assert_eq!(xbe_property(&bin, "Regions"), "North America, Japan, rest of the world");
+    assert_eq!(xbe_property(&bin, "Debug path"), "D:\\tiny\\Release\\tiny.exe");
+    // Each section where the loader puts it, its kind and permissions from its flags.
+    type Row<'a> = (&'a str, u64, u64, Option<u64>, RegionKind, &'a str);
+    let sections: Vec<Row> = bin
+        .sections()
+        .iter()
+        .map(|s| {
+            (
+                s.name.as_str(),
+                s.address,
+                s.size,
+                s.file_offset,
+                s.kind,
+                s.perms.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        sections,
+        [
+            (".text", 0x11000, 0xb3, Some(0x1000), RegionKind::Code, "r-x"),
+            ("D3D", 0x110c0, 0xc, Some(0x2000), RegionKind::Code, "r-x"),
+            (".rdata", 0x110e0, 0x64, Some(0x3000), RegionKind::Rodata, "r--"),
+            (".data", 0x11160, 0x60, Some(0x4000), RegionKind::Data, "rw-"),
+            ("$$XTIMAGE", 0x111c0, 0x2c, Some(0x5000), RegionKind::Resources, "r--"),
+        ]
+    );
+    assert_eq!(
+        bin.sections()[2].flags,
+        "preload, head page read-only, tail page read-only"
+    );
+    // .data's last 0x40 bytes are in memory only; the headers are mapped at the base address.
+    assert_eq!(bin.address_to_offset(0x11164), Some(0x4004));
+    assert_eq!(bin.address_to_offset(0x11190), None);
+    assert_eq!(bin.address_to_offset(0x10178), Some(0x178));
+    assert_eq!(bin.offset_to_address(0x1004), Some(0x11004));
+    assert_eq!(bin.segments()[0].name, "Headers");
+    // In a folder (a game's files), its header says it is a binary.
+    let header = binviz::package::header(bin.data()).unwrap();
+    assert_eq!(
+        (header.format.as_str(), header.kind),
+        ("XBE", binviz::package::BinaryKind::Executable)
+    );
+    // Wide strings are found, as in a PE.
+    let strings = bin.strings("", 0, 10);
+    assert!(
+        strings.strings.iter().any(|s| s.wide && s.text == "Press START"),
+        "{strings:?}"
+    );
+}
+
+#[test]
+fn xbe_layout_names_every_header_field() {
+    let bin = open("tiny.xbe");
+    let at = |offset: u64| {
+        let path = bin.describe_offset(offset);
+        let names: Vec<String> = path.iter().map(|p| p.name.clone()).collect();
+        (names, path.last().and_then(|p| p.value.clone()).unwrap_or_default())
+    };
+    let (path, value) = at(0x128);
+    assert_eq!(path, ["Headers", "Image header", "Entry point (encoded)"]);
+    assert_eq!(value, "0xa8fd47ab → 0x11000 (XOR 0xa8fc57ab, the retail key)");
+    let (path, value) = at(0x158);
+    assert_eq!(path.last().unwrap(), "Kernel thunk table address (encoded)");
+    assert!(value.ends_with("→ 0x110e0 (XOR 0x5b6d40b6, the retail key)"), "{value}");
+    let (path, value) = at(0x184);
+    assert_eq!(
+        (path, value.as_str()),
+        (
+            vec!["Headers".to_string(), "Certificate".into(), "Title name".into()],
+            "L\"Tiny\""
+        )
+    );
+    let (path, value) = at(0x3b8);
+    assert_eq!(path, ["Headers", "Section headers", "Section header .rdata", "Flags"]);
+    assert!(value.starts_with("preload, head page read-only"), "{value}");
+    assert_eq!(at(0x49c).0.last().unwrap(), "Build");
+    assert_eq!(at(0x4c0).0[2], "D3D8 1.0.5849 (QFE 1)");
+    assert_eq!(at(0x506).0, ["Headers", "Debug path name", "Debug file name"]);
+    assert_eq!(at(0x520).0, ["Headers", "Logo bitmap"]);
+    let (path, value) = at(0x3010);
+    assert_eq!(path, ["Section .rdata", "Kernel thunk table", "KeBugCheck"]);
+    assert_eq!(value, "ordinal 95 (0x8000005f), slot 0x110f0");
+    assert_eq!(at(0x3050).0, ["Section .rdata", "TLS directory", "AddressOfCallBacks"]);
+    // Nothing is left unexplained (layout_covers_every_byte checks the spans too).
+    let unknown: u64 = bin
+        .composition()
+        .iter()
+        .filter(|(k, _)| *k == RegionKind::Unknown)
+        .map(|(_, n)| n)
+        .sum();
+    assert_eq!(unknown, 0);
+}
+
+#[test]
+fn xbe_keys_say_retail_or_debug() {
+    let xor = |data: &mut Vec<u8>, at: usize, key: u32| {
+        let v = u32::from_le_bytes(data[at..at + 4].try_into().unwrap()) ^ key;
+        data[at..at + 4].copy_from_slice(&v.to_le_bytes());
+    };
+    // The same entry point and thunk table, encoded with the development kits' keys.
+    let mut data = fixture("tiny.xbe");
+    xor(&mut data, 0x128, 0xA8FC_57AB ^ 0x9485_9D4B);
+    xor(&mut data, 0x158, 0x5B6D_40B6 ^ 0xEFB1_F152);
+    let bin = Binary::parse(data.clone()).unwrap();
+    assert_eq!(
+        (bin.summary().kind.as_str(), bin.summary().entry, bin.imports().len()),
+        ("Executable (debug)", Some(0x11000), 5)
+    );
+    assert!(xbe_property(&bin, "Build").starts_with("debug"));
+    let field = bin.describe_offset(0x128).pop().unwrap();
+    assert!(field.value.unwrap().ends_with("the debug key)"));
+    // An entry point no known key decodes: still an XBE, without an entry point or imports.
+    xor(&mut data, 0x128, 0x0100_0000);
+    let bin = Binary::parse(data).unwrap();
+    assert_eq!(
+        (bin.summary().kind.as_str(), bin.summary().entry, bin.imports().len()),
+        ("Executable", None, 0)
+    );
+    assert!(xbe_property(&bin, "Build").starts_with("unknown"));
+}
+
+#[test]
+fn xbe_kernel_imports_come_from_the_thunk_table() {
+    let bin = open("tiny.xbe");
+    let imports: Vec<(&str, &str, Option<u32>, Option<u64>)> = bin
+        .imports()
+        .iter()
+        .map(|i| (i.library.as_str(), i.name.as_str(), i.ordinal, i.address))
+        .collect();
+    assert_eq!(
+        imports,
+        [
+            ("xboxkrnl.exe", "KeTickCount", Some(156), Some(0x110e0)),
+            ("xboxkrnl.exe", "DbgPrint", Some(8), Some(0x110e4)),
+            ("xboxkrnl.exe", "HalReturnToFirmware", Some(49), Some(0x110e8)),
+            ("xboxkrnl.exe", "NtClose", Some(187), Some(0x110ec)),
+            ("xboxkrnl.exe", "KeBugCheck", Some(95), Some(0x110f0)),
+        ]
+    );
+    let slot = bin.symbols().by_name("__imp_KeBugCheck").unwrap();
+    assert_eq!(
+        (slot.address, slot.size, slot.source),
+        (0x110f0, 4, SymbolSource::Import)
+    );
+    assert_eq!(
+        xbe_property(&bin, "Kernel imports"),
+        "5 from xboxkrnl.exe, by ordinal (all named)"
+    );
+}
+
+#[test]
+fn xbe_code_is_followed_from_the_entry_point() {
+    let bin = open("tiny.xbe");
+    let found: Vec<(u64, u64)> = bin.symbols().functions().map(|f| (f.address, f.size)).collect();
+    assert_eq!(
+        found,
+        [
+            // The entry point, up to HalReturnToFirmware, which never returns.
+            (0x11000, 0x3a),
+            (0x11040, 11),
+            // The switch, with its jump table after its code.
+            (0x11050, 0x3c),
+            // It ends in KeBugCheck, which never returns (and so does the case calling it).
+            (0x11090, 10),
+            // Reached only through the pointer in .data.
+            (0x110a0, 16),
+            // The TLS callback.
+            (0x110b0, 3),
+            // In the D3D section.
+            (0x110c0, 12),
+        ]
+    );
+    assert!(xbe_property(&bin, "Code found").starts_with("7 functions and 1 jump table,"));
+    let cases: Vec<u64> = bin
+        .disassemble_function(0x11050, 100)
+        .instructions
+        .iter()
+        .filter(|i| i.mnemonic == "dd")
+        .map(|i| i.target.unwrap())
+        .collect();
+    assert_eq!(cases, [0x11060, 0x11063, 0x11069, 0x1106f]);
+    // All of the code is in functions, or alignment filler between them.
+    let cov = bin.coverage(5);
+    for name in [".text", "D3D"] {
+        let s = cov.sections.iter().find(|s| s.name == name).unwrap();
+        assert_eq!(s.bytes.unexplored, 0, "{name}: {:?}", cov.gaps);
+    }
+}
+
+#[test]
+fn xbe_kernel_calls_read_as_such() {
+    let bin = open("tiny.xbe");
+    let named: Vec<(String, String)> = bin
+        .disassemble_function(0x11000, 100)
+        .instructions
+        .iter()
+        .filter_map(|i| Some((i.mnemonic.clone(), i.target_symbol.clone()?)))
+        .collect();
+    let want = [
+        ("call", "sub_11040"),
+        ("call", "sub_11050"),
+        ("call", "sub_110c0"),
+        // The kernel variable, read through its slot.
+        ("mov", "__imp_KeTickCount"),
+        // The address of a string, pushed.
+        ("push", "\"tiny: %d frames\\n\""),
+        ("call", "__imp_DbgPrint"),
+        ("call", "__imp_HalReturnToFirmware"),
+    ];
+    assert_eq!(named, want.map(|(m, t)| (m.to_string(), t.to_string())));
+    bin.prepare_xrefs();
+    // A call through a slot is a call to it, from the function it is in.
+    let refs = bin.references_to(0x110ec, 0x110f0, 0, 10);
+    assert_eq!((refs.counts.call, refs.refs[0].function), (1, Some(0x110a0)));
+    let callees: Vec<String> = bin.callees(0x11000).into_iter().map(|c| c.name).collect();
+    assert!(callees.iter().any(|c| c == "__imp_DbgPrint"), "{callees:?}");
+    // Globals are read and written at their addresses; the callback's pointer is in .data.
+    let frames = bin.references_to(0x11164, 0x11168, 0, 10);
+    assert_eq!((frames.counts.read, frames.counts.write), (1, 1));
+    assert_eq!(bin.references_to(0x110a0, 0x110a1, 0, 10).counts.pointer, 1);
+    let summary = bin.function_summary(0x11000, 50).unwrap();
+    assert!(
+        summary.strings.iter().any(|s| s.text.starts_with("tiny: %d frames")),
+        "{:?}",
+        summary.strings
+    );
 }

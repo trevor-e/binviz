@@ -536,3 +536,32 @@ fn two_builds_function_by_function() {
     );
     assert!(code.contains("Identical") && code.contains("= 0x"), "{code}");
 }
+
+#[test]
+fn an_original_xbox_executable() {
+    let path = fixture_copy_for("tiny.xbe", "xbe-");
+    let dir = path.parent().unwrap().to_path_buf();
+    let mut s = Session::start();
+    let opened = s.ok("open_binary", json!({ "path": path.to_str().unwrap() }));
+    assert!(opened.contains("XBE"), "{opened}");
+    let summary = s.ok("binary_summary", json!({}));
+    assert!(
+        summary.contains("XBE executable (retail)") && summary.contains("Built with: XDK 5849"),
+        "{summary}"
+    );
+    // The kernel's calls read as such, named after the ordinals in the thunk table.
+    let code = s.ok("disassemble", json!({ "at": "0x11000" }));
+    assert!(
+        code.contains("<__imp_KeTickCount>") && code.contains("<__imp_HalReturnToFirmware>"),
+        "{code}"
+    );
+    let info = s.ok("function_info", json!({ "at": "0x110a0" }));
+    assert!(info.contains("__imp_NtClose"), "{info}");
+    let refs = s.ok("xrefs", json!({ "at": "__imp_KeBugCheck" }));
+    assert!(refs.contains("0x11094"), "{refs}");
+    let context = s.ok("decomp_context", json!({ "at": "0x11050" }));
+    assert!(context.contains("dd 0x11060"), "{context}");
+    let cov = s.ok("coverage", json!({ "gaps": 0 }));
+    assert!(cov.contains(".text") && cov.contains("D3D"), "{cov}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

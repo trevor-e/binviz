@@ -114,7 +114,8 @@ impl Binary {
 
     pub(crate) fn read_rtti(&self) -> Rtti {
         let mut out = Rtti::default();
-        if self.summary.format != Format::Pe {
+        // An XBE is a PE the XDK's image builder rewrote: the same RTTI.
+        if !matches!(self.summary.format, Format::Pe | Format::Xbe) {
             return out;
         }
         let ptr = if self.is64 { 8u64 } else { 4 };

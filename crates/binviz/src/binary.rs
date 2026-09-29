@@ -98,6 +98,7 @@ impl Binary {
             }
             Ok(object::FileKind::Archive) => bail!("this is an archive; pick a member first"),
             Ok(object::FileKind::DyldCache) => bail!("dyld shared caches are not supported"),
+            Err(_) if crate::xbe::is_xbe(bytes) => return Binary::from_xbe(data.clone()),
             Err(_) if crate::dwarf::pdb::is_pdb(bytes) => {
                 bail!(
                     "this is a PDB, the debug info of a Windows binary: open the .exe or .dll it belongs to, then attach this file to it as its debug file"
@@ -634,6 +635,7 @@ impl Binary {
             Format::MachO => layout::macho::build(&mut b),
             Format::Pe => layout::pe::build(&mut b, true),
             Format::Coff => layout::pe::build(&mut b, false),
+            Format::Xbe => layout::xbe::build(&mut b),
             _ => {}
         }
         b.finish()
@@ -1206,6 +1208,7 @@ fn format_name(format: Format, is64: bool, b: &Bytes) -> String {
         Format::Xcoff => "XCOFF".into(),
         Format::Wasm => "WebAssembly".into(),
         Format::Rom => "ROM".into(),
+        Format::Xbe => "XBE".into(),
         Format::Unknown => "Unknown".into(),
     }
 }

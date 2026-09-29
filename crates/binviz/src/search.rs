@@ -659,7 +659,11 @@ impl Binary {
                     detail.push_str(&format!(" · ordinal {o}"));
                 }
                 if imp.address.is_some() {
-                    detail.push_str(" · IAT slot");
+                    detail.push_str(if self.summary.format == crate::model::Format::Xbe {
+                        " · kernel thunk slot"
+                    } else {
+                        " · IAT slot"
+                    });
                 }
                 let mut hit = SearchHit::new(
                     HitKind::Import,

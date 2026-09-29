@@ -58,6 +58,8 @@ pub enum Format {
     Wasm,
     /// A game ROM (see [`crate::rom`]).
     Rom,
+    /// An original Xbox executable (`default.xbe`).
+    Xbe,
     Unknown,
 }
 

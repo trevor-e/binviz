@@ -9,7 +9,7 @@ export type RegionKind =
 export interface Property { key: string; value: string }
 
 export interface Summary {
-  format: 'elf' | 'mach-o' | 'pe' | 'coff' | 'xcoff' | 'wasm' | 'rom' | 'unknown';
+  format: 'elf' | 'mach-o' | 'pe' | 'coff' | 'xcoff' | 'wasm' | 'rom' | 'xbe' | 'unknown';
   formatName: string;
   kind: string;
   arch: string;

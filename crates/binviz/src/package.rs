@@ -86,7 +86,7 @@ pub struct BuildId {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Header {
-    /// "Mach-O", "ELF" or "PE".
+    /// "Mach-O", "ELF", "PE" or "XBE".
     pub format: String,
     pub kind: BinaryKind,
     /// One per architecture (a universal binary has several).
@@ -117,7 +117,7 @@ pub struct PackageBinary {
     pub path: String,
     /// The file name.
     pub name: String,
-    /// "Mach-O", "ELF" or "PE".
+    /// "Mach-O", "ELF", "PE" or "XBE".
     pub format: String,
     pub kind: BinaryKind,
     /// The bundle it is the executable of, from an `Info.plist` beside it.
@@ -275,12 +275,25 @@ impl Bytes<'_> {
 }
 
 /// Recognises a binary from its first bytes: Mach-O (thin or universal), ELF
-/// or PE, or a PDB (a Windows binary's debug file).
+/// or PE, an XBE, or a PDB (a Windows binary's debug file).
 pub fn header(prefix: &[u8]) -> Option<Header> {
     mach_o(prefix)
         .or_else(|| elf(prefix))
         .or_else(|| pe(prefix))
+        .or_else(|| xbe(prefix))
         .or_else(|| pdb(prefix))
+}
+
+/// An original Xbox executable (a game's `default.xbe`).
+fn xbe(b: &[u8]) -> Option<Header> {
+    crate::xbe::is_xbe(b).then(|| Header {
+        format: "XBE".into(),
+        kind: BinaryKind::Executable,
+        ids: vec![BuildId {
+            arch: "x86".into(),
+            id: String::new(),
+        }],
+    })
 }
 
 /// A PDB. Its GUID is in a stream its directory places, usually near the end

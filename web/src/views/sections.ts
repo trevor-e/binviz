@@ -110,6 +110,8 @@ function segmentBlurb(format: string): string {
       return 'PE images map the headers plus each section at ImageBase + RVA.';
     case 'rom':
       return 'Where the console’s CPU sees each part: ROM banks at their addresses (a switched bank’s as bank:address), RAM and hardware registers.';
+    case 'xbe':
+      return 'XBE images map the headers at the base address, as they are in the file, and each section at its virtual address.';
     default:
       return 'Memory mappings.';
   }
