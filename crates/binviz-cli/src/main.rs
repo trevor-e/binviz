@@ -133,7 +133,26 @@ fn num(s: &str) -> Result<u64, String> {
     r.map_err(|_| format!("not a number: {s}"))
 }
 
+/// Rust ignores SIGPIPE, so printing into a closed pipe (`binviz … | head`)
+/// panics; the default action ends the process quietly like any other tool.
+#[cfg(unix)]
+fn restore_sigpipe() {
+    unsafe extern "C" {
+        fn signal(signum: i32, handler: usize) -> usize;
+    }
+    const SIGPIPE: i32 = 13;
+    const SIG_DFL: usize = 0;
+    // SAFETY: called once at startup, before any thread exists.
+    unsafe {
+        signal(SIGPIPE, SIG_DFL);
+    }
+}
+
+#[cfg(not(unix))]
+fn restore_sigpipe() {}
+
 fn main() -> ExitCode {
+    restore_sigpipe();
     let mut args: Vec<String> = std::env::args().skip(1).collect();
     let mut take_opt = |name: &str| -> Option<String> {
         let i = args.iter().position(|a| a == name)?;

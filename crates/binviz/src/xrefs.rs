@@ -1150,6 +1150,15 @@ impl Binary {
             if kind.is_call() || (lo..hi).contains(&target) || !seen.insert(target) {
                 continue;
             }
+            // A float or double read (its bytes can pass for a short string) is data with a value.
+            if let Some(value) = self.float_operand_at(site) {
+                if data.len() < limit {
+                    let mut r = self.describe_ref(site, target, kind);
+                    r.to = Some(value);
+                    data.push(r);
+                }
+                continue;
+            }
             match self.string_at_address(target) {
                 Some(text) if strings.len() < limit => strings.push(StringUse {
                     address: target,

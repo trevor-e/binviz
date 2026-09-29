@@ -671,6 +671,29 @@ fn stripped_32_bit_pe_functions_are_found_by_following_the_code() {
 }
 
 #[test]
+fn a_float_read_from_an_absolute_address_shows_its_value() {
+    let bin = open("x86demo.exe");
+    let d = bin.disassemble(0x4010b0, 0x4010d0, 20);
+    let value = |mnemonic: &str| {
+        d.instructions
+            .iter()
+            .find(|i| i.mnemonic == mnemonic)
+            .and_then(|i| i.target_symbol.clone())
+    };
+    assert_eq!(value("mulsd").as_deref(), Some("f64 1.25"), "{d:?}");
+    assert_eq!(value("addsd").as_deref(), Some("f64 0.5"), "{d:?}");
+    // What the function reads is data with a value, not a string.
+    let f = bin.symbols().function_containing(0x4010b7).unwrap().address;
+    let summary = bin.function_summary(f, 50).unwrap();
+    assert!(
+        summary.data.iter().any(|r| r.to.as_deref() == Some("f64 1.25")),
+        "{:?}",
+        summary.data
+    );
+    assert!(summary.strings.iter().all(|s| s.address != 0x402090), "{:?}", summary.strings);
+}
+
+#[test]
 fn decompilation_goes_from_what_is_ready() {
     use binviz::{Decomp, DecompState, NextQuery, Readiness};
     let mut bin = open("x86demo.exe");

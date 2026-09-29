@@ -56,6 +56,45 @@ impl Binary {
         isa(self.arch)
     }
 
+    /// The value of a float or double an x86 instruction reads from an
+    /// absolute address (`fld qword ptr [0x40e100]`, `mulss xmm0, [0x40e104]`):
+    /// `f64 -1.0`. MSVC folds `x + 1` into `x - (-1)`, so the value is what
+    /// makes that code readable.
+    pub(crate) fn float_operand(&self, ins: &iced_x86::Instruction) -> Option<String> {
+        use iced_x86::{MemorySize, OpKind, Register};
+        if ins.is_invalid() || !(0..ins.op_count()).any(|i| ins.op_kind(i) == OpKind::Memory) {
+            return None;
+        }
+        let address = if ins.is_ip_rel_memory_operand() {
+            ins.ip_rel_memory_address()
+        } else if ins.memory_base() == Register::None && ins.memory_index() == Register::None {
+            ins.memory_displacement64()
+        } else {
+            return None;
+        };
+        let offset = self.address_to_offset(address)? as usize;
+        match ins.memory_size() {
+            MemorySize::Float32 => {
+                let b = self.data.get(offset..offset + 4)?;
+                Some(format!("f32 {:?}", f32::from_le_bytes(b.try_into().ok()?)))
+            }
+            MemorySize::Float64 => {
+                let b = self.data.get(offset..offset + 8)?;
+                Some(format!("f64 {:?}", f64::from_le_bytes(b.try_into().ok()?)))
+            }
+            _ => None,
+        }
+    }
+
+    /// [`Self::float_operand`] for the instruction at `site`.
+    pub(crate) fn float_operand_at(&self, site: u64) -> Option<String> {
+        let Isa::X86(bits) = self.isa() else { return None };
+        let offset = self.address_to_offset(site)? as usize;
+        let bytes = self.data.get(offset..(offset + 16).min(self.data.len()))?;
+        let mut decoder = iced_x86::Decoder::with_ip(bits, bytes, site, iced_x86::DecoderOptions::NONE);
+        self.float_operand(&decoder.decode())
+    }
+
     /// Whether this binary's code can be disassembled.
     pub fn can_disassemble(&self) -> bool {
         self.isa() != Isa::None
@@ -170,6 +209,7 @@ impl Binary {
                         (None, false)
                     };
                     let address = ins.ip();
+                    let value = self.float_operand(&ins);
                     out.instructions.push(Instruction {
                         address,
                         offset: Some(offset + pos as u64),
@@ -178,7 +218,10 @@ impl Binary {
                         mnemonic,
                         operands,
                         flow,
-                        target_symbol: target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }),
+                        target_symbol: match (target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }), value) {
+                            (Some(name), Some(value)) => Some(format!("{name} = {value}")),
+                            (name, value) => name.or(value),
+                        },
                         target,
                         source: source_for(address),
                     });
