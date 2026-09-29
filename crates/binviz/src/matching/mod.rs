@@ -1,17 +1,23 @@
 //! Matching a decompilation's rebuilt code against the original: the
 //! compiler's object file, function by function, against the functions of
 //! the binary it is meant to reproduce, with the fields the linker fills in
-//! (relocations: call targets, the halves of an address) masked, and each
+//! (relocations: call targets, globals' addresses, the halves of an address)
+//! masked and checked against where the original points, and each
 //! difference explained (a register chosen differently, a stack slot at
 //! another offset, an instruction reordered, a `nop` missing from a delay
-//! slot) so that whoever is writing the C knows what to change.
+//! slot) so that whoever is writing the C knows what to change. A project's
+//! objects are matched unit by unit, and summed up as objdiff does.
 //!
 //! Also reads objdiff's report (what decomp.dev shows) to place its verdicts
 //! on the binary's functions.
 //!
-//! MIPS (PlayStation, Nintendo 64) so far.
+//! MIPS (PlayStation, Nintendo 64) objects in ELF; x86 and x86-64 ones in
+//! COFF (MSVC, clang-cl) or ELF, lined up and explained by `x86.rs`.
+
+mod x86;
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use object::{Object, ObjectSection, ObjectSymbol, RelocationTarget};
 use serde::{Deserialize, Serialize};
@@ -27,19 +33,64 @@ pub struct ObjectFunction {
     pub name: String,
     /// Its offset in its section.
     pub offset: u64,
-    /// Instruction words, in the object's byte order.
-    pub words: Vec<u32>,
-    pub big_endian: bool,
-    /// Relocations by instruction index: what the linker fills in.
-    pub relocs: BTreeMap<usize, Reloc>,
+    /// Its code, in the object's byte order; for x86, without the alignment
+    /// padding that follows it.
+    pub code: Vec<u8>,
+    pub isa: ObjectIsa,
+    /// Relocations, what the linker fills in, by the offset in `code` of the
+    /// field each fills (for MIPS, the instruction word's).
+    pub relocs: BTreeMap<u64, Reloc>,
+    /// Its section's index in the object.
+    pub(crate) section: usize,
+    /// The functions of its section (offset, name), for a call the assembler
+    /// resolved itself, with no relocation.
+    pub(crate) neighbours: Arc<[(u64, String)]>,
+}
+
+/// The instruction set an object's code is for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ObjectIsa {
+    Mips {
+        big_endian: bool,
+    },
+    /// x86 (32) or x86-64 (64).
+    X86 {
+        bits: u32,
+    },
+}
+
+/// What a relocated field holds once linked.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RelocForm {
+    /// The symbol's address, plus the addend.
+    Absolute,
+    /// That less the field's own address: a call's or a jump's displacement, `[rip+N]`.
+    Relative,
+    /// Something else (a MIPS address half, an image offset, a GOT slot): masked, and
+    /// checked only where the instruction set's matcher knows the kind.
+    Other,
 }
 
 #[derive(Debug, Clone)]
 pub struct Reloc {
-    /// The ELF relocation type (`R_MIPS_26`, `R_MIPS_HI16`…).
+    /// The relocation type in its format: ELF's `r_type` (`R_MIPS_26`,
+    /// `R_386_PC32`…) or COFF's (`IMAGE_REL_I386_REL32`…).
     pub kind: u32,
+    pub form: RelocForm,
+    /// The width of the field, in bits.
+    pub bits: u8,
     pub symbol: String,
+    /// Added to the symbol's address. Formats that keep the addend in the
+    /// field itself (ELF's REL, COFF) set `implicit`: the field's value is
+    /// added too.
     pub addend: i64,
+    pub implicit: bool,
+    /// Where the symbol is when this object defines it: its section's index
+    /// and its offset there.
+    pub(crate) defined: Option<(usize, u64)>,
+    /// The symbol stands for a section of this object (a static's data, a
+    /// jump table in `.rdata`), a name the binary can't know.
+    pub(crate) section_symbol: bool,
 }
 
 /// One instruction of the original lined up with one of the rebuild.
@@ -63,6 +114,9 @@ pub struct MatchResult {
     pub original_instructions: u32,
     pub rebuilt_instructions: u32,
     pub matched_instructions: u32,
+    /// The bytes of code compared on each side.
+    pub original_bytes: u64,
+    pub rebuilt_bytes: u64,
     /// 100 when every instruction matches, relocations aside.
     pub percent: f32,
     pub lines: Vec<MatchLine>,
@@ -102,77 +156,222 @@ fn layout_mask(w: MipsWord) -> u32 {
     }
 }
 
-/// The functions of a compiled object file (ELF, MIPS), with their relocations.
+/// The functions of a compiled object file (ELF or COFF; MIPS, x86 or
+/// x86-64), with their relocations.
 pub fn object_functions(bytes: &[u8]) -> Result<Vec<ObjectFunction>> {
     let file = object::File::parse(bytes).map_err(|e| Error::new(format!("not an object file: {e}")))?;
-    if file.architecture() != object::Architecture::Mips {
-        return Err(Error::new(format!(
-            "matching is for MIPS objects so far; this one is {:?}",
-            file.architecture()
-        )));
-    }
-    let big_endian = !file.is_little_endian();
+    file_functions(&file)
+}
+
+/// The functions of a parsed object file (see [`object_functions`]).
+pub(crate) fn file_functions(file: &object::File) -> Result<Vec<ObjectFunction>> {
+    let isa = match file.architecture() {
+        object::Architecture::Mips => ObjectIsa::Mips {
+            big_endian: !file.is_little_endian(),
+        },
+        object::Architecture::I386 => ObjectIsa::X86 { bits: 32 },
+        object::Architecture::X86_64 | object::Architecture::X86_64_X32 => ObjectIsa::X86 { bits: 64 },
+        other => {
+            return Err(Error::new(format!(
+                "matching is for MIPS, x86 and x86-64 objects; this one is {other:?}"
+            )));
+        }
+    };
     let mut out = Vec::new();
     for section in file.sections() {
         if section.kind() != object::SectionKind::Text {
             continue;
         }
         let data = section.data().map_err(|e| Error::new(e.to_string()))?;
-        let mut relocs: BTreeMap<u64, Reloc> = BTreeMap::new();
-        for (offset, rel) in section.relocations() {
-            let object::RelocationFlags::Elf { r_type } = rel.flags() else { continue };
-            let symbol = match rel.target() {
-                RelocationTarget::Symbol(i) => file
-                    .symbol_by_index(i)
-                    .ok()
-                    .and_then(|s| s.name().ok().map(str::to_string))
-                    .unwrap_or_default(),
-                _ => String::new(),
-            };
-            relocs.insert(
-                offset,
-                Reloc {
-                    kind: r_type.0,
-                    symbol,
-                    addend: rel.addend(),
-                },
-            );
-        }
+        let relocs = section_relocs(file, &section);
+        // Where functions start: MIPS keeps to typed functions; for x86, the
+        // global symbols of hand-written assembly count too, and labels
+        // inside functions (MSVC's `$LN` ones) don't.
+        let starts = |s: &object::Symbol| match isa {
+            ObjectIsa::Mips { .. } => s.kind() == object::SymbolKind::Text,
+            ObjectIsa::X86 { .. } => {
+                s.kind() == object::SymbolKind::Text
+                    || (s.is_global() && matches!(s.kind(), object::SymbolKind::Data | object::SymbolKind::Unknown))
+            }
+        };
         let mut symbols: Vec<(u64, u64, String)> = file
             .symbols()
-            .filter(|s| s.section_index() == Some(section.index()) && s.kind() == object::SymbolKind::Text)
+            .filter(|s| s.section_index() == Some(section.index()) && starts(s))
             .filter(|s| !s.name().unwrap_or("").is_empty())
-            .map(|s| (s.address(), s.size(), s.name().unwrap_or("").to_string()))
+            .map(|s| {
+                let offset = s.address().wrapping_sub(section.address());
+                (offset, s.size(), s.name().unwrap_or("").to_string())
+            })
             .collect();
         symbols.sort();
-        for (i, (offset, size, name)) in symbols.iter().enumerate() {
+        let neighbours: Arc<[(u64, String)]> = symbols.iter().map(|(o, _, n)| (*o, n.clone())).collect();
+        for (offset, size, name) in &symbols {
             let end = if *size > 0 {
                 offset + size
             } else {
-                symbols.get(i + 1).map_or(data.len() as u64, |s| s.0)
+                // The next function, past any others at the same place (aliases).
+                symbols
+                    .iter()
+                    .map(|s| s.0)
+                    .find(|&o| o > *offset)
+                    .unwrap_or(data.len() as u64)
             };
-            let Some(code) = data.get(*offset as usize..end as usize) else { continue };
-            let words = code
-                .chunks_exact(4)
-                .map(|c| {
-                    let b = [c[0], c[1], c[2], c[3]];
-                    if big_endian { u32::from_be_bytes(b) } else { u32::from_le_bytes(b) }
-                })
-                .collect();
-            let relocs = relocs
+            let Some(code) = data.get(*offset as usize..end as usize) else {
+                continue;
+            };
+            let mut relocs: BTreeMap<u64, Reloc> = relocs
                 .range(*offset..end)
-                .map(|(at, r)| (((at - offset) / 4) as usize, r.clone()))
+                .map(|(at, r)| (at - offset, r.clone()))
                 .collect();
+            let len = match isa {
+                ObjectIsa::Mips { .. } => code.len(),
+                // The last relocated field stays in, whatever follows it.
+                ObjectIsa::X86 { bits } => {
+                    let fields = relocs
+                        .iter()
+                        .map(|(at, r)| *at as usize + usize::from(r.bits).div_ceil(8))
+                        .max();
+                    x86::code_len(code, bits).max(fields.unwrap_or(0)).min(code.len())
+                }
+            };
+            relocs.retain(|at, _| (*at as usize) < len);
             out.push(ObjectFunction {
                 name: name.clone(),
                 offset: *offset,
-                words,
-                big_endian,
+                code: code[..len].to_vec(),
+                isa,
                 relocs,
+                section: section.index().0,
+                neighbours: neighbours.clone(),
             });
         }
     }
     Ok(out)
+}
+
+/// A section's relocations, by the offset of the field each fills.
+fn section_relocs(file: &object::File, section: &object::Section) -> BTreeMap<u64, Reloc> {
+    let mut out = BTreeMap::new();
+    for (offset, rel) in section.relocations() {
+        let kind = match rel.flags() {
+            object::RelocationFlags::Elf { r_type } => r_type.0,
+            object::RelocationFlags::Coff { typ } => u32::from(typ.0),
+            _ => continue,
+        };
+        let (symbol, defined, section_symbol) = match rel.target() {
+            RelocationTarget::Symbol(i) => match file.symbol_by_index(i) {
+                Ok(s) => {
+                    let defined = s.section_index().and_then(|x| {
+                        let base = file.section_by_index(x).ok()?.address();
+                        Some((x.0, s.address().wrapping_sub(base)))
+                    });
+                    // A section symbol is shown as its section's name.
+                    let section_symbol = s.kind() == object::SymbolKind::Section;
+                    let name = match s.name() {
+                        Ok(n) if !n.is_empty() => n.to_string(),
+                        _ => s
+                            .section_index()
+                            .and_then(|x| file.section_by_index(x).ok())
+                            .and_then(|x| x.name().ok().map(str::to_string))
+                            .unwrap_or_default(),
+                    };
+                    (name, defined, section_symbol)
+                }
+                Err(_) => (String::new(), None, false),
+            },
+            _ => (String::new(), None, false),
+        };
+        let form = match rel.kind() {
+            object::RelocationKind::Absolute => RelocForm::Absolute,
+            object::RelocationKind::Relative | object::RelocationKind::PltRelative => RelocForm::Relative,
+            _ => RelocForm::Other,
+        };
+        // Unknown kinds say no width: an x86 field is 32 bits unless said otherwise.
+        let bits = match rel.size() {
+            0 => 32,
+            n => n,
+        };
+        out.insert(
+            offset,
+            Reloc {
+                kind,
+                form,
+                bits,
+                symbol,
+                addend: rel.addend(),
+                implicit: rel.has_implicit_addend(),
+                defined,
+                section_symbol,
+            },
+        );
+    }
+    out
+}
+
+/// Where names of the objects are in the binary, found once each.
+#[derive(Default)]
+struct Lookups(std::cell::RefCell<std::collections::HashMap<String, Option<u64>>>);
+
+/// A function's code as instruction words (MIPS), with its relocations by
+/// instruction index.
+struct Words {
+    words: Vec<u32>,
+    big_endian: bool,
+    relocs: BTreeMap<usize, Reloc>,
+}
+
+impl Words {
+    fn of(f: &ObjectFunction, big_endian: bool) -> Words {
+        let words = f
+            .code
+            .chunks_exact(4)
+            .map(|c| {
+                let b = [c[0], c[1], c[2], c[3]];
+                if big_endian {
+                    u32::from_be_bytes(b)
+                } else {
+                    u32::from_le_bytes(b)
+                }
+            })
+            .collect();
+        let relocs = f.relocs.iter().map(|(at, r)| ((at / 4) as usize, r.clone())).collect();
+        Words {
+            words,
+            big_endian,
+            relocs,
+        }
+    }
+}
+
+impl ObjectFunction {
+    /// Which bytes of `code` to compare: 0 where the linker fills them in.
+    pub fn mask(&self) -> Vec<u8> {
+        let mut mask = vec![0xFF; self.code.len()];
+        for (&at, r) in &self.relocs {
+            let at = at as usize;
+            match self.isa {
+                ObjectIsa::Mips { big_endian } => {
+                    let bits = reloc_mask(r.kind);
+                    let bytes = if big_endian {
+                        bits.to_be_bytes()
+                    } else {
+                        bits.to_le_bytes()
+                    };
+                    for (i, b) in bytes.iter().enumerate() {
+                        if let Some(m) = mask.get_mut(at + i) {
+                            *m &= !b;
+                        }
+                    }
+                }
+                ObjectIsa::X86 { .. } => {
+                    for m in mask.iter_mut().skip(at).take(usize::from(r.bits).div_ceil(8)) {
+                        *m = 0;
+                    }
+                }
+            }
+        }
+        mask
+    }
 }
 
 fn text(w: u32, pc: u64, big: bool) -> String {
@@ -200,13 +399,67 @@ impl Binary {
     }
 
     /// Where the rebuild's symbol `name` is in the original, if known: from
-    /// the file's symbols and the user's names.
-    fn symbol_address(&self, name: &str) -> Option<u64> {
-        self.symbols().by_name(name).map(|s| s.address)
+    /// the file's symbols and the user's names, by the name as the object
+    /// has it or as C or C++ source would write it (see [`source_names`]).
+    pub fn object_symbol_address(&self, name: &str) -> Option<u64> {
+        source_names(name)
+            .iter()
+            .find_map(|n| self.symbols().by_name(n))
+            .map(|s| s.address)
+    }
+
+    /// [`Binary::object_symbol_address`], each name looked up once: a name
+    /// the binary doesn't have (a string literal's, say) costs a search of
+    /// every symbol, and an object's functions share most of theirs.
+    fn cached_symbol_address(&self, cache: &Lookups, name: &str) -> Option<u64> {
+        if let Some(&address) = cache.0.borrow().get(name) {
+            return address;
+        }
+        let address = self.object_symbol_address(name);
+        cache.0.borrow_mut().insert(name.to_string(), address);
+        address
+    }
+
+    /// Whether this binary's code is in the instruction set of an object's.
+    pub fn check_isa(&self, isa: ObjectIsa) -> Result<()> {
+        let fits = match isa {
+            ObjectIsa::Mips { .. } => matches!(self.arch, object::Architecture::Mips | object::Architecture::Mips64),
+            ObjectIsa::X86 { bits: 32 } => self.arch == object::Architecture::I386,
+            ObjectIsa::X86 { .. } => {
+                matches!(
+                    self.arch,
+                    object::Architecture::X86_64 | object::Architecture::X86_64_X32
+                )
+            }
+        };
+        if fits {
+            Ok(())
+        } else {
+            let object = match isa {
+                ObjectIsa::Mips { .. } => "MIPS",
+                ObjectIsa::X86 { bits: 32 } => "x86",
+                ObjectIsa::X86 { .. } => "x86-64",
+            };
+            Err(Error::new(format!(
+                "the object's code is {object}, the binary's {}",
+                self.summary().arch
+            )))
+        }
     }
 
     /// The rebuilt `func` against the original's function at `address`.
     pub fn match_function(&self, address: u64, func: &ObjectFunction) -> Option<MatchResult> {
+        self.match_function_with(address, func, &Lookups::default())
+    }
+
+    fn match_function_with(&self, address: u64, func: &ObjectFunction, lookups: &Lookups) -> Option<MatchResult> {
+        match func.isa {
+            ObjectIsa::Mips { big_endian } => self.match_mips(address, &Words::of(func, big_endian)),
+            ObjectIsa::X86 { bits } => self.match_x86(address, func, bits, lookups),
+        }
+    }
+
+    fn match_mips(&self, address: u64, func: &Words) -> Option<MatchResult> {
         let (name, start, orig, big) = self.function_words(address)?;
         let cand = &func.words;
         // Lined up by their shapes: everything the layout decides masked off.
@@ -304,6 +557,8 @@ impl Binary {
             original_instructions: orig.len() as u32,
             rebuilt_instructions: cand.len() as u32,
             matched_instructions: matched,
+            original_bytes: 4 * orig.len() as u64,
+            rebuilt_bytes: 4 * cand.len() as u64,
             percent: if total == 0 { 100.0 } else { matched as f32 * 100.0 / total as f32 },
             lines,
             differences: counts.into_iter().collect(),
@@ -311,17 +566,15 @@ impl Binary {
     }
 
     /// Why the original's word `a` and the rebuild's `b`, lined up, differ (None: they match).
-    fn compare(&self, a: u32, b: u32, pc: u64, reloc: Option<&Reloc>, func: &ObjectFunction, j: usize) -> Option<String> {
+    fn compare(&self, a: u32, b: u32, pc: u64, reloc: Option<&Reloc>, func: &Words, j: usize) -> Option<String> {
         let (wa, wb) = (MipsWord(a), MipsWord(b));
         let mask = reloc.map_or(0, |r| reloc_mask(r.kind));
         if a & !mask != b & !mask {
             return Some(explain(a, b, "instruction differs"));
         }
-        let Some(rel) = reloc else { return None };
+        let rel = reloc.filter(|r| !r.section_symbol)?;
         // The linker's field: the same symbol in the original, when it is known there.
-        let Some(target) = self.symbol_address(&rel.symbol) else {
-            return None;
-        };
+        let target = self.object_symbol_address(&rel.symbol)?;
         let field = |w: MipsWord| w.0 & mask;
         match rel.kind {
             r::MIPS_26 => {
@@ -357,17 +610,353 @@ impl Binary {
     /// Every function of the object file `bytes` that the original names,
     /// matched; sorted worst first.
     pub fn match_object(&self, bytes: &[u8]) -> Result<Vec<MatchResult>> {
-        let mut out = Vec::new();
-        for f in object_functions(bytes)? {
-            if let Some(address) = self.symbol_address(&f.name)
-                && let Some(m) = self.match_function(address, &f)
+        Ok(self.match_unit("", bytes)?.functions)
+    }
+
+    /// The object file `bytes`, a unit of the project named `unit`: each of
+    /// its functions matched against the original's function of that name
+    /// (as the object has it, undecorated or demangled), worst first, and
+    /// the functions the original has no name for.
+    pub fn match_unit(&self, unit: &str, bytes: &[u8]) -> Result<UnitMatch> {
+        self.match_unit_with(unit, bytes, &Lookups::default())
+    }
+
+    fn match_unit_with(&self, unit: &str, bytes: &[u8], lookups: &Lookups) -> Result<UnitMatch> {
+        let functions = object_functions(bytes)?;
+        if let Some(f) = functions.first() {
+            self.check_isa(f.isa)?;
+        }
+        let mut out = UnitMatch {
+            unit: unit.to_string(),
+            functions: Vec::new(),
+            unplaced: Vec::new(),
+        };
+        for f in &functions {
+            match self
+                .cached_symbol_address(lookups, &f.name)
+                .and_then(|a| self.match_function_with(a, f, lookups))
             {
-                out.push(m);
+                Some(m) => out.functions.push(m),
+                None => out.unplaced.push(f.name.clone()),
             }
         }
-        out.sort_by(|a, b| a.percent.total_cmp(&b.percent).then(a.address.cmp(&b.address)));
+        out.functions
+            .sort_by(|a, b| a.percent.total_cmp(&b.percent).then(a.address.cmp(&b.address)));
         Ok(out)
     }
+
+    /// A project's object files (name, bytes) matched against the original,
+    /// unit by unit (see [`Binary::match_unit`]); units worst first.
+    pub fn match_project(&self, objects: &[(String, Vec<u8>)]) -> ProjectMatch {
+        let mut p = ProjectMatch::default();
+        let lookups = Lookups::default();
+        for (name, bytes) in objects {
+            match self.match_unit_with(name, bytes, &lookups) {
+                Ok(u) => p.units.push(u),
+                Err(e) => p.failed.push((name.clone(), e.to_string())),
+            }
+        }
+        for u in &p.units {
+            let (code, matched) = u.bytes();
+            p.functions += u.functions.len() as u32;
+            p.exact += u.exact();
+            p.unplaced += u.unplaced.len() as u32;
+            p.code_bytes += code;
+            p.matched_bytes += matched;
+        }
+        let weighted: f64 = p
+            .units
+            .iter()
+            .flat_map(|u| &u.functions)
+            .map(|m| f64::from(m.percent) * m.original_bytes as f64)
+            .sum();
+        p.fuzzy_percent = if p.code_bytes == 0 {
+            0.0
+        } else {
+            (weighted / p.code_bytes as f64) as f32
+        };
+        p.units.sort_by(|a, b| {
+            a.fuzzy_percent()
+                .total_cmp(&b.fuzzy_percent())
+                .then_with(|| a.unit.cmp(&b.unit))
+        });
+        p
+    }
+}
+
+/// An object file matched against the original: a unit of the project.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UnitMatch {
+    pub unit: String,
+    /// Its functions the original has, matched; worst first.
+    pub functions: Vec<MatchResult>,
+    /// Its functions no function of the original is named like.
+    pub unplaced: Vec<String>,
+}
+
+impl UnitMatch {
+    /// How many functions match exactly.
+    pub fn exact(&self) -> u32 {
+        self.functions.iter().filter(|m| m.percent >= 100.0).count() as u32
+    }
+
+    /// The original's bytes of code the functions compared cover, and those
+    /// of the functions matching exactly.
+    pub fn bytes(&self) -> (u64, u64) {
+        let all = self.functions.iter().map(|m| m.original_bytes).sum();
+        let exact = self
+            .functions
+            .iter()
+            .filter(|m| m.percent >= 100.0)
+            .map(|m| m.original_bytes)
+            .sum();
+        (all, exact)
+    }
+
+    /// The functions' percents, weighted by their size.
+    pub fn fuzzy_percent(&self) -> f32 {
+        let (all, _) = self.bytes();
+        let weighted: f64 = self
+            .functions
+            .iter()
+            .map(|m| f64::from(m.percent) * m.original_bytes as f64)
+            .sum();
+        if all == 0 { 0.0 } else { (weighted / all as f64) as f32 }
+    }
+}
+
+/// A project's objects matched against the original (see [`Binary::match_project`]).
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectMatch {
+    /// Worst first.
+    pub units: Vec<UnitMatch>,
+    /// Objects that couldn't be read or aren't for this binary's processor, with why.
+    pub failed: Vec<(String, String)>,
+    pub functions: u32,
+    /// Functions matching exactly.
+    pub exact: u32,
+    /// Functions of the objects the original has no function named like.
+    pub unplaced: u32,
+    /// The original's code in the functions compared, and in those matching exactly.
+    pub code_bytes: u64,
+    pub matched_bytes: u64,
+    /// The functions' percents, weighted by their size.
+    pub fuzzy_percent: f32,
+}
+
+impl ProjectMatch {
+    /// The summary as text: the totals, each unit (worst first) with its
+    /// worst functions, then the `limit` worst functions of all.
+    pub fn to_text(&self, limit: usize) -> String {
+        let pct = |n: u64, of: u64| if of == 0 { 0.0 } else { n as f64 * 100.0 / of as f64 };
+        let mut out = format!(
+            "{} objects, {} functions compared, {} match exactly; {} of {} bytes of code in exact matches ({:.1}%), {:.1}% overall.\n",
+            self.units.len(),
+            self.functions,
+            self.exact,
+            self.matched_bytes,
+            self.code_bytes,
+            pct(self.matched_bytes, self.code_bytes),
+            self.fuzzy_percent
+        );
+        match self.unplaced {
+            0 => {}
+            1 => out.push_str("1 function of the objects has none named like it here (name it first).\n"),
+            n => out.push_str(&format!(
+                "{n} functions of the objects have none named like them here (name them first).\n"
+            )),
+        }
+        for (name, why) in &self.failed {
+            out.push_str(&format!("  not matched: {name}: {why}\n"));
+        }
+        out.push_str("\nUnits, worst first:\n");
+        for u in &self.units {
+            let (code, matched) = u.bytes();
+            let worst: Vec<String> = u
+                .functions
+                .iter()
+                .filter(|m| m.percent < 100.0)
+                .take(3)
+                .map(|m| format!("{} {:.1}%", m.name, m.percent))
+                .collect();
+            out.push_str(&format!(
+                "  {:>5.1}%  {}  {} of {} functions exact, {} of {} bytes{}{}\n",
+                u.fuzzy_percent(),
+                u.unit,
+                u.exact(),
+                u.functions.len(),
+                matched,
+                code,
+                if u.unplaced.is_empty() {
+                    String::new()
+                } else {
+                    format!(", {} not found here", u.unplaced.len())
+                },
+                if worst.is_empty() {
+                    String::new()
+                } else {
+                    format!("; worst: {}", worst.join(", "))
+                }
+            ));
+        }
+        let mut all: Vec<(&MatchResult, &str)> = self
+            .units
+            .iter()
+            .flat_map(|u| u.functions.iter().map(move |m| (m, u.unit.as_str())))
+            .filter(|(m, _)| m.percent < 100.0)
+            .collect();
+        all.sort_by(|a, b| a.0.percent.total_cmp(&b.0.percent).then(a.0.address.cmp(&b.0.address)));
+        if !all.is_empty() {
+            out.push_str("\nFunctions not matching yet, worst first:\n");
+            for (m, unit) in all.iter().take(limit) {
+                let kinds: Vec<String> = m.differences.iter().map(|(k, n)| format!("{n} × {k}")).collect();
+                out.push_str(&format!(
+                    "  {:#x} {:>6.1}%  {}  ({unit}){}\n",
+                    m.address,
+                    m.percent,
+                    m.name,
+                    if kinds.is_empty() {
+                        String::new()
+                    } else {
+                        format!("  {}", kinds.join(", "))
+                    }
+                ));
+            }
+            if all.len() > limit {
+                out.push_str(&format!("  … {} more\n", all.len() - limit));
+            }
+        }
+        out
+    }
+
+    /// Each function's outcome, as objdiff's report would place it: for
+    /// recording in the notes.
+    pub fn progress(&self) -> Vec<FunctionProgress> {
+        self.units
+            .iter()
+            .flat_map(|u| {
+                u.functions.iter().map(|m| FunctionProgress {
+                    address: m.address,
+                    name: m.name.clone(),
+                    unit: u.unit.clone(),
+                    size: m.original_bytes,
+                    percent: m.percent,
+                })
+            })
+            .collect()
+    }
+}
+
+/// The object files (`.o`, `.obj`) in a folder and its subfolders, sorted:
+/// a project's build output.
+pub fn object_files(dir: &std::path::Path) -> std::io::Result<Vec<std::path::PathBuf>> {
+    fn walk(dir: &std::path::Path, depth: u32, out: &mut Vec<std::path::PathBuf>) -> std::io::Result<()> {
+        for entry in std::fs::read_dir(dir)? {
+            let path = entry?.path();
+            if path.is_dir() {
+                if depth < 16 {
+                    walk(&path, depth + 1, out)?;
+                }
+            } else if path
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|e| e.eq_ignore_ascii_case("o") || e.eq_ignore_ascii_case("obj"))
+            {
+                out.push(path);
+            }
+        }
+        Ok(())
+    }
+    let mut out = Vec::new();
+    walk(dir, 0, &mut out)?;
+    out.sort();
+    Ok(out)
+}
+
+/// The function of an object named `name`: as the object has it, or as
+/// source writes it (`clamp` for `_clamp`, `Shape::scaled` for its mangling).
+pub fn find_function<'a>(functions: &'a [ObjectFunction], name: &str) -> Option<&'a ObjectFunction> {
+    functions.iter().find(|f| f.name == name).or_else(|| {
+        functions
+            .iter()
+            .find(|f| source_names(&f.name).iter().any(|n| n == name))
+    })
+}
+
+/// The names the symbol `name` of an object file may have in the binary,
+/// most likely first: as it is; undecorated as C source writes it (MSVC's
+/// 32-bit `_foo` for cdecl, `_foo@8` for stdcall, `@foo@8` for fastcall,
+/// `foo@@8` for vectorcall, and an import's `__imp_` slot); and for C++,
+/// the qualified name its mangling spells (`?scaled@Shape@@QBEHH@Z` and
+/// `_ZNK5Shape6scaledEi` are `Shape::scaled`).
+pub fn source_names(name: &str) -> Vec<String> {
+    let mut out = vec![name.to_string()];
+    let mut add = |n: String| {
+        if !n.is_empty() && !out.contains(&n) {
+            out.push(n);
+        }
+    };
+    if let Some(rest) = name.strip_prefix("__imp_") {
+        for n in source_names(rest).into_iter().skip(1) {
+            add(format!("__imp_{n}"));
+        }
+        return out;
+    }
+    if name.starts_with('?') {
+        // Not the compiler's own names (`` `string' ``, `` Shape::`vftable' ``): many share one.
+        if let Ok(n) = msvc_demangler::demangle(name, msvc_demangler::DemangleFlags::NAME_ONLY)
+            && !n.ends_with('\'')
+        {
+            add(n);
+        }
+        return out;
+    }
+    if name.starts_with("_Z") {
+        if let Some(d) = crate::util::demangle(name) {
+            add(without_parameters(&d).to_string());
+        }
+        return out;
+    }
+    add(undecorated(name).to_string());
+    out
+}
+
+/// A 32-bit MSVC C name without its decoration: `_foo`, `_foo@8`, `@foo@8`
+/// and `foo@@8` are all `foo`.
+pub(crate) fn undecorated(name: &str) -> &str {
+    let (body, fastcall) = match name.strip_prefix('@') {
+        Some(rest) => (rest, true),
+        None => (name, false),
+    };
+    // The argument bytes after the last `@` (or `@@`), when it's a number.
+    let body = match body.rsplit_once('@') {
+        Some((base, n)) if !base.is_empty() && !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()) => {
+            base.strip_suffix('@').unwrap_or(base)
+        }
+        _ if fastcall => return name,
+        _ => body,
+    };
+    if fastcall {
+        body
+    } else {
+        body.strip_prefix('_').unwrap_or(body)
+    }
+}
+
+/// A demangled C++ name without its parameter list: `Shape::scaled(int) const` is `Shape::scaled`.
+fn without_parameters(d: &str) -> &str {
+    let mut depth = 0;
+    for (i, c) in d.char_indices() {
+        match c {
+            '<' => depth += 1,
+            '>' => depth -= 1,
+            '(' if depth == 0 && i > 0 => return &d[..i],
+            _ => {}
+        }
+    }
+    d
 }
 
 /// The kind of difference a note describes, for counting.
@@ -565,11 +1154,11 @@ impl Binary {
                     .and_then(|m| m.virtual_address)
                     .and_then(|a| self.symbols().function_containing(a).map(|s| s.address));
                 let by_name = || {
-                    self.symbol_address(&f.name).or_else(|| {
+                    self.object_symbol_address(&f.name).or_else(|| {
                         f.metadata
                             .as_ref()
                             .and_then(|m| m.demangled_name.as_deref())
-                            .and_then(|n| self.symbol_address(n))
+                            .and_then(|n| self.object_symbol_address(n))
                     })
                 };
                 match by_address.or_else(by_name) {
