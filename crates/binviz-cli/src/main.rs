@@ -81,6 +81,23 @@ COMMANDS:
     labels <rom> <file | format>   An emulator's label file (Mesen .mlb, FCEUX .nl, a .sym:
                                    RGBDS, WLA DX, no$gba) as notes, JSON for --notes; or with a
                                    format (mlb, nl, sym, nocash), the --notes as that label file
+  Decompilation (MIPS: PlayStation, Nintendo 64)
+    signature <file> <addr|symbol> What a function's code says about its prototype: register
+                                   and stack arguments, return, frame, saved registers, the
+                                   structures it walks
+    context <file> <addr|symbol> [n]
+                                   Everything needed to write a function's C: its code with
+                                   names, its signature, callers and callees with theirs,
+                                   strings, globals, notes
+    match <file> <object.o> [name] The compiler's object file scored against the original,
+                                   function by function (relocations masked), each difference
+                                   explained; with a name, that function only
+    report <file> <report.json>    objdiff's report placed on the file's functions
+    splat <file> <name> [dir] [split...]
+                                   A splat config and symbol_addrs.txt (in dir, or printed)
+                                   for a PS-X EXE, the code split into units at the splits
+    splat <file> import <symbol_addrs.txt>
+                                   A splat symbol file as notes, JSON for --notes
 
 Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
                          PDB), or for a Mach-O binary linked without dsymutil,
@@ -91,6 +108,11 @@ Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
          --notes <file>  load annotations (a JSON array) first
          --log <file>    a game ROM: follow its code with an emulator's code/data log
                          (FCEUX's or Mesen's .cdl): the code the game ran, the data it read
+         --psx-exe <file> a PlayStation memory image (2 MiB of RAM dumped by an emulator)
+                         or overlay: name the functions of this boot executable in it
+         --overlay-at <addr> open the file as a PlayStation overlay loaded at this address
+         --trace <file>  a PlayStation image: follow the code an emulator's trace saw run
+                         (any text with an address per line: a CPU trace, a list of PCs)
 Numbers accept decimal or 0x-prefixed hex; banked ROMs' addresses bank:address (03:C000).";
 
 fn num(s: &str) -> Result<u64, String> {
@@ -112,6 +134,9 @@ fn main() -> ExitCode {
     let member = take_opt("--member");
     let notes = take_opt("--notes");
     let log = take_opt("--log");
+    let psx_exe = take_opt("--psx-exe");
+    let overlay_at = take_opt("--overlay-at");
+    let trace = take_opt("--trace");
     if args.len() < 2 {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
@@ -122,6 +147,11 @@ fn main() -> ExitCode {
         member.as_deref(),
         notes.as_deref(),
         log.as_deref(),
+        Psx {
+            exe: psx_exe.as_deref(),
+            overlay_at: overlay_at.as_deref(),
+            trace: trace.as_deref(),
+        },
     ) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
@@ -179,6 +209,30 @@ fn open(path: &str, debug: Option<&str>, member: Option<&str>) -> Result<Binary,
             folders.push(dir.to_path_buf());
         }
         debug_map_note(bin.attach_debug_map_from_disk(&folders));
+    }
+    Ok(bin)
+}
+
+/// A PlayStation memory image or overlay, its functions named after the
+/// boot executable's.
+fn open_psx(path: &str, psx: Psx<'_>) -> Result<Binary, String> {
+    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let exe = match psx.exe {
+        Some(e) => Some(open(e, None, None)?),
+        None => None,
+    };
+    let bin = match psx.overlay_at {
+        Some(at) => Binary::parse_psx_overlay(data, num(at)?, exe.as_ref()),
+        None => Binary::parse_psx_memory(data, exe.as_ref()),
+    }
+    .map_err(|e| format!("{path}: {e}"))?;
+    if let Some(e) = &exe {
+        eprintln!(
+            "{}: {} functions named after {}",
+            bin.summary().format_name,
+            e.symbols().functions().count(),
+            psx.exe.unwrap_or("")
+        );
     }
     Ok(bin)
 }
@@ -248,12 +302,22 @@ fn internal(args: &[String]) -> Vec<String> {
     a
 }
 
+/// The PlayStation options: a memory image or overlay named after a boot
+/// executable, a file opened as an overlay, an emulator's trace.
+#[derive(Clone, Copy)]
+struct Psx<'a> {
+    exe: Option<&'a str>,
+    overlay_at: Option<&'a str>,
+    trace: Option<&'a str>,
+}
+
 fn run(
     args: &[String],
     debug: Option<&str>,
     member: Option<&str>,
     notes: Option<&str>,
     log: Option<&str>,
+    psx: Psx<'_>,
 ) -> Result<(), String> {
     let args = &internal(args);
     let cmd = args[0].as_str();
@@ -309,9 +373,20 @@ fn run(
             }
         }
         folder_binary(&mut pkg, member, debug)?
+    } else if psx.exe.is_some() || psx.overlay_at.is_some() {
+        open_psx(&args[1], psx)?
     } else {
         open(&args[1], debug, member)?
     };
+    if let Some(path) = psx.trace {
+        let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+        let (traced, s) = bin.with_psx_trace(&text).map_err(|e| format!("{path}: {e}"))?;
+        eprintln!(
+            "trace: {} lines, {} addresses, {} in this image, {} new runs of code followed",
+            s.lines, s.addresses, s.placed, s.new_runs
+        );
+        bin = traced;
+    }
     // Swift names read better through `swift-demangle`, where it is installed.
     bin.demangle_swift_with_tool();
     if let Some(path) = log {
@@ -973,6 +1048,101 @@ fn run(
                     r.target,
                     r.to.as_deref().unwrap_or("")
                 );
+            }
+        }
+        "signature" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let s = bin
+                .function_signature(addr)
+                .ok_or("not in a function, or not MIPS code")?;
+            print!("{}", s.describe());
+        }
+        "context" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let n = arg(3).map(num).transpose()?.unwrap_or(400) as usize;
+            let c = bin.decomp_context(addr, n).ok_or("not in a function")?;
+            print!("{}", c.describe());
+        }
+        "match" => {
+            let object = arg(2).ok_or("which object file? binviz match <file> <object.o> [name]")?;
+            let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
+            match arg(3) {
+                Some(name) => {
+                    let funcs = binviz::matching::object_functions(&bytes).map_err(|e| e.to_string())?;
+                    let f = funcs
+                        .iter()
+                        .find(|f| f.name == name)
+                        .ok_or_else(|| format!("no function {name} in {object}"))?;
+                    let addr = resolve_address(&bin, name)?;
+                    let m = bin.match_function(addr, f).ok_or("not in a function")?;
+                    print!("{}", m.to_text());
+                }
+                None => {
+                    let results = bin.match_object(&bytes).map_err(|e| e.to_string())?;
+                    if results.is_empty() {
+                        return Err("no function of the object has a name the binary knows".into());
+                    }
+                    let matched = results.iter().filter(|m| m.percent >= 100.0).count();
+                    println!("{} functions compared, {matched} match exactly\n", results.len());
+                    for m in &results {
+                        print!("{}", m.to_text());
+                    }
+                }
+            }
+        }
+        "report" => {
+            let path = arg(2).ok_or("which report? binviz report <file> <report.json>")?;
+            let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+            let report = binviz::matching::ObjdiffReport::parse(&json).map_err(|e| e.to_string())?;
+            let p = bin.place_report(&report);
+            println!(
+                "{:.2}% matched: {} of {} bytes of code, {} of {} functions; {} placed on this file, {} not found",
+                p.fuzzy_match_percent,
+                p.matched_code,
+                p.total_code,
+                p.matched_functions,
+                p.total_functions,
+                p.functions.len(),
+                p.unplaced.len()
+            );
+            for f in &p.functions {
+                println!("  {:#x} {:>6.1}%  {}  ({})", f.address, f.percent, f.name, f.unit);
+            }
+            for u in p.unplaced.iter().take(50) {
+                println!("  not placed: {u}");
+            }
+        }
+        "splat" => {
+            let second = arg(2).ok_or("binviz splat <file> <name> [dir] [split...], or splat <file> import <symbol_addrs.txt>")?;
+            if second == "import" {
+                let path = arg(3).ok_or("which symbol file?")?;
+                let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+                let notes = binviz::splat::parse_symbol_addrs(&text);
+                eprintln!("{} names", notes.len());
+                println!("{}", serde_json::to_string_pretty(&notes).map_err(|e| e.to_string())?);
+            } else {
+                let splits: Vec<u64> = args.get(4..).unwrap_or(&[]).iter().map(|a| num(a)).collect::<Result<_, _>>()?;
+                let e = bin.splat_export(second, &splits).map_err(|e| e.to_string())?;
+                match arg(3) {
+                    Some(dir) => {
+                        let dir = std::path::Path::new(dir);
+                        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+                        let yaml = dir.join(format!("{second}.yaml"));
+                        std::fs::write(&yaml, &e.config).map_err(|e| e.to_string())?;
+                        std::fs::write(dir.join("symbol_addrs.txt"), &e.symbol_addrs).map_err(|e| e.to_string())?;
+                        println!(
+                            "wrote {} and symbol_addrs.txt ({} functions, {} data symbols)",
+                            yaml.display(),
+                            e.functions,
+                            e.data_symbols
+                        );
+                    }
+                    None => {
+                        print!("{}", e.config);
+                        println!("--- symbol_addrs.txt ---");
+                        print!("{}", e.symbol_addrs);
+                    }
+                }
             }
         }
         _ => return Err(format!("unknown command {cmd}\n\n{USAGE}")),

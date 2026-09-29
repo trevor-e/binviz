@@ -119,13 +119,13 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       Where: `cpu/mips.rs`, `rom/jumptable.rs`, `rom/analysis.rs`.
       Done when: function count on the boot exe is within a few percent of
       Ghidra's and every switch in a sample of 50 functions is followed.
-- [ ] **A4. Splat and symbol interchange.** Export a splat YAML with segments
+- [x] **A4. Splat and symbol interchange** (2026-09-29, `splat.rs`; CLI `splat`, MCP `splat_export`/`import_symbol_addrs`). Export a splat YAML with segments
       derived from the map (SDK ranges as `bin`/`asm`, code as `c` units split
       at chosen boundaries, `data`/`rodata` extents) and `symbol_addrs.txt`
       from symbols plus notes; import `symbol_addrs.txt` and splat's
       `undefined_funcs_auto.txt` back. Where: `rom/labels.rs` (new formats).
       Done when: a project set up from the export builds with splat unchanged.
-- [ ] **A5. objdiff in, match score native.** (a) Read objdiff's report JSON
+- [x] **A5. objdiff in, match score native** (2026-09-29, `matching.rs`; CLI `match`/`report`, MCP `match_function`/`match_object`/`place_report`; notes status still open). (a) Read objdiff's report JSON
       and mark each function `matched`/percent in notes and the coverage map,
       so binviz shows project progress by address. (b) Native score for a
       MIPS ELF `.o` against the original: bytes compared with relocations
@@ -133,7 +133,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       instructions, different register, different immediate, different
       `$gp`/`lui` split, missing `nop` in a delay slot). Extend `fndiff.rs`.
       Done when: binviz's percent agrees with objdiff's on the same pair.
-- [ ] **A6. Agent bundle over MCP.** `decomp_context(function)`: disassembly
+- [x] **A6. Agent bundle over MCP** (2026-09-29, `decomp.rs`; CLI `context`/`signature`, MCP `decomp_context`/`function_signature`; similar-matched-function examples still open). `decomp_context(function)`: disassembly
       with pseudo-ops, the signature guess, callers and callees with their
       prototypes where known, strings and globals used with inferred types,
       struct offset hints, and two or three already-matched functions that
@@ -145,7 +145,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       to MIPS functions by shared string literals, call-graph shape and
       constant tables; the agent confirms. Where: `fndiff.rs` matching by
       strings, `rom/labels.rs` import.
-- [ ] **A8. Emulator traces.** Read an execution or coverage log from
+- [x] **A8. Emulator traces** (2026-09-29, `rom/psx.rs` `with_psx_trace`; CLI `--trace`, MCP `open_binary` `trace`). Read an execution or coverage log from
       PCSX-Redux or DuckStation (check what each can emit) the way NES/SNES
       code/data logs are read, to find code reached only through pointers and
       to catch overlay load addresses. Where: `rom/cdl.rs`.
@@ -229,6 +229,11 @@ below too.
 ## Progress log
 
 - 2026-09-28: plan written; no implementation yet.
+- 2026-09-29 (later): A4 splat export/import, A5 match scoring with explained diffs and objdiff
+  report placement, A6 decomp context bundle, A8 trace input, all wired into the CLI and the
+  MCP server (`--psx-exe`, `--overlay-at`, `--trace`; `signature`, `context`, `match`, `report`,
+  `splat`). Left in Track A: A1 Psy-Q signatures, A7 names from the remaster, and the
+  data-classification and matched-status items noted above.
 - 2026-09-29: A3 switch tables (`rom/jumptable.rs`), function signatures and struct hints
   (`signature.rs`), A2 memory images, overlays and `locate` (`rom/psx.rs`) landed; library only,
   CLI and MCP wiring to follow once the other session's edits to those files are pushed.

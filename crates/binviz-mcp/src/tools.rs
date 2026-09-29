@@ -80,6 +80,9 @@ pub fn definitions() -> Vec<Value> {
                 "member": { "type": "string", "description": "For universal binaries or archives: the slice/member index or architecture (e.g. arm64, x86_64). Universal binaries default to arm64." },
                 "debug_file": { "type": "string", "description": "Separate debug info to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, a PE's PDB (read as DWARF), or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
+                "psx_exe": { "type": "string", "description": "PlayStation: the game's boot executable (PS-X EXE), whose functions are named in the file being opened when it is a memory image (2 MiB of RAM dumped by an emulator) or an overlay." },
+                "overlay_at": { "type": "string", "description": "PlayStation: open the file as a code overlay loaded at this address (0x80100000)." },
+                "trace": { "type": "string", "description": "PlayStation: a trace of the code an emulator ran (any text with an address per line: a CPU trace, a list of PCs); code it saw run that following the code didn't reach is followed too." },
             }),
             &["path"],
             false,
@@ -404,6 +407,80 @@ pub fn definitions() -> Vec<Value> {
             true,
         ),
         tool(
+            "decomp_context",
+            "Everything needed to decompile a function",
+            "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, and the notes on it. MIPS (PlayStation, Nintendo 64) for the prototype; the rest for any binary.",
+            json!({
+                "at": address("A function or address inside it"),
+                "limit": { "type": "integer", "description": "Instructions, and entries per list (default 400, max 5000)." },
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "function_signature",
+            "A function's prototype, from its code",
+            "What a MIPS function's code says about how it is called: which of $a0-$a3 it reads before writing, arguments taken from the stack, whether $v0 carries a result, its frame size and saved registers, whether it calls anything, and the offsets it loads and stores off each base register (structure layout hints).",
+            json!({ "at": address("A function or address inside it") }),
+            &["at"],
+            true,
+        ),
+        tool(
+            "match_function",
+            "Score a rebuilt function against the original",
+            "Compares a function in the compiler's object file (ELF, MIPS) with the original's: instructions lined up, the fields the linker fills in masked (call targets, address halves), each relocation checked against where the original points, and every difference explained (registers allocated differently, a stack frame or slot of another size, a branch of another length, reordered instructions, a nop missing from a delay slot). Returns the percent matched and the lined-up code.",
+            json!({
+                "object": { "type": "string", "description": "Path to the compiled object file (.o)." },
+                "symbol": { "type": "string", "description": "The function's name in the object file." },
+                "at": address("The original's function; defaults to the one named like the symbol"),
+            }),
+            &["object", "symbol"],
+            true,
+        ),
+        tool(
+            "match_object",
+            "Score every function of an object file",
+            "Every function of the compiler's object file (ELF, MIPS) that the original names, scored against it, worst first, with the kinds of difference in each. The project's progress in one call.",
+            json!({
+                "object": { "type": "string", "description": "Path to the compiled object file (.o)." },
+                "limit": { "type": "integer", "description": "Functions to list (default 50, max 1000)." },
+            }),
+            &["object"],
+            true,
+        ),
+        tool(
+            "place_report",
+            "Place an objdiff report on the binary",
+            "Reads objdiff's report JSON (what decomp.dev shows) and places its per-function verdicts on this binary's functions, by the virtual address the report records or by name: the totals, each function's match percent, and the entries no function was found for.",
+            json!({
+                "report": { "type": "string", "description": "Path to the report JSON (objdiff-cli report generate)." },
+                "below": { "type": "number", "description": "List only functions matched below this percent (default 100: the unfinished ones)." },
+                "limit": { "type": "integer", "description": "Functions to list (default 100, max 5000)." },
+            }),
+            &["report"],
+            true,
+        ),
+        tool(
+            "splat_export",
+            "Write a splat config and symbol file",
+            "For a PlayStation executable: a splat YAML config (header, the code segment at its load address split into asm units at the given addresses, the bytes after the last function as data, the BSS size) and symbol_addrs.txt naming every function and known place, the starting point of a decompilation project. Written to a folder, or returned.",
+            json!({
+                "name": { "type": "string", "description": "The project's name (the basename splat uses)." },
+                "out_dir": { "type": "string", "description": "Folder to write <name>.yaml and symbol_addrs.txt to; omitted, both are returned." },
+                "splits": { "type": "array", "items": { "type": "string" }, "description": "Addresses where new units start." },
+            }),
+            &["name"],
+            false,
+        ),
+        tool(
+            "import_symbol_addrs",
+            "Read a splat symbol file into the notes",
+            "Names from a splat symbol file (symbol_addrs.txt, undefined_funcs_auto.txt, undefined_syms_auto.txt) become notes here, so the project's names show in disassembly and search. splat's own made-up names (func_80010000, D_8001ABCD) are left out.",
+            json!({ "path": { "type": "string", "description": "Path to the symbol file." } }),
+            &["path"],
+            false,
+        ),
+        tool(
             "list_symbols",
             "List symbols",
             "Pages through the symbol table: filter by name, kind (function, data, …), sort by address, name or size.",
@@ -643,6 +720,13 @@ impl Server {
                     "dwarf_die" => dwarf_die(o, args)?,
                     "dwarf_at" => dwarf_at(o, args)?,
                     "dwarf_check" => dwarf_check(o, args)?,
+                    "decomp_context" => decomp_context(o, args)?,
+                    "function_signature" => function_signature(o, args)?,
+                    "match_function" => match_function(o, args)?,
+                    "match_object" => match_object(o, args)?,
+                    "place_report" => place_report(o, args)?,
+                    "splat_export" => splat_export(o, args)?,
+                    "import_symbol_addrs" => import_symbol_addrs(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -681,7 +765,25 @@ impl Server {
             .file_name()
             .map_or_else(|| "binary".into(), |n| n.to_string_lossy().into_owned());
         let mut note = String::new();
-        let (bin, label) = if Container::is_container(&data) {
+        let psx_exe = match string(args, "psx_exe") {
+            Some(p) => {
+                let bytes = binviz::read_file(Path::new(p)).map_err(|e| format!("{p}: {e}"))?;
+                Some(Binary::parse(bytes).map_err(|e| format!("{p}: {e}"))?)
+            }
+            None => None,
+        };
+        let (bin, label) = if let Some(at) = string(args, "overlay_at") {
+            let at = parse_number(at).ok_or_else(|| format!("overlay_at: not an address: {at}"))?;
+            (
+                Binary::parse_psx_overlay(data, at, psx_exe.as_ref()).map_err(|e| e.to_string())?,
+                file_name.clone(),
+            )
+        } else if let Some(exe) = &psx_exe {
+            (
+                Binary::parse_psx_memory(data, Some(exe)).map_err(|e| e.to_string())?,
+                file_name.clone(),
+            )
+        } else if Container::is_container(&data) {
             let c = Container::parse(data).map_err(|e| e.to_string())?;
             let members = c.members();
             let want = string(args, "member");
@@ -731,6 +833,19 @@ impl Server {
             (bin, format!("{file_name} [{}]", m.arch.as_deref().unwrap_or(&m.name)))
         } else {
             (Binary::parse(data).map_err(|e| e.to_string())?, file_name.clone())
+        };
+        let bin = match string(args, "trace") {
+            Some(t) => {
+                let text = std::fs::read_to_string(t).map_err(|e| format!("{t}: {e}"))?;
+                let (traced, s) = bin.with_psx_trace(&text).map_err(|e| format!("{t}: {e}"))?;
+                let _ = writeln!(
+                    note,
+                    "Trace: {} lines, {} addresses, {} in this image, {} new runs of code followed.",
+                    s.lines, s.addresses, s.placed, s.new_runs
+                );
+                traced
+            }
+            None => bin,
         };
         let mut open = Open {
             id: String::new(),
@@ -1915,6 +2030,172 @@ fn save_notes(o: &Open) -> String {
         },
         None => "kept in memory".into(),
     }
+}
+
+fn decomp_context(o: &Open, args: &Value) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let start = function_at(&o.bin, at)?;
+    let mut out = ensure_xrefs(o)?;
+    let limit = int(args, "limit", 400, 5000) as usize;
+    let c = o.bin.decomp_context(start, limit).ok_or("not in a function")?;
+    out.push_str(&c.describe());
+    Ok(out)
+}
+
+fn function_signature(o: &Open, args: &Value) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let start = function_at(&o.bin, at)?;
+    let s = o
+        .bin
+        .function_signature(start)
+        .ok_or("not in a function, or not MIPS code (signatures are for MIPS so far)")?;
+    Ok(s.describe())
+}
+
+fn match_function(o: &Open, args: &Value) -> Result<String, String> {
+    let object = string(args, "object").ok_or("object is required")?;
+    let symbol = string(args, "symbol").ok_or("symbol is required")?;
+    let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
+    let funcs = binviz::matching::object_functions(&bytes).map_err(|e| e.to_string())?;
+    let f = funcs.iter().find(|f| f.name == symbol).ok_or_else(|| {
+        format!(
+            "no function {symbol} in {object}; it has: {}",
+            funcs.iter().map(|f| f.name.as_str()).take(40).collect::<Vec<_>>().join(", ")
+        )
+    })?;
+    let at = string(args, "at").unwrap_or(symbol);
+    let start = function_at(&o.bin, at)?;
+    let m = o.bin.match_function(start, f).ok_or("not in a function")?;
+    Ok(m.to_text())
+}
+
+fn match_object(o: &Open, args: &Value) -> Result<String, String> {
+    let object = string(args, "object").ok_or("object is required")?;
+    let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
+    let results = o.bin.match_object(&bytes).map_err(|e| e.to_string())?;
+    if results.is_empty() {
+        return Err("no function of the object has a name the binary knows (name them with annotate or import_symbol_addrs first)".into());
+    }
+    let limit = int(args, "limit", 50, 1000) as usize;
+    let exact = results.iter().filter(|m| m.percent >= 100.0).count();
+    let mut out = format!(
+        "{} functions compared, {exact} match exactly, {:.1}% of instructions overall.\n\n",
+        results.len(),
+        results.iter().map(|m| m.matched_instructions as f64).sum::<f64>() * 100.0
+            / results
+                .iter()
+                .map(|m| m.original_instructions.max(m.rebuilt_instructions) as f64)
+                .sum::<f64>()
+                .max(1.0)
+    );
+    for m in results.iter().take(limit) {
+        let kinds: Vec<String> = m.differences.iter().map(|(k, n)| format!("{n} × {k}")).collect();
+        let _ = writeln!(
+            out,
+            "  {:#x} {:>6.1}%  {}  {}",
+            m.address,
+            m.percent,
+            m.name,
+            if kinds.is_empty() { String::new() } else { format!("({})", kinds.join(", ")) }
+        );
+    }
+    if results.len() > limit {
+        let _ = writeln!(out, "  … {} more", results.len() - limit);
+    }
+    out.push_str("\nmatch_function shows one function's instructions lined up with the original's.");
+    Ok(out)
+}
+
+fn place_report(o: &Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "report").ok_or("report is required")?;
+    let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let report = binviz::matching::ObjdiffReport::parse(&json).map_err(|e| e.to_string())?;
+    let p = o.bin.place_report(&report);
+    let below = args.get("below").and_then(Value::as_f64).unwrap_or(100.0) as f32;
+    let limit = int(args, "limit", 100, 5000) as usize;
+    let mut out = format!(
+        "{:.2}% matched: {} of {} bytes of code, {} of {} functions; {} placed on this binary, {} not found.\n",
+        p.fuzzy_match_percent,
+        p.matched_code,
+        p.total_code,
+        p.matched_functions,
+        p.total_functions,
+        p.functions.len(),
+        p.unplaced.len()
+    );
+    let listed: Vec<_> = p.functions.iter().filter(|f| f.percent < below).collect();
+    let _ = writeln!(out, "\n{} functions below {below}%:", listed.len());
+    for f in listed.iter().take(limit) {
+        let _ = writeln!(out, "  {:#x} {:>6.1}%  {}  ({})", f.address, f.percent, f.name, f.unit);
+    }
+    if listed.len() > limit {
+        let _ = writeln!(out, "  … {} more", listed.len() - limit);
+    }
+    if !p.unplaced.is_empty() {
+        let _ = writeln!(out, "\nNot found here: {}", p.unplaced.iter().take(30).cloned().collect::<Vec<_>>().join(", "));
+    }
+    Ok(out)
+}
+
+fn splat_export(o: &Open, args: &Value) -> Result<String, String> {
+    let name = string(args, "name").ok_or("name is required")?;
+    let splits: Vec<u64> = args
+        .get("splits")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(|v| v.as_str().and_then(parse_number)).collect())
+        .unwrap_or_default();
+    let e = o.bin.splat_export(name, &splits).map_err(|e| e.to_string())?;
+    match string(args, "out_dir") {
+        Some(dir) => {
+            let dir = Path::new(dir);
+            std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+            let yaml = dir.join(format!("{name}.yaml"));
+            std::fs::write(&yaml, &e.config).map_err(|e| e.to_string())?;
+            std::fs::write(dir.join("symbol_addrs.txt"), &e.symbol_addrs).map_err(|e| e.to_string())?;
+            Ok(format!(
+                "Wrote {} and symbol_addrs.txt: {} functions, {} data symbols.",
+                yaml.display(),
+                e.functions,
+                e.data_symbols
+            ))
+        }
+        None => Ok(format!(
+            "{}\n--- symbol_addrs.txt ({} functions, {} data symbols) ---\n{}",
+            e.config, e.functions, e.data_symbols, e.symbol_addrs
+        )),
+    }
+}
+
+fn import_symbol_addrs(o: &mut Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "path").ok_or("path is required")?;
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+    let names = binviz::splat::parse_symbol_addrs(&text);
+    let mut list: Vec<Annotation> = o.bin.annotations().to_vec();
+    let mut added = 0;
+    let mut updated = 0;
+    for n in names {
+        match list.iter_mut().find(|a| a.address == n.address) {
+            Some(a) => {
+                if a.name != n.name {
+                    a.name = n.name;
+                    updated += 1;
+                }
+                if a.size == 0 {
+                    a.size = n.size;
+                }
+            }
+            None => {
+                list.push(n);
+                added += 1;
+            }
+        }
+    }
+    o.bin.set_annotations(list);
+    Ok(format!(
+        "{added} names added, {updated} changed; {} notes, {}.",
+        o.bin.annotations().len(),
+        save_notes(o)
+    ))
 }
 
 fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {

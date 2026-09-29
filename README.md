@@ -18,6 +18,7 @@ millions of symbols.
 - **Crash reports symbolicated** against the binaries you have open.
 - **Game ROMs** with banks, hardware registers, emulator logs, text, tiles and patches.
 - **An MCP server** so an LLM agent can ask all of the above.
+- **Decompilation support** for PlayStation and Nintendo 64 games: memory images and overlays, guessed prototypes, rebuilt code scored against the original with each difference explained, splat and objdiff interchange.
 
 The [reference](docs/reference.md) describes everything in full.
 
@@ -78,6 +79,19 @@ Text is found in the game's own encoding and read through table files, tiles
 are drawn in the consoles' formats, and IPS, UPS and BPS patches are placed
 in banks and functions or created from your edits. PlayStation discs open to
 their files.
+
+**Matching decompilation.** For a PlayStation or Nintendo 64 game being
+decompiled: a PlayStation memory image (RAM as an emulator dumped it) or an
+overlay opens with the boot executable's names, functions found by their
+prologues, switch tables followed, and an emulator's trace of the code that
+ran adds what pointers reach. Each function's code implies a prototype
+(register and stack arguments, return value, frame, saved registers, the
+structure offsets it walks), and one call gathers everything needed to write
+its C. The compiler's object file is scored against the original function by
+function with the linker's fields masked and each difference explained
+(registers, stack slots, branch lengths, reordering, delay-slot nops). A
+splat config and symbol file start the project; objdiff's report places the
+project's progress on the binary. See [the plan](docs/decomp-plan.md).
 
 **Built for agents.** The MCP server loads a binary once and answers every
 question after that from memory, in milliseconds even for a 1 GB app: search,

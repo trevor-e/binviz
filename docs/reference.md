@@ -362,6 +362,27 @@ the code that parses deep links and name what you find"*, *"Which functions
 use this error string, and how are they reached from main?"*, *"What haven't
 we looked at yet?"*.
 
+## Decompilation (MIPS: PlayStation, Nintendo 64)
+
+What a matching decompilation needs from the binary side, wired into the
+CLI and the MCP server:
+
+| CLI | MCP | |
+|---|---|---|
+| `--psx-exe <exe>` | `open_binary` `psx_exe` | A PlayStation memory image (2 MiB of RAM dumped by an emulator; recognized by the kernel at its start) or an overlay opens with the boot executable's functions named, so calls into it read as in it. Functions are found by their prologues (`addiu $sp` with `$ra` saved) as well as by following the code |
+| `--overlay-at <addr>` | `open_binary` `overlay_at` | Open a file as a code overlay loaded at an address. `Binary::psx_locate` finds where a file from the disc sits in a memory image |
+| `--trace <file>` | `open_binary` `trace` | A trace of the code an emulator ran (any text with an address per line): each run of traced code the following hadn't reached is followed as a function, after everything reachable, so functions aren't split |
+| `signature <file> <fn>` | `function_signature` | What a function's code says about its prototype: `$a0`–`$a3` read before written, stack arguments, whether `$v0` carries a result, frame size, saved registers, calls, GTE/FPU use, and the offsets loaded and stored off each base register (structure layout hints, named after the argument they came from) |
+| `context <file> <fn> [n]` | `decomp_context` | The code with names resolved, the signature, callers and callees with theirs, strings, globals and notes: one call per function |
+| `match <file> <obj> [name]` | `match_function`, `match_object` | The compiler's object file (ELF, MIPS) scored against the original: instructions lined up by shape, relocation fields masked, each relocation's symbol checked against where the original points, every difference explained (registers allocated differently, stack frame or slot size, branch length, reordering, a nop missing from a delay slot) |
+| `report <file> <json>` | `place_report` | objdiff's report placed on the binary's functions by virtual address or name |
+| `splat <file> <name> [dir] [splits…]` | `splat_export` | A splat YAML config (header, the code segment at its load address split into units, the bytes after the last function as data, the BSS size) and `symbol_addrs.txt` naming every function and known place |
+| `splat <file> import <syms>` | `import_symbol_addrs` | A splat symbol file's names into the notes (splat's own `func_…`/`D_…` names left out) |
+
+MIPS switch tables (the `sltiu` guard, `sll … 2`, `lui`/`addu`/`lw`, `jr`
+idiom GCC and IDO write) are followed for PlayStation and Nintendo 64 code,
+so the cases of a `switch` are part of their function.
+
 ## The library
 
 ```rust

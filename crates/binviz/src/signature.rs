@@ -161,6 +161,9 @@ impl Binary {
         let mut instance = [0u32; 32];
         // The argument register a register's value came from (`move $s0, $a0`).
         let mut origin: [Option<u32>; 32] = [None; 32];
+        // Registers holding an address built from constants (`lui`, then `addiu`/`ori`):
+        // what is loaded off them is a global, not a structure's field.
+        let mut constant = [false; 32];
         let mut groups: Vec<((u32, u32), Option<u32>, Vec<Field>)> = Vec::new();
         for (n, &w) in words.iter().enumerate() {
             let r = reads(w);
@@ -199,7 +202,7 @@ impl Binary {
                         let k = ((off as u32) - sig.frame - 0x10) / 4;
                         sig.stack_args = sig.stack_args.max(k + 1);
                     }
-                } else if base != 0 && base != 28 {
+                } else if base != 0 && base != 28 && !constant[base as usize] {
                     let key = (base, instance[base as usize]);
                     let from = if (4..8).contains(&base) && written & (1 << base) == 0 {
                         Some(base)
@@ -239,6 +242,11 @@ impl Binary {
                 } else {
                     None
                 };
+                constant[reg as usize] = match w.op() {
+                    15 => true,
+                    9 | 13 => constant[w.rs() as usize],
+                    _ => false,
+                };
                 written |= 1 << reg;
                 instance[reg as usize] += 1;
             }
@@ -247,6 +255,7 @@ impl Binary {
                 for a in 2..16 {
                     instance[a] += 1;
                     origin[a] = None;
+                    constant[a] = false;
                 }
                 clobber_after = false;
             }
