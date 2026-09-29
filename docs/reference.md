@@ -272,12 +272,14 @@ CPUs, and original Xbox executables (**XBE**).
   matching decompilation has to rebuild it with. The header's checksum is
   checked, so one edited after linking shows.
 - **Folders of binaries.** Open a folder or a zip, and every binary in it is
-  found by its header (Mach-O, ELF, PE or XBE, zips inside opened too), so an
-  `.ipa`, an `.app` or `.xcarchive`, an APK or a build folder are all just
-  folders. Each binary is paired with its separate debug file (a dSYM, an ELF
-  `.debug` file, a PDB) by UUID or build ID, whatever the names, or by the
-  debug link an ELF file names or the PDB a PE file names, so stripped
-  binaries get their names and DWARF back.
+  found by its header (Mach-O, ELF, PE, XBE or WebAssembly, zips inside opened
+  too), so an `.ipa`, an `.app` or `.xcarchive`, an APK, a web build or a
+  build folder are all just folders. Each binary is paired with its separate
+  debug file (a dSYM, an ELF `.debug` file, a PDB, a WebAssembly module's
+  `.debug.wasm` or source map) by UUID or build ID, whatever the names, or by
+  the debug link an ELF file names, the PDB a PE file names or the DWARF
+  module and source map a WebAssembly module names (by path or URL), so
+  stripped binaries get their names and DWARF back.
   Debug files dropped later (the zip of dSYMs App Store Connect gives you, say)
   join what is open. The folder's size is broken down by content (asset
   catalogs, images, localizations, fonts…) with the largest and duplicated
@@ -829,5 +831,9 @@ cargo test
   may reach (the disassembly says how many there are). Without DWARF or a
   symbol table, where the zero-filled variables end and the stack begins
   isn't known (`bss and stack`), and the heap above is no section. A source
-  map gives lines, not inlined calls or variables. Modules in a folder or
-  zip aren't recognized as binaries yet: open the `.wasm`.
+  map gives lines, not inlined calls or variables. In a folder or zip, a
+  DWARF module is told from the modules it belongs to by its name
+  (`.debug.wasm`, as `emcc -gseparate-dwarf` writes it) unless it holds
+  DWARF alone, and a source map is found by its name (`.wasm.map`): named
+  otherwise, a DWARF module is listed as a module of its own and a source
+  map isn't paired, though either can still be attached by hand.

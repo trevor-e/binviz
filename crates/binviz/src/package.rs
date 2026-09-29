@@ -1,9 +1,11 @@
 //! Folders and zips of binaries: every file whose first bytes say it is a
-//! binary (Mach-O, universal binaries included, ELF or PE), each paired with
-//! its separate debug file (a dSYM, an ELF `.debug` file) by UUID or build ID,
-//! and every other file by kind of content. An `.ipa`, an `.xcarchive`, an
-//! `.app`, an unpacked Android or Linux package, a build folder: all just
-//! folders here, and zips inside them open like folders too.
+//! binary (Mach-O, universal binaries included, ELF, PE, XBE or WebAssembly),
+//! each paired with its separate debug file (a dSYM, an ELF `.debug` file, a
+//! WebAssembly module's `.debug.wasm` or source map) by UUID or build ID, or
+//! by the name the binary gives it, and every other file by kind of content.
+//! An `.ipa`, an `.xcarchive`, an `.app`, an unpacked Android or Linux
+//! package, a web build, a build folder: all just folders here, and zips
+//! inside them open like folders too.
 //!
 //! Discovery asks for as little as it can ([`plan`]): the first bytes of files
 //! that might be binaries, for [`header`], and `Info.plist` files, for
@@ -15,6 +17,8 @@ use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
+
+use crate::model::Format;
 
 /// A file in a folder or zip, as a walk or a zip directory lists it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,7 +61,8 @@ pub enum BinaryKind {
     Other,
     /// A relocatable object file (`.o`).
     Object,
-    /// Separate debug info: a dSYM's DWARF file, an ELF file with only debug sections.
+    /// Separate debug info: a dSYM's DWARF file, an ELF file with only debug
+    /// sections, a WebAssembly module's `.debug.wasm` or source map.
     Debug,
 }
 
@@ -74,8 +79,9 @@ impl BinaryKind {
     }
 }
 
-/// An architecture and its build ID: a Mach-O slice's UUID or an ELF build
-/// ID (empty when there is none, or the header read didn't reach it).
+/// An architecture and its build ID: a Mach-O slice's UUID, an ELF build ID
+/// or a WebAssembly module's `build_id` section (empty when there is none, or
+/// the header read didn't reach it).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BuildId {
     pub arch: String,
@@ -86,7 +92,7 @@ pub struct BuildId {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Header {
-    /// "Mach-O", "ELF", "PE" or "XBE".
+    /// "Mach-O", "ELF", "PE", "XBE", "WebAssembly" or "PDB".
     pub format: String,
     pub kind: BinaryKind,
     /// One per architecture (a universal binary has several).
@@ -117,7 +123,7 @@ pub struct PackageBinary {
     pub path: String,
     /// The file name.
     pub name: String,
-    /// "Mach-O", "ELF", "PE" or "XBE".
+    /// "Mach-O", "ELF", "PE", "XBE" or "WebAssembly".
     pub format: String,
     pub kind: BinaryKind,
     /// The bundle it is the executable of, from an `Info.plist` beside it.
@@ -275,13 +281,41 @@ impl Bytes<'_> {
 }
 
 /// Recognises a binary from its first bytes: Mach-O (thin or universal), ELF
-/// or PE, an XBE, or a PDB (a Windows binary's debug file).
+/// or PE, an XBE, a WebAssembly module, or a PDB (a Windows binary's debug file).
 pub fn header(prefix: &[u8]) -> Option<Header> {
     mach_o(prefix)
         .or_else(|| elf(prefix))
         .or_else(|| pe(prefix))
         .or_else(|| xbe(prefix))
+        .or_else(|| wasm(prefix))
         .or_else(|| pdb(prefix))
+}
+
+/// A WebAssembly module: a program, a side module (a shared library), an
+/// object, or DWARF on its own. wasm-ld writes the build ID last, so a
+/// module larger than the bytes read gets it once it is read in full.
+fn wasm(b: &[u8]) -> Option<Header> {
+    let head = crate::wasm::read::head(b)?;
+    Some(Header {
+        format: "WebAssembly".into(),
+        kind: if head.object {
+            BinaryKind::Object
+        } else if head.side_module {
+            BinaryKind::Library
+        } else if head.debug_only {
+            BinaryKind::Debug
+        } else {
+            BinaryKind::Executable
+        },
+        ids: vec![BuildId {
+            arch: if head.is64 { "wasm64" } else { "wasm32" }.into(),
+            id: head
+                .build_id
+                .as_deref()
+                .map(crate::util::hex_compact)
+                .unwrap_or_default(),
+        }],
+    })
 }
 
 /// An original Xbox executable (a game's `default.xbe`).
@@ -593,6 +627,19 @@ fn is_dsym_path(path: &str) -> bool {
     path.contains(".dSYM/")
 }
 
+/// A WebAssembly module's DWARF: `emcc -gseparate-dwarf` writes the whole
+/// module to `<module>.debug.wasm`, DWARF and all, so only the name tells
+/// it from the module.
+fn is_wasm_debug_path(path: &str) -> bool {
+    path.to_ascii_lowercase().ends_with(".debug.wasm")
+}
+
+/// A WebAssembly module's source map (`emcc -gsource-map` writes
+/// `<module>.map`), which the module names in its `sourceMappingURL`.
+fn is_wasm_source_map(path: &str) -> bool {
+    path.to_ascii_lowercase().ends_with(".wasm.map")
+}
+
 /// Extensions of files that are never binaries: their headers aren't read.
 #[rustfmt::skip]
 const NOT_BINARY: &[&str] = &[
@@ -732,8 +779,22 @@ pub fn discover(
     let mut debug_files = Vec::new();
     for (i, f) in files.iter().enumerate() {
         let i = i as u32;
-        let Some(h) = headers.get(&i) else { continue };
-        if h.kind == BinaryKind::Debug {
+        let Some(h) = headers.get(&i) else {
+            // No header to read (it's JSON), but the module it belongs to names it.
+            if is_wasm_source_map(&f.path) {
+                debug_files.push(DebugFile {
+                    index: 0,
+                    file: i,
+                    path: f.path.clone(),
+                    size: f.size,
+                    compressed_size: f.compressed_size,
+                    ids: Vec::new(),
+                    binary: None,
+                });
+            }
+            continue;
+        };
+        if h.kind == BinaryKind::Debug || (h.format == "WebAssembly" && is_wasm_debug_path(&f.path)) {
             debug_files.push(DebugFile {
                 index: 0,
                 file: i,
@@ -760,10 +821,11 @@ pub fn discover(
         }
     }
     // Nothing but debug files (a zip of dSYMs, say): they are what there is to
-    // explore, or to pair with what is open.
+    // explore, or to pair with what is open. A source map, which is no
+    // binary, stays a debug file.
     if binaries.is_empty() {
         binaries = debug_files
-            .drain(..)
+            .extract_if(.., |d| headers.contains_key(&d.file))
             .map(|d| PackageBinary {
                 index: 0,
                 file: d.file,
@@ -938,7 +1000,8 @@ pub fn match_debug(info: &mut PackageInfo) {
 /// After binary `index` has been read in full (`bytes`, parsed into `bin`):
 /// the build IDs of all its slices (a universal binary's later ones lie past
 /// the header read at discovery), and, if nothing pairs with it by build ID,
-/// the debug file its `.gnu_debuglink` names, or for a PE, its PDB.
+/// the debug file its `.gnu_debuglink` names, for a PE its PDB, or for a
+/// WebAssembly module its `.debug.wasm` or source map.
 pub fn update_loaded(info: &mut PackageInfo, index: u32, bytes: &[u8], bin: &crate::Binary) {
     let Some(b) = info.binaries.get_mut(index as usize) else {
         return;
@@ -954,30 +1017,37 @@ pub fn update_loaded(info: &mut PackageInfo, index: u32, bytes: &[u8], bin: &cra
         return;
     }
     // "name (crc 0x…)" for ELF; for PE, where the PDB was written (often a
-    // Windows path), its file name compared as Windows does, ignoring case.
-    let Some(link) = bin.summary().debug_link.as_deref() else {
-        return;
-    };
-    let pe = bin.summary().format == crate::model::Format::Pe;
-    let wanted = if pe {
-        link.rsplit(['\\', '/']).next().unwrap_or(link)
-    } else {
-        link.split(" (crc ").next().unwrap_or(link)
-    };
-    let named = |n: &str| {
-        if pe {
-            n.eq_ignore_ascii_case(wanted)
-        } else {
-            n == wanted
-        }
+    // Windows path), its file name compared as Windows does, ignoring case;
+    // for WebAssembly, its DWARF module, then its source map, each named by
+    // a path or a URL, of which the last part counts.
+    let format = bin.summary().format;
+    let links = match format {
+        Format::Wasm => bin.wasm_debug_files(),
+        _ => bin.summary().debug_link.iter().cloned().collect(),
     };
     let dir = parent(&b.path);
-    let found = info
-        .debug_files
-        .iter()
-        .filter(|d| d.binary.is_none() && named(file_name(&d.path)))
-        .min_by_key(|d| parent(&d.path) != dir)
-        .map(|d| d.index);
+    let found = links.iter().find_map(|link| {
+        let wanted = match format {
+            Format::Pe => link.rsplit(['\\', '/']).next().unwrap_or(link),
+            Format::Wasm => {
+                let path = link.split(['?', '#']).next().unwrap_or(link);
+                path.rsplit(['/', '\\']).next().unwrap_or(path)
+            }
+            _ => link.split(" (crc ").next().unwrap_or(link),
+        };
+        let named = |n: &str| {
+            if format == Format::Pe {
+                n.eq_ignore_ascii_case(wanted)
+            } else {
+                n == wanted
+            }
+        };
+        info.debug_files
+            .iter()
+            .filter(|d| d.binary.is_none() && named(file_name(&d.path)))
+            .min_by_key(|d| parent(&d.path) != dir)
+            .map(|d| d.index)
+    });
     if let Some(d) = found {
         info.binaries[index as usize].debug = Some(d);
         info.debug_files[d as usize].binary = Some(index);
@@ -1421,5 +1491,156 @@ mod tests {
         assert!(info.binaries.iter().all(|b| b.kind == BinaryKind::Debug));
         assert!(info.debug_files.is_empty());
         assert_eq!((info.size, info.debug_size), (0, 12_000));
+    }
+
+    fn leb(out: &mut Vec<u8>, mut n: usize) {
+        loop {
+            let b = (n & 0x7f) as u8;
+            n >>= 7;
+            if n == 0 {
+                out.push(b);
+                return;
+            }
+            out.push(b | 0x80);
+        }
+    }
+
+    /// A WebAssembly module of these sections: (id, contents).
+    fn module(sections: &[(u8, Vec<u8>)]) -> Vec<u8> {
+        let mut m = b"\0asm\x01\0\0\0".to_vec();
+        for (id, contents) in sections {
+            m.push(*id);
+            leb(&mut m, contents.len());
+            m.extend_from_slice(contents);
+        }
+        m
+    }
+
+    fn custom(name: &str, contents: &[u8]) -> (u8, Vec<u8>) {
+        let mut c = Vec::new();
+        leb(&mut c, name.len());
+        c.extend_from_slice(name.as_bytes());
+        c.extend_from_slice(contents);
+        (0, c)
+    }
+
+    /// A custom section holding a string (a URL, a path).
+    fn custom_str(name: &str, s: &str) -> (u8, Vec<u8>) {
+        let mut c = Vec::new();
+        leb(&mut c, s.len());
+        c.extend_from_slice(s.as_bytes());
+        custom(name, &c)
+    }
+
+    #[test]
+    fn webassembly_modules_are_binaries() {
+        let types = (1, vec![1, 0x60, 0, 0]);
+        let read = |m: &[u8]| header(m).unwrap();
+        // A program, with a build ID when the bytes read reach it (wasm-ld writes it last).
+        let program = module(&[
+            types.clone(),
+            (5, vec![1, 0, 1]),
+            custom("build_id", &[4, 0xde, 0xad, 0xbe, 0xef]),
+        ]);
+        let h = read(&program);
+        assert_eq!((h.format.as_str(), h.kind), ("WebAssembly", BinaryKind::Executable));
+        assert_eq!(
+            h.ids,
+            [BuildId {
+                arch: "wasm32".into(),
+                id: "deadbeef".into()
+            }]
+        );
+        assert_eq!(read(&program[..program.len() - 3]).ids[0].id, "");
+        // Its memory imported, and 64-bit.
+        let import = (2, [&[1u8][..], b"\x03env\x06memory\x02\x04\x01"].concat());
+        assert_eq!(read(&module(&[types.clone(), import])).ids[0].arch, "wasm64");
+        // An object, a side module, DWARF on its own.
+        let object = module(&[types.clone(), custom("linking", &[2])]);
+        assert_eq!(read(&object).kind, BinaryKind::Object);
+        let side = module(&[custom("dylink.0", &[]), types.clone()]);
+        assert_eq!(read(&side).kind, BinaryKind::Library);
+        let dwarf = module(&[custom(".debug_info", &[0; 16]), custom("name", &[])]);
+        assert_eq!(read(&dwarf).kind, BinaryKind::Debug);
+        // A component (version 0x1000d) is no module.
+        assert!(header(b"\0asm\x0d\0\x01\0").is_none());
+    }
+
+    #[test]
+    fn a_web_build_s_modules_and_their_debug_files() {
+        let files = vec![
+            file("game/index.html", 2000),
+            file("game/game.js", 90_000),
+            file("game/game.wasm", 3_000_000),
+            file("game/game.wasm.map", 400_000),
+            file("game/worker.wasm", 200_000),
+            file("symbols/game.wasm.debug.wasm", 9_000_000),
+        ];
+        let p = plan(&files);
+        assert_eq!(p.headers, [2, 4, 5]);
+        let wasm = || head("WebAssembly", BinaryKind::Executable, "");
+        let headers = HashMap::from([(2, wasm()), (4, wasm()), (5, wasm())]);
+        let info = discover("web", "folder", &files, &headers, &HashMap::new());
+        let names: Vec<&str> = info.binaries.iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, ["game.wasm", "worker.wasm"]);
+        let debug: Vec<&str> = info.debug_files.iter().map(|d| d.path.as_str()).collect();
+        assert_eq!(debug, ["game/game.wasm.map", "symbols/game.wasm.debug.wasm"]);
+        assert_eq!((info.size, info.debug_size), (3_292_000, 9_400_000));
+        let cat = |c: FileCategory| info.categories.iter().find(|x| x.category == c).map(|x| x.size);
+        assert_eq!(cat(FileCategory::Web), Some(92_000));
+        // With only debug files, the DWARF module is what there is to
+        // explore; the source map is no binary, and stays a debug file.
+        let only = [files[3].clone(), files[5].clone()];
+        let alone = discover(
+            "symbols",
+            "folder",
+            &only,
+            &HashMap::from([(1, wasm())]),
+            &HashMap::new(),
+        );
+        let found: Vec<(&str, BinaryKind)> = alone.binaries.iter().map(|b| (b.name.as_str(), b.kind)).collect();
+        assert_eq!(found, [("game.wasm.debug.wasm", BinaryKind::Debug)]);
+        let debug: Vec<&str> = alone.debug_files.iter().map(|d| d.path.as_str()).collect();
+        assert_eq!(debug, ["game/game.wasm.map"]);
+        let maps = discover("maps", "folder", &files[3..4], &HashMap::new(), &HashMap::new());
+        assert!(maps.binaries.is_empty());
+    }
+
+    #[test]
+    fn a_webassembly_module_pairs_with_the_debug_files_it_names() {
+        let files = vec![
+            file("symbols/game.wasm.debug.wasm", 9_000_000),
+            file("web/game.wasm", 3_000_000),
+            file("web/game.wasm.map", 400_000),
+        ];
+        let wasm = || head("WebAssembly", BinaryKind::Executable, "");
+        let headers = HashMap::from([(0, wasm()), (1, wasm())]);
+        let types = (1, vec![1, 0x60, 0, 0]);
+        let source_map = custom_str("sourceMappingURL", "game.wasm.map");
+        // Its DWARF module first, by the last part of a URL.
+        let bytes = module(&[
+            types.clone(),
+            custom_str(
+                "external_debug_info",
+                "https://cdn.example.com/symbols/game.wasm.debug.wasm?v=3",
+            ),
+            source_map.clone(),
+        ]);
+        let bin = crate::Binary::parse(bytes.clone()).unwrap();
+        let mut info = discover("web", "folder", &files, &headers, &HashMap::new());
+        update_loaded(&mut info, 0, &bytes, &bin);
+        assert_eq!(info.binaries[0].debug, Some(0));
+        assert_eq!(info.debug_files[0].path, "symbols/game.wasm.debug.wasm");
+        // Without it, the source map.
+        let mut info = discover(
+            "web",
+            "folder",
+            &files[1..],
+            &HashMap::from([(0, wasm())]),
+            &HashMap::new(),
+        );
+        update_loaded(&mut info, 0, &bytes, &bin);
+        assert_eq!(info.binaries[0].debug, Some(0));
+        assert_eq!(info.debug_files[0].path, "web/game.wasm.map");
     }
 }

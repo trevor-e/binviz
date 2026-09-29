@@ -919,6 +919,82 @@ pub(crate) struct Module {
 /// of each signature each table holds: (table, type) → count.
 pub(crate) type Indirect = (Vec<u32>, HashMap<(u32, u32), u32>);
 
+/// What a module's first bytes say it is, for finding modules among a
+/// folder's files without reading them whole (see [`head`]).
+#[derive(Debug, Default)]
+pub(crate) struct Head {
+    /// A relocatable object: it has a `linking` section.
+    pub object: bool,
+    /// A side module (a shared library): it has a `dylink.0` section.
+    pub side_module: bool,
+    /// DWARF and nothing to run: `.debug_*` sections among custom sections
+    /// only, as `llvm-objcopy --only-keep-debug` leaves a module.
+    pub debug_only: bool,
+    /// Its first memory, imported or its own, is 64-bit: a wasm64 module.
+    pub is64: bool,
+    /// Its `build_id` section. wasm-ld writes it last, so it is here only
+    /// when the bytes read reach the end of the module.
+    pub build_id: Option<Vec<u8>>,
+}
+
+/// Reads a module's [`Head`] from as much of it as `data` holds, section by
+/// section, looking into only the sections that say what it is. `None` when
+/// `data` doesn't start a module.
+pub(crate) fn head(data: &[u8]) -> Option<Head> {
+    if !is_module(data) {
+        return None;
+    }
+    let mut head = Head::default();
+    let (mut standard, mut debug, mut memory) = (false, false, None);
+    let len = data.len() as u64;
+    let mut pos = 8;
+    while pos < len {
+        let mut r = Reader::new(data, pos, len);
+        let (Some(id), Some(size)) = (r.u8(), r.u32()) else {
+            break;
+        };
+        let end = r.pos() + u64::from(size);
+        let mut s = Reader::new(data, r.pos(), end);
+        match id {
+            CUSTOM => match s.name() {
+                Some(b"linking") => head.object = true,
+                Some(b"build_id") => head.build_id = s.name().map(<[u8]>::to_vec),
+                Some(n) if n.starts_with(b"dylink") => head.side_module = true,
+                Some(n) if n.starts_with(b".debug") => debug = true,
+                _ => {}
+            },
+            // Imported memories come first in the memory index space.
+            IMPORT if memory.is_none() => memory = imported_memory(&mut s),
+            MEMORY if memory.is_none() => {
+                memory = s
+                    .count()
+                    .filter(|&n| n > 0)
+                    .and_then(|_| Limits::read(&mut s))
+                    .map(|l| l.is64);
+            }
+            _ => {}
+        }
+        standard |= id != CUSTOM;
+        pos = end;
+    }
+    head.debug_only = debug && !standard;
+    head.is64 = memory == Some(true);
+    Some(head)
+}
+
+/// Whether the first memory an import section imports is 64-bit; `None`
+/// when it imports none.
+fn imported_memory(r: &mut Reader) -> Option<bool> {
+    for _ in 0..r.count()? {
+        r.name()?;
+        r.name()?;
+        if let ImportDesc::Memory(limits) = ImportDesc::read(r)? {
+            return Some(limits.is64);
+        }
+    }
+    None
+}
+
 impl Module {
     /// Reads a module. Fails only when `data` isn't one.
     pub fn parse(data: &[u8]) -> Result<Module> {

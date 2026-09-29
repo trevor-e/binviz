@@ -328,7 +328,7 @@ export class FolderView extends View {
       });
       body.push(h('table', { class: 'data' }, h('thead', null, h('tr', null, h('th', null, 'Debug file'), h('th', null, 'Architectures'), h('th', { class: 'right' }, 'Size'), h('th', null, 'Pairs with'))), h('tbody', null, rows)));
     }
-    return h('div', { class: 'card' }, h('h2', null, 'Debug files'), h('p', { class: 'sub' }, 'They pair with binaries by UUID or build ID, whatever their names, or by the debug link an ELF file names or the PDB a PE file names'), body);
+    return h('div', { class: 'card' }, h('h2', null, 'Debug files'), h('p', { class: 'sub' }, 'They pair with binaries by UUID or build ID, whatever their names, or by the debug link an ELF file names, the PDB a PE file names or the DWARF module and source map a WebAssembly module names'), body);
   }
 
   private duplicates(info: PackageInfo): HTMLElement {

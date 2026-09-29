@@ -75,11 +75,11 @@ sections, functions, imports and exports, the name section, DWARF (a separate
 symbolicated. An original Xbox executable (XBE) opens like the 32-bit PE it
 holds, with its headers, certificate and kernel imports decoded.
 
-**Folders of binaries.** Open a folder, a zip, an `.ipa`, an `.app` or a build
-directory: every binary in it is found and paired with its debug file by build
-ID. The folder's size is broken down by content, and the code of all its
-binaries is summed by owner: Swift modules, Objective-C classes, C++
-namespaces, C prefixes.
+**Folders of binaries.** Open a folder, a zip, an `.ipa`, an `.app`, a web
+build or a build directory: every binary in it is found and paired with its
+debug file, by build ID or by the name the binary gives it. The folder's size
+is broken down by content, and the code of all its binaries is summed by
+owner: Swift modules, Objective-C classes, C++ namespaces, C prefixes.
 
 **Game ROMs.** Headers decoded field by field with checksums checked, each
 bank at the address the console's CPU sees, RAM and hardware registers named.

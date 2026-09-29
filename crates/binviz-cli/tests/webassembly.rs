@@ -1,5 +1,6 @@
 //! A browser port's WebAssembly build from the command line: opened,
-//! symbolicated with the debug info it names, compared with another build.
+//! symbolicated with the debug info it names, compared with another build,
+//! found in a folder with its debug files.
 
 use std::path::Path;
 use std::process::Command;
@@ -54,4 +55,68 @@ fn a_stack_trace_is_symbolicated_with_the_source_map_the_module_names() {
         &fixture("wasmdemo.wasm"),
     ]);
     assert!(out.contains("inlined into middle"), "{out}");
+}
+
+/// A custom section holding a string, as `emcc` appends one to a module.
+fn custom_str(name: &str, s: &str) -> Vec<u8> {
+    fn leb(out: &mut Vec<u8>, mut n: usize) {
+        while n >= 0x80 {
+            out.push(n as u8 | 0x80);
+            n >>= 7;
+        }
+        out.push(n as u8);
+    }
+    let mut contents = Vec::new();
+    for part in [name, s] {
+        leb(&mut contents, part.len());
+        contents.extend_from_slice(part.as_bytes());
+    }
+    let mut section = vec![0];
+    leb(&mut section, contents.len());
+    section.extend(contents);
+    section
+}
+
+#[test]
+fn a_web_build_folder_pairs_its_modules_with_their_debug_files() {
+    let dir = std::env::temp_dir().join(format!("binviz-cli-web-build-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let put = |rel: &str, data: &[u8]| {
+        let p = dir.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, data).unwrap();
+    };
+    let read = |name: &str| std::fs::read(fixture(name)).unwrap();
+    // As `emcc -gseparate-dwarf` leaves a build: the module without its
+    // DWARF, naming (by URL) the module with it, kept elsewhere.
+    let mut module = read("wasmdemo.bare.wasm");
+    module.extend(custom_str(
+        "external_debug_info",
+        "https://cdn.example.com/symbols/wasmdemo.wasm.debug.wasm?v=3",
+    ));
+    put("game/wasmdemo.wasm", &module);
+    put("symbols/wasmdemo.wasm.debug.wasm", &read("wasmdemo.wasm"));
+    put(
+        "game/index.html",
+        b"<!doctype html><script src=\"wasmdemo.js\"></script>",
+    );
+    put(
+        "game/wasmdemo.js",
+        b"WebAssembly.instantiateStreaming(fetch(\"wasmdemo.wasm\"));",
+    );
+    // As `emcc -gsource-map` leaves one: the module names its map, beside it.
+    put("game/worker/wasmdemo.stripped.wasm", &read("wasmdemo.stripped.wasm"));
+    put("game/worker/wasmdemo.wasm.map", &read("wasmdemo.wasm.map"));
+    let d = dir.to_str().unwrap();
+
+    let (info, _) = binviz(&["info", d]);
+    assert!(info.contains("2 binaries"), "{info}");
+    assert!(info.contains("game/wasmdemo.wasm  [WebAssembly wasm32"), "{info}");
+    assert!(info.contains("debug file symbols/wasmdemo.wasm.debug.wasm"), "{info}");
+    assert!(info.contains("debug file game/worker/wasmdemo.wasm.map"), "{info}");
+    assert!(info.contains("Debug symbols"), "{info}");
+    // A stack trace finds the module by name, and its DWARF through the link.
+    let (out, _) = binviz(&["crash", d, &fixture("wasmdemo.trace")]);
+    assert!(out.contains("inlined into middle"), "{out}");
+    let _ = std::fs::remove_dir_all(&dir);
 }
