@@ -382,6 +382,7 @@ CLI and the MCP server:
 | `splat <file> <name> [dir] [splits…]` | `splat_export` | A splat YAML config (header, the code segment at its load address split into units, the bytes after the last function as data, the BSS size) and `symbol_addrs.txt` naming every function and known place |
 | `splat <file> import <syms>` | `import_symbol_addrs` | A splat symbol file's names into the notes (splat's own `func_…`/`D_…` names left out) |
 | `sdk <file> <libs…> [notes]` | `identify_sdk` | The Psy-Q SDK's functions in the binary, found by the signatures of its `.LIB`/`.OBJ` files (Sony's `LNK` object format, the linker's fields masked): each named, with an `sdk:` note and marked library code so a decompilation leaves it be (its callers don't wait on it), and the libraries the game was linked with |
+| `locate <ram.bin> <file>` | (`Binary::psx_locate`) | Where a file from the disc sits in a memory image: which of the overlays sharing an address is the one loaded |
 | `names <file> <json> [min%]` | `propose_names` | Names from another build of the game (a port with its source, a symbolized build): its functions with the strings they use and the functions they call, matched to functions here by shared strings, then through the calls; each with a confidence and the evidence |
 
 Strings in a console's code area (a PlayStation executable's one section, a

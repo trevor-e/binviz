@@ -267,6 +267,11 @@ below too.
 ## Progress log
 
 - 2026-09-28: plan written; no implementation yet.
+- 2026-09-30 (later): `samples/psx-vm/` (48 functions in four objects, a 24-way jump table,
+  pointer-reached syscalls, two overlays at one address, struct returns, a look-alike family)
+  and `samples/loop.py`, which plays the agent over the MCP server: Map, Pick, Context,
+  Compile, Compare with the queue tools, to 100% in 46 rounds with 10 simulated failures.
+  Signatures now spot structures returned by value; the CLI gained `locate`.
 - 2026-09-30: `samples/psx-advanced/` (two objects, a jump table, pointer-reached handlers, an
   overlay, a memory image, a trace, name candidates) runs every tool end to end and found four
   bugs, fixed: MIPS32 `movn`/`movz` stopping the follower, call clobbers applied before the

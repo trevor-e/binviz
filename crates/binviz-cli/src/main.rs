@@ -101,6 +101,8 @@ COMMANDS:
     sdk <file> <lib|folder...> [notes]
                                    The Psy-Q SDK's functions in the file, found by the
                                    signatures of its .LIB/.OBJ files; notes: as notes JSON
+    locate <ram.bin> <file>        Where a file from the disc (an overlay) sits in a PlayStation
+                                   memory image
     names <file> <candidates.json> [min%]
                                    Names from another build (each function with the strings
                                    it uses and the functions it calls) proposed for the
@@ -1204,6 +1206,17 @@ fn run(
                 println!("{}", serde_json::to_string_pretty(&r.annotations()).map_err(|e| e.to_string())?);
             } else {
                 print!("{}", r.to_text());
+            }
+        }
+        "locate" => {
+            let path = arg(2).ok_or("which file? binviz locate <ram.bin> <file>")?;
+            let blob = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+            if !bin.is_psx_memory() {
+                return Err("locate is for PlayStation memory images (2 MiB of RAM dumped by an emulator)".into());
+            }
+            match bin.psx_locate(&blob) {
+                Some(at) => println!("{path} is loaded at {at:#x} ({} bytes)", blob.len()),
+                None => println!("{path} is not in this image"),
             }
         }
         "names" => {

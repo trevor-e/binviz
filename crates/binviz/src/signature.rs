@@ -42,6 +42,9 @@ pub struct FunctionSignature {
     pub accesses: Vec<Access>,
     /// `int name(int a0, int a1)`.
     pub prototype: String,
+    /// The first argument is only written through, and `$v0` is set:
+    /// likely the hidden pointer a structure returned by value is built in.
+    pub returns_struct: bool,
 }
 
 /// The offsets a function loads and stores off one base register.
@@ -150,6 +153,7 @@ impl Binary {
             uses_float: false,
             accesses: Vec::new(),
             prototype: String::new(),
+            returns_struct: false,
         };
         // Registers written so far; a call clobbers the caller-saved ones after its delay slot.
         let mut written: u32 = 1;
@@ -303,11 +307,22 @@ impl Binary {
                 None => sig.accesses.push(Access { base: name, fields }),
             }
         }
+        // o32 returns a structure through a pointer passed as the first argument and handed back in $v0.
+        sig.returns_struct = sig.returns
+            && sig.register_args >= 1
+            && sig
+                .accesses
+                .iter()
+                .find(|a| a.base == "a0")
+                .is_some_and(|a| a.fields.len() >= 2 && a.fields.iter().all(|f| f.access == "w"));
         let mut args: Vec<String> = (0..sig.register_args).map(|i| format!("int a{i}")).collect();
         args.extend((0..sig.stack_args).map(|i| format!("int a{}", 4 + i)));
+        if sig.returns_struct {
+            args[0] = "struct *ret".into();
+        }
         sig.prototype = format!(
             "{} {}({})",
-            if sig.returns { "int" } else { "void" },
+            if sig.returns_struct { "struct *" } else if sig.returns { "int" } else { "void" },
             sig.name,
             if args.is_empty() { "void".to_string() } else { args.join(", ") }
         );
@@ -331,6 +346,10 @@ impl FunctionSignature {
             if self.uses_cop2 { ", uses cop2 (GTE)" } else { "" },
             if self.uses_float { ", uses the FPU" } else { "" },
         ));
+        if self.returns_struct {
+            out.push_str("  returns a structure by value: a0 is the hidden pointer it is built in, handed back in $v0
+");
+        }
         for a in &self.accesses {
             let fields: Vec<String> = a
                 .fields

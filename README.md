@@ -94,7 +94,8 @@ splat config and symbol file start the project; objdiff's report places the
 project's progress on the binary. [samples/psx](samples/psx/README.md) walks
 the whole loop on a small program built from source,
 [samples/psx-advanced](samples/psx-advanced/README.md) adds an overlay, a memory
-image, a trace and a jump table; the
+image, a trace and a jump table, and [samples/psx-vm](samples/psx-vm/README.md)
+runs the whole loop through the MCP server with a script as the agent; the
 [plan](docs/decomp-plan.md) says what is next.
 
 **Built for agents.** The MCP server loads a binary once and answers every
