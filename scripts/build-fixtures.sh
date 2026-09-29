@@ -5,9 +5,11 @@
 # platform SDKs are needed. Required rustup targets:
 #   rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl aarch64-apple-darwin
 # Optional: a MinGW g++ on PATH (for the C++ PE fixture), clang (any build with
-# the x86 target, Apple's included: for the 32-bit PE with a PDB), the llvm-tools
-# component (for the split-debug ELF pair) and the x86_64-pc-windows-msvc
-# target (for the PE with a PDB). Python 3 writes the game ROMs.
+# the x86 target, Apple's included: for the 32-bit PE with a PDB; with the
+# wasm32 target, for the WebAssembly modules, whose source map needs
+# llvm-dwarfdump and whose stack trace needs Node), the llvm-tools component
+# (for the split-debug ELF pair) and the x86_64-pc-windows-msvc target (for
+# the PE with a PDB). Python 3 writes the game ROMs.
 #
 # Pass --large to also build the std-linked "demo" binaries (~5 MB each) into
 # tests/fixtures/large (git-ignored), which are handy for manual testing.
@@ -129,6 +131,39 @@ if command -v clang >/dev/null 2>&1; then
     cp "$tmp/x86demo.exe" "$tmp/x86demo.pdb" "$out"
     cp "$tmp/fixed/x86demo.exe" "$out/x86demo-fixed.exe"
     rm -rf "$tmp"
+fi
+
+if command -v clang >/dev/null 2>&1 && clang --target=wasm32 -c -x c /dev/null -o /dev/null 2>/dev/null; then
+    echo "wasmdemo: WebAssembly (clang --target=wasm32, rust-lld): with DWARF 4 and 5, stripped to its names with a"
+    echo "  source map, stripped of everything, and the object; a stack trace from Node when it is installed"
+    tmp="$(mktemp -d)"
+    cp "$src/wasmdemo.c" "$tmp"
+    (
+        # Relative paths only, so that none of this machine's end up in the DWARF.
+        cd "$tmp"
+        compile=(--target=wasm32 -O1 -g -ffile-compilation-dir=. -c wasmdemo.c)
+        clang "${compile[@]}" -o wasmdemo.o
+        clang "${compile[@]}" -gdwarf-5 -o wasmdemo5.o
+        link=(-flavor wasm --no-entry --build-id=fast)
+        "$lld" "${link[@]}" -o wasmdemo.wasm wasmdemo.o
+        "$lld" "${link[@]}" -o wasmdemo.dwarf5.wasm wasmdemo5.o
+        "$lld" "${link[@]}" --strip-debug -o wasmdemo.stripped.wasm wasmdemo.o
+        "$lld" "${link[@]}" --strip-all -o wasmdemo.bare.wasm wasmdemo.o
+    )
+    cp "$tmp"/wasmdemo.{o,wasm,dwarf5.wasm,stripped.wasm,bare.wasm} "$out"
+    rm -rf "$tmp"
+    # The stripped module names a source map made from the DWARF, as `emcc -gsource-map` does.
+    if command -v llvm-dwarfdump >/dev/null 2>&1; then
+        python3 "$src/wasm_sourcemap.py" "$out/wasmdemo.wasm" "$out/wasmdemo.wasm.map" \
+            "$out/wasmdemo.stripped.wasm" wasmdemo.wasm.map
+    fi
+    if command -v node >/dev/null 2>&1; then
+        node -e '
+            const bytes = require("fs").readFileSync(process.argv[1]);
+            WebAssembly.instantiate(bytes, { env: { log() {} } }).then(({ instance }) => {
+                try { instance.exports.crash(200); } catch (e) { console.log(e.stack); }
+            });' "$out/wasmdemo.wasm" >"$out/wasmdemo.trace"
+    fi
 fi
 
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"

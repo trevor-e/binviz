@@ -54,6 +54,11 @@ const ALL: &[&str] = &[
     "tiny-psx.exe",
     "tiny.gba",
     "tiny.md",
+    "wasmdemo.wasm",
+    "wasmdemo.dwarf5.wasm",
+    "wasmdemo.stripped.wasm",
+    "wasmdemo.bare.wasm",
+    "wasmdemo.o",
 ];
 
 #[test]
@@ -2366,4 +2371,458 @@ fn playstation_discs_open_their_executable() {
     let bin = c.open(0).unwrap();
     assert_eq!(bin.platform(), Some(binviz::rom::Platform::PlayStation));
     assert_eq!(bin.data(), &exe[..]);
+}
+
+// --- WebAssembly --------------------------------------------------------------------
+
+/// Where binviz places a module's linear memory (its address 0).
+const WASM_MEMORY: u64 = 0x8000_0000;
+
+#[test]
+fn webassembly_modules_are_read_into_the_model() {
+    let bin = open("wasmdemo.wasm");
+    let s = bin.summary();
+    assert_eq!(
+        (s.format, s.format_name.as_str(), s.kind.as_str(), s.arch.as_str()),
+        (binviz::Format::Wasm, "WebAssembly", "Module", "wasm32")
+    );
+    assert_eq!(s.build_id.as_deref(), Some("3f23f9630d6357eca9ae2dbbddc964a5"));
+    assert!(s.has_dwarf);
+    let section = |name: &str| {
+        bin.sections()
+            .iter()
+            .find(|x| x.name == name)
+            .unwrap_or_else(|| panic!("no {name} section"))
+    };
+    // The module's sections at their offsets in the file: addresses are file offsets.
+    let code = section("code");
+    assert_eq!((code.kind, Some(code.address)), (RegionKind::Code, code.file_offset));
+    assert_eq!(section(".debug_info").kind, RegionKind::Debug);
+    // Data segments where they are written in memory, the zero-filled variables after them.
+    let data = section(".data");
+    assert_eq!((data.address, data.kind), (WASM_MEMORY + 1104, RegionKind::Data));
+    let at = bin.address_to_offset(data.address).unwrap() as usize;
+    assert_eq!(bin.data()[at..at + 8], [1, 0, 0, 0, 2, 0, 0, 0], "entities[0].x and .y");
+    let bss = section(".bss");
+    assert_eq!((bss.kind, bss.file_offset), (RegionKind::Bss, None));
+    let frames = bin.symbols().by_name("frames").expect("frames");
+    assert_eq!((frames.size, frames.section), (4, Some(bss.index)));
+
+    // Functions at their bodies, named by the name section; the import where it is declared.
+    let step = bin.symbols().by_name("step").expect("step");
+    assert_eq!(
+        (step.kind, step.source),
+        (binviz::SymbolKind::Function, SymbolSource::Symtab)
+    );
+    assert_eq!(bin.section_at(step.address).map(|x| x.index), Some(code.index));
+    assert_eq!(bin.address_to_offset(step.address), Some(step.address));
+    let path = bin.describe_offset(step.address);
+    assert!(path.iter().any(|p| p.name == "Function 6 step"), "{path:?}");
+    let log = bin.symbols().by_name("host_log").expect("host_log");
+    assert_eq!(log.source, SymbolSource::Import);
+    let import = &bin.imports()[0];
+    assert_eq!((import.library.as_str(), import.name.as_str()), ("env", "log"));
+    assert_eq!(import.address, Some(log.address));
+    let exports: Vec<&str> = bin.exports().iter().map(|e| e.name.as_str()).collect();
+    assert!(
+        ["memory", "step", "crash"].iter().all(|e| exports.contains(e)),
+        "{exports:?}"
+    );
+    let property = |key: &str| {
+        s.properties
+            .iter()
+            .find(|p| p.key == key)
+            .unwrap_or_else(|| panic!("no {key}: {:?}", s.properties))
+            .value
+            .clone()
+    };
+    assert!(
+        property("Table 0").ends_with("(idle, wander, chase)"),
+        "{}",
+        property("Table 0")
+    );
+    assert_eq!(property("Producers: language"), "C11");
+    assert!(property("Imports").contains("env.log"));
+
+    // Stripped of its DWARF it keeps the name section; stripped of that
+    // too, functions are named by export, else numbered.
+    let stripped = open("wasmdemo.stripped.wasm");
+    assert!(!stripped.summary().has_dwarf);
+    assert_eq!(
+        stripped.symbols().by_name("step").map(|s| s.address),
+        Some(step.address)
+    );
+    let bare = open("wasmdemo.bare.wasm");
+    assert_eq!(
+        bare.symbols().by_name("step").map(|s| s.source),
+        Some(SymbolSource::Export)
+    );
+    let check = bin.symbols().by_name("check").unwrap().address;
+    let numbered = bare.symbols().by_name("func[8]").expect("func[8]");
+    assert_eq!((numbered.address, numbered.source), (check, SymbolSource::Discovered));
+    assert!(bare.symbols().by_name("env.log").is_some());
+    // A memory the stack pointer starts above the data in: what is between is zero-filled.
+    assert!(stripped.sections().iter().any(|x| x.name == "bss and stack"));
+
+    // An object file: a data segment per variable, named by its symbol table.
+    let obj = open("wasmdemo.o");
+    assert_eq!(obj.summary().kind, "Relocatable object");
+    let messages = obj.symbols().by_name("messages").expect("messages");
+    let segment = obj.section_at(messages.address).unwrap();
+    assert_eq!((segment.name.as_str(), messages.size), (".rodata.messages", 12));
+}
+
+#[test]
+fn webassembly_code_disassembles_with_names() {
+    let bin = open("wasmdemo.wasm");
+    let sym = |name: &str| bin.symbols().by_name(name).unwrap_or_else(|| panic!("{name}"));
+    let step = sym("step");
+    let d = bin.disassemble_function(step.address, 1000);
+    assert!(d.supported && !d.truncated);
+    let insns = &d.instructions;
+    // The body opens with its locals and closes with the `end` that returns.
+    assert_eq!(
+        (insns[0].mnemonic.as_str(), insns[0].operands.as_str()),
+        (".local", "i32 ×5")
+    );
+    let last = insns.last().unwrap();
+    assert_eq!((last.mnemonic.as_str(), last.flow), ("end", binviz::FlowKind::Return));
+    assert_eq!(last.address + last.len as u64, step.address + step.size);
+    // Calls name their functions, and the imports they call.
+    let calls: Vec<(&str, Option<u64>, Option<&str>)> = insns
+        .iter()
+        .filter(|i| i.mnemonic == "call")
+        .map(|i| (i.operands.as_str(), i.target, i.target_symbol.as_deref()))
+        .collect();
+    assert_eq!(
+        calls,
+        [
+            ("5", Some(sym("score_for").address), Some("score_for")),
+            ("0", Some(sym("host_log").address), Some("host_log")),
+        ]
+    );
+    // A call through the table says which functions it can reach.
+    let indirect = insns.iter().find(|i| i.mnemonic == "call_indirect").unwrap();
+    assert_eq!(indirect.operands, "(type 0)");
+    let note = indirect.target_symbol.as_deref().unwrap();
+    assert!(note.contains("(i32) -> ()") && note.contains("3 functions"), "{note}");
+    // Branches go to the instruction after their block's `end`, or back to their loop.
+    for b in insns.iter().filter(|i| i.mnemonic == "br_if") {
+        let t = b.target.expect("a target");
+        assert!(insns.iter().any(|i| i.address == t), "{t:#x}");
+    }
+    let back = insns
+        .iter()
+        .filter(|i| i.mnemonic == "br_if" && i.target < Some(i.address));
+    assert_eq!(back.count(), 2, "the two loops");
+    // Memory the code gives the address of: a load off a constant, a constant address.
+    let load = insns
+        .iter()
+        .find(|i| i.mnemonic == "i32.load" && i.operands == "offset=1168")
+        .unwrap();
+    assert_eq!(load.target_symbol.as_deref(), Some("frames"));
+    let text = insns.iter().find(|i| i.operands == "1035").unwrap();
+    assert_eq!(text.target_symbol.as_deref(), Some("\"frame done\""));
+    // Source lines, from the DWARF.
+    let line = source_line("wasmdemo.c", "frames++;");
+    let store = insns.iter().find(|i| i.mnemonic == "i32.store").unwrap();
+    assert_eq!(store.source.as_ref().map(|s| s.line), Some(line));
+}
+
+#[test]
+fn webassembly_dwarf_is_moved_to_module_offsets() {
+    for name in ["wasmdemo.wasm", "wasmdemo.dwarf5.wasm", "wasmdemo.o"] {
+        let bin = open(name);
+        // Each function's DWARF starts where its body does.
+        for (address, function) in functions(&bin) {
+            if bin.symbols().by_name(&function).map(|s| s.source) == Some(SymbolSource::Import) {
+                continue;
+            }
+            let frames = bin.symbolize(address);
+            assert_eq!(
+                frames.last().and_then(|f| f.function.as_deref()),
+                Some(function.as_str()),
+                "{name}: {function} at {address:#x}"
+            );
+        }
+        // twice_checked() is inlined into middle().
+        let middle = bin.symbols().by_name("middle").unwrap();
+        let inlined = (middle.address..middle.address + middle.size)
+            .find(|&a| bin.symbolize(a).first().and_then(|l| l.function.as_deref()) == Some("twice_checked"))
+            .unwrap_or_else(|| panic!("{name}: twice_checked isn't inlined into middle"));
+        let frames = bin.symbolize(inlined);
+        assert!(frames[0].inlined, "{name}");
+        assert_eq!(
+            frames.last().map(|f| (f.function.as_deref(), f.line)),
+            Some((
+                Some("middle"),
+                Some(source_line("wasmdemo.c", "return twice_checked(v) * 3"))
+            ))
+        );
+        // Variables at their addresses in memory.
+        let entities = bin.symbols().by_name("entities").unwrap();
+        assert_eq!(entities.size, 60, "{name}");
+        assert!(entities.address >= WASM_MEMORY, "{name}");
+    }
+}
+
+#[test]
+fn webassembly_debug_info_attaches_from_other_files() {
+    let full = open("wasmdemo.wasm");
+    let check = full.symbols().by_name("check").unwrap().address;
+    let trap = source_line("wasmdemo.c", "__builtin_trap");
+    let trap_at = (check..check + 20)
+        .find(|&a| full.symbolize(a).first().and_then(|f| f.line) == Some(trap))
+        .expect("the trap's line");
+
+    // A source map, named by the module (emcc -gsource-map): lines, no inlining.
+    let mut stripped = open("wasmdemo.stripped.wasm");
+    assert_eq!(stripped.wasm_debug_files(), ["wasmdemo.wasm.map"]);
+    stripped
+        .attach_debug_file("wasmdemo.wasm.map", fixture("wasmdemo.wasm.map"))
+        .unwrap();
+    let frames = stripped.symbolize(trap_at);
+    assert_eq!(frames.len(), 1);
+    assert_eq!(
+        (frames[0].function.as_deref(), frames[0].line),
+        (Some("check"), Some(trap))
+    );
+    assert!(frames[0].file.as_deref().is_some_and(|f| f.ends_with("wasmdemo.c")));
+
+    // The module with DWARF (emcc -gseparate-dwarf's .debug.wasm), for one
+    // with no names at all: its DWARF and its names.
+    let mut bare = open("wasmdemo.bare.wasm");
+    bare.attach_debug_file("wasmdemo.wasm", fixture("wasmdemo.wasm"))
+        .unwrap();
+    let frames = |b: &Binary| -> Vec<(Option<String>, Option<u32>, bool)> {
+        b.symbolize(trap_at)
+            .into_iter()
+            .map(|l| (l.function, l.line, l.inlined))
+            .collect()
+    };
+    assert_eq!(frames(&bare), frames(&full));
+    let named = bare.symbols().by_name("check").expect("check named");
+    assert_eq!((named.address, named.source), (check, SymbolSource::DebugFile));
+    assert!(bare.symbols().by_name("frames").is_some(), "variables, from the DWARF");
+
+    // Not another build's: the code must be the same.
+    let mut other = open("wasmdemo.stripped.wasm");
+    let err = other
+        .attach_debug_file("wasmdemo.o", fixture("wasmdemo.o"))
+        .unwrap_err();
+    assert!(err.to_string().contains("code section differs"), "{err}");
+    // Nor a source map for a binary of another kind.
+    let mut elf = open("tiny-elf-x64");
+    assert!(
+        elf.attach_debug_file("wasmdemo.wasm.map", fixture("wasmdemo.wasm.map"))
+            .is_err()
+    );
+}
+
+#[test]
+fn webassembly_stack_traces_symbolicate() {
+    use binviz::crash::{Candidate, Found, match_images, parse, symbolicate};
+    // Node's trace of crash(200), which traps in check() (see scripts/build-fixtures.sh).
+    let text = String::from_utf8(fixture("wasmdemo.trace")).unwrap();
+    let report = parse(&text).expect("a stack trace");
+    assert_eq!(report.format, "WebAssembly stack trace");
+    assert_eq!(report.exception.as_deref(), Some("RuntimeError: unreachable"));
+    // V8 names the module after the name it gives itself.
+    let found = match_images(
+        &report,
+        &[Candidate {
+            binary: 0,
+            name: "wasmdemo.wasm",
+            ids: vec![],
+        }],
+    );
+    assert_eq!(found.pairs, [(0, 0)]);
+    let bin = open("wasmdemo.wasm");
+    let out = symbolicate(
+        &report,
+        &[Found {
+            image: 0,
+            binary: 0,
+            bin: &bin,
+        }],
+        &[],
+    );
+    let frames = &out.threads[0].frames;
+    let lines = |i: usize| -> Vec<(Option<&str>, Option<u32>, bool)> {
+        frames[i]
+            .lines
+            .iter()
+            .map(|l| (l.function.as_deref(), l.line, l.inlined))
+            .collect()
+    };
+    let line = |needle: &str| Some(source_line("wasmdemo.c", needle));
+    assert_eq!(lines(0), [(Some("check"), line("__builtin_trap"), false)]);
+    assert_eq!(
+        lines(1),
+        [
+            (Some("twice_checked"), line("static inline int twice_checked"), true),
+            (Some("middle"), line("return twice_checked(v) * 3"), false),
+        ]
+    );
+    assert_eq!(lines(2), [(Some("crash"), line("int crash(int v)"), false)]);
+    // The JavaScript frame that called in stays as it was.
+    assert_eq!(frames[3].reported.as_deref(), Some("[eval]:4:40"));
+
+    // Firefox's form of the same frames, with the stripped build and its source map.
+    let firefox = "check@https://example.com/wasmdemo.wasm:wasm-function[8]:0x317
+middle@https://example.com/wasmdemo.wasm:wasm-function[7]:0x2fe
+crash@https://example.com/wasmdemo.wasm:wasm-function[9]:0x324
+@https://example.com/game.js:4:40
+";
+    let report = parse(firefox).expect("a Firefox trace");
+    assert_eq!(report.images[0].name, "wasmdemo.wasm");
+    let mut stripped = open("wasmdemo.stripped.wasm");
+    stripped
+        .attach_debug_file("wasmdemo.wasm.map", fixture("wasmdemo.wasm.map"))
+        .unwrap();
+    let out = symbolicate(
+        &report,
+        &[Found {
+            image: 0,
+            binary: 0,
+            bin: &stripped,
+        }],
+        &[],
+    );
+    let top = &out.threads[0].frames[0].lines[0];
+    assert_eq!(
+        (top.function.as_deref(), top.line),
+        (Some("check"), line("__builtin_trap"))
+    );
+
+    // Safari gives only the function: its start.
+    let safari = parse("wasm-function[8]@[wasm code]\n").expect("a Safari trace");
+    let out = symbolicate(
+        &safari,
+        &[Found {
+            image: 0,
+            binary: 0,
+            bin: &bin,
+        }],
+        &[],
+    );
+    let check = bin.symbols().by_name("check").unwrap().address;
+    assert_eq!(out.threads[0].frames[0].binary_address, Some(check));
+    assert_eq!(
+        out.threads[0].frames[0].lines.last().unwrap().function.as_deref(),
+        Some("check")
+    );
+}
+
+#[test]
+fn webassembly_references_and_pointers() {
+    let bin = open("wasmdemo.wasm");
+    let sym = |name: &str| bin.symbols().by_name(name).unwrap_or_else(|| panic!("{name}"));
+    let (chase, damage, crash, check) = (sym("chase"), sym("damage"), sym("crash"), sym("check"));
+    assert!(bin.callers(damage.address).iter().any(|c| c.address == chase.address));
+    let callees: Vec<String> = bin.callees(sym("step").address).into_iter().map(|c| c.name).collect();
+    assert_eq!(callees.len(), 2, "{callees:?}");
+    assert!(callees.contains(&"score_for".to_string()) && callees.contains(&"host_log".to_string()));
+    let path = bin.call_path(crash.address, check.address, 4).expect("a path");
+    assert_eq!(path.len(), 3, "crash, middle, check: {path:?}");
+    // Globals in memory: read and written where the code says.
+    let frames = sym("frames");
+    let refs = bin.references_to(frames.address, frames.address + frames.size, 0, 50);
+    assert_eq!((refs.counts.read, refs.counts.write), (4, 1), "{:?}", refs.counts);
+    // A function called only through the table is referenced by its slot.
+    let refs = bin.references_to(chase.address, chase.address + 1, 0, 10);
+    assert_eq!((refs.total, refs.counts.pointer), (1, 1));
+    let element = bin.sections().iter().find(|s| s.name == "element").unwrap();
+    assert_eq!(
+        bin.section_at(refs.refs[0].source).map(|s| s.index),
+        Some(element.index)
+    );
+    // Pointers in memory point into memory: each entity's name.
+    let entities = sym("entities");
+    let names: Vec<String> = bin
+        .references_from(entities.address, entities.address + entities.size)
+        .into_iter()
+        .filter(|r| r.kind == binviz::RefKind::Pointer)
+        .map(|r| r.to.unwrap_or_default())
+        .collect();
+    assert_eq!(names, ["\"rat\"", "\"guard\"", "\"dragon\""]);
+    // Every byte of the code belongs to a function.
+    let cov = bin.coverage(5);
+    let code = cov.sections.iter().find(|s| s.name == "code").unwrap();
+    assert_eq!(total(&code.bytes), code.size);
+    assert_eq!(code.bytes.unexplored, 0, "{:?}", code.bytes);
+}
+
+#[test]
+fn webassembly_builds_diff() {
+    use binviz::fndiff::{LineKind, MatchKind, PairStatus};
+    // The same code with DWARF 4 and DWARF 5: only debug info differs.
+    let (old, new) = (open("wasmdemo.wasm"), open("wasmdemo.dwarf5.wasm"));
+    let d = binviz::diff::diff_binaries(&old.size_snapshot("old"), &new.size_snapshot("new"), 40);
+    assert_eq!(
+        (d.symbols_added, d.symbols_removed, d.symbols_changed),
+        (0, 0, 0),
+        "{:?}",
+        d.symbols
+    );
+    assert!(
+        d.sections
+            .iter()
+            .any(|c| c.name == ".debug_addr" && c.old == 0 && c.new > 0)
+    );
+    // (And the name section: the module is named after the file.)
+    let same = |k: &binviz::diff::KindChange| k.old == k.new;
+    assert!(
+        d.by_kind
+            .iter()
+            .all(|k| same(k) || matches!(k.kind, RegionKind::Debug | RegionKind::Symbols)),
+        "{:?}",
+        d.by_kind
+    );
+    // Linking an object file drops the variable nothing uses.
+    let d = binviz::diff::diff_binaries(
+        &open("wasmdemo.o").size_snapshot("wasmdemo.o"),
+        &old.size_snapshot("wasmdemo.wasm"),
+        40,
+    );
+    assert!(
+        d.symbols.iter().any(|c| c.name == "messages" && c.new == 0),
+        "{:?}",
+        d.symbols
+    );
+    assert!(
+        d.symbols.iter().all(|c| !c.code),
+        "no function changed: {:?}",
+        d.symbols
+    );
+
+    // A patched copy: one constant in chase() changed.
+    let chase = old.symbols().by_name("chase").unwrap();
+    let mut bytes = old.data().to_vec();
+    let four = (chase.address..chase.address + chase.size)
+        .find(|&a| bytes[a as usize..a as usize + 2] == [0x41, 0x04])
+        .expect("i32.const 4, the damage done");
+    bytes[four as usize + 1] = 0x05;
+    let patched = Binary::parse(bytes).unwrap();
+    let d = old.diff_functions(&patched);
+    assert_eq!((d.changed, d.added.len(), d.removed.len()), (1, 0, 0), "{d:#?}");
+    assert_eq!(
+        (d.pairs[0].old.name.as_str(), d.pairs[0].status, d.pairs[0].how),
+        ("chase", PairStatus::Changed, MatchKind::Name)
+    );
+    let lines = old.diff_function_code(chase.address, &patched, chase.address);
+    let differ: Vec<_> = lines
+        .iter()
+        .filter(|l| l.kind != LineKind::Same)
+        .map(|l| {
+            (
+                l.old.as_ref().map(|i| i.operands.clone()),
+                l.new.as_ref().map(|i| i.operands.clone()),
+            )
+        })
+        .collect();
+    assert_eq!(differ, [(Some("4".to_string()), Some("5".to_string()))]);
+    // Numbered functions match by their code.
+    let d = old.diff_functions(&open("wasmdemo.bare.wasm"));
+    assert_eq!((d.changed, d.added.len(), d.removed.len()), (0, 0, 0), "{d:#?}");
 }
