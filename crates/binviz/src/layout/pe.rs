@@ -759,24 +759,26 @@ fn dos_stub(b: &mut Builder, stub: u32, lfanew: u64) {
             id,
             "Undocumented MSVC toolchain fingerprint, XOR-masked with a checksum key",
         );
-        b.set_value(id, format!("key {:#010x}", r.xor_key));
+        let entries: Vec<(u32, u32)> = r.unmasked_entries().map(|e| (e.comp_id, e.count)).collect();
+        let sum = super::rich::checksum(ctx.bytes.data, r.offset, &entries);
+        b.set_value(
+            id,
+            if sum == r.xor_key {
+                format!("key {:#010x} (the checksum it is: untouched since linking)", r.xor_key)
+            } else {
+                format!("key {:#010x}, but the checksum is {sum:#010x}: edited after linking", r.xor_key)
+            },
+        );
         if let Some(id) = id {
             if let Some(f) = b.child(id, rich_start, 16, RegionKind::Metadata, "\"DanS\" marker + padding") {
                 b.node_mut(f).is_field = true;
             }
-            for (i, e) in r.unmasked_entries().enumerate() {
+            for (i, &(comp_id, count)) in entries.iter().enumerate() {
                 let off = rich_start + 16 + i as u64 * 8;
                 if let Some(f) = b.child(id, off, 8, RegionKind::Metadata, format!("Entry {i}")) {
                     b.node_mut(f).is_field = true;
-                    b.set_value(
-                        Some(f),
-                        format!(
-                            "product {:#06x}, build {}, used {} times",
-                            e.comp_id >> 16,
-                            e.comp_id & 0xffff,
-                            e.count
-                        ),
-                    );
+                    let tool = super::rich::tool((comp_id >> 16) as u16, comp_id as u16, count);
+                    b.set_value(Some(f), tool.describe());
                 }
             }
             if let Some(f) = b.child(id, rich_end - 8, 8, RegionKind::Metadata, "\"Rich\" marker + key") {

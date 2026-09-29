@@ -1339,6 +1339,16 @@ fn properties(
                 );
                 let os = (b.u16(opt + 40).unwrap_or(0), b.u16(opt + 42).unwrap_or(0));
                 prop(&mut p, "OS version", format!("{}.{}", os.0, os.1));
+                // The Rich header names the tools that made the objects linked in.
+                if let Some(rich) = object::read::pe::RichHeaderInfo::parse(b.data, base - 4) {
+                    let tools: Vec<layout::rich::Tool> = rich
+                        .unmasked_entries()
+                        .map(|e| layout::rich::tool((e.comp_id >> 16) as u16, e.comp_id as u16, e.count))
+                        .collect();
+                    if let Some(compiler) = layout::rich::summary(&tools) {
+                        prop(&mut p, "Compiler", compiler);
+                    }
+                }
                 let mut dlls: Vec<&str> = imports.iter().map(|i| i.library.as_str()).collect();
                 dlls.dedup();
                 prop(&mut p, "Imported DLLs", dlls.join(", "));

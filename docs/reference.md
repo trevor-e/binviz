@@ -130,6 +130,15 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   entry leads there. Name functions, comment instructions and mark code as
   reviewed; a coverage map shows what is named, recovered, reviewed or still
   unexplored, and lists the largest gaps with a guess at what they hold.
+- **Which compiler built it.** A PE file's Rich header, where Microsoft's
+  linker records the tools that made each object it linked, is decoded: each
+  entry names its tool (C or C++ compiler, with link-time code generation or
+  profile-guided optimization; assembler; linker; resource converter…), the
+  tool's version and build, and the Visual C++ release it shipped with, down
+  to the service pack or update where the build number says. The summary
+  names the compiler that made most of the code, and the linker — what a
+  matching decompilation has to rebuild it with. The header's checksum is
+  checked, so one edited after linking shows.
 - **Folders of binaries.** Open a folder or a zip, and every binary in it is
   found by its header (Mach-O, ELF or PE, zips inside opened too), so an
   `.ipa`, an `.app` or `.xcarchive`, an APK or a build folder are all just

@@ -717,6 +717,71 @@ fn context_says_when_it_stops_short_of_the_end() {
     assert!(!all.truncated && !all.describe().contains("stopped at"));
 }
 
+/// x86demo.exe with a Rich header like Visual C++ 6.0's linker writes, of
+/// `entries` (product, build, count): lld-link writes none, so the NT
+/// headers move up to make room for one, with its checksum as its key.
+fn with_rich_header(entries: &[(u16, u16, u32)]) -> Vec<u8> {
+    let mut data = fixture("x86demo.exe");
+    let (old, new) = (0x78usize, 0x100usize);
+    // The NT headers and the section table end well before the first section's bytes, at 0x400.
+    let headers = data[old..0x238].to_vec();
+    data[old..new + headers.len()].fill(0);
+    data[new..new + headers.len()].copy_from_slice(&headers);
+    data[0x3C..0x40].copy_from_slice(&(new as u32).to_le_bytes());
+    let ids: Vec<(u32, u32)> = entries.iter().map(|&(p, b, n)| ((p as u32) << 16 | b as u32, n)).collect();
+    // The key is the checksum of what comes before (e_lfanew left out) and of the entries.
+    let start = 0x80usize;
+    let mut key = start as u32;
+    for (i, &b) in data[..start].iter().enumerate() {
+        if !(0x3C..0x40).contains(&i) {
+            key = key.wrapping_add((b as u32).rotate_left(i as u32 % 32));
+        }
+    }
+    for &(id, n) in &ids {
+        key = key.wrapping_add(id.rotate_left(n % 32));
+    }
+    let mut rich = vec![u32::from_le_bytes(*b"DanS") ^ key, key, key, key];
+    for &(id, n) in &ids {
+        rich.extend([id ^ key, n ^ key]);
+    }
+    rich.extend([u32::from_le_bytes(*b"Rich"), key]);
+    for (i, w) in rich.iter().enumerate() {
+        data[start + 4 * i..start + 4 * i + 4].copy_from_slice(&w.to_le_bytes());
+    }
+    data
+}
+
+#[test]
+fn the_rich_header_names_the_compiler() {
+    let entries = [(0x0001, 0, 90), (0x000A, 8804, 41), (0x000B, 8804, 3), (0x0012, 8444, 2), (0x0004, 8447, 1)];
+    let bin = Binary::parse(with_rich_header(&entries)).unwrap();
+    let compiler = bin.summary().properties.iter().find(|p| p.key == "Compiler").unwrap();
+    assert_eq!(
+        compiler.value,
+        "Visual C++ 6.0 SP5 or SP6: cl 12.00.8804 (41 C and 3 C++ objects); link 6.00.8447"
+    );
+    // Each entry says what made the objects, and the key is the checksum it should be.
+    let path = bin.describe_offset(0x80 + 16 + 8);
+    let entry = path.last().unwrap();
+    assert_eq!(entry.name, "Entry 1");
+    assert_eq!(
+        entry.value.as_deref(),
+        Some("cl 12.00.8804, C compiler (Visual C++ 6.0 SP5 or SP6): 41 objects [Utc12_C]")
+    );
+    let header = &path[path.len() - 2];
+    assert!(header.value.as_deref().unwrap().contains("untouched since linking"), "{header:?}");
+    // The code still reads as before.
+    assert!(bin.symbols().functions().count() > 40);
+
+    // A byte of the DOS stub changed after linking no longer adds up.
+    let mut edited = with_rich_header(&entries);
+    edited[0x50] ^= 1;
+    let bin = Binary::parse(edited).unwrap();
+    let path = bin.describe_offset(0x80 + 16);
+    let header = &path[path.len() - 2];
+    assert!(header.value.as_deref().unwrap().contains("edited after linking"), "{header:?}");
+}
+
 #[test]
 fn decompilation_goes_from_what_is_ready() {
     use binviz::{Decomp, DecompState, NextQuery, Readiness};
