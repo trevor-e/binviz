@@ -65,6 +65,7 @@ mod switches;
 mod symbols;
 pub mod tables;
 mod util;
+mod wasm;
 mod xbe;
 pub mod xrefs;
 pub mod zip;

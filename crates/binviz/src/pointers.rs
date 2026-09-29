@@ -368,6 +368,10 @@ impl Binary {
     fn pointer_scheme(&self, file: Option<&object::File<'_>>) -> Scheme {
         let b = Bytes::new(&self.data, self.endian);
         match self.summary.format {
+            // WebAssembly data holds linear memory's addresses, not the module's: the
+            // function tables' slots are the only pointers to the module's code, and
+            // words of data point only into data.
+            Format::Wasm => Scheme::Relocated(crate::wasm::analysis::pointers(self)),
             Format::MachO => match chained_segments(&b, self) {
                 Some((base, segments, imports)) => Scheme::Chained {
                     base,

@@ -675,6 +675,7 @@ impl Binary {
     /// Whether references can be found in this binary's code.
     pub fn xrefs_supported(&self) -> bool {
         self.rom.is_some()
+            || self.wasm.is_some()
             || matches!(
                 self.arch,
                 Architecture::Aarch64
@@ -686,6 +687,10 @@ impl Binary {
     }
 
     fn scan_code(&self, bytes: &[u8], addr: u64, cx: &Scan, emit: &mut dyn FnMut(u64, u64, RefKind)) {
+        if self.wasm.is_some() {
+            crate::wasm::analysis::scan(self, addr, addr + bytes.len() as u64, emit);
+            return;
+        }
         if let Some(rom) = &self.rom {
             let mut state = self.rom_state_at(addr);
             let tail = self.code_bytes(addr).unwrap_or(bytes);

@@ -5,7 +5,7 @@ use std::process::ExitCode;
 use binviz::{Binary, Container, SymbolQuery, Target};
 
 const USAGE: &str = "\
-binviz — explain every byte and address of ELF, Mach-O, PE and XBE binaries
+binviz — explain every byte and address of ELF, Mach-O, PE, XBE and WebAssembly binaries
 
 USAGE:
     binviz <command> <file> [args]
@@ -69,7 +69,8 @@ COMMANDS:
     attribution <file> [unit] [id] Code and data per source file (or unit); with an id,
                                    the address ranges of that one
     crash <file> <report>          Symbolicate a crash report (Apple .crash or .ips, Android
-                                   tombstone, a stack trace) with a binary or a folder's binaries
+                                   tombstone, a stack trace, a browser's or Node's through
+                                   WebAssembly) with a binary or a folder's binaries
   Two versions
     diff <old> <new>               What changed in size between two builds: two binaries, or
                                    two folders or zips (files, owners, symbols)
@@ -126,9 +127,11 @@ COMMANDS:
                                    above that confidence
 
 Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
-                         PDB), or for a Mach-O binary linked without dsymutil,
-                         from the folder holding the object files its debug
-                         map names
+                         PDB; for WebAssembly, a source map or the module with
+                         the DWARF, which binviz looks for beside the module
+                         when it names one), or for a Mach-O binary linked
+                         without dsymutil, from the folder holding the object
+                         files its debug map names
          --member <n>    pick a slice/member of a universal binary or archive, or
                          a binary of a folder (its name, path or number)
          --notes <file>  load annotations (a JSON array) first; a note's type (a
@@ -264,7 +267,29 @@ fn open(path: &str, debug: Option<&str>, member: Option<&str>) -> Result<Binary,
         }
         debug_map_note(bin.attach_debug_map_from_disk(&folders));
     }
+    if debug.is_none() && bin.debug_info().is_none() {
+        wasm_debug_beside(&mut bin, path);
+    }
     Ok(bin)
+}
+
+/// Attaches the debug info a WebAssembly module names (its DWARF module,
+/// its source map) when the file is beside the module: the name's last
+/// part, a URL's too. Says which on stderr.
+fn wasm_debug_beside(bin: &mut Binary, path: &str) {
+    let dir = std::path::Path::new(path).parent().unwrap_or(std::path::Path::new(""));
+    for named in bin.wasm_debug_files() {
+        let file = named.split(['?', '#']).next().unwrap_or(&named);
+        let file = dir.join(file.rsplit(['/', '\\']).next().unwrap_or(file));
+        let Ok(bytes) = std::fs::read(&file) else { continue };
+        match bin.attach_debug_file(&file.to_string_lossy(), bytes) {
+            Ok(()) => {
+                eprintln!("debug info from {}, which the module names", file.display());
+                return;
+            }
+            Err(e) => eprintln!("{}: {e}", file.display()),
+        }
+    }
 }
 
 /// A PlayStation memory image or overlay, its functions named after the
@@ -1842,7 +1867,9 @@ fn crash(path: &str, report_path: &str, debug: Option<&str>, member: Option<&str
     use binviz::crash::{Candidate, Found, Matches, match_images, parse, symbolicate};
     let text = std::fs::read_to_string(report_path).map_err(|e| format!("{report_path}: {e}"))?;
     let report = parse(&text).ok_or_else(|| {
-        format!("{report_path}: not a crash report (an Apple .crash or .ips, an Android tombstone, or a stack trace)")
+        format!(
+            "{report_path}: not a crash report (an Apple .crash or .ips, an Android tombstone, or a stack trace, native or WebAssembly)"
+        )
     })?;
     let p = std::path::Path::new(path);
     // Binaries by the index the matching knows them by, and their names.

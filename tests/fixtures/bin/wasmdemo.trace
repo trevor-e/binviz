@@ -1,0 +1,5 @@
+RuntimeError: unreachable
+    at wasmdemo.wasm.check (wasm://wasm/wasmdemo.wasm-ba54c726:wasm-function[8]:0x317)
+    at wasmdemo.wasm.middle (wasm://wasm/wasmdemo.wasm-ba54c726:wasm-function[7]:0x2fe)
+    at wasmdemo.wasm.crash (wasm://wasm/wasmdemo.wasm-ba54c726:wasm-function[9]:0x324)
+    at [eval]:4:40

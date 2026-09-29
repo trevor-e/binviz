@@ -584,6 +584,7 @@ impl Binary {
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
             rom: None,
+            wasm: None,
         };
         binary.discovered = rom.analysis.functions.clone();
         binary.rom = Some(rom);

@@ -60,6 +60,8 @@ pub struct Binary {
     pub(crate) similar: std::sync::OnceLock<crate::similar::SimilarIndex>,
     /// For a game ROM: its console, memory map and the code found in it.
     pub(crate) rom: Option<crate::rom::Rom>,
+    /// For a WebAssembly module: its sections and what they declare.
+    pub(crate) wasm: Option<crate::wasm::Module>,
 }
 
 fn arch_name(a: Architecture) -> String {
@@ -93,7 +95,7 @@ fn perm_string(r: bool, w: bool, x: bool) -> String {
 }
 
 impl Binary {
-    /// Parses ELF, Mach-O (thin), PE or COFF data.
+    /// Parses ELF, Mach-O (thin), PE, COFF or WebAssembly data.
     ///
     /// Fat Mach-O files and archives contain several binaries; open those with
     /// [`crate::Container`] first.
@@ -112,6 +114,7 @@ impl Binary {
                     "this is a PDB, the debug info of a Windows binary: open the .exe or .dll it belongs to, then attach this file to it as its debug file"
                 )
             }
+            Err(_) if crate::wasm::is_wasm(bytes) => return Binary::from_wasm(data.clone()),
             Err(_) => {
                 return match crate::rom::detect(bytes) {
                     Some(rom) => Binary::from_rom(data.clone(), rom),
@@ -550,6 +553,7 @@ impl Binary {
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
             rom: None,
+            wasm: None,
         };
         drop(file);
         // DWARF first: it may add functions, and the symbol index is built once.
@@ -633,6 +637,7 @@ impl Binary {
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
             rom: None,
+            wasm: None,
         };
         binary.layout = binary.build_layout(Format::Unknown);
         binary
@@ -650,6 +655,7 @@ impl Binary {
             Format::Pe => layout::pe::build(&mut b, true),
             Format::Coff => layout::pe::build(&mut b, false),
             Format::Xbe => layout::xbe::build(&mut b),
+            Format::Wasm => crate::wasm::layout::build(&mut b),
             _ => {}
         }
         b.finish()
@@ -665,6 +671,7 @@ impl Binary {
             sections: &self.sections,
             symbols: Some(&self.symbols),
             dwarf: self.debug.as_ref(),
+            wasm: self.wasm.as_ref(),
         }
     }
 
@@ -831,6 +838,7 @@ impl Layout {
             sections: &[],
             symbols: None,
             dwarf: None,
+            wasm: None,
         })
         .finish()
     }

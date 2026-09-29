@@ -67,6 +67,8 @@ enum Isa {
     Arm,
     /// A game ROM's CPU.
     Rom,
+    /// WebAssembly bytecode (see [`crate::wasm::code`]).
+    Wasm,
     None,
 }
 
@@ -76,6 +78,7 @@ fn isa(arch: Architecture) -> Isa {
         Architecture::X86_64_X32 | Architecture::I386 => Isa::X86(32),
         Architecture::Aarch64 | Architecture::Aarch64_Ilp32 => Isa::A64,
         Architecture::Arm => Isa::Arm,
+        Architecture::Wasm32 | Architecture::Wasm64 => Isa::Wasm,
         _ => Isa::None,
     }
 }
@@ -88,6 +91,9 @@ impl Binary {
     fn isa(&self) -> Isa {
         if self.rom.as_ref().is_some_and(|r| crate::cpu::supported(r.cpu)) {
             return Isa::Rom;
+        }
+        if self.wasm.is_none() && isa(self.arch) == Isa::Wasm {
+            return Isa::None;
         }
         isa(self.arch)
     }
@@ -484,6 +490,14 @@ impl Binary {
                     pos += len;
                 }
             }
+            Isa::Wasm => {
+                let (instructions, truncated) = crate::wasm::analysis::disassemble(self, start, start + avail, limit);
+                for mut i in instructions {
+                    i.source = source_for(i.address);
+                    out.instructions.push(i);
+                }
+                out.truncated = truncated;
+            }
             Isa::None => {}
         }
         out.end = out.instructions.last().map_or(start, |i| i.address + i.len as u64);
@@ -613,6 +627,11 @@ impl Binary {
                     real = (out.len(), pos.min(bytes.len()) as u64);
                 }
             }
+            Isa::Wasm => {
+                let (tokens, len) = crate::wasm::analysis::tokens(self, start, start + bytes.len() as u64, limit);
+                real = (tokens.len(), len);
+                out = tokens;
+            }
             Isa::None => return (Vec::new(), bytes.len() as u64),
         }
         out.truncate(real.0);
@@ -697,6 +716,8 @@ impl Binary {
             Isa::A64 | Isa::Arm => address & !3,
             // Where the function it is in starts (the analysis found those).
             Isa::Rom => self.symbols.function_containing(address).map_or(address, |f| f.address),
+            // A body decodes only from its start.
+            Isa::Wasm => crate::wasm::analysis::boundary_before(self, address),
             _ => {
                 let from_lines = self.debug.as_ref().and_then(|d| {
                     let rows = d.locations_in(address.saturating_sub(0x1000), address + 1);

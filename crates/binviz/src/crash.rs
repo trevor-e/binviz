@@ -1,6 +1,7 @@
 //! Crash reports, symbolicated with the binaries at hand: Apple's text
-//! reports (`.crash`) and JSON ones (`.ips`), Android tombstones, and
-//! pasted stack traces that give images and offsets.
+//! reports (`.crash`) and JSON ones (`.ips`), Android tombstones, pasted
+//! stack traces that give images and offsets, and the stack traces
+//! browsers and Node.js print for WebAssembly (`wasm-function[12]:0x1a2b`).
 //!
 //! [`parse`] reads a report. The caller picks the binaries whose UUID or
 //! build ID is one of the report's images ([`CrashImage::matches`]), and
@@ -14,7 +15,8 @@ use crate::Binary;
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CrashReport {
-    /// "Apple crash report", "Apple crash report (.ips)", "Android tombstone" or "Stack trace".
+    /// "Apple crash report", "Apple crash report (.ips)", "Android tombstone",
+    /// "WebAssembly stack trace" or "Stack trace".
     pub format: String,
     pub process: Option<String>,
     pub identifier: Option<String>,
@@ -66,6 +68,9 @@ pub struct CrashFrame {
     pub linked: Option<u64>,
     /// The name the report gives it, if any.
     pub symbol: Option<String>,
+    /// A WebAssembly frame's function index (`wasm-function[12]`): where it
+    /// is when the frame gives no offset.
+    pub wasm_function: Option<u32>,
 }
 
 /// Whether a binary is one of a report's images.
@@ -93,6 +98,15 @@ impl CrashImage {
             .and_then(|p| p.rsplit(['/', '\\']).next())
             .filter(|n| !n.is_empty())
             .unwrap_or(&self.name)
+    }
+
+    /// Whether this is a WebAssembly module the report can't name: V8 calls
+    /// one compiled from bytes `wasm://wasm/<hash>`, Firefox after the script
+    /// that compiled it (`app.js line 2 > WebAssembly.instantiate`).
+    fn unnamed_module(&self) -> bool {
+        self.path
+            .as_deref()
+            .is_some_and(|p| p.starts_with("wasm://") || p.contains("> WebAssembly."))
     }
 
     /// Whether a binary named `name` with these build IDs (a Mach-O UUID per
@@ -177,7 +191,15 @@ pub fn match_images(report: &CrashReport, candidates: &[Candidate<'_>]) -> Match
                     img.id.as_deref().unwrap_or("?")
                 ),
             )),
-            (None, None) => {}
+            (None, None) => {
+                // A module the trace can't name is the one WebAssembly module here, if there is just one.
+                let modules: Vec<&Candidate> = candidates.iter().filter(|c| c.name.ends_with(".wasm")).collect();
+                if let [c] = modules.as_slice()
+                    && img.unnamed_module()
+                {
+                    found.push((image, c.binary));
+                }
+            }
         }
     }
     Matches { pairs: found, notes }
@@ -425,15 +447,21 @@ pub fn symbolicate(report: &CrashReport, found: &[Found<'_>], notes: &[(u32, Str
                     let image = f.image.and_then(|i| report.images.get(i as usize));
                     let binary_address = hit.and_then(|h| {
                         let base = h.bin.link_base();
-                        f.linked.or_else(|| f.offset.map(|o| base.wrapping_add(o))).or_else(|| {
-                            let (a, load) = (f.address?, image?.load_address?);
-                            a.checked_sub(load).map(|o| base.wrapping_add(o))
-                        })
+                        f.linked
+                            .or_else(|| f.offset.map(|o| base.wrapping_add(o)))
+                            .or_else(|| {
+                                let (a, load) = (f.address?, image?.load_address?);
+                                a.checked_sub(load).map(|o| base.wrapping_add(o))
+                            })
+                            // A WebAssembly frame with no offset: its function.
+                            .or_else(|| h.bin.wasm_function_address(f.wasm_function?))
                     });
                     // Frames past the first hold return addresses: the call is just
                     // before, which is where to look (but the offset is the frame's).
+                    // A WebAssembly frame gives the call's own offset.
+                    let returns = hit.is_some_and(|h| h.bin.summary().format != crate::Format::Wasm);
                     let lines = match (hit, binary_address) {
-                        (Some(h), Some(a)) if f.index > 0 && a > 0 => {
+                        (Some(h), Some(a)) if f.index > 0 && a > 0 && returns => {
                             let mut lines = h.bin.symbolize(a - 1);
                             for l in &mut lines {
                                 l.offset = l.offset.map(|o| o + 1);
@@ -481,14 +509,17 @@ pub fn symbolicate(report: &CrashReport, found: &[Found<'_>], notes: &[(u32, Str
 
 // --- Parsing ------------------------------------------------------------------------
 
-/// Reads a crash report: Apple's (text or `.ips`), an Android tombstone, or
-/// a stack trace with images and offsets. `None` when it is none of those.
+/// Reads a crash report: Apple's (text or `.ips`), an Android tombstone, a
+/// browser's or Node's stack trace through WebAssembly, or a stack trace
+/// with images and offsets. `None` when it is none of those.
 pub fn parse(text: &str) -> Option<CrashReport> {
     let text = text.trim_start_matches('\u{feff}');
     let report = if text.trim_start().starts_with('{') {
         parse_ips(text)
     } else if text.lines().any(|l| tombstone_frame(l).is_some()) {
         parse_tombstone(text)
+    } else if text.lines().any(|l| wasm_frame(l).is_some()) {
+        parse_wasm_trace(text)
     } else {
         parse_apple(text)
     }?;
@@ -847,6 +878,159 @@ fn parse_tombstone(text: &str) -> Option<CrashReport> {
     Some(r)
 }
 
+/// A WebAssembly frame as browsers and Node print one, and the module's URL:
+/// `at name (https://…/app.wasm:wasm-function[12]:0x1a2b)` (Chrome, Node;
+/// `wasm://wasm/<hash>` for a module compiled from bytes, `<name>-<hash>`
+/// when the module names itself), `name@https://…/app.wasm:wasm-function[12]:0x1a2b`
+/// (Firefox), `<?>.wasm-function[12]@[wasm code]` (Safari, which gives no
+/// offset). The offset is in the module: binviz's address. An older V8 gave
+/// a decimal offset into the function instead, which is not used.
+fn wasm_frame(line: &str) -> Option<(CrashFrame, String)> {
+    const MARK: &str = "wasm-function[";
+    let t = line.trim();
+    // The last one: Firefox names a function without a name `wasm-function[12]` too.
+    let at = t.rfind(MARK)?;
+    let rest = &t[at + MARK.len()..];
+    let close = rest.find(']')?;
+    let wasm_function = rest[..close].parse().ok();
+    let offset = rest[close + 1..].strip_prefix(":0x").and_then(|h| {
+        let end = h.find(|c: char| !c.is_ascii_hexdigit()).unwrap_or(h.len());
+        u64::from_str_radix(&h[..end], 16).ok()
+    });
+    let before = t[..at].trim();
+    let before = before.strip_prefix("at ").unwrap_or(before);
+    let (symbol, url) = if let Some((name, url)) = before.rsplit_once(" (") {
+        (Some(name), url)
+    } else if let Some((name, url)) = before.split_once('@') {
+        (Some(name), url)
+    } else {
+        (None, before)
+    };
+    let url = url.trim_end_matches(':').trim();
+    // Safari's `<?>.` names nothing.
+    let url = if url.contains(['/', ':']) { url } else { "" };
+    let frame = CrashFrame {
+        offset,
+        symbol: symbol.filter(|s| !s.is_empty()).map(str::to_string),
+        wasm_function,
+        ..CrashFrame::default()
+    };
+    (wasm_function.is_some() || offset.is_some()).then(|| (frame, url.to_string()))
+}
+
+/// The image a WebAssembly frame's URL names: the file, for a URL; for
+/// V8's `wasm://wasm/<name>-<hash>`, the name the module gives itself.
+fn wasm_image(url: &str) -> CrashImage {
+    let clean = url.split(['?', '#']).next().unwrap_or(url);
+    let name = if let Some(rest) = clean.strip_prefix("wasm://wasm/") {
+        match rest.rsplit_once('-') {
+            Some((module, hash)) if hash.len() == 8 && hash.bytes().all(|b| b.is_ascii_hexdigit()) => {
+                module.to_string()
+            }
+            _ => clean.to_string(),
+        }
+    } else if clean.is_empty() {
+        "WebAssembly module".to_string()
+    } else if clean.contains("> WebAssembly.") {
+        clean.to_string()
+    } else {
+        clean.rsplit(['/', '\\']).next().unwrap_or(clean).to_string()
+    };
+    CrashImage {
+        name,
+        path: Some(clean.to_string()).filter(|p| !p.is_empty()),
+        ..CrashImage::default()
+    }
+}
+
+/// A JavaScript frame of the same trace (`at f (https://…/app.js:12:5)`,
+/// `f@https://…/app.js:12:5`): shown as it is, since no binary holds it.
+fn js_frame(line: &str) -> Option<CrashFrame> {
+    let t = line.trim();
+    let (symbol, place) = if let Some(rest) = t.strip_prefix("at ") {
+        match rest.rsplit_once(" (") {
+            Some((name, place)) => (Some(name), place.trim_end_matches(')')),
+            None => (None, rest),
+        }
+    } else {
+        let (name, place) = t.split_once('@')?;
+        (Some(name).filter(|n| !n.is_empty()), place)
+    };
+    // It ends in a line and column.
+    let mut parts = place.rsplitn(3, ':');
+    let (col, line_no) = (parts.next()?, parts.next()?);
+    if !col.bytes().all(|b| b.is_ascii_digit()) || !line_no.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let file = place.rsplit(['/', '\\']).next().unwrap_or(place);
+    Some(CrashFrame {
+        image_name: file.split(':').next().unwrap_or(file).to_string(),
+        symbol: Some(match symbol {
+            Some(s) => format!("{s} ({file})"),
+            None => file.to_string(),
+        }),
+        ..CrashFrame::default()
+    })
+}
+
+/// A stack trace through WebAssembly, as a browser's console or Node
+/// prints an error: the message, then a frame per line, WebAssembly's and
+/// JavaScript's mixed.
+fn parse_wasm_trace(text: &str) -> Option<CrashReport> {
+    let mut r = CrashReport {
+        format: "WebAssembly stack trace".into(),
+        ..CrashReport::default()
+    };
+    let mut frames = Vec::new();
+    for line in text.lines() {
+        let t = line.trim();
+        if t.is_empty() {
+            continue;
+        }
+        let index = frames.len() as u32;
+        if let Some((mut frame, url)) = wasm_frame(t) {
+            let image = wasm_image(&url);
+            let i = match r
+                .images
+                .iter()
+                .position(|x| x.path == image.path && x.name == image.name)
+            {
+                Some(i) => i,
+                None => {
+                    r.images.push(image);
+                    r.images.len() - 1
+                }
+            };
+            frame.index = index;
+            frame.image = Some(i as u32);
+            frame.image_name = r.images[i].name.clone();
+            frames.push(frame);
+        } else if let Some(mut frame) = js_frame(t) {
+            frame.index = index;
+            frames.push(frame);
+        } else if frames.is_empty() {
+            // The message: "RuntimeError: unreachable", then any more said before the frames.
+            let t = t.strip_prefix("Uncaught ").unwrap_or(t);
+            match &mut r.exception {
+                None => r.exception = Some(t.to_string()),
+                Some(_) => {
+                    let reason = r.reason.get_or_insert_with(String::new);
+                    if !reason.is_empty() {
+                        reason.push('\n');
+                    }
+                    reason.push_str(t);
+                }
+            }
+        }
+    }
+    r.threads.push(CrashThread {
+        name: "Stack".into(),
+        crashed: true,
+        frames,
+    });
+    Some(r)
+}
+
 fn parse_ips(text: &str) -> Option<CrashReport> {
     use serde_json::Value;
     let text = text.trim_start();
@@ -1095,6 +1279,71 @@ backtrace:
         assert_eq!(f[0].symbol.as_deref(), Some("Java_com_example_crash(int)+24"));
         assert_eq!((f[0].image, f[2].image), (Some(0), Some(0)));
         assert!(f[2].symbol.is_none());
+    }
+
+    #[test]
+    fn webassembly_traces() {
+        // Node 22 (V8), a module that names itself b.wasm, then JavaScript.
+        let node = "RuntimeError: unreachable
+    at b.wasm.check (wasm://wasm/b.wasm-4871eff6:wasm-function[2]:0x79)
+    at b.wasm.middle (wasm://wasm/b.wasm-4871eff6:wasm-function[1]:0x61)
+    at wasm://wasm/b.wasm-4871eff6:wasm-function[3]:0x86
+    at /home/me/run.js:5:22
+";
+        let r = parse(node).expect("parsed");
+        assert_eq!(r.format, "WebAssembly stack trace");
+        assert_eq!(r.exception.as_deref(), Some("RuntimeError: unreachable"));
+        assert_eq!(r.images.len(), 1);
+        assert_eq!(r.images[0].name, "b.wasm");
+        let f = &r.threads[0].frames;
+        assert_eq!(f.len(), 4);
+        assert_eq!((f[0].offset, f[0].wasm_function), (Some(0x79), Some(2)));
+        assert_eq!(f[0].symbol.as_deref(), Some("b.wasm.check"));
+        assert_eq!((f[2].offset, f[2].symbol.as_deref()), (Some(0x86), None));
+        assert_eq!((f[3].image, f[3].symbol.as_deref()), (None, Some("run.js:5:22")));
+        // Matched by the module's own name, or as the one module here when unnamed.
+        let candidate = |binary, name| Candidate {
+            binary,
+            name,
+            ids: vec![],
+        };
+        let found = match_images(&r, &[candidate(7, "b.wasm")]);
+        assert_eq!(found.pairs, [(0, 7)]);
+        let unnamed = parse("Error\n    at wasm://wasm/778cff12:wasm-function[2]:0x82\n").unwrap();
+        assert_eq!(unnamed.images[0].name, "wasm://wasm/778cff12");
+        let found = match_images(&unnamed, &[candidate(1, "app.wasm")]);
+        assert_eq!(found.pairs, [(0, 1)]);
+        let two = [candidate(1, "app.wasm"), candidate(2, "other.wasm")];
+        assert!(match_images(&unnamed, &two).pairs.is_empty(), "which one is it?");
+
+        // Chrome, loaded from a URL (streaming compilation), with a JavaScript frame.
+        let chrome = "Uncaught RuntimeError: memory access out of bounds
+    at $foo (https://example.com/game/app.wasm?v=3:wasm-function[12]:0x1a2b)
+    at Module._main (https://example.com/game/app.js:1234:10)";
+        let r = parse(chrome).unwrap();
+        let exception = r.exception.as_deref();
+        assert_eq!(exception, Some("RuntimeError: memory access out of bounds"));
+        assert_eq!(r.images[0].name, "app.wasm");
+        assert_eq!(r.images[0].path.as_deref(), Some("https://example.com/game/app.wasm"));
+        assert_eq!(r.threads[0].frames[0].symbol.as_deref(), Some("$foo"));
+        let js = r.threads[0].frames[1].symbol.as_deref();
+        assert_eq!(js, Some("Module._main (app.js:1234:10)"));
+
+        // Firefox: by URL, and compiled from bytes (named after the script that did it).
+        let firefox = "foo@https://example.com/app.wasm:wasm-function[12]:0x1a2b
+wasm-function[3]@https://example.com/run.js line 2 > WebAssembly.instantiate:wasm-function[3]:0x40
+Module._main@https://example.com/app.js:1234:10";
+        let r = parse(firefox).unwrap();
+        let f = &r.threads[0].frames;
+        assert_eq!((f[0].offset, f[0].symbol.as_deref()), (Some(0x1a2b), Some("foo")));
+        assert_eq!((f[1].offset, f[1].wasm_function), (Some(0x40), Some(3)));
+        assert!(r.images[f[1].image.unwrap() as usize].unnamed_module());
+        assert_eq!(f[2].image, None);
+
+        // Safari: no offset, the function's index only.
+        let r = parse("<?>.wasm-function[5]@[wasm code]\n").unwrap();
+        let f = &r.threads[0].frames[0];
+        assert_eq!((f.offset, f.wasm_function), (None, Some(5)));
     }
 
     #[test]

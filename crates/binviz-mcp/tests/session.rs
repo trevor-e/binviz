@@ -702,3 +702,24 @@ fn types_as_c_and_members_at_offsets() {
         assert!(fields.contains(line), "{line:?} missing in:\n{fields}");
     }
 }
+
+#[test]
+fn a_webassembly_build_and_its_stack_trace() {
+    // The stripped build names its source map, which is beside it.
+    let module = fixture_copy_for("wasmdemo.stripped.wasm", "wasm-");
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin");
+    std::fs::copy(
+        src.join("wasmdemo.wasm.map"),
+        module.with_file_name("wasmdemo.wasm.map"),
+    )
+    .unwrap();
+    let mut s = Session::start();
+    let opened = s.ok("open_binary", json!({ "path": module.to_str().unwrap() }));
+    assert!(opened.contains("wasmdemo.wasm.map, which the module names"), "{opened}");
+    let code = s.ok("disassemble", json!({ "at": "middle" }));
+    assert!(code.contains("<check>"), "{code}");
+    let trace = src.join("wasmdemo.trace");
+    let crash = s.ok("symbolicate", json!({ "report_file": trace.to_str().unwrap() }));
+    assert!(crash.contains("check  wasmdemo.c:84:9"), "{crash}");
+    let _ = std::fs::remove_dir_all(module.parent().unwrap());
+}

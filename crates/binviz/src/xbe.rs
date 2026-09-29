@@ -811,6 +811,7 @@ impl Binary {
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
             rom: None,
+            wasm: None,
         };
         binary.rebuild_static_symbols();
         binary.layout = binary.build_layout(Format::Xbe);
