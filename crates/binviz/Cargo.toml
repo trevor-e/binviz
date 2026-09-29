@@ -1,6 +1,6 @@
 [package]
 name = "binviz"
-description = "Explain every byte and every address of ELF, Mach-O and PE binaries, including DWARF debug info"
+description = "Explain every byte and every address of ELF, Mach-O, PE, XBE and WebAssembly binaries, including DWARF debug info"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

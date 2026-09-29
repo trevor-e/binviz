@@ -1,6 +1,6 @@
 //! # binviz
 //!
-//! Explains every byte and every address of ELF, Mach-O and PE binaries.
+//! Explains every byte and every address of ELF, Mach-O, PE, XBE and WebAssembly binaries.
 //!
 //! - [`Binary`] parses a file (via the [`object`] crate) into sections,
 //!   segments, symbols, imports and exports, and builds a *layout*: a tree of

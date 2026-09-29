@@ -292,7 +292,7 @@ function renderLanding() {
         'div',
         { class: 'dropzone' },
         h('div', { class: 'big' }, 'Drop a binary, disc image or ROM'),
-        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'PS1 discs and EXEs, console ROMs, PE, ELF and Mach-O'),
+        h('div', { class: 'secondary', style: 'margin-bottom:14px' }, 'PS1 discs and EXEs, console ROMs, PE, ELF, Mach-O, XBE and WebAssembly'),
         h('div', { class: 'dropzone-actions' }, choose, chooseFolder),
       ),
       h('div', { class: 'secondary', style: 'margin-top:18px' }, 'Or try a sample:'),

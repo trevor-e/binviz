@@ -64,8 +64,9 @@ from the user's own copy of the game.
 - **have** function-by-function diff of two builds with an instruction-hash similarity (`fndiff.rs`, MCP `diff_functions`)
 - **have** relocatable ELF/Mach-O objects opened with synthetic addresses and relocated DWARF
 - **have** MCP server exposing all of the above (`crates/binviz-mcp`)
-- **have** Rich header located and its size accounted for (`layout/pe.rs`), but not decoded
-- **have** `Format::Wasm` as a name only (`model.rs`); no wasm reader
+- **have** Rich header located, sized and decoded to compilers and linkers (`layout/rich.rs`;
+  decoded under **Compiler identification** below)
+- **have** WebAssembly modules read, in folders and zips too (`wasm/`; built under **WASM reader** below)
 
 ## Track A: Final Fantasy IX (PS1)
 
