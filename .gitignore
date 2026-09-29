@@ -12,6 +12,7 @@ node_modules
 samples/psx/build/
 samples/psx-advanced/build/
 samples/psx-vm/build/
+samples/quake2-loop/build/
 
 # Wrangler's local cache
 .wrangler
