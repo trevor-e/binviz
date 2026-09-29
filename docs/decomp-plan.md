@@ -1,6 +1,6 @@
 # Plan: binviz for agent-driven matching decompilation
 
-Status: planning. Nothing below is built yet unless marked **have**.
+Status: planning. Nothing below is built yet unless marked **have** or ticked.
 Keep this file current: tick items as they land, and note the commit.
 
 Chosen first target: **Final Fantasy IX (PlayStation 1)**, Track A below.
@@ -161,18 +161,31 @@ then one overlay.
 
 ### Phase B1: map a stripped 32-bit x86 binary
 
-A 32-bit PE has no `.pdata`, so today a stripped x86 game yields almost no
-functions (`discover.rs` handles only `.pdata`, `.eh_frame`,
-`LC_FUNCTION_STARTS`).
+A 32-bit PE has no `.pdata`; its code is followed instead
+(`discover/x86.rs`). Fixture: `x86demo.exe` with its PDB, and
+`x86demo-fixed.exe`, the same code linked `/FIXED` (no base relocations, as
+games of the time were), built with clang for the MSVC ABI and lld-link, with
+MSVC's idioms written in `x86demo-msvc.s` (no MSVC needed). It has every
+calling convention, vtables, TLS callbacks and a SafeSEH table, for the items
+below too.
 
-- [ ] **Recursive-descent function discovery for x86.** Follow calls and
-      branches from the entry point, exports, TLS callbacks, vtable slots and
-      pointers in data, the way `rom/` follows a ROM from its vectors. Then a
-      prologue scan for code nothing reaches. Where: `discover.rs`.
-      Done when: a stripped MSVC 32-bit exe recovers >95 % of the functions
-      its PDB names.
-- [ ] **x86 jump tables.** MSVC `jmp dword ptr [table + reg*4]`, with the
-      optional byte index table, bounded by the preceding `cmp reg, N; ja`.
+- [x] **Recursive-descent function discovery for x86** (79a1903). Starts:
+      entry point, exports, import thunks, TLS callbacks, SafeSEH handlers;
+      then code addresses the image holds (relocated words, or aligned words
+      of data without `.reloc`, and immediates); then gap starts that read as
+      code. Calls that never return end a function (imports by name, and
+      what only ends in them); MSVC's in-place `__finally` blocks stay in
+      their parent; VS2019's conditional tail calls leave it. PE32 only:
+      x86-64 PE keeps `.pdata`. Measured: every function of the fixture in
+      both builds, no extras, PDB sizes exact; a generated 20 004-function
+      program (1.4 MB) likewise, parsed in 0.16 s; real MSVC-built PE32s
+      without PDBs (VS2008–2019) put 98.8–99.6 % of `.text` in functions.
+      Still to measure: an exe MSVC itself built, against its PDB.
+- [x] **x86 jump tables** (79a1903). `jmp [table + reg*4]` (or `jmp reg`
+      after loading from one), with the optional byte index table, bounded by
+      `cmp reg, N; ja` or `and reg, N`, else by where relocated entries stop.
+      Tables are data: `dd`/`db` rows in disassembly, each entry a pointer to
+      its case in the xrefs. Not yet: x86-64 table forms.
 - [ ] **Stack frame and calling convention.** `cdecl` / `stdcall` (`ret N`) /
       `fastcall` / `thiscall`; argument bytes; frame size; saved registers.
 - [ ] **Data typing.** Global extents, float constants, vtables and RTTI,
@@ -219,3 +232,10 @@ functions (`discover.rs` handles only `.pdata`, `.eh_frame`,
 - 2026-09-28: first target chosen: Final Fantasy IX (PS1). Track A added from
   the decomp.wiki PS1 page (Psy-Q GCC via maspsx, splat, objdiff, Ghidra with
   ghidra_psx_ldr). Track B (x86) kept for later.
+- 2026-09-28: Track B, Phase B1's first two items landed in 79a1903 (x86
+  function discovery by following the code, x86 jump tables), with the
+  `x86demo` fixtures. Follow-ups seen on real MSVC code: a `__finally` block
+  its parent doesn't branch over still reads as its own small function; the
+  load config's CFG table (`/guard:cf` builds) would list address-taken
+  functions exactly; x86-64 PE could run the follower seeded from `.pdata` to
+  find leaf functions, which have no entry there.
