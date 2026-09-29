@@ -3,22 +3,22 @@
 See what every byte and every address of a binary is.
 
 binviz is a Rust library with a browser UI (WebAssembly), a CLI and an MCP
-server for agents. It explains ELF, Mach-O and PE/COFF files down to
-individual header fields, maps machine code back to source through DWARF and
-PDB debug info, and reads game ROMs for the NES, SNES, Game Boy, GBA, Mega
-Drive, Nintendo 64 and PlayStation. Everything runs locally; in the browser
-the file never leaves your machine. It handles gigabyte binaries with
-millions of symbols.
+server for agents. It explains ELF, Mach-O, PE/COFF, original Xbox (XBE) and
+WebAssembly files down to individual header fields, maps machine code back to
+source through DWARF, PDB debug info and source maps, and reads game ROMs for
+the NES, SNES, Game Boy, GBA, Mega Drive, Nintendo 64 and PlayStation.
+Everything runs locally; in the browser the file never leaves your machine. It
+handles gigabyte binaries with millions of symbols.
 
 - **Every byte accounted for**: headers, tables, sections, DWARF, padding, and what nothing claims.
 - **Every address explained**: region, section, symbol, source line, inlined calls, instruction.
-- **Disassembly, cross-references and call graph** for x86, x86-64, AArch64 and ARM, plus consoles' CPUs.
-- **DWARF and PDB, readable**, with a checker for broken debug info.
+- **Disassembly, cross-references and call graph** for x86, x86-64, AArch64, ARM and WebAssembly, plus consoles' CPUs.
+- **DWARF and PDB, readable**, with a checker for broken debug info, and C headers written from their types.
 - **Compare builds**: size diffs and function-by-function diffs, even with no symbols.
-- **Crash reports symbolicated** against the binaries you have open.
+- **Crash reports symbolicated** against the binaries you have open, browsers' WebAssembly stack traces too.
 - **Game ROMs** with banks, hardware registers, emulator logs, text, tiles and patches.
 - **An MCP server** so an LLM agent can ask all of the above.
-- **Decompilation support** for PlayStation and Nintendo 64 games: memory images and overlays, guessed prototypes, rebuilt code scored against the original with each difference explained, splat and objdiff interchange.
+- **Decompilation support** for PlayStation, Nintendo 64 and x86 PC games: memory images and overlays, guessed prototypes and stack frames, rebuilt code scored against the original with each difference explained and what to try, m2c's first draft, splat and objdiff interchange.
 
 The [reference](docs/reference.md) describes everything in full.
 
@@ -40,7 +40,9 @@ the variables in scope and where each one lives. A checker lists everything in
 the DWARF that cannot be read or does not add up, at its unit, DIE and section
 offset. Separate debug files attach: dSYMs, `.debug` files, Mach-O debug maps
 (the objects' DWARF moved to the binary's addresses), and PDBs, which are read
-into DWARF so MSVC, clang-cl and Rust `-msvc` builds get the same treatment.
+into DWARF, types included, so MSVC, clang-cl and Rust `-msvc` builds get the
+same treatment. From the types, a C header: structures with their padding,
+unions, enums and prototypes, and the member at any offset named.
 
 **Code, references and calls.** Disassembly with branch targets resolved to
 symbols, the strings and globals each instruction uses named inline, and
@@ -52,7 +54,11 @@ one function to another. Stripped binaries get their functions back from
 unwind tables, and 32-bit PE images, which have none, by following their code
 (jump tables and calls that never return included); name them, comment
 instructions and mark code reviewed, and a coverage map shows what is still
-unexplored. Mach-O images get their
+unexplored. The data the code uses is typed by how it uses it (floats with
+their values, tables of functions filled at run time, structures reached
+through pointers, jump tables) and named as disassemblers do; MSVC's C++ RTTI
+gives classes, bases and vtables back, and a prototype or type on a note names
+the fields reached through it. Mach-O images get their
 Objective-C classes, categories, protocols and selectors back.
 
 **Builds compared and crashes explained.** Compare two binaries, or two
@@ -62,6 +68,12 @@ name, bytes, instructions and the call graph, then lined up side by side. Drop
 an Apple crash report, an Android tombstone or a stack trace and every frame
 gets its function, source line and inlined calls from the binaries that are
 open, each image found by build ID.
+
+**WebAssembly and the Xbox.** A WebAssembly module opens like any binary: its
+sections, functions, imports and exports, the name section, DWARF (a separate
+`.debug.wasm` too) and source maps, and browsers' and Node's stack traces
+symbolicated. An original Xbox executable (XBE) opens like the 32-bit PE it
+holds, with its headers, certificate and kernel imports decoded.
 
 **Folders of binaries.** Open a folder, a zip, an `.ipa`, an `.app` or a build
 directory: every binary in it is found and paired with its debug file by build
@@ -84,15 +96,23 @@ their files.
 decompiled: a PlayStation memory image (RAM as an emulator dumped it) or an
 overlay opens with the boot executable's names, functions found by their
 prologues, switch tables followed, and an emulator's trace of the code that
-ran adds what pointers reach. Each function's code implies a prototype
+ran adds what pointers reach; the Psy-Q SDK's functions are named, with the
+release that built them. For an x86 PC game: the compiler and linker from the
+Rich header, calling conventions and stack frames with named slots, the C
+runtime named from its `.lib`. Each function's code implies a prototype
 (register and stack arguments, return value, frame, saved registers, the
 structure offsets it walks), and one call gathers everything needed to write
-its C. The compiler's object file is scored against the original function by
-function with the linker's fields masked and each difference explained
-(registers, stack slots, branch lengths, reordering, delay-slot nops). A
-splat config and symbol file start the project; objdiff's report places the
-project's progress on the binary. [samples/psx](samples/psx/README.md) walks
-the whole loop on a small program built from source,
+its C, with worked examples: functions already matched that are shaped like
+it, in this game or a sibling one built with the same compiler. m2c gets its
+input for a first draft (`binviz asm`). The compiler's object file (MIPS ELF,
+or COFF from MSVC or clang-cl) is scored against the original function by
+function with the linker's fields masked, each difference explained
+(registers, stack slots, branch lengths, reordering, delay-slot nops) with
+what to try in the C, and builds with different flags ranked. A splat config
+and symbol file start the project; objdiff's report places its progress on the
+binary, and the notes export it again in that format for decomp.dev.
+[samples/psx](samples/psx/README.md) walks the whole loop on a small program
+built from source,
 [samples/psx-advanced](samples/psx-advanced/README.md) adds an overlay, a memory
 image, a trace and a jump table, and [samples/psx-vm](samples/psx-vm/README.md)
 runs the whole loop through the MCP server with a script as the agent; the
@@ -141,12 +161,15 @@ cargo run --release -p binviz-cli -- info path/to/binary
 ```
 
 Run it with no arguments for the full command list: `info`, `layout`,
-`inspect`, `symbols`, `strings`, `search`, `disasm`, `func`, `refs`, `calls`,
-`coverage`, `objc`, `dwarf`, `attribution`, `crash`, `diff`, `patch`,
-`relsearch`, `text`, `labels` and `check`. `--debug` attaches a separate debug
-file, `--member` picks a slice of a universal binary or a file in a folder,
-`--notes` loads annotations, and `--log` follows a ROM with an emulator's
-code/data log. A folder, zip or CD image works in place of a file.
+`inspect`, `check`, `symbols`, `strings`, `search`, `disasm`, `func`, `refs`,
+`calls`, `coverage`, `globals`, `classes`, `objc`, `dwarf`, `header`,
+`attribution`, `crash`, `diff`, `patch`, `relsearch`, `text` and `labels`, and
+for a decompilation `signature`, `context`, `match`, `asm`, `m2c`, `flags`,
+`report`, `progress`, `splat`, `sdk`, `locate`, `counterparts` and `names`.
+`--debug` attaches a separate debug file, `--member` picks a slice of a
+universal binary or a file in a folder, `--notes` loads annotations (and
+`--types` the structures they name), and `--log` follows a ROM with an
+emulator's code/data log. A folder, zip or CD image works in place of a file.
 
 ## The MCP server
 
@@ -201,7 +224,7 @@ crates/binviz-wasm   wasm-bindgen bindings for the web UI
 crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents
 web/                 TypeScript UI; the WASM runs in a Web Worker
-tests/fixtures/      small ELF, Mach-O and PE test binaries and hand-assembled ROMs
+tests/fixtures/      small ELF, Mach-O, PE, XBE and WebAssembly binaries, hand-assembled ROMs
 docs/                the full reference and plans
 ```
 
@@ -211,11 +234,12 @@ cargo test
 
 ## Limitations
 
-- PDBs contribute modules, procedures, globals and line records, not types or
+- PDBs contribute modules, procedures, globals, types and line records, not
   local variables; those need DWARF.
 - Split DWARF (`.dwo`/`.dwp`) is detected but not followed.
-- Cross-references and the call graph cover x86, x86-64 and AArch64; virtual
-  calls are not resolved to their targets.
+- Cross-references and the call graph cover x86, x86-64, AArch64,
+  WebAssembly and the consoles' CPUs; virtual calls are not resolved to their
+  targets.
 - Swift names are demangled only by the CLI and MCP server, through
   `swift-demangle` when it is installed.
 - Master System, Game Gear and PC Engine ROMs are not recognized yet.

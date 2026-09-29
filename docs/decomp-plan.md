@@ -97,7 +97,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
 
 ### Items, in order
 
-- [x] **A1. Psy-Q SDK identification** (2026-09-29, `rom/psyq.rs`; CLI `sdk`, MCP `identify_sdk`; SDK version reporting still open). Build byte signatures from a folder
+- [x] **A1. Psy-Q SDK identification** (2026-09-29, `rom/psyq.rs`; CLI `sdk`, MCP `identify_sdk`; the SDK release is reported since 91a0212). Build byte signatures from a folder
       of Psy-Q `.LIB`/`.OBJ` files the user supplies (like `xsig` /
       `ghidra_psx_ldr`), match them against the executable and overlays, name
       the library functions (`GsSortObject4`, `CdRead`, `SpuSetKey`...), tag
@@ -106,7 +106,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       Where: new `rom/psx_sdk.rs`; signature store in the notes file.
       Done when: the FF9 boot executable's SDK calls are all named and the
       version is reported.
-- [x] **A2. Overlays and memory images** (2026-09-29; FF9 archive parsing still open). (a) Open an emulator RAM dump or
+- [x] **A2. Overlays and memory images** (2026-09-29; an archive's files are found in a memory image by their bytes since 91a0212, CLI `locate`; FF9's own archive format is still unread, which needs the game's disc). (a) Open an emulator RAM dump or
       savestate (2 MiB) as a PS1 memory image at `0x80000000`, with the boot
       executable's symbols laid over it, so whatever overlay was loaded at the
       time is analysable in place. (b) Find overlay blobs in the disc's
@@ -117,7 +117,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       Where: `rom/psx.rs`, `disc.rs`, `symbols.rs`.
       Done when: a field overlay and a battle overlay both open with SDK and
       boot-exe calls resolved.
-- [x] **A3. MIPS mapping quality** (2026-09-29: switch tables, signatures, struct hints; data classification still open). Static switch tables (`sltiu`/`beq`
+- [x] **A3. MIPS mapping quality** (2026-09-29: switch tables, signatures, struct hints; data classification in ee1041c: tables of code pointers and of strings, structures holding pointers, constants). Static switch tables (`sltiu`/`beq`
       guard, `sll 2`, `lui`/`addu`, `lw`, `jr` pattern, table in `.rodata`);
       `$gp`-relative small data named as symbols; function signature guess
       (`$a0-$a3` read before written, stack args above the frame, `$v0/$v1`
@@ -197,12 +197,14 @@ below too.
       after loading from one), with the optional byte index table, bounded by
       `cmp reg, N; ja` or `and reg, N`, else by where relocated entries stop.
       Tables are data: `dd`/`db` rows in disassembly, each entry a pointer to
-      its case in the xrefs. Not yet: x86-64 table forms.
-- [ ] **Stack frame and calling convention.** `cdecl` / `stdcall` (`ret N`) /
+      its case in the xrefs. x86-64's forms (absolute, relative to the image
+      base as MSVC writes them, relative to the table as clang and GCC do) since
+      bcd9b07.
+- [x] **Stack frame and calling convention** (dcdc8f6). `cdecl` / `stdcall` (`ret N`) /
       `fastcall` / `thiscall`; argument bytes; frame size; saved registers.
-- [ ] **Data typing.** Global extents, float constants, vtables and RTTI,
+- [x] **Data typing** (ee1041c; vtables and RTTI in 804a324). Global extents, float constants, vtables and RTTI,
       string tables.
-- [ ] **Compiler identification.** Decode Rich header product IDs to
+- [x] **Compiler identification** (6cd40c1). Decode Rich header product IDs to
       compiler/linker versions (`layout/pe.rs`).
 
 ### Phase B1b: what a blind decompile of a real x86 game needed
@@ -241,40 +243,44 @@ Fixed:
 
 Missing features:
 
-- [ ] **Name the C runtime.** About 300 of 1 239 functions are statically
+- [x] **Name the C runtime** (601556f, 7151cb6: signatures from the runtime's own
+      `.lib` archives or objects, which the user supplies; none ship with binviz). About 300 of 1 239 functions are statically
       linked MSVC CRT and every one is `sub_XXXX`; agents identified them from
       code shapes and strings. Signatures (bytes with relocations masked, as
       A1 does for Psy-Q) for the MSVC 6 / 7 / 8 / 2010 CRTs and their `.lib`
       objects. Shares the matcher with A1.
-- [ ] **Map field offsets to struct fields.** `[esi+0x21c]` has no name;
+- [x] **Map field offsets to struct fields** (2d5fecc). `[esi+0x21c]` has no name;
       agents built an offset table by compiling the headers with clang
       (`-fdump-record-layouts`). With headers or a PDB's types loaded, show
       `[esi+0x21c] ; edict_t.enemy` and type the register from the
       prototype. Needs B3's header/PDB type export first.
-- [ ] **Recognise an import table in data.** Quake 2 reaches the engine
+- [x] **Recognise an import table in data** (ee1041c: a table of function
+      pointers filled at run time, where it is filled, each slot labelled). Quake 2 reaches the engine
       through a struct of function pointers (`gi`, at `0x20066ee0`, 4 bytes
       per slot), each call `call [0x20066f10]`. Detect a structure of
       pointers filled at one site (`GetGameAPI`'s `rep movsd` plus stores)
       and label each slot `gi+0x30`, or with its type from the headers.
-- [ ] **Name globals.** `level`, `game`, `g_edicts`, cvar pointers and CRT
+- [x] **Name globals** (ee1041c; import slots in a015b27). `level`, `game`, `g_edicts`, cvar pointers and CRT
       state (`_nhandle`, `__pioinfo`) show only as `.data+0x25ee0`. Cluster
       by access pattern (a pointer read then `[ptr+0x14]` is a cvar's value;
       a constant stride is an array of structs) and let a note name them.
       Data tables are labelled inconsistently: some get a first-string
       annotation (`read -> "classname"`), most get nothing.
-- [ ] **Tables of code pointers and structs in `.data`.** A monster's
+- [x] **Tables of code pointers and structs in `.data`** (ee1041c; vtables in
+      804a324). A monster's
       `mmove_t` frame table, `_fptrap` (6 pointers, no callers), a vtable:
       these report as pointers, or as `write -> sub_20038960` when the target
       is a table, not code. Say "table of N code pointers", and show that
       `mov [esi+0x304], 0x2004xxxx` stores a pointer to a `.data` table.
       Likewise `Globals` lists `mov [esi+0x1c4], 0x2001f7e0` as an "address"
       without resolving it to a function.
-- [ ] **Stack frame and calling convention for x86** (item above, still
-      open). MSVC merges `add esp, N` after several calls, so `[esp+N]`
+- [x] **Stack frame and calling convention for x86** (dcdc8f6, the item
+      above). MSVC merges `add esp, N` after several calls, so `[esp+N]`
       shifts between calls and is easy to misread: track the stack
       pointer's delta and show `arg1`, `arg2` against the entry frame. Then
       an x86 `signature` line in `context` (MIPS only today).
-- [ ] **A function in more than one range.** MSVC puts a function's tail
+- [x] **A function in more than one range** (5e5a19f; folded functions read
+      as one with both names). MSVC puts a function's tail
       before its entry (`strchr`'s shared `lea eax,[edx-1]; pop ebx; ret` at
       `0x200301d0`, three pieces of `getSystemCP` at `0x20037710`, x87 libm
       case stubs from `0x20036820`, alternate-entry stubs at `0x20031424`),
@@ -282,35 +288,48 @@ Missing features:
       `0x2000bb20`). A function is one range, so these show as tiny functions
       with no callers. A function needs to own several ranges;
       `discover/x86.rs` has the jump analysis to find them.
-- [ ] **Say where a jump table starts.** Tables are `dd` rows with their
+- [x] **Say where a jump table starts** (bcd9b07: the table and each case
+      marked in `disasm` and `context`). Tables are `dd` rows with their
       targets, but nothing marks the boundary after a `ret` (`; jump table,
       10 cases`), and `context` does not follow an indirect jump's targets.
-- [ ] **Short strings.** One- and two-character strings (`"a"`, `"m"`, the
+- [x] **Short strings** (ee1041c). One- and two-character strings (`"a"`, `"m"`, the
       light styles) referenced from code show as bare `.data` addresses.
-- [ ] **Shorter `context`.** It prints up to 4 000 callers, callees and
+- [x] **Shorter `context`** (ab36979: 24 of each list and how many more). It prints up to 4 000 callers, callees and
       globals before any code; cap them ("and N more") and put the code
       first, or offer a brief form. `func` shows blank `strings:` and
       `data:` sections for tiny functions, which looks like truncation.
-- [ ] **Say which functions have no counterpart in a source or older build**
+- [x] **Say which functions have no counterpart in a source or older build**
+      (d409709: CLI `counterparts`, MCP `source_counterparts`)
       (`CheckNeedPass` and the extra `needpass` cvar are 3.20 changes the
       GitHub source lacks). `diff functions` does this for two binaries, not
       for a binary and source.
 
-Unconfirmed reports (reproduce first):
+Unconfirmed reports (reproduce first; each checked on `gamedemo.dll`, the
+fixture shaped like Quake 2's game DLL):
 
-- [ ] `Called by` mixes code callers with data references (`0x20067774 read
+- [x] `Called by` mixes code callers with data references (`0x20067774 read
       .data`); split them. Perhaps the same thing as the "Also referenced by"
-      line above, now that exists.
-- [ ] `Calls:` lists callbacks stored into struct fields (`0x2000fc00` in
+      line above, now that exists. Outcome: it was; callers are code only,
+      data references are the "Also referenced by" line, and a callback lists
+      where its address is taken (ab36979).
+- [x] `Calls:` lists callbacks stored into struct fields (`0x2000fc00` in
       `0x2000f720`, the movetype functions under `0x200118e0`) as if called.
-      Only the indirect-call case was seen and fixed.
-- [ ] `context` output cut at ~400 lines without a marker in `0x2000d0e0`
+      Only the indirect-call case was seen and fixed. Outcome: reproduced,
+      and fixed in ee1041c: a stored function address is a callback, not a
+      call.
+- [x] `context` output cut at ~400 lines without a marker in `0x2000d0e0`
       (`barrel_explode`); the marker exists in code, so check it was the
-      `disasm` default and not a second cutoff.
-- [ ] Very short functions (`player_pain`, a bare `ret`) appear only as data
+      `disasm` default and not a second cutoff. Outcome: it was the MCP
+      tool's default of 400 instructions, which says where it stopped; the
+      lists before the code are capped since ab36979, and the server marks
+      its own 60 KB cut.
+- [x] Very short functions (`player_pain`, a bare `ret`) appear only as data
       pointers, with no call sites: expected for callbacks; check the wording.
+      Outcome: the context now calls them callbacks, says where their address
+      is taken, and that a function reading no arguments may still be passed
+      some (ab36979).
 
-Tests still to run:
+Tests still to run (none can run without the games and agents; not done):
 
 - [ ] **A mutated Quake 2.** Agents reproduced the source almost verbatim,
       comments included. Change constants, swap conditions, add or drop
@@ -328,20 +347,22 @@ Tests still to run:
 
 ### Phase B2: the matching loop for COFF
 
-- [ ] **COFF `.obj` input** with symbols and relocations, synthetic addresses.
-- [ ] **Byte match score with relocations masked** and an explained diff
+- [x] **COFF `.obj` input** (0c20f50, add2594) with symbols and relocations, synthetic addresses.
+- [x] **Byte match score with relocations masked** (0c20f50; what to try for
+      each kind of difference, 2365e73) and an explained diff
       (shares the engine with A5).
-- [ ] **MCP tools** `match_function`, `match_project` (shares A6).
+- [x] **MCP tools** `match_function`, `match_project` (shares A6) (7151cb6).
 
 ### Phase B3: borrow symbols from other builds
 
-- [ ] **C header export from PDB/DWARF types.** Structs with explicit
+- [x] **C header export from PDB/DWARF types** (29aa399, 72e0357, 34b0723,
+      9aa31c4). Structs with explicit
       padding, enums, typedefs, unions, prototypes; must round-trip.
-- [ ] **Symbol porting** from a symbolized build to a stripped one (shares A7).
+- [x] **Symbol porting** (d409709) from a symbolized build to a stripped one (shares A7).
 
 ### Phase B4: containers
 
-- [ ] **XBE reader** (original Xbox) only if an Xbox target is chosen; the
+- [x] **XBE reader** (be3b233, 61c0c0c) (original Xbox) only if an Xbox target is chosen; the
       XDK compiler is not public, so matching Xbox games is a sourcing problem
       before it is a tooling one.
 
@@ -354,7 +375,7 @@ Tests still to run:
       `place_report` records objdiff's verdicts (and sends back what stopped
       matching), `identify_sdk` marks library code; `coverage`,
       `binary_summary`, `inspect`, `function_info` and `disassemble` report
-      it. Not yet: a colour for it on the web UI's coverage map.
+      it. The web UI's coverage map colours matched code since 6996685.
 - [x] **Work queue and look-alikes** (2026-09-29, 8e208bc, `queue.rs`, `similar.rs`;
       MCP `next_functions`, `mark`, `similar_functions`). What to decompile
       next, best first: near-copies of a matched function (90 % of the same
@@ -368,25 +389,52 @@ Tests still to run:
       diffed exactly: `decomp_context` gets matched look-alikes as worked
       examples. 20 004 functions: 10–60 ms a ranking, 40 ms a claim-and-mark
       round over MCP.
-- [ ] **Tightening the loop further.** A programmatic first draft before the
+- [x] **Tightening the loop further.** A programmatic first draft before the
       model (m2c for MIPS) and decomp-permuter in the background on
       near-misses, with rule-based rewrites for the common mismatch classes
       (Echo); compiler flags searched per unit; worked examples from sibling
       decomps built with the same compiler, so the first functions have some
       too; learned embeddings only where instruction shapes don't carry over
       (the remaster's C# in A7, searching agents' summaries in words).
-- [ ] **Progress export** in the format decomp.dev consumes (or rely on
+      Landed: the rewrites to try for each kind of difference and the flags
+      searched per unit (2365e73, CLI `flags`, MCP `rank_builds`); m2c's input
+      written by `binviz asm` (MCP `export_asm`) and m2c run on it by `binviz
+      m2c` (089fd72, cdeb134, 787e095): every function of the three PS1 samples
+      assembles back to its words, and m2c writes the dispatcher's `switch`;
+      worked examples from sibling decompilations (7d94e5f). Not done: running
+      decomp-permuter, which needs the project's own compiler (`binviz asm`
+      writes what its `import.py` takes), and learned embeddings.
+- [x] **Progress export** (6996685: objdiff's report JSON) in the format decomp.dev consumes (or rely on
       objdiff's report and A5a).
-- [ ] **WASM reader.** Sections, function table, imports/exports, the name
+- [x] **WASM reader** (187304c, 64858e7, 8cd2956, bdda68b). Sections, function table, imports/exports, the name
       section, Emscripten's DWARF and source maps, so the browser port's
       build can be opened, size-diffed and its stack traces symbolicated.
       Fill in `Format::Wasm`.
-- [ ] **Behavioral comparison** (runtime; furthest from binviz's shape):
+- [ ] **Behavioral comparison** (not started; runtime; furthest from binviz's shape):
       the same function on the same asset in the original (under an emulator)
       and in the port. Consider last.
 
 ## Progress log
 
+- 2026-09-29 (Track B and the shared items): everything above that can be built and checked
+  without the games landed. Phase B1 and B1b's x86 items: the Rich header (6cd40c1), stack
+  frames and calling conventions (dcdc8f6), globals typed by use and named (ee1041c), import
+  slots (a015b27), MSVC's RTTI and x86-64 leaf functions (804a324), functions in pieces
+  (5e5a19f), switch cases and x86-64 jump tables (bcd9b07), short contexts (ab36979), fields
+  named through typed pointers (2d5fecc); the four unconfirmed Quake 2 reports checked on
+  `gamedemo.dll`. B2, COFF objects matched and library signatures from `.lib` archives (0c20f50,
+  601556f, add2594, 7151cb6). B3, C headers from PDB or DWARF types (29aa399, 72e0357, 34b0723,
+  9aa31c4) and names ported from a symbolized build (d409709). B4, the XBE reader (be3b233).
+  The WASM reader (187304c, 64858e7, 8cd2956, bdda68b). Progress as objdiff's report and the
+  matched colour (6996685), A1's SDK release and A2's archives found in memory (91a0212). The
+  loop: what to try per mismatch and flags ranked per unit (2365e73), m2c's input and m2c run
+  on it (089fd72, cdeb134, 787e095), worked examples from sibling decompilations (7d94e5f).
+  Found on the way and fixed: a MIPS function's last delay slot was dropped as padding, trap
+  codes weren't shown (so `break 7` came back `break 0`), and a loop counter read as an address.
+  Not done, needing what isn't here: FF9's archive format and the FF9 checks, the Quake 2
+  test runs, an MSVC-built exe measured against its PDB, decomp-permuter runs (the project's
+  compiler); nor learned embeddings or behavioral comparison. `samples/loop.py` still takes
+  psx-vm to 100%, in 47 rounds here (46 in the entry below).
 - 2026-09-29 (Quake 2): decompiled `gamex86.dll` blind with agents and graded it against id's source;
   five fixes landed (float constants, broken pipe, padding, truncation, callbacks), the rest are
   Phase B1b above.
