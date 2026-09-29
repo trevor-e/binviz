@@ -279,8 +279,14 @@ pub(crate) fn convert(data: &[u8], image_base: u64) -> Result<Converted> {
             }
         }
     }
-    for (name, a, kind) in data.into_iter().chain(publics) {
+    for (name, a, kind) in data {
         if described.insert(a) {
+            symbols.push((name, a, 0, kind));
+        }
+    }
+    // Several public names at one address are functions the linker folded into one: keep them all.
+    for (name, a, kind) in publics {
+        if !described.contains(&a) {
             symbols.push((name, a, 0, kind));
         }
     }

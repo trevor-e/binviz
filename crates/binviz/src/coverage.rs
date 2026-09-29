@@ -356,6 +356,15 @@ impl Binary {
                 }
                 intervals.push((s.address, end, status));
             }
+            // The pieces of functions away from their entries are their functions'.
+            for &(ps, pe, owner) in self.code_parts.iter().filter(|p| p.0 < hi && p.1 > lo) {
+                let status = match self.symbols.at(owner).map(|s| s.source) {
+                    Some(SymbolSource::User) => MapStatus::Annotated,
+                    Some(SymbolSource::Discovered) | None => MapStatus::Recovered,
+                    Some(_) => MapStatus::Named,
+                };
+                intervals.push((ps.max(lo), pe.min(hi), status));
+            }
             for a in self.annotations.iter().filter(|a| a.address < hi && a.is_note()) {
                 let (s, e) = self.annotation_extent(a);
                 if e <= lo {

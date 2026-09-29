@@ -68,6 +68,8 @@ pub(crate) struct Found {
     pub functions: Vec<(u64, u64)>,
     /// Jump tables and their index tables, sorted by address.
     pub tables: Vec<Table>,
+    /// Pieces of functions away from their entry: (start, end, the function's start), sorted.
+    pub parts: Vec<(u64, u64, u64)>,
 }
 
 /// Where control goes after an instruction that doesn't just go on to the next.
@@ -182,9 +184,16 @@ pub(crate) fn follow(image: &Image) -> Found {
         .collect();
     tables.sort_by_key(|t| (t.address, t.jump));
     tables.dedup_by_key(|t| t.address);
+    let known: HashSet<u64> = image.starts.iter().copied().collect();
+    let parts = f.parts(&extents, &known);
     Found {
-        functions: extents.into_iter().map(|(s, e)| (s, e - s)).collect(),
+        functions: extents
+            .into_iter()
+            .filter(|e| parts.binary_search_by_key(&e.0, |p| p.0).is_err())
+            .map(|(s, e)| (s, e - s))
+            .collect(),
         tables,
+        parts,
     }
 }
 
@@ -703,6 +712,125 @@ impl<'a> Follower<'a> {
         left.sort_unstable();
         left.dedup();
         Bodies { extents, exits: left }
+    }
+
+    /// The functions that are pieces of another, away from its entry: only
+    /// ever jumped to, from that one function, and not a function of their
+    /// own by their code — they pop a frame they never pushed (MSVC's shared
+    /// `pop ebx; ret` tails, placed before the entry), or jump back into the
+    /// middle of the function (a piece moved out of line). A real function
+    /// jumped to from one place is a tail call, and returns as it came.
+    /// Returns (start, end, the function's start), sorted.
+    fn parts(&mut self, extents: &[(u64, u64)], known: &HashSet<u64>) -> Vec<(u64, u64, u64)> {
+        let calls = self.call_sites();
+        let mut jumps: HashMap<u64, Vec<u64>> = HashMap::new();
+        for (&site, flow) in &self.flows {
+            if let Flow::Branch(t) | Flow::Jump(Some(t)) = *flow {
+                jumps.entry(t).or_default().push(site);
+            }
+        }
+        for s in &self.switches {
+            for &t in &s.targets {
+                jumps.entry(t).or_default().push(s.table.jump);
+            }
+        }
+        let function_of = |a: u64| {
+            let i = extents.partition_point(|e| e.0 <= a).checked_sub(1)?;
+            (a < extents[i].1).then_some(extents[i])
+        };
+        let mut out = Vec::new();
+        for &(start, end) in extents {
+            if known.contains(&start) || calls.contains_key(&start) || self.adopted.contains(&start) {
+                continue;
+            }
+            let Some(sites) = jumps.get(&start) else { continue };
+            // Jumped to from one other function only.
+            let owners: HashSet<(u64, u64)> = sites.iter().filter_map(|&s| function_of(s)).collect();
+            let [owner] = owners.into_iter().collect::<Vec<_>>()[..] else { continue };
+            if owner.0 == start || known.contains(&start) {
+                continue;
+            }
+            if self.continues_a_frame(start, end, owner) {
+                out.push((start, end, owner.0));
+            }
+        }
+        out.sort_unstable();
+        out
+    }
+
+    /// Whether the code at `start..end` carries on a frame it didn't set up:
+    /// it pops more than it pushed before returning, leaves a frame (`leave`,
+    /// `mov esp, ebp`) it didn't make, or jumps into the middle of `owner`.
+    fn continues_a_frame(&mut self, start: u64, end: u64, owner: (u64, u64)) -> bool {
+        let sp_register = if self.bits == 64 { Register::RSP } else { Register::ESP };
+        let mut paths = vec![(start, 0i64, false)];
+        let mut seen = HashSet::new();
+        while let Some((mut pc, mut sp, mut framed)) = paths.pop() {
+            while pc >= start && pc < end && seen.insert(pc) {
+                let Some(ins) = self.decode(pc) else { break };
+                match ins.mnemonic() {
+                    Mnemonic::Leave if !framed => return true,
+                    Mnemonic::Mov
+                        if ins.op0_kind() == OpKind::Register
+                            && ins.op0_register() == sp_register
+                            && ins.op1_kind() == OpKind::Register
+                            && !framed =>
+                    {
+                        return true;
+                    }
+                    Mnemonic::Mov
+                        if ins.op0_kind() == OpKind::Register
+                            && matches!(ins.op0_register(), Register::EBP | Register::RBP)
+                            && ins.op1_kind() == OpKind::Register
+                            && ins.op1_register() == sp_register =>
+                    {
+                        framed = true;
+                    }
+                    Mnemonic::Add | Mnemonic::Sub
+                        if ins.op0_kind() == OpKind::Register
+                            && ins.op0_register() == sp_register
+                            && is_immediate(ins.op1_kind()) =>
+                    {
+                        let n = ins.immediate(1) as i64;
+                        sp += if ins.mnemonic() == Mnemonic::Add { n } else { -n };
+                    }
+                    _ => {
+                        if !matches!(ins.flow_control(), FlowControl::Call | FlowControl::IndirectCall) {
+                            sp += ins.stack_pointer_increment() as i64;
+                        }
+                    }
+                }
+                let flow = match ins.flow_control() {
+                    FlowControl::Return => {
+                        // The return address was at the top: anything more was popped from someone's frame.
+                        let n = if ins.op_count() > 0 { ins.immediate16() as i64 } else { 0 };
+                        if sp - (self.bits as i64 / 8) - n > 0 {
+                            return true;
+                        }
+                        break;
+                    }
+                    FlowControl::ConditionalBranch | FlowControl::UnconditionalBranch => {
+                        let t = ins.near_branch_target();
+                        if t > owner.0 && t < owner.1 {
+                            return true;
+                        }
+                        Some((t, ins.flow_control() == FlowControl::UnconditionalBranch))
+                    }
+                    FlowControl::IndirectBranch | FlowControl::Exception | FlowControl::Interrupt => break,
+                    _ => None,
+                };
+                match flow {
+                    Some((t, true)) => {
+                        pc = t;
+                        continue;
+                    }
+                    Some((t, false)) => paths.push((t, sp, framed)),
+                    None => {}
+                }
+                pc = ins.next_ip();
+            }
+        }
+        false
     }
 
     /// Where each address is called from.

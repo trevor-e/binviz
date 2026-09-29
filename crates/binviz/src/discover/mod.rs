@@ -27,6 +27,8 @@ pub(crate) struct Discovery {
     pub functions: Vec<(u64, u64)>,
     /// Jump tables (and the index tables that pick their entries), sorted.
     pub tables: Vec<x86::Table>,
+    /// Pieces of functions away from their entry: (start, end, the function's start), sorted.
+    pub parts: Vec<(u64, u64, u64)>,
     /// How the functions were found, when that took following the code.
     pub note: Option<String>,
 }
@@ -75,6 +77,7 @@ pub(crate) fn discover(
         return Discovery {
             functions,
             tables: found.tables,
+            parts: found.parts.into_iter().filter(|p| !within_ranges(&covered, p.0)).collect(),
             note: Some(note),
         };
     }
@@ -83,9 +86,14 @@ pub(crate) fn discover(
         let found = x86::follow(&image);
         let switches = found.tables.iter().filter(|t| t.entry == 4).count();
         let note = format!(
-            "{} functions and {switches} jump tables, following the code from the entry point, exports, TLS \
+            "{} functions{} and {switches} jump tables, following the code from the entry point, exports, TLS \
              callbacks and exception handlers, then from the code addresses the image holds ({})",
             found.functions.len(),
+            match found.parts.len() {
+                0 => String::new(),
+                1 => " (one with a piece away from its entry)".into(),
+                n => format!(" ({n} pieces of them away from their entries)"),
+            },
             if image.relocations.is_some() {
                 "its base relocations say which words are addresses"
             } else {
@@ -95,6 +103,7 @@ pub(crate) fn discover(
         return Discovery {
             functions: found.functions,
             tables: found.tables,
+            parts: found.parts,
             note: Some(note),
         };
     }
@@ -120,6 +129,7 @@ pub(crate) fn discover(
     Discovery {
         functions: out,
         tables: Vec::new(),
+        parts: Vec::new(),
         note: None,
     }
 }

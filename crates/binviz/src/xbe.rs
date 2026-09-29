@@ -798,6 +798,7 @@ impl Binary {
             debug: None,
             discovered: found.functions,
             code_tables: found.tables,
+            code_parts: found.parts,
             debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),

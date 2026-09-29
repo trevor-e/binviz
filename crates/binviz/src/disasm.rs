@@ -22,6 +22,9 @@ pub struct Disassembly {
     pub truncated: bool,
     /// False if the architecture has no disassembler (bytes are shown as data).
     pub supported: bool,
+    /// The function's pieces away from its entry, whose instructions follow
+    /// the entry's: (start, end).
+    pub parts: Vec<(u64, u64)>,
 }
 
 impl Disassembly {
@@ -151,6 +154,7 @@ impl Binary {
             instructions: Vec::new(),
             truncated: false,
             supported: isa != Isa::None,
+            parts: Vec::new(),
         };
         let Some(offset) = self.address_to_offset(start) else {
             return out;
@@ -589,6 +593,8 @@ impl Binary {
     /// Disassembles the function containing `address`: its symbol if there is
     /// one, else a window starting at the closest known instruction boundary.
     pub fn disassemble_function(&self, address: u64, limit: usize) -> Disassembly {
+        // A piece of a function away from its entry is disassembled with its function.
+        let address = self.symbols.part_owner(address).unwrap_or(address);
         if let Some(sym) = self.symbols.lookup(address)
             && sym.size > 0
             && let Some(s) = self.symbols.get(sym.index)
@@ -608,6 +614,17 @@ impl Binary {
             }
             let mut d = self.disassemble(sym.address, end, limit);
             d.drop_padding();
+            // Then its pieces away from its entry.
+            for (ps, pe) in self.symbols.parts_of(sym.address) {
+                if d.truncated {
+                    break;
+                }
+                let mut p = self.disassemble(ps, pe, limit.saturating_sub(d.instructions.len()));
+                p.drop_padding();
+                d.truncated |= p.truncated;
+                d.instructions.extend(p.instructions);
+                d.parts.push((ps, pe));
+            }
             return d;
         }
         let start = self.instruction_boundary_before(address);
@@ -690,12 +707,32 @@ impl Binary {
     }
 
     fn symbol_name(&self, address: u64) -> Option<String> {
+        if let Some(name) = self.part_name(address) {
+            return Some(name);
+        }
         let r = self.symbols.lookup(address)?;
         let name = r.demangled.as_deref().unwrap_or(&r.name);
         Some(if r.offset == 0 {
             name.to_string()
         } else {
             format!("{name}+{:#x}", r.offset)
+        })
+    }
+}
+
+impl Binary {
+    /// The name of an address in a piece of a function away from its entry:
+    /// `find_char.part+0x2`, after the function it belongs to.
+    pub(crate) fn part_name(&self, address: u64) -> Option<String> {
+        let (start, _, owner) = self.symbols.part_at(address)?;
+        let name = self
+            .symbols
+            .at(owner)
+            .map_or_else(|| format!("sub_{owner:x}"), |s| s.display_name().into_owned());
+        Some(if address == start {
+            format!("{name}.part")
+        } else {
+            format!("{name}.part+{:#x}", address - start)
         })
     }
 }

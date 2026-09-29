@@ -71,6 +71,15 @@ pub struct DecompContext {
     pub typed: Vec<TypedData>,
     /// The vtable slots holding it (a virtual function): `const Square::`vftable'[1]`.
     pub vtables: Vec<String>,
+    /// Its pieces away from its entry, whose code follows the entry's in `instructions`: (start, end).
+    pub parts: Vec<(u64, u64)>,
+    /// The function its code runs on into at its end, with no return or jump:
+    /// it is another way into that one (an alternate entry).
+    pub falls_into: Option<(u64, String)>,
+    /// The function that runs on into this one at its end: another way in.
+    pub entered_from: Option<(u64, String)>,
+    /// Other names of it: functions with the same code the linker folded into one.
+    pub aliases: Vec<String>,
     /// Notes on the function and the addresses in it.
     pub notes: Vec<Annotation>,
     /// Where decompiling it stands.
@@ -168,6 +177,17 @@ impl Binary {
                 name.contains("`vftable'").then(|| format!("{name}[{}]", s.offset / word))
             })
             .collect();
+        // A function whose last instruction runs on into the next is another way into it.
+        let name_at = |a: u64| self.symbols().at(a).map(|s| (a, s.display_name().into_owned()));
+        let falls_into = self.falls_into(lo, lo + f.size).and_then(name_at);
+        let entered_from = self
+            .symbols()
+            .functions()
+            .take_while(|g| g.address < lo)
+            .filter(|g| g.address + g.size == lo)
+            .last()
+            .filter(|g| self.falls_into(g.address, lo).is_some())
+            .and_then(|g| name_at(g.address));
         Some(DecompContext {
             address: lo,
             name: f.display_name().into_owned(),
@@ -182,6 +202,10 @@ impl Binary {
             data: summary.data,
             typed,
             vtables,
+            parts: dis.parts.clone(),
+            falls_into,
+            entered_from,
+            aliases: self.symbols().aliases(lo),
             notes,
             decomp: self.decomp_at(lo).cloned(),
             examples,
@@ -253,6 +277,32 @@ impl DecompContext {
                 );
             }
         }
+        if !self.aliases.is_empty() {
+            let _ = writeln!(
+                out,
+                "Also named: {} (functions with the same code, folded into one by the linker)",
+                self.aliases.join(", ")
+            );
+        }
+        for (s, e) in &self.parts {
+            let _ = writeln!(
+                out,
+                "Has a piece away from its entry at {s:#x}..{e:#x} ({} bytes; its code follows the entry's below)",
+                e - s
+            );
+        }
+        if let Some((a, name)) = &self.falls_into {
+            let _ = writeln!(
+                out,
+                "Runs on into {name} at {a:#x} at its end, with no return: another way into that function (an alternate entry)"
+            );
+        }
+        if let Some((a, name)) = &self.entered_from {
+            let _ = writeln!(
+                out,
+                "Also entered from {name} at {a:#x}, whose code runs on into this one: an alternate entry"
+            );
+        }
         if !self.vtables.is_empty() {
             let _ = writeln!(out, "In vtables (a virtual function): {}", self.vtables.join(", "));
         }
@@ -307,6 +357,9 @@ impl DecompContext {
         }
         let _ = writeln!(out, "Code:");
         for i in &self.instructions {
+            if let Some((s, _)) = self.parts.iter().find(|p| p.0 == i.address) {
+                let _ = writeln!(out, "  ; its piece at {s:#x}, away from the entry:");
+            }
             let _ = writeln!(
                 out,
                 "  {:08x}  {} {}{}",

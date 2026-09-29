@@ -162,6 +162,8 @@ pub struct SymbolTable {
     query_cache: Mutex<Option<(String, Vec<u32>)>>,
     /// The last function-list filter's matches, in address order.
     function_cache: Mutex<Option<(String, Vec<u32>)>>,
+    /// Pieces of functions away from their entries: (start, end, the function's start), sorted.
+    parts: Vec<(u64, u64, u64)>,
 }
 
 /// A page of the function list: `(address, size, name)`.
@@ -362,6 +364,7 @@ impl Builder {
             name_order: OnceLock::new(),
             query_cache: Mutex::new(None),
             function_cache: Mutex::new(None),
+            parts: Vec::new(),
         }
     }
 }
@@ -789,8 +792,54 @@ impl SymbolTable {
         None
     }
 
-    /// The function whose extent contains `address` (the user's included).
+    /// Sets the pieces of functions away from their entries: (start, end,
+    /// the function's start). An address in one is in its function.
+    pub(crate) fn set_parts(&mut self, parts: Vec<(u64, u64, u64)>) {
+        self.parts = parts;
+    }
+
+    /// The piece of a function away from its entry holding `address`:
+    /// (start, end, the function's start).
+    pub(crate) fn part_at(&self, address: u64) -> Option<(u64, u64, u64)> {
+        let i = self.parts.partition_point(|p| p.0 <= address).checked_sub(1)?;
+        let p = self.parts[i];
+        (address < p.1).then_some(p)
+    }
+
+    /// The start of the function a piece away from its entry holding `address` belongs to.
+    pub(crate) fn part_owner(&self, address: u64) -> Option<u64> {
+        self.part_at(address).map(|p| p.2)
+    }
+
+    /// Other names of the function at `address` than the one shown: several
+    /// functions the linker folded into one, when the symbols say so.
+    pub fn aliases(&self, address: u64) -> Vec<String> {
+        let shown = self.at(address).map(|s| s.index);
+        let mut out: Vec<String> = (0..self.recs.len() as u32)
+            .filter(|&i| {
+                let r = &self.recs[i as usize];
+                r.address == address && r.kind == SymbolKind::Function && r.flags & DEFINED != 0 && Some(i) != shown
+            })
+            .map(|i| self.sym(i).display_name().into_owned())
+            .collect();
+        out.sort();
+        out.dedup();
+        if let Some(s) = self.at(address) {
+            let name = s.display_name().into_owned();
+            out.retain(|n| *n != name);
+        }
+        out
+    }
+
+    /// The pieces of the function starting at `start` away from its entry: (start, end).
+    pub fn parts_of(&self, start: u64) -> Vec<(u64, u64)> {
+        self.parts.iter().filter(|p| p.2 == start).map(|p| (p.0, p.1)).collect()
+    }
+
+    /// The function whose extent contains `address` (the user's included),
+    /// or whose piece away from its entry does.
     pub fn function_containing(&self, address: u64) -> Option<Sym<'_>> {
+        let address = self.part_owner(address).unwrap_or(address);
         self.containing_in(&self.by_addr, address).map(|i| self.sym(i))
     }
 
@@ -798,6 +847,7 @@ impl SymbolTable {
     /// functions only (analyses built once must not depend on the user's names):
     /// the function's start and end.
     pub(crate) fn static_function_containing(&self, address: u64) -> Option<(u64, u64)> {
+        let address = self.part_owner(address).unwrap_or(address);
         let r = &self.recs[self.containing_in(&self.base_by_addr, address)? as usize];
         Some((r.address, r.address + r.size.max(1)))
     }
@@ -813,17 +863,22 @@ impl SymbolTable {
         })
     }
 
-    /// File and recovered functions starting in `lo..hi`: (start, end), in order.
+    /// File and recovered functions starting in `lo..hi`, and the pieces of
+    /// functions away from their entries: (start, end), in order.
     pub(crate) fn static_functions_in(&self, lo: u64, hi: u64) -> impl Iterator<Item = (u64, u64)> + '_ {
         let first = self
             .base_by_addr
             .partition_point(|&i| self.recs[i as usize].address < lo);
-        self.base_by_addr[first..]
+        let functions = self.base_by_addr[first..]
             .iter()
             .map(|&i| &self.recs[i as usize])
             .take_while(move |r| r.address < hi)
             .filter(|r| r.kind == SymbolKind::Function)
-            .map(|r| (r.address, r.address + r.size.max(1)))
+            .map(|r| (r.address, r.address + r.size.max(1)));
+        let mut all: Vec<(u64, u64)> = functions.collect();
+        all.extend(self.parts.iter().filter(|p| p.0 >= lo && p.0 < hi).map(|p| (p.0, p.1)));
+        all.sort_unstable();
+        all.into_iter()
     }
 
     /// Like [`Self::static_functions_in`], without import stubs: the binary's own code.

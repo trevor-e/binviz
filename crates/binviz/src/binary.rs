@@ -35,6 +35,9 @@ pub struct Binary {
     pub(crate) discovered: Vec<(u64, u64)>,
     /// Jump tables found following the code, sorted by address: data, even inside code.
     pub(crate) code_tables: Vec<crate::discover::x86::Table>,
+    /// Pieces of functions away from their entries, found following the code:
+    /// (start, end, the function's start), sorted.
+    pub(crate) code_parts: Vec<(u64, u64, u64)>,
     /// The symbol table of an attached debug file (a dSYM's), for stripped binaries.
     pub(crate) debug_symbols: crate::inspect::DebugSymbols,
     pub(crate) annotations: Vec<Annotation>,
@@ -530,6 +533,7 @@ impl Binary {
             debug: None,
             discovered: discovery.functions,
             code_tables: discovery.tables,
+            code_parts: discovery.parts,
             debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),
@@ -610,6 +614,7 @@ impl Binary {
             debug: None,
             discovered: Vec::new(),
             code_tables: Vec::new(),
+            code_parts: Vec::new(),
             debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),

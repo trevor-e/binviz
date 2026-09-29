@@ -398,9 +398,19 @@ impl Binary {
             Convention::Thiscall => 1,
             _ => frame.registers.len() + 1,
         };
-        for i in 0..frame.stack_args as usize {
+        for (i, a) in frame.args.iter().enumerate() {
             let arg = format!("arg{}", first + i);
-            args.push(format!("{}{arg}", if pointer(&arg) { "void *" } else { "int " }));
+            let ty = match (a.float, a.size) {
+                (true, 4) => "float ",
+                (true, _) => "double ",
+                _ if pointer(&arg) => "void *",
+                _ => "int ",
+            };
+            args.push(format!("{ty}{arg}"));
+        }
+        // An argument on the x87 stack comes first (MSVC's _CIsqrt and its kind take theirs there).
+        if frame.fpu_argument {
+            args.insert(0, "double st0".into());
         }
         let keyword = match frame.convention {
             Convention::Win64 | Convention::SysV => String::new(),

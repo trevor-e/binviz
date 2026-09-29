@@ -161,7 +161,13 @@ Xbox executables (**XBE**).
   leaf functions, which need no unwind data: its code is followed from those
   to find them. MSVC's `__finally` blocks stay in their functions, jump tables
   show as data in the disassembly, and each case's address says which table
-  entry leads there. Name functions, comment instructions and mark code as
+  entry leads there. Code the optimizer moved away from its function's entry
+  (a piece reached only by a jump from it, with no frame of its own) stays
+  that function's: the disassembly and the context show it after the entry's
+  code, and the stack is followed through it. A function whose last
+  instruction runs on into the next function is another way into that one
+  (an alternate entry, as MSVC's `_CIsqrt` is to `sqrt`), and its context
+  says so; functions the linker folded into one show all their names. Name functions, comment instructions and mark code as
   reviewed; a coverage map shows what is named, recovered, reviewed or still
   unexplored, and lists the largest gaps with a guess at what they hold.
 - **Data typed by its use.** Every address in data that the code reads,
@@ -438,7 +444,7 @@ CLI and the MCP server:
 | `--psx-exe <exe>` | `open_binary` `psx_exe` | A PlayStation memory image (2 MiB of RAM dumped by an emulator; recognized by the kernel at its start) or an overlay opens with the boot executable's functions named, so calls into it read as in it. Functions are found by their prologues (`addiu $sp` with `$ra` saved) as well as by following the code |
 | `--overlay-at <addr>` | `open_binary` `overlay_at` | Open a file as a code overlay loaded at an address. `Binary::psx_locate` finds where a file from the disc sits in a memory image |
 | `--trace <file>` | `open_binary` `trace` | A trace of the code an emulator ran (any text with an address per line): each run of traced code the following hadn't reached is followed as a function, after everything reachable, so functions aren't split |
-| `signature <file> <fn>` | `function_signature` | What a function's code says about its prototype: `$a0`–`$a3` read before written, stack arguments, whether `$v0` carries a result, frame size, saved registers, calls, GTE/FPU use, and the offsets loaded and stored off each base register (structure layout hints, named after the argument they came from). For x86 and x86-64 too: the stack pointer is followed from the entry through pushes, calls (what each callee pops: `ret N` in its code, the arguments of a Windows import, the stack adding up at the returns for a call through a pointer), merged `add esp, N`, `ebp` frames and `and esp, -N` alignment, so the calling convention (cdecl, stdcall, thiscall, fastcall; Microsoft x64, System V), the arguments read, the frame, the saved registers and a result in `eax` or on the FPU stack come out, and every stack slot in `disasm` and `context` is named against the entry frame (`arg2`, `local_10`, `saved esi`) however the pushes before calls move `esp` |
+| `signature <file> <fn>` | `function_signature` | What a function's code says about its prototype: `$a0`–`$a3` read before written, stack arguments, whether `$v0` carries a result, frame size, saved registers, calls, GTE/FPU use, and the offsets loaded and stored off each base register (structure layout hints, named after the argument they came from). For x86 and x86-64 too: the stack pointer is followed from the entry through pushes, calls (what each callee pops: `ret N` in its code, the arguments of a Windows import, the stack adding up at the returns for a call through a pointer), merged `add esp, N`, `ebp` frames and `and esp, -N` alignment, so the calling convention (cdecl, stdcall, thiscall, fastcall; Microsoft x64, System V), the arguments read (a `float` or `double` where the code reads one, an argument on the x87 stack as `double st0`), the frame, the saved registers and a result in `eax` or on the FPU stack come out, and every stack slot in `disasm` and `context` is named against the entry frame (`arg2`, `local_10`, `saved esi`) however the pushes before calls move `esp` |
 | — | `next_functions` · `mark` | The work queue (any architecture): what to write C for next, best first, and claiming it so parallel agents don't collide; each outcome recorded in the notes (see below) |
 | — | `similar_functions` | The functions whose instructions are shaped most like a function's, with where each stands: a matched one's C is the worked example |
 | `context <file> <fn> [n]` | `decomp_context` | The code with names resolved, the signature, callers and callees with theirs, strings, globals and notes, where decompiling it stands, and the matched functions shaped like it with their source files: one call per function |

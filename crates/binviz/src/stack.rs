@@ -103,6 +103,10 @@ struct State {
     fpu: i32,
     /// `eax` was set by the function's own code since the last call.
     result: bool,
+    /// Something was loaded onto the x87 stack on this path.
+    fpu_loaded: bool,
+    /// The last x87 instruction popped the stack (`fstp`): what it held was stored, not returned.
+    fpu_popped: bool,
     /// Registers holding an address the code names outright (`mov ecx, offset table`):
     /// what is read off them is a global's, not a structure's.
     constant: u32,
@@ -132,6 +136,11 @@ pub(crate) struct Frame {
     pub registers: Vec<&'static str>,
     /// Arguments passed on the stack: those the callee pops, or (cdecl) up to the highest one read.
     pub stack_args: u32,
+    /// The stack arguments one by one: where each is (from the entry), and
+    /// whether the code reads it as a `float` or a `double`.
+    pub args: Vec<StackArg>,
+    /// It takes an argument on the x87 stack (reads `st(0)` before loading anything).
+    pub fpu_argument: bool,
     /// Bytes the prologue reserves for locals.
     pub locals: u32,
     /// Registers saved on entry and where (offset from the entry).
@@ -150,6 +159,16 @@ pub(crate) struct Frame {
     pub slots: Vec<(u64, Slot)>,
     /// Offsets walked off each base register.
     pub accesses: Vec<Access>,
+}
+
+/// An argument on the stack.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct StackArg {
+    /// Offset from the entry's stack pointer.
+    pub offset: i64,
+    pub size: u8,
+    /// Read as a `float` (4 bytes) or a `double` (8).
+    pub float: bool,
 }
 
 /// A place in the stack frame an instruction reads or writes.
@@ -218,12 +237,21 @@ impl Binary {
         };
         let f = self.symbols.function_containing(address)?;
         let (start, end) = (f.address, f.address + f.size.max(1));
-        let mut frame = self.walk(bits, start, end, false);
+        // Its pieces away from its entry are its code too, and so is the function its code runs on into.
+        let mut ranges = vec![(start, end)];
+        ranges.extend(self.symbols.parts_of(start));
+        if let Some(next) = self.runs_on_into(bits, start, start + f.size)
+            && let Some(g) = self.symbols.at(next).filter(|g| g.size > 0)
+        {
+            ranges.push((next, next + g.size));
+            ranges.extend(self.symbols.parts_of(next));
+        }
+        let mut frame = self.walk(bits, &ranges, false);
         // A call through a pointer that pops its own arguments (a COM method,
         // a stdcall callback) leaves the stack lower than we think; if assuming
         // they all do makes every return add up, they do.
         if frame.unbalanced {
-            let again = self.walk(bits, start, end, true);
+            let again = self.walk(bits, &ranges, true);
             if !again.unbalanced {
                 frame = again;
             }
@@ -232,7 +260,9 @@ impl Binary {
     }
 
     /// Follows every path of the function at `start..end`.
-    fn walk(&self, bits: u32, start: u64, end: u64, indirect_pops: bool) -> Frame {
+    fn walk(&self, bits: u32, ranges: &[(u64, u64)], indirect_pops: bool) -> Frame {
+        let start = ranges[0].0;
+        let inside = |a: u64| ranges.iter().any(|&(s, e)| a >= s && a < e);
         let word = (bits / 8) as i64;
         let mut info = InstructionInfoFactory::new();
         let mut seen: HashMap<u64, ()> = HashMap::new();
@@ -246,6 +276,8 @@ impl Binary {
             eax: None,
             fpu: 0,
             result: false,
+            fpu_loaded: false,
+            fpu_popped: false,
             constant: 0,
         };
         let mut paths = vec![(start, first)];
@@ -254,6 +286,9 @@ impl Binary {
         let mut ecx_base = false;
         let mut pops: Option<i64> = None;
         let mut max_arg = 0i64;
+        // How each argument slot is read: (bytes, as a float).
+        let mut arg_reads: BTreeMap<i64, (u8, bool)> = BTreeMap::new();
+        let mut fpu_argument = false;
         let mut locals = 0i64;
         let mut saved: Vec<(&'static str, i64)> = Vec::new();
         let mut frame_pointer = false;
@@ -267,7 +302,7 @@ impl Binary {
         while let Some((pc, mut st)) = paths.pop() {
             let mut pc = pc;
             loop {
-                if pc < start || pc >= end || seen.insert(pc, ()).is_some() || budget == 0 {
+                if !inside(pc) || seen.insert(pc, ()).is_some() || budget == 0 {
                     break;
                 }
                 budget -= 1;
@@ -315,10 +350,18 @@ impl Binary {
                 if regs.iter().any(|&(r, _)| r.is_st() || r.is_xmm() || r.is_ymm()) {
                     uses_float = true;
                 }
+                // st(0) read before anything was loaded: an argument on the x87 stack.
+                if !st.fpu_loaded && regs.iter().any(|&(r, access)| r.is_st() && reads(access)) {
+                    fpu_argument = true;
+                }
                 // Values on the x87 stack; a callee's float result isn't counted, so never below none.
                 let fpu = ins.fpu_stack_increment_info();
                 if fpu.writes_top() {
                     st.fpu = (st.fpu - fpu.increment()).max(0);
+                    st.fpu_loaded |= fpu.increment() < 0;
+                    st.fpu_popped = fpu.increment() > 0;
+                } else if regs.iter().any(|&(r, _)| r.is_st()) {
+                    st.fpu_popped = false;
                 }
                 // The stack slot it uses.
                 let memory = (0..ins.op_count()).any(|i| ins.op_kind(i) == OpKind::Memory);
@@ -341,7 +384,11 @@ impl Binary {
                             && off >= word
                             && !lea
                         {
-                            max_arg = max_arg.max(off + ins.memory_size().size().max(1) as i64);
+                            let size = ins.memory_size();
+                            max_arg = max_arg.max(off + size.size().max(1) as i64);
+                            let float = matches!(size, iced_x86::MemorySize::Float32 | iced_x86::MemorySize::Float64);
+                            let e = arg_reads.entry(off).or_insert((0, false));
+                            *e = (e.0.max(size.size().min(255) as u8), e.1 || float);
                         }
                         // A register loaded from an argument holds that argument.
                         if let (Sp::Entry(off), Mnemonic::Mov | Mnemonic::Movzx | Mnemonic::Movsx) =
@@ -434,7 +481,8 @@ impl Binary {
                             unbalanced = true;
                         }
                         returns |= st.result;
-                        returns_float |= st.fpu > 0;
+                        // A value left on the x87 stack, or the argument it came with, worked on in place.
+                        returns_float |= st.fpu > 0 || (fpu_argument && !st.fpu_popped);
                         break;
                     }
                     FlowControl::Exception | FlowControl::Interrupt if ins.mnemonic() != Mnemonic::Int => break,
@@ -577,7 +625,7 @@ impl Binary {
                 match flow {
                     FlowControl::UnconditionalBranch => {
                         match near_target(&ins) {
-                            Some(t) if t >= start && t < end => paths.push((t, st.clone())),
+                            Some(t) if inside(t) => paths.push((t, st.clone())),
                             // A tail call: the stack must be back where it started.
                             Some(_) => {
                                 if st.sp != Sp::Entry(0) && st.sp != Sp::Unknown {
@@ -641,8 +689,20 @@ impl Binary {
             Convention::Win64 => 5 * word,
             _ => word,
         };
-        let read = ((max_arg - first_stack).max(0) + word - 1) / word;
-        let stack_args = if pops > 0 { pops / word as u32 } else { read as u32 };
+        // The arguments one by one, as far as the callee pops or the code reads: a
+        // double read from a slot takes two in 32-bit code.
+        let end = max_arg.max(first_stack + pops as i64);
+        let mut args = Vec::new();
+        let mut p = first_stack;
+        while p < end && args.len() < 64 {
+            let (size, float) = match arg_reads.get(&p) {
+                Some(&(n @ (4 | 8), true)) => (n.max(word as u8), true),
+                _ => (word as u8, false),
+            };
+            args.push(StackArg { offset: p, size, float });
+            p += size as i64;
+        }
+        let stack_args = args.len() as u32;
         slots.sort_by_key(|s: &(u64, Slot)| s.0);
         slots.dedup_by_key(|s| s.0);
         let mut frame = Frame {
@@ -651,6 +711,8 @@ impl Binary {
             pops,
             registers,
             stack_args,
+            args,
+            fpu_argument,
             locals: locals.max(0) as u32,
             saved,
             frame_pointer,
@@ -696,6 +758,40 @@ impl Binary {
             }
         }
         frame
+    }
+
+    /// The function the x86 function at `start..end` runs on into at its end,
+    /// with no return or jump: another way into that one.
+    pub(crate) fn falls_into(&self, start: u64, end: u64) -> Option<u64> {
+        let bits = match self.arch {
+            object::Architecture::I386 => 32,
+            object::Architecture::X86_64 => 64,
+            _ => return None,
+        };
+        self.runs_on_into(bits, start, end)
+    }
+
+    fn runs_on_into(&self, bits: u32, start: u64, end: u64) -> Option<u64> {
+        if end <= start {
+            return None;
+        }
+        let mut pc = start;
+        let mut last = None;
+        while pc < end {
+            let ins = self.decode_x86(bits, pc)?;
+            pc = ins.next_ip();
+            last = Some(ins);
+        }
+        let last = last?;
+        // A call last is to a function that doesn't return (`call _exit`), not a way on.
+        let on = matches!(last.flow_control(), FlowControl::Next | FlowControl::ConditionalBranch)
+            && !matches!(last.mnemonic(), Mnemonic::Int3 | Mnemonic::Nop);
+        (on && last.next_ip() == end
+            && self
+                .symbols
+                .at(end)
+                .is_some_and(|g| g.kind == crate::model::SymbolKind::Function))
+        .then_some(end)
     }
 
     /// The instruction at `pc`, decoded.
@@ -963,8 +1059,23 @@ impl Frame {
                     Convention::Win64 => (5 * word, 5),
                     _ => (word, self.first_stack_arg() as i64),
                 };
-                let k = (off - base) / word;
-                let within = (off - base) % word;
+                // Within an argument the code reads (a double takes two slots), else by slots past the last.
+                let (k, within) = match self
+                    .args
+                    .iter()
+                    .position(|a| off >= a.offset && off < a.offset + a.size as i64)
+                {
+                    Some(i) => (i as i64, off - self.args[i].offset),
+                    None => {
+                        let past = self.args.last().map_or(base, |a| a.offset + a.size as i64);
+                        let n = self.args.len() as i64;
+                        if off >= past {
+                            (n + (off - past) / word, (off - past) % word)
+                        } else {
+                            ((off - base) / word, (off - base) % word)
+                        }
+                    }
+                };
                 let name = format!("arg{}", first + k);
                 if within == 0 { name } else { format!("{name}+{within}") }
             }

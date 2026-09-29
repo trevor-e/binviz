@@ -751,6 +751,9 @@ fn x86_code_says_how_each_function_is_called() {
     assert!(text.contains("int __cdecl apply(int arg1, int arg2)"), "{text}");
     assert!(text.contains("mov edi, [esp+0x10]  ; arg1"), "{text}");
     assert!(text.contains("mov ebx, [esp+0x14]  ; arg2"), "{text}");
+    // A function ending in a call that doesn't return runs on into nothing.
+    let checked = bin.symbols().by_name("_checked_index").unwrap().address;
+    assert!(bin.decomp_context(checked, 100).unwrap().falls_into.is_none());
     // Every function the PDB names balances its stack.
     for f in bin.symbols().functions() {
         if let Some(s) = bin.function_signature(f.address) {
@@ -904,6 +907,44 @@ fn a_game_dll_stripped_reads_as_its_source_would() {
         "{:?}",
         c.typed
     );
+}
+
+#[test]
+fn a_function_in_more_than_one_piece_reads_as_one() {
+    let (bin, named) = gamedemo();
+    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    // find_char's found case sits before its entry: a piece of it, not a function of its own.
+    let (find_char, piece) = (at("_find_char"), at("_find_char") - 5);
+    assert!(bin.symbols().functions().all(|f| f.address != piece));
+    assert_eq!(bin.symbols().function_containing(piece).unwrap().address, find_char);
+    let c = bin.decomp_context(find_char, 100).unwrap();
+    assert_eq!(c.parts, [(piece, find_char)]);
+    let text = c.describe();
+    assert!(text.contains(&format!("Has a piece away from its entry at {piece:#x}..{find_char:#x}")), "{text}");
+    assert!(text.contains("lea eax, [edx-1]"), "{text}");
+    // Its code pops what the entry pushed.
+    let s = bin.function_signature(find_char).unwrap();
+    assert!(!s.unbalanced, "{}", s.describe());
+    assert_eq!(s.saved, ["ebx"]);
+    assert!(bin.coverage(1000).gaps.iter().all(|g| g.end <= piece || g.start >= find_char));
+    // sqrt_either loads its argument and runs on into a second entry taking it on the FPU stack.
+    let (sqrt, cisqrt) = (at("_sqrt_either"), at("__CIsqrt_either"));
+    let s = bin.function_signature(sqrt).unwrap();
+    assert_eq!(s.prototype, format!("double __cdecl sub_{sqrt:x}(double arg1)"));
+    assert_eq!(
+        bin.function_signature(cisqrt).unwrap().prototype,
+        format!("double __cdecl sub_{cisqrt:x}(double st0)")
+    );
+    let c = bin.decomp_context(sqrt, 100).unwrap();
+    assert_eq!(c.falls_into.as_ref().map(|f| f.0), Some(cisqrt));
+    assert!(c.describe().contains("(an alternate entry)"));
+    let c = bin.decomp_context(cisqrt, 100).unwrap();
+    assert_eq!(c.entered_from.as_ref().map(|f| f.0), Some(sqrt));
+    // gib_die and debris_die, folded into one: the context names both.
+    let c = named.decomp_context(at("_gib_die"), 100).unwrap();
+    let names = [c.name.as_str(), c.aliases.first().map_or("", String::as_str)];
+    assert!(names.contains(&"_gib_die") && names.contains(&"_debris_die"), "{names:?}");
+    assert!(c.describe().contains("folded into one by the linker"));
 }
 
 /// x86demo.exe with a Rich header like Visual C++ 6.0's linker writes, of

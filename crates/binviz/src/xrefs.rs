@@ -849,6 +849,16 @@ impl Binary {
         out
     }
 
+    /// References made by the function at `start` (`size` bytes) and by its
+    /// pieces away from its entry.
+    fn scan_function(&self, start: u64, size: u64) -> Vec<(u64, u64, RefKind)> {
+        let mut out = self.scan_range(start, start + size.max(1));
+        for (ps, pe) in self.symbols.parts_of(start) {
+            out.extend(self.scan_range(ps, pe));
+        }
+        out
+    }
+
     /// References made by the code or data in `lo..hi`, in address order.
     pub fn references_from(&self, lo: u64, hi: u64) -> Vec<Reference> {
         self.scan_range(lo, hi)
@@ -878,6 +888,9 @@ impl Binary {
 
     /// Where an address is: `symbol+offset`, or `section+offset`.
     pub(crate) fn place(&self, address: u64) -> Option<String> {
+        if let Some(name) = self.part_name(address) {
+            return Some(name);
+        }
         if let Some(s) = self.symbols.lookup(address) {
             let name = s.demangled.unwrap_or(s.name);
             return Some(if s.offset == 0 {
@@ -897,6 +910,9 @@ impl Binary {
     /// text, `symbol+offset`, or for a pointer slot, what it points to. Cheap:
     /// it uses the reference index only if it has been built.
     pub fn name_for(&self, address: u64) -> Option<String> {
+        if let Some(name) = self.part_name(address) {
+            return Some(name);
+        }
         let sym = self.symbols.lookup(address);
         if let Some(s) = &sym
             && s.offset == 0
@@ -1054,7 +1070,7 @@ impl Binary {
             return Vec::new();
         };
         let mut by_callee: HashMap<u64, (u32, u64)> = HashMap::new();
-        for (site, target, kind) in self.scan_range(f.address, f.address + f.size.max(1)) {
+        for (site, target, kind) in self.scan_function(f.address, f.size) {
             if !kind.is_call() {
                 continue;
             }
@@ -1193,9 +1209,13 @@ impl Binary {
         let mut strings = Vec::new();
         let mut data = Vec::new();
         let mut seen = HashSet::new();
-        for (site, target, kind) in self.scan_range(lo, hi) {
+        for (site, target, kind) in self.scan_function(lo, hi - lo) {
             // Its own code and jump tables aren't data it uses.
-            if kind.is_call() || (lo..hi).contains(&target) || !seen.insert(target) {
+            if kind.is_call()
+                || (lo..hi).contains(&target)
+                || self.symbols.part_owner(target) == Some(lo)
+                || !seen.insert(target)
+            {
                 continue;
             }
             // A float or double read (its bytes can pass for a short string) is data with a value.
