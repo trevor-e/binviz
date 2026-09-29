@@ -650,3 +650,55 @@ fn an_original_xbox_executable() {
     assert!(cov.contains(".text") && cov.contains("D3D"), "{cov}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn types_as_c_and_members_at_offsets() {
+    let path = fixture_copy_for("layouts-pe-x86.exe", "types-");
+    let pdb = path.with_file_name("layouts-pe-x86.pdb");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin/layouts-pe-x86.pdb"),
+        &pdb,
+    )
+    .unwrap();
+    let mut s = Session::start();
+    s.ok(
+        "open_binary",
+        json!({ "path": path.to_str().unwrap(), "debug_file": pdb.to_str().unwrap() }),
+    );
+    // A structure with what it holds, from the PDB's types.
+    let header = s.ok("c_header", json!({ "names": ["entity"] }));
+    assert!(header.starts_with("4 structures and unions, 3 enums"), "{header}");
+    assert!(
+        header.contains("struct entity { /* 0x108 bytes */") && header.contains("union odd {"),
+        "{header}"
+    );
+    assert!(
+        header.contains("_Static_assert(BINVIZ_OFFSETOF(struct entity, enemy) == 0x54"),
+        "{header}"
+    );
+    // Everything, prototypes included.
+    let all = s.ok("c_header", json!({}));
+    assert!(all.contains("int BINVIZ_STDCALL list_length(struct list *l);"), "{all}");
+    let (text, error) = s.call("c_header", json!({ "names": ["no_such_type"] }));
+    assert!(
+        error && text.contains("no type or function named no_such_type"),
+        "{text}"
+    );
+    // Which member an offset is: through a typedef, into arrays and unions.
+    let fields = s.ok("struct_field", json!({ "type": "list_t", "offsets": ["0x0", "4"] }));
+    assert!(fields.contains("0x0  list.head: struct node *"), "{fields}");
+    assert!(fields.contains("0x4  list.length: int"), "{fields}");
+    let fields = s.ok(
+        "struct_field",
+        json!({ "type": "entity", "offsets": ["0x3c", "0x80", "0x85", "0xa4", "0x200"] }),
+    );
+    for line in [
+        "0x3c  entity.matrix[1][2]: float",
+        "0x80  entity.count: int",
+        "0x85  entity+0x85 (padding)",
+        "0xa4  entity.fl.d: unsigned short, bits 1312..1316",
+        "0x200  past its end (0x108 bytes)",
+    ] {
+        assert!(fields.contains(line), "{line:?} missing in:\n{fields}");
+    }
+}

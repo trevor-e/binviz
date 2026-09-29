@@ -168,7 +168,8 @@ impl Binary {
         if self.summary.format != crate::model::Format::Pe {
             bail!("{name} is a PDB, the debug info of Windows binaries; this binary isn't one");
         }
-        let converted = dwarf::pdb::convert(data, self.image_base)?;
+        let address_size = self.arch.address_size().map_or(8, |s| s.bytes());
+        let converted = dwarf::pdb::convert(data, self.image_base, address_size)?;
         // The GUID says which build a PDB is for (its age only how often it was written).
         let Some(ours) = &self.summary.build_id else {
             bail!("this binary names no PDB (it has no CodeView record), so {name} can't be matched to it");

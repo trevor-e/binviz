@@ -125,6 +125,30 @@ fn to_string(r: R) -> String {
     r.to_string_lossy().map(|c| c.into_owned()).unwrap_or_default()
 }
 
+/// A calling convention's name, with the vendor ones GCC and LLVM write for
+/// x86 (a PDB's stdcall, fastcall and thiscall read as LLVM's).
+fn calling_convention(cc: gimli::DwCc) -> String {
+    if let Some(s) = cc.static_string() {
+        return s.to_string();
+    }
+    let name = match cc.0 {
+        0x40 => "DW_CC_GNU_renesas_sh",
+        0x41 => "DW_CC_GNU_borland_fastcall_i386",
+        0xb0 => "DW_CC_BORLAND_safecall",
+        0xb1 => "DW_CC_BORLAND_stdcall",
+        0xb2 => "DW_CC_BORLAND_pascal",
+        0xb3 => "DW_CC_BORLAND_msfastcall",
+        0xb4 => "DW_CC_BORLAND_msreturn",
+        0xb5 => "DW_CC_BORLAND_thiscall",
+        0xb6 => "DW_CC_BORLAND_fastcall",
+        0xc0 => "DW_CC_LLVM_vectorcall",
+        0xc1 => "DW_CC_LLVM_Win64",
+        0xc2 => "DW_CC_LLVM_X86_64SysV",
+        _ => return format!("{:#x}", cc.0),
+    };
+    name.to_string()
+}
+
 /// A DIE's name, following `DW_AT_abstract_origin` / `DW_AT_specification`.
 /// With `linkage`, prefers the (demangled) linkage name, which is fully qualified.
 pub(crate) fn die_name(unit: &gimli::UnitRef<'_, R>, die: &Die, linkage: bool) -> Option<String> {
@@ -513,25 +537,7 @@ impl DebugInfo {
                     member_offset(unit, child).or(union.then_some(0))
                 };
                 let bit_size = child.attr_value(gimli::DW_AT_bit_size).and_then(|v| v.udata_value());
-                let bit_offset = bit_size.and_then(|bits| {
-                    child
-                        .attr_value(gimli::DW_AT_data_bit_offset)
-                        .and_then(|v| v.udata_value())
-                        .or_else(|| {
-                            // DWARF 2/3: bits from the most significant end of the storage unit.
-                            let from_top = child.attr_value(gimli::DW_AT_bit_offset)?.udata_value()?;
-                            let storage = child
-                                .attr_value(gimli::DW_AT_byte_size)
-                                .and_then(|v| v.udata_value())
-                                .or(size)?;
-                            let base = offset.unwrap_or(0) * 8;
-                            Some(if little {
-                                base + (storage * 8).checked_sub(from_top + bits)?
-                            } else {
-                                base + from_top
-                            })
-                        })
-                });
+                let bit_offset = bit_size.and_then(|bits| member_bit_offset(child, bits, offset, size, little));
                 out.push(MemberLayout {
                     kind: kind.into(),
                     name: die_name(unit, child, false),
@@ -736,7 +742,7 @@ impl DebugInfo {
             AttributeValue::Language(v) => v.static_string().unwrap_or("?").to_string(),
             AttributeValue::AddressClass(v) => v.static_string().unwrap_or("?").to_string(),
             AttributeValue::IdentifierCase(v) => v.static_string().unwrap_or("?").to_string(),
-            AttributeValue::CallingConvention(v) => v.static_string().unwrap_or("?").to_string(),
+            AttributeValue::CallingConvention(v) => calling_convention(v),
             AttributeValue::Inline(v) => v.static_string().unwrap_or("?").to_string(),
             AttributeValue::Ordering(v) => v.static_string().unwrap_or("?").to_string(),
             AttributeValue::FileIndex(i) => match self.files.unit_file(unit_idx, i) {
@@ -780,7 +786,23 @@ impl DebugInfo {
             None => "void".to_string(),
         };
         match die.tag() {
-            gimli::DW_TAG_pointer_type => name.unwrap_or_else(|| format!("{} *", inner())),
+            gimli::DW_TAG_pointer_type => name.unwrap_or_else(|| {
+                // A pointer to a function reads `int (*)(int)`, as its type does.
+                let to = die
+                    .attr_value(gimli::DW_AT_type)
+                    .and_then(|v| self.resolve_ref(unit_idx, v));
+                match to {
+                    Some((u, o))
+                        if self
+                            .unit(u)
+                            .and_then(|tu| tu.entry(o).ok())
+                            .is_some_and(|t| t.tag() == gimli::DW_TAG_subroutine_type) =>
+                    {
+                        self.type_name(u, o, depth + 1)
+                    }
+                    _ => format!("{} *", inner()),
+                }
+            }),
             gimli::DW_TAG_reference_type => name.unwrap_or_else(|| format!("{} &", inner())),
             gimli::DW_TAG_rvalue_reference_type => name.unwrap_or_else(|| format!("{} &&", inner())),
             // A qualified pointer reads `T * const`; anything else `const T`.
@@ -981,9 +1003,38 @@ pub(crate) fn is_type_tag(tag: gimli::DwTag) -> bool {
     )
 }
 
+/// A bit field's first bit, from the start of the object: `DW_AT_data_bit_offset`,
+/// or (DWARF 2/3) `DW_AT_bit_offset`, which counts from the most significant end
+/// of a storage unit of `DW_AT_byte_size` (else the type's `size`) at `offset`.
+pub(crate) fn member_bit_offset(
+    die: &Die,
+    bits: u64,
+    offset: Option<u64>,
+    size: Option<u64>,
+    little: bool,
+) -> Option<u64> {
+    if let Some(b) = die
+        .attr_value(gimli::DW_AT_data_bit_offset)
+        .and_then(|v| v.udata_value())
+    {
+        return Some(b);
+    }
+    let from_top = die.attr_value(gimli::DW_AT_bit_offset)?.udata_value()?;
+    let storage = die
+        .attr_value(gimli::DW_AT_byte_size)
+        .and_then(|v| v.udata_value())
+        .or(size)?;
+    let base = offset.unwrap_or(0) * 8;
+    Some(if little {
+        base + (storage * 8).checked_sub(from_top + bits)?
+    } else {
+        base + from_top
+    })
+}
+
 /// `DW_AT_data_member_location` as a byte offset: a constant, or (DWARF 2) an
 /// expression that just adds one.
-fn member_offset(unit: &gimli::UnitRef<'_, R>, die: &Die) -> Option<u64> {
+pub(crate) fn member_offset(unit: &gimli::UnitRef<'_, R>, die: &Die) -> Option<u64> {
     match die.attr_value(gimli::DW_AT_data_member_location)? {
         AttributeValue::Exprloc(e) => {
             let mut ops = e.operations(unit.encoding());
