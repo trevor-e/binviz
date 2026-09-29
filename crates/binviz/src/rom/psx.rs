@@ -364,6 +364,105 @@ pub fn locate(blob: &[u8], ram: &[u8]) -> Option<u64> {
     None
 }
 
+/// A stretch of a file found in a memory image: where it is in the file,
+/// where it is loaded, and how much of it is still the same (data the
+/// program changed after loading it differs).
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoadedPiece {
+    /// Offset in the file.
+    pub offset: u64,
+    pub size: u64,
+    pub address: u64,
+    /// The share of its bytes still the same, 0 to 1.
+    pub same: f32,
+}
+
+/// The stretches of `file` (a disc's archive, whatever its format, when it
+/// stores what it holds uncompressed) that are loaded in `ram` (a
+/// PlayStation's 2 MiB): the overlays and data its loader copied in, found
+/// by their bytes, each at least 1 KiB and loaded 4-byte aligned.
+pub fn loaded_pieces(file: &[u8], ram: &[u8]) -> Vec<LoadedPiece> {
+    const WINDOW: usize = 32;
+    const STEP: usize = 64;
+    fn hash(w: &[u8]) -> u64 {
+        w.chunks(8).fold(0xcbf2_9ce4_8422_2325u64, |h, c| {
+            let mut word = [0u8; 8];
+            word[..c.len()].copy_from_slice(c);
+            (h ^ u64::from_le_bytes(word)).wrapping_mul(0x0100_0000_01b3)
+        })
+    }
+    let telling = |w: &[u8]| {
+        let mut seen = [false; 256];
+        w.iter().filter(|&&x| !std::mem::replace(&mut seen[x as usize], true)).count() >= 12
+    };
+    // Every 4-byte aligned window of memory with bytes enough to tell it apart.
+    let mut index: std::collections::HashMap<u64, Vec<u32>> = std::collections::HashMap::new();
+    for o in (0..ram.len().saturating_sub(WINDOW)).step_by(4) {
+        let w = &ram[o..o + WINDOW];
+        if telling(w) {
+            index.entry(hash(w)).or_default().push(o as u32);
+        }
+    }
+    // The file's windows found there, by how far memory is from the file (one per loaded stretch).
+    let mut hits: std::collections::BTreeMap<i64, Vec<usize>> = std::collections::BTreeMap::new();
+    for a in (0..file.len().saturating_sub(WINDOW)).step_by(STEP) {
+        let w = &file[a..a + WINDOW];
+        let Some(at) = index.get(&hash(w)) else { continue };
+        // A pattern repeated all over tells nothing.
+        if at.len() > 8 {
+            continue;
+        }
+        for &o in at {
+            if &ram[o as usize..o as usize + WINDOW] == w {
+                hits.entry(o as i64 - a as i64).or_default().push(a);
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for (delta, offsets) in hits {
+        // Runs of hits close together; data changed since loading leaves gaps.
+        let mut runs: Vec<(usize, usize, u32)> = Vec::new();
+        for a in offsets {
+            match runs.last_mut() {
+                Some(r) if a <= r.1 + 4096 => {
+                    r.1 = a + WINDOW;
+                    r.2 += 1;
+                }
+                _ => runs.push((a, a + WINDOW, 1)),
+            }
+        }
+        for (mut start, mut end, n) in runs {
+            if n < 4 {
+                continue;
+            }
+            let ram_at = |a: usize| (a as i64 + delta) as usize;
+            // Out to where the bytes stop being the same.
+            while start >= 4 && ram_at(start) >= 4 && file[start - 4..start] == ram[ram_at(start) - 4..ram_at(start)] {
+                start -= 4;
+            }
+            while end + 4 <= file.len()
+                && ram_at(end) + 4 <= ram.len()
+                && file[end..end + 4] == ram[ram_at(end)..ram_at(end) + 4]
+            {
+                end += 4;
+            }
+            if end - start < 1024 {
+                continue;
+            }
+            let same = file[start..end].iter().zip(&ram[ram_at(start)..ram_at(end)]).filter(|(x, y)| x == y).count();
+            out.push(LoadedPiece {
+                offset: start as u64,
+                size: (end - start) as u64,
+                address: 0x8000_0000 + ram_at(start) as u64,
+                same: same as f32 / (end - start) as f32,
+            });
+        }
+    }
+    out.sort_by_key(|p| (p.offset, p.address));
+    out
+}
+
 /// The functions an image knows, for another image of the same game to
 /// share: (name, address, size), so that calls into it read as in it.
 fn shared_functions(exe: &crate::binary::Binary) -> Vec<(String, u64, u64)> {
@@ -420,12 +519,56 @@ impl crate::binary::Binary {
     pub fn psx_locate(&self, blob: &[u8]) -> Option<u64> {
         self.is_psx_memory().then(|| locate(blob, &self.data)).flatten()
     }
+
+    /// The stretches of `file` (a disc's archive, of whatever format) loaded
+    /// in this memory image: see [`loaded_pieces`].
+    pub fn psx_loaded_pieces(&self, file: &[u8]) -> Vec<LoadedPiece> {
+        if self.is_psx_memory() {
+            loaded_pieces(file, &self.data)
+        } else {
+            Vec::new()
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::binary::Binary;
+
+    #[test]
+    fn an_archives_files_are_found_where_they_are_loaded() {
+        // Bytes that don't repeat, as code and data don't.
+        let mut seed = 0x2545_f491u32;
+        let mut noise = |n: usize| -> Vec<u8> {
+            (0..n)
+                .map(|_| {
+                    seed ^= seed << 13;
+                    seed ^= seed >> 17;
+                    seed ^= seed << 5;
+                    seed as u8
+                })
+                .collect()
+        };
+        // An archive of three files, the first two loaded; the program changed a word of the first.
+        let (a, b, c) = (noise(4096), noise(8192), noise(2048));
+        let mut archive = noise(100);
+        let (at_a, at_b) = (archive.len() + 12, archive.len() + 12 + 4096 + 20);
+        archive.extend(noise(12));
+        archive.extend(&a);
+        archive.extend(noise(20));
+        archive.extend(&b);
+        archive.extend(noise(36));
+        archive.extend(&c);
+        let mut ram = vec![0u8; 0x20_0000];
+        ram[0x4_0000..0x4_1000].copy_from_slice(&a);
+        ram[0x4_0800..0x4_0804].copy_from_slice(&[1, 2, 3, 4]);
+        ram[0x10_0000..0x10_2000].copy_from_slice(&b);
+        let found = loaded_pieces(&archive, &ram);
+        let placed: Vec<(u64, u64, u64)> = found.iter().map(|p| (p.offset, p.size, p.address)).collect();
+        assert_eq!(placed, [(at_a as u64, 4096, 0x8004_0000), (at_b as u64, 8192, 0x8010_0000)]);
+        assert!(found[0].same < 1.0 && found[0].same > 0.99 && found[1].same == 1.0, "{found:?}");
+    }
 
     fn le(words: &[u32]) -> Vec<u8> {
         words.iter().flat_map(|w| w.to_le_bytes()).collect()

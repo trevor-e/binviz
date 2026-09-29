@@ -1876,6 +1876,25 @@ fn msvc_x64_jump_tables_match_by_where_their_entries_lead() {
 }
 
 #[test]
+fn the_sdk_release_is_the_one_whose_libraries_account_for_the_code() {
+    // Two releases side by side: one has both objects of the library, the other only the first.
+    let bin = open("x86match.exe");
+    let mut sigs = binviz::sigs::SignatureSet::default();
+    sigs.add_file("sdk/release-2/x86lib.lib", &fixture("x86lib.lib")).unwrap();
+    sigs.add_file("sdk/release-1/x86lib-a.obj", &fixture("x86lib-a.obj")).unwrap();
+    let r = bin.identify_sdk(&sigs);
+    let releases: Vec<(&str, u32, u32)> = r.releases.iter().map(|x| (x.release.as_str(), x.functions, x.only)).collect();
+    assert_eq!(releases, [("release-2", 4, 2), ("release-1", 2, 0)]);
+    let checksum = r.matches.iter().find(|m| m.name == "lib_checksum").unwrap();
+    assert_eq!(checksum.releases, ["release-1", "release-2"]);
+    assert!(r.to_text().contains("SDK release: release-2 (4 of the 4 library functions found are its, 2 of them only its)"), "{}", r.to_text());
+    // One release: nothing to tell apart.
+    let mut one = binviz::sigs::SignatureSet::default();
+    one.add_file("x86lib.lib", &fixture("x86lib.lib")).unwrap();
+    assert!(bin.identify_sdk(&one).releases.is_empty());
+}
+
+#[test]
 fn a_static_librarys_functions_are_named_by_their_signatures() {
     // The program without its PDB: nothing names its functions.
     let bin = open("x86match.exe");

@@ -121,7 +121,8 @@ COMMANDS:
                                    Psy-Q .LIB/.OBJ, MSVC .lib/.obj (COFF), .a/.o; notes: as
                                    notes JSON
     locate <ram.bin> <file>        Where a file from the disc (an overlay) sits in a PlayStation
-                                   memory image
+                                   memory image; for an archive of files (any format, stored
+                                   uncompressed), each stretch of it loaded there
     counterparts <file> <source folder> [n]
                                    The file set against the source it may be built from (C,
                                    C++): functions named here the source doesn't define and
@@ -1423,7 +1424,24 @@ fn run(
             }
             match bin.psx_locate(&blob) {
                 Some(at) => println!("{path} is loaded at {at:#x} ({} bytes)", blob.len()),
-                None => println!("{path} is not in this image"),
+                None => {
+                    // An archive of files, whatever its format: the stretches of it loaded here.
+                    let pieces = bin.psx_loaded_pieces(&blob);
+                    if pieces.is_empty() {
+                        println!("{path} is not in this image");
+                    }
+                    for p in &pieces {
+                        println!(
+                            "{path} {:#x}..{:#x} ({} bytes) is loaded at {:#x}..{:#x}, {:.1}% the same",
+                            p.offset,
+                            p.offset + p.size,
+                            p.size,
+                            p.address,
+                            p.address + p.size,
+                            p.same * 100.0
+                        );
+                    }
+                }
             }
         }
         "progress" => {

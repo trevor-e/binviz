@@ -544,6 +544,16 @@ pub fn definitions() -> Vec<Value> {
             false,
         ),
         tool(
+            "locate",
+            "Find a disc file in memory",
+            "For a PlayStation memory image (2 MiB of RAM an emulator dumped): where a file from the disc (an overlay) is loaded; for an archive of files in a format binviz doesn't read (stored uncompressed), each stretch of it loaded there, with its offset in the archive, its address and how much of it is still the same. Open a stretch as an overlay at its address (open_binary's overlay_at) to work on it.",
+            json!({
+                "file": { "type": "string", "description": "Path to the file or archive from the disc." },
+            }),
+            &["file"],
+            true,
+        ),
+        tool(
             "export_progress",
             "Export decompilation progress",
             "Writes where the decompilation stands (each function's status in the notes: matched, nonmatching with its best percent, library, not decompiled) as objdiff's report JSON, the format decomp.dev reads: a unit per source file the notes record, functions not decompiled yet in a unit of their own, library code in its own category. Returns the totals and each unit.",
@@ -884,6 +894,7 @@ impl Server {
                     "propose_names" => propose_names(o, args)?,
                     "source_counterparts" => source_counterparts(o, args)?,
                     "export_progress" => export_progress(o, args)?,
+                    "locate" => locate(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -2702,6 +2713,35 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
         let n = notes.len();
         let (added, updated) = merge_notes(o, notes);
         let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
+    }
+    Ok(out)
+}
+
+fn locate(o: &Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "file").ok_or("file is required")?;
+    if !o.bin.is_psx_memory() {
+        return Err("locate is for PlayStation memory images (2 MiB of RAM dumped by an emulator)".into());
+    }
+    let blob = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    if let Some(at) = o.bin.psx_locate(&blob) {
+        return Ok(format!("{path} is loaded at {at:#x} ({} bytes).", blob.len()));
+    }
+    let pieces = o.bin.psx_loaded_pieces(&blob);
+    if pieces.is_empty() {
+        return Ok(format!("{path} is not in this image, whole or in part (compressed, or not loaded)."));
+    }
+    let mut out = format!("{} stretches of {path} are loaded in this image:\n", pieces.len());
+    for p in pieces.iter().take(200) {
+        let _ = writeln!(
+            out,
+            "  {:#x}..{:#x} ({} bytes) at {:#x}..{:#x}, {:.1}% the same",
+            p.offset,
+            p.offset + p.size,
+            p.size,
+            p.address,
+            p.address + p.size,
+            p.same * 100.0
+        );
     }
     Ok(out)
 }

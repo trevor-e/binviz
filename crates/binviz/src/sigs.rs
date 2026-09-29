@@ -28,6 +28,9 @@ pub struct Signature {
     pub code: Vec<u8>,
     /// Which bits of `code` are compared: 0 where the linker fills them in.
     pub mask: Vec<u8>,
+    /// The releases of the SDK that have it, the same: the folders the
+    /// libraries were read from (`psyq-4.3`, `psyq-4.6`).
+    pub releases: Vec<String>,
 }
 
 /// Signatures from a set of libraries and objects.
@@ -39,7 +42,7 @@ pub struct SignatureSet {
     /// machine code (compiled for link-time code generation).
     pub notes: Vec<String>,
     /// The signatures already taken (name and bytes), to keep one of each.
-    seen: HashSet<u64>,
+    seen: HashMap<u64, usize>,
 }
 
 /// Signatures shorter than this, or with fewer compared bytes, match by chance.
@@ -60,6 +63,12 @@ impl SignatureSet {
         let file = std::path::Path::new(name)
             .file_name()
             .map_or(name.to_string(), |n| n.to_string_lossy().into_owned());
+        // The SDK release: the folder the file is in (one per release, side by side).
+        let release = std::path::Path::new(name)
+            .parent()
+            .and_then(|p| p.file_name())
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
         let from_psyq = |functions: Vec<psyq::ObjFunction>| {
             functions
                 .into_iter()
@@ -91,9 +100,15 @@ impl SignatureSet {
                 }
                 let mut h = DefaultHasher::new();
                 (&f.name, &f.code, &f.mask).hash(&mut h);
-                if !self.seen.insert(h.finish()) {
+                // The same function in another release: that one has it too.
+                if let Some(&i) = self.seen.get(&h.finish()) {
+                    let releases = &mut self.signatures[i].releases;
+                    if !release.is_empty() && !releases.contains(&release) {
+                        releases.push(release.clone());
+                    }
                     continue;
                 }
+                self.seen.insert(h.finish(), self.signatures.len());
                 self.signatures.push(Signature {
                     name: f.name,
                     library: if module.is_empty() {
@@ -103,6 +118,7 @@ impl SignatureSet {
                     },
                     code: f.code,
                     mask: f.mask,
+                    releases: if release.is_empty() { Vec::new() } else { vec![release.clone()] },
                 });
                 n += 1;
             }
@@ -213,6 +229,19 @@ pub struct SdkMatch {
     pub size: u64,
     /// Other signatures with the same bytes (aliases, or identical functions).
     pub also: Vec<String>,
+    /// The SDK releases whose libraries have it, when several were given.
+    pub releases: Vec<String>,
+}
+
+/// How well one release of the SDK accounts for the library code found.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReleaseMatch {
+    pub release: String,
+    /// Library functions found here that it has, the same.
+    pub functions: u32,
+    /// Those only it has.
+    pub only: u32,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -221,6 +250,11 @@ pub struct SdkReport {
     pub matches: Vec<SdkMatch>,
     /// Functions matched per library file, most first.
     pub libraries: Vec<(String, u32)>,
+    /// When the libraries of several releases of the SDK were given (a
+    /// folder each), how many of the functions found each has, best first:
+    /// the first is the release the binary was built with, which says the
+    /// compiler and assembler versions a matching decompilation needs.
+    pub releases: Vec<ReleaseMatch>,
     pub functions_checked: u32,
     pub signatures: u32,
 }
@@ -292,12 +326,21 @@ impl Binary {
                 .filter(|s| s.code.len() == best.code.len() && s.name != best.name)
                 .map(|s| s.name.clone())
                 .collect();
+            // The releases with these bytes: the best signature's, and those of its twins.
+            let mut releases: Vec<String> = found
+                .iter()
+                .filter(|s| s.code.len() == best.code.len())
+                .flat_map(|s| s.releases.iter().cloned())
+                .collect();
+            releases.sort();
+            releases.dedup();
             matches.push(SdkMatch {
                 address: f.address,
                 name: best.name.clone(),
                 library: best.library.clone(),
                 size: best.code.len() as u64,
                 also,
+                releases,
             });
         }
         let mut per: HashMap<String, u32> = HashMap::new();
@@ -307,9 +350,30 @@ impl Binary {
         }
         let mut libraries: Vec<(String, u32)> = per.into_iter().collect();
         libraries.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+        // Which release the library code is from, when several were given.
+        let all: HashSet<&String> = sigs.signatures.iter().flat_map(|s| &s.releases).collect();
+        let mut releases: Vec<ReleaseMatch> = Vec::new();
+        if all.len() > 1 {
+            for r in all {
+                let functions = matches.iter().filter(|m| m.releases.contains(r)).count() as u32;
+                let only = matches.iter().filter(|m| m.releases.len() == 1 && m.releases[0] == *r).count() as u32;
+                releases.push(ReleaseMatch {
+                    release: r.clone(),
+                    functions,
+                    only,
+                });
+            }
+            releases.sort_by(|a, b| {
+                b.functions
+                    .cmp(&a.functions)
+                    .then(b.only.cmp(&a.only))
+                    .then(a.release.cmp(&b.release))
+            });
+        }
         SdkReport {
             matches,
             libraries,
+            releases,
             functions_checked: checked,
             signatures: sigs.signatures.len() as u32,
         }
@@ -349,6 +413,33 @@ impl SdkReport {
         );
         for (lib, n) in &self.libraries {
             out.push_str(&format!("  {n:>5}  {lib}\n"));
+        }
+        if let Some(best) = self.releases.first() {
+            let tie: Vec<&str> = self
+                .releases
+                .iter()
+                .skip(1)
+                .filter(|r| r.functions == best.functions && r.only == best.only)
+                .map(|r| r.release.as_str())
+                .collect();
+            if tie.is_empty() {
+                out.push_str(&format!(
+                    "SDK release: {} ({} of the {} library functions found are its, {} of them only its)\n",
+                    best.release,
+                    best.functions,
+                    self.matches.len(),
+                    best.only
+                ));
+            } else {
+                out.push_str(&format!(
+                    "SDK release: {} or {} (the functions found are the same in them)\n",
+                    best.release,
+                    tie.join(" or ")
+                ));
+            }
+            for r in &self.releases {
+                out.push_str(&format!("  {:>5} functions ({:>4} only it has)  {}\n", r.functions, r.only, r.release));
+            }
         }
         for m in &self.matches {
             out.push_str(&format!(
