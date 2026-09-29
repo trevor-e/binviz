@@ -297,6 +297,14 @@ impl Binary {
                         }
                     }
                 }
+                // eax used after it was set (as a base, stored, pushed) was scratch, not the result;
+                // a comparison only looks at it.
+                if !zeroing
+                    && !matches!(ins.mnemonic(), Mnemonic::Cmp | Mnemonic::Test)
+                    && regs.iter().any(|&(r, access)| gpr(r) == Some(EAX) && reads(access))
+                {
+                    st.result = false;
+                }
                 if bits == 32
                     && (0..ins.op_count()).any(|i| ins.op_kind(i) == OpKind::Memory)
                     && ins.memory_base() == Register::ECX
@@ -1049,7 +1057,10 @@ mod tests {
         );
         let s = bin.function_signature(f).unwrap();
         assert_eq!(s.prototype, "int __cdecl _f(int arg1, int arg2)");
-        assert_eq!((s.saved.as_slice(), s.calls, s.unbalanced), (&["esi".to_string()][..], 2, false));
+        assert_eq!(
+            (s.saved.as_slice(), s.calls, s.unbalanced),
+            (&["esi".to_string()][..], 2, false)
+        );
         let g = bin.function_signature(f + 34).unwrap();
         assert_eq!((g.prototype.as_str(), g.leaf), ("int __cdecl _g(int arg1)", true));
     }
@@ -1072,7 +1083,11 @@ mod tests {
         let h = bin.function_signature(f + 15).unwrap();
         assert_eq!(h.prototype, "int __stdcall _h@8(int arg1, int arg2)");
         assert_eq!((h.convention.as_deref(), h.pops, h.stack_args), (Some("stdcall"), 8, 2));
-        assert!(h.describe().contains("pops 8 bytes of arguments (ret 8)"), "{}", h.describe());
+        assert!(
+            h.describe().contains("pops 8 bytes of arguments (ret 8)"),
+            "{}",
+            h.describe()
+        );
     }
 
     #[test]
@@ -1100,7 +1115,10 @@ mod tests {
             ]
         );
         let s = bin.function_signature(f).unwrap();
-        assert_eq!((s.frame, s.frame_pointer, s.saved.as_slice()), (8, true, &["ebp".to_string()][..]));
+        assert_eq!(
+            (s.frame, s.frame_pointer, s.saved.as_slice()),
+            (8, true, &["ebp".to_string()][..])
+        );
     }
 
     #[test]

@@ -52,6 +52,7 @@ impl Binary {
         };
         let instruction = address.and_then(|a| self.instruction_at(a));
         let annotation = address.and_then(|a| self.annotation_at(a)).cloned();
+        let global = address.filter(|_| self.xrefs_ready()).and_then(|a| self.global_at(a));
         Inspection {
             offset,
             address,
@@ -65,6 +66,7 @@ impl Binary {
             instruction,
             unit,
             annotation,
+            global,
         }
     }
 

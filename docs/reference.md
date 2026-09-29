@@ -130,6 +130,24 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   entry leads there. Name functions, comment instructions and mark code as
   reviewed; a coverage map shows what is named, recovered, reviewed or still
   unexplored, and lists the largest gaps with a guess at what they hold.
+- **Data typed by its use.** Every address in data that the code reads,
+  writes, calls through or takes, or that a pointer in data points at, is a
+  global, and how the code uses it says what it is: read as a `float` or a
+  `double` (with its value, when nothing writes it), a byte, a word…; indexed
+  (an array of elements that size); a pointer read and then reached through
+  (a pointer to a structure, with the offsets used: a cvar's value at `0x14`);
+  pointers stored in it (a table of functions — callbacks, a vtable — of
+  strings, of other data; records with a pointer in the same place in each, a
+  monster's frame table; a structure holding pointers); called through, its
+  slots filled at run time (a game DLL's table of engine functions, with the
+  `rep movsd` that fills it); a `switch`'s jump table. Where nothing names
+  it, it is named the way disassemblers do — `flt_4020a0`, `funcs_402000`,
+  `stru_20003024`, `fptrs_2000309c+0x30` — in the disassembly, the context,
+  cross-references and inspection; a note naming it wins. In 32-bit x86
+  code the disassembly names the absolute addresses instructions use and
+  the addresses they push or store (`push offset string`, `mov [esi+0x24],
+  offset callback`), and strings a letter or two long show once the code
+  takes their address.
 - **Which compiler built it.** A PE file's Rich header, where Microsoft's
   linker records the tools that made each object it linked, is decoded: each
   entry names its tool (C or C++ compiler, with link-time code generation or
@@ -289,6 +307,7 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `refs <file> <addr\|symbol> [from]` | References to an address (`from`: the references a function or data makes) |
 | `calls <file> <addr\|symbol> [up] [down]` · `calls <file> <from> to <to>` | The call graph around a function (`callers` or `callees` for just those); a shortest chain of calls |
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
+| `globals <file> [filter]` | The data the code uses, typed by its use and named where nothing names it (see below) |
 | `objc <file> [name]` | Objective-C classes, categories and protocols; with a name, one declared as its header would, or a selector's implementations and senders |
 | `dwarf <file> [check \| find \| die \| offset \| list \| at \| lines \| sources \| file]` | DWARF units, and: everything wrong with it; DIEs by name, a DIE, the DIE at a `.debug_info` offset, a unit's DIEs by tag; scopes and variables at an address; line tables, source files and their address ranges |
 | `attribution <file> [unit] [id]` | Code and data per source file (or unit); with an id, that one's address ranges |
@@ -359,6 +378,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `dwarf_at` | At an address: the source line, the inlined call stack, and the variables in scope with where each value lives |
 | `dwarf_check` | Everything in the DWARF that can't be read or doesn't add up — start here with a customer's broken build |
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
+| `list_globals` | The data the code uses, typed by its use: floats and doubles with their values, integers by width, pointers to structures with the offsets reached through them, tables of functions, strings or pointers, records holding pointers, arrays, jump tables, and tables of function pointers filled at run time and called through (an engine's import table, with where it is filled) |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
 | `next_functions` · `mark` · `similar_functions` · … | For a matching decompilation: see [Decompilation](#decompilation-mips-playstation-nintendo-64) |

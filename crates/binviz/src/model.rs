@@ -366,6 +366,10 @@ pub struct Inspection {
     pub unit: Option<u32>,
     /// The user's annotation covering this address, if any.
     pub annotation: Option<Annotation>,
+    /// The global the code's use of this data says it is part of, once
+    /// references are indexed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub global: Option<crate::globals::Global>,
 }
 
 /// A note the user attached to an address range while reverse engineering.

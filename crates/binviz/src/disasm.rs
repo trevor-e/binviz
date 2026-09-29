@@ -169,6 +169,16 @@ impl Binary {
                     .symbols
                     .function_containing(start)
                     .and_then(|f| self.stack_frame(f.address));
+                // An image loaded well above zero: numbers in it that fall inside it are its addresses
+                // (`push offset string`, `mov eax, [global]`), as the reference index takes them.
+                let absolute = self
+                    .sections
+                    .iter()
+                    .filter(|s| s.loaded && s.size > 0)
+                    .map(|s| s.address)
+                    .min()
+                    .is_some_and(|lo| lo >= 0x10_0000);
+                let inside = |a: u64| self.section_at(a).is_some();
                 let mut decoder = iced_x86::Decoder::with_ip(bits, bytes, start, iced_x86::DecoderOptions::NONE);
                 let mut formatter = iced_x86::IntelFormatter::new();
                 let o = formatter.options_mut();
@@ -228,10 +238,28 @@ impl Binary {
                             FlowControl::Interrupt | FlowControl::Exception => FlowKind::Interrupt,
                         }
                     };
+                    let memory = !invalid && (0..ins.op_count()).any(|i| ins.op_kind(i) == iced_x86::OpKind::Memory);
+                    let immediate = (0..ins.op_count())
+                        .filter(|&i| {
+                            matches!(
+                                ins.op_kind(i),
+                                iced_x86::OpKind::Immediate32 | iced_x86::OpKind::Immediate32to64 | iced_x86::OpKind::Immediate64
+                            )
+                        })
+                        .map(|i| ins.immediate(i))
+                        .find(|&v| inside(v));
                     let (target, data) = if !invalid && ins.near_branch_target() != 0 {
                         (Some(ins.near_branch_target()), false)
                     } else if !invalid && ins.is_ip_rel_memory_operand() {
                         (Some(ins.ip_rel_memory_address()), true)
+                    } else if absolute
+                        && memory
+                        && ins.memory_base() == iced_x86::Register::None
+                        && inside(ins.memory_displacement64())
+                    {
+                        (Some(ins.memory_displacement64()), true)
+                    } else if absolute && !invalid && immediate.is_some() {
+                        (immediate, true)
                     } else {
                         (None, false)
                     };
@@ -245,10 +273,16 @@ impl Binary {
                         mnemonic,
                         operands,
                         flow,
-                        target_symbol: match (target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }), value) {
-                            (Some(name), Some(value)) => Some(format!("{name} = {value}")),
-                            (None, None) => frame.as_ref().and_then(|f| f.slot_at(address)),
-                            (name, value) => name.or(value),
+                        target_symbol: {
+                            let named = match (target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }), value) {
+                                (Some(name), Some(value)) => Some(format!("{name} = {value}")),
+                                (name, value) => name.or(value),
+                            };
+                            // A stack slot, and what is stored in it or read with it.
+                            match (frame.as_ref().and_then(|f| f.slot_at(address)), named) {
+                                (Some(slot), Some(named)) => Some(format!("{slot}; {named}")),
+                                (slot, named) => slot.or(named),
+                            }
                         },
                         target,
                         source: source_for(address),

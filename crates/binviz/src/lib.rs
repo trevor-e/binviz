@@ -37,6 +37,7 @@ mod discover;
 pub mod dwarf;
 mod error;
 pub mod fndiff;
+pub mod globals;
 mod inspect;
 mod layout;
 pub mod matching;

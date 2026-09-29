@@ -76,11 +76,13 @@ pub(crate) struct XrefIndex {
     base: u64,
     /// Per kind: `(target - base) << 32 | (source - base)`, sorted.
     lists: [Vec<u64>; 6],
+    /// Where the data the code and data refer to starts, built on first use.
+    pub(crate) globals: std::sync::OnceLock<crate::globals::GlobalIndex>,
 }
 
 impl XrefIndex {
     /// References of one kind to targets in `lo..hi`.
-    fn range(&self, kind: RefKind, lo: u64, hi: u64) -> &[u64] {
+    pub(crate) fn range(&self, kind: RefKind, lo: u64, hi: u64) -> &[u64] {
         let list = &self.lists[kind as usize];
         let (a, b) = (lo.saturating_sub(self.base), hi.saturating_sub(self.base));
         let a = list.partition_point(|&v| (v >> 32) < a);
@@ -88,11 +90,11 @@ impl XrefIndex {
         &list[a..b.max(a)]
     }
 
-    fn source(&self, v: u64) -> u64 {
+    pub(crate) fn source(&self, v: u64) -> u64 {
         self.base + (v & 0xFFFF_FFFF)
     }
 
-    fn target(&self, v: u64) -> u64 {
+    pub(crate) fn target(&self, v: u64) -> u64 {
         self.base + (v >> 32)
     }
 
@@ -106,6 +108,11 @@ impl XrefIndex {
                 list.get(i).map(|&v| self.target(v))
             })
             .min()
+    }
+
+    /// Every target of references of one kind, in order (repeated per source).
+    pub(crate) fn targets(&self, kind: RefKind) -> impl Iterator<Item = u64> + '_ {
+        self.lists[kind as usize].iter().map(|&v| self.target(v))
     }
 
     fn contains(&self, kind: RefKind, source: u64, target: u64) -> bool {
@@ -576,10 +583,12 @@ fn scan_x86(bits: u32, bytes: &[u8], addr: u64, cx: &Scan, emit: &mut dyn FnMut(
             let kind = if ins.mnemonic() == Mnemonic::Lea {
                 RefKind::Address
             } else if info.info(&ins).used_memory().iter().any(|m| {
-                matches!(
-                    m.access(),
-                    OpAccess::Write | OpAccess::CondWrite | OpAccess::ReadWrite | OpAccess::ReadCondWrite
-                )
+                // `push [global]` writes the stack, not the global.
+                !matches!(m.base(), Register::ESP | Register::RSP)
+                    && matches!(
+                        m.access(),
+                        OpAccess::Write | OpAccess::CondWrite | OpAccess::ReadWrite | OpAccess::ReadCondWrite
+                    )
             }) {
                 RefKind::Write
             } else {
@@ -712,7 +721,11 @@ impl Binary {
             list.dedup();
             list.shrink_to_fit();
         }
-        XrefIndex { base, lists }
+        XrefIndex {
+            base,
+            lists,
+            globals: std::sync::OnceLock::new(),
+        }
     }
 
     /// Every call and tail call in the code: (site, target).
@@ -871,6 +884,9 @@ impl Binary {
                 format!("{name}+{:#x}", s.offset)
             });
         }
+        if let Some(name) = self.global_name(address) {
+            return Some(name);
+        }
         let sec = self.section_at(address)?;
         Some(format!("{}+{:#x}", sec.name, address - sec.address))
     }
@@ -891,6 +907,10 @@ impl Binary {
         if let Some(s) = sym {
             return Some(format!("{}+{:#x}", s.demangled.unwrap_or(s.name), s.offset));
         }
+        // What the code's use of the data says it is: `flt_4020a0`, `funcs_402000+0x8`.
+        if let Some(name) = self.global_name(address) {
+            return Some(name);
+        }
         if let Some(index) = self.xrefs.get()
             && let Some(t) = self.decode_pointer(self.scheme(), address)
             && index.contains(RefKind::Pointer, address, t)
@@ -910,7 +930,9 @@ impl Binary {
     /// Swift literals run into each other), so once references are indexed the
     /// text also ends where the next referenced address begins.
     pub(crate) fn string_at_address(&self, address: u64) -> Option<String> {
-        let text = self.string_preview(address, 200)?;
+        let Some(text) = self.string_preview(address, 200) else {
+            return self.short_string(address);
+        };
         if let Some(xrefs) = self.xrefs.get()
             && self
                 .section_at(address)
@@ -922,6 +944,30 @@ impl Binary {
             return (cut.chars().count() >= 2).then_some(cut);
         }
         Some(text)
+    }
+
+    /// A string of one to three characters (`"a"`, the light styles of a
+    /// game), which alone could be any small number: one only when the code
+    /// takes its address and it starts where a string would, aligned or
+    /// right after another's NUL.
+    fn short_string(&self, address: u64) -> Option<String> {
+        let index = self.xrefs.get()?;
+        if index.range(RefKind::Address, address, address + 1).is_empty() {
+            return None;
+        }
+        let sec = self.section_at(address)?;
+        // A console's code and data share one area.
+        let mixed = self.rom.is_some() && sec.kind == RegionKind::Code;
+        if !matches!(sec.kind, RegionKind::Rodata | RegionKind::Data) && !mixed {
+            return None;
+        }
+        let off = self.address_to_offset(address)? as usize;
+        let bytes = self.data.get(off..off + 4)?;
+        let n = bytes.iter().take_while(|&&b| (0x20..0x7f).contains(&b)).count();
+        (1..4).contains(&n).then_some(())?;
+        // It starts where the string before it ends (MSVC aligns them; clang packs them).
+        let starts = address.is_multiple_of(4) || self.data.get(off.checked_sub(1)?) == Some(&0);
+        (starts && bytes[n] == 0).then(|| String::from_utf8_lossy(&bytes[..n]).into_owned())
     }
 
     /// A call graph node for an address: what it is and its name.

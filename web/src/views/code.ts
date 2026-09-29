@@ -303,6 +303,9 @@ export class CodeView extends View {
         void store.select({ address: t }, { view: store.file && this.isCode(t) ? 'code' : 'hex' });
       });
       row.appendChild(link);
+    } else if (ins.targetSymbol) {
+      // What the instruction reads or writes without an address: a stack slot (arg1, local_10).
+      row.appendChild(h('span', { class: 'tgt' }, `<${ins.targetSymbol}>`));
     }
     if (note?.comment) row.appendChild(h('span', { class: 'cmt', title: note.comment }, `; ${note.comment.split('\n')[0]}`));
     row.addEventListener('click', () => void store.select({ address: ins.address }, { origin: 'code' }));

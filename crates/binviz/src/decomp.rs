@@ -40,6 +40,16 @@ pub struct Example {
     pub source: String,
 }
 
+/// What a piece of data a function uses is, where the code's use of it
+/// says more than its name: a table of callbacks, a pointer to a structure
+/// and the offsets reached through it, a function whose address is stored.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TypedData {
+    pub address: u64,
+    pub what: String,
+}
+
 /// The context for decompiling one function.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -57,6 +67,8 @@ pub struct DecompContext {
     pub referenced_by: RefCounts,
     pub strings: Vec<StringUse>,
     pub data: Vec<Reference>,
+    /// What the data in `data` is, where that says more than its name.
+    pub typed: Vec<TypedData>,
     /// Notes on the function and the addresses in it.
     pub notes: Vec<Annotation>,
     /// Where decompiling it stands.
@@ -71,6 +83,10 @@ impl Binary {
     pub fn decomp_context(&self, address: u64, limit: usize) -> Option<DecompContext> {
         let f = self.symbols().function_containing(address)?;
         let (lo, hi) = (f.address, f.address + f.size.max(1));
+        // The references first: they name the data the code uses.
+        if self.xrefs_supported() {
+            self.prepare_xrefs();
+        }
         let dis = self.disassemble_function(lo, limit);
         let summary = self.function_summary(lo, limit)?;
         let neighbour = |e: &crate::xrefs::CallEdge| Neighbour {
@@ -103,6 +119,40 @@ impl Binary {
                 }
             })
             .collect();
+        let typed = summary
+            .data
+            .iter()
+            .filter_map(|r| {
+                let what = if self.symbols().function_containing(r.target).is_some_and(|f| f.address == r.target)
+                    && self.section_at(r.target).is_some_and(|s| s.kind == crate::model::RegionKind::Code)
+                {
+                    "a function, its address stored or passed: a callback".to_string()
+                } else {
+                    use crate::globals::GlobalKind as K;
+                    let g = self.global_at(r.target)?;
+                    let says_more = match g.kind {
+                        K::Functions
+                        | K::Strings
+                        | K::Pointers
+                        | K::Array
+                        | K::Records
+                        | K::Structure
+                        | K::FunctionPointers
+                        | K::JumpTable => true,
+                        K::Pointer => !g.fields.is_empty(),
+                        _ => false,
+                    };
+                    if !says_more {
+                        return None;
+                    }
+                    g.description
+                };
+                Some(TypedData {
+                    address: r.target,
+                    what,
+                })
+            })
+            .collect();
         Some(DecompContext {
             address: lo,
             name: f.display_name().into_owned(),
@@ -115,6 +165,7 @@ impl Binary {
             referenced_by: summary.referenced_by,
             strings: summary.strings,
             data: summary.data,
+            typed,
             notes,
             decomp: self.decomp_at(lo).cloned(),
             examples,
@@ -171,7 +222,8 @@ impl DecompContext {
             let _ = writeln!(out, "{label}:");
             for n in list {
                 let name = if n.kind == NodeKind::Data {
-                    format!("(indirect, through the pointer at {:#x})", n.address)
+                    let slot = if n.name.starts_with("0x") { String::new() } else { format!(" {}", n.name) };
+                    format!("(indirect, through the pointer{slot} at {:#x})", n.address)
                 } else {
                     n.name.clone()
                 };
@@ -208,9 +260,14 @@ impl DecompContext {
         if !self.data.is_empty() {
             let _ = writeln!(out, "Globals:");
             for d in &self.data {
+                let what = self
+                    .typed
+                    .iter()
+                    .find(|t| t.address == d.target)
+                    .map_or(String::new(), |t| format!(" — {}", t.what));
                 let _ = writeln!(
                     out,
-                    "  {:#x} {} {}",
+                    "  {:#x} {} {}{what}",
                     d.target,
                     format!("{:?}", d.kind).to_lowercase(),
                     d.to.as_deref().unwrap_or("")

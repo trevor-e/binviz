@@ -40,6 +40,10 @@ COMMANDS:
                                    in place of up and down lists just those
     calls <file> <from> to <to>    A shortest chain of calls between two functions
     coverage <file>                How much of the code and data is mapped out
+    globals <file> [filter]        The data the code uses, typed by its use and named where
+                                   nothing names it: floats, integers, pointers to structures
+                                   (the offsets reached through them), tables of functions,
+                                   strings or pointers, arrays, function pointers called through
     objc <file> [name]             Objective-C classes, categories and protocols; with a name,
                                    one declared as its header would, or a selector's
                                    implementations and the functions that send it
@@ -466,6 +470,9 @@ fn run(
             print_inspection(&bin, &bin.inspect(Target::Offset(off)));
         }
         "inspect" => {
+            if bin.xrefs_supported() {
+                bin.prepare_xrefs();
+            }
             let addr = resolve_address(&bin, arg(2).ok_or("missing address")?)?;
             print_inspection(&bin, &bin.inspect(Target::Address(addr)));
         }
@@ -491,6 +498,10 @@ fn run(
         "disasm" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
             let n = arg(3).map(num).transpose()?.unwrap_or(4000) as usize;
+            // The references name the data the code uses (tables, globals, short strings).
+            if bin.xrefs_supported() {
+                bin.prepare_xrefs();
+            }
             // An address inside a function starts there, not at the function's start.
             let d = match bin.symbols().function_containing(addr) {
                 Some(f) if f.address != addr && addr < f.address + f.size => {
@@ -871,6 +882,18 @@ fn run(
                         }
                     );
                 }
+            }
+        }
+        "globals" => {
+            if !bin.xrefs_supported() {
+                return Err("globals are found through the code's references, which aren't read for this architecture".into());
+            }
+            let filter = arg(2).unwrap_or("");
+            let page = bin.globals(filter, 0, 100_000);
+            println!("{} globals{}", page.total, if filter.is_empty() { String::new() } else { format!(" matching {filter:?}") });
+            for g in &page.globals {
+                let name = bin.symbols().at(g.address).map_or(g.name.clone(), |s| s.display_name().into_owned());
+                println!("  {:#x} {:>6}  {:<20} {}", g.address, g.size, name, g.description);
             }
         }
         "coverage" => {
@@ -1538,6 +1561,15 @@ fn print_inspection(bin: &Binary, i: &binviz::Inspection) {
     }
     if let Some(s) = &i.symbol {
         println!("symbol: {}+{:#x}", s.demangled.as_deref().unwrap_or(&s.name), s.offset);
+    }
+    if let Some(g) = &i.global {
+        println!(
+            "global: {}+{:#x} ({} bytes): {}",
+            g.name,
+            i.address.unwrap_or(g.address) - g.address,
+            g.size,
+            g.description
+        );
     }
     if let Some(l) = &i.source {
         println!("source: {}:{}:{}", l.path, l.line, l.column);

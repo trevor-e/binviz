@@ -43,6 +43,7 @@ const ALL: &[&str] = &[
     "pdbdemo.exe",
     "x86demo.exe",
     "x86demo-fixed.exe",
+    "gamedemo.dll",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -753,6 +754,94 @@ fn x86_code_says_how_each_function_is_called() {
             assert!(!s.unbalanced, "{}: {}", f.name(), s.describe());
         }
     }
+}
+
+#[test]
+fn data_the_code_uses_is_typed_and_named_by_its_use() {
+    use binviz::globals::GlobalKind;
+    let bin = open("x86demo.exe");
+    bin.prepare_xrefs();
+    let g = |a: u64| bin.global_at(a).unwrap_or_else(|| panic!("{a:#x}"));
+    // dispatch's jump table, the const table of callbacks, the doubles ratio reads.
+    assert_eq!((g(0x402000).kind, g(0x402000).count), (GlobalKind::JumpTable, 8));
+    let unary = g(0x402084);
+    assert_eq!((unary.name.as_str(), unary.kind, unary.count), ("funcs_402080", GlobalKind::Functions, 3));
+    assert_eq!(g(0x402090).name, "dbl_402090");
+    assert!(g(0x402090).description.starts_with("double = 1.25, never written"), "{:?}", g(0x402090));
+    // The disassembly names what the code reads and the tables it calls through.
+    let start = bin.symbols().function_containing(0x4013f2).unwrap().address;
+    let d = bin.disassemble_function(start, 4000);
+    let call = d.instructions.iter().find(|i| i.address == 0x4013f2).unwrap();
+    assert_eq!(call.target_symbol.as_deref(), Some("funcs_402080"));
+    let ratio = bin.symbols().function_containing(0x4010b7).unwrap().address;
+    let d = bin.disassemble_function(ratio, 100);
+    let mulsd = d.instructions.iter().find(|i| i.mnemonic == "mulsd").unwrap();
+    assert_eq!(mulsd.target_symbol.as_deref(), Some("dbl_402090 = f64 1.25"));
+    // The context says what a table is.
+    let c = bin.decomp_context(start, 4000).unwrap();
+    assert!(
+        c.typed.iter().any(|t| t.address == 0x4020a0 && t.what.starts_with("table of 2 code pointers")),
+        "{:?}",
+        c.typed
+    );
+    let listed = bin.globals("code pointers", 0, 100);
+    assert!(listed.globals.iter().any(|g| g.address == 0x403004), "{listed:?}");
+}
+
+/// gamedemo.dll and, to look its functions and data up by name, the same with its PDB.
+fn gamedemo() -> (Binary, Binary) {
+    let bin = open("gamedemo.dll");
+    let mut named = open("gamedemo.dll");
+    named.attach_debug_file("gamedemo.pdb", fixture("gamedemo.pdb")).unwrap();
+    bin.prepare_xrefs();
+    (bin, named)
+}
+
+#[test]
+fn a_game_dll_stripped_reads_as_its_source_would() {
+    use binviz::globals::GlobalKind;
+    let (bin, named) = gamedemo();
+    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    // The engine's table of functions: filled by copying in GetGameAPI, each slot called through.
+    let gi = bin.global_at(at("gi") + 0x2c).unwrap();
+    assert_eq!((gi.address, gi.kind, gi.size), (at("gi"), GlobalKind::FunctionPointers, 56));
+    assert!(gi.description.contains("filled at GetGameAPI+0x10 by copying 14 words"), "{gi:?}");
+    assert_eq!(bin.name_for(at("gi") + 0x2c), Some(format!("fptrs_{:x}+0x2c", at("gi"))));
+    // cvars: pointers read, their value at 0x14.
+    let dm = bin.global_at(at("deathmatch")).unwrap();
+    assert_eq!(dm.kind, GlobalKind::Pointer);
+    assert!(dm.fields.iter().any(|f| f.offset == 0x14 && f.float), "{dm:?}");
+    // A monster's frames: records holding callbacks; its move, a structure pointing at them.
+    let frames = bin.global_at(at("soldier_frames_stand")).unwrap();
+    assert_eq!((frames.kind, frames.count, frames.stride), (GlobalKind::Records, 3, 12));
+    let mv = bin.global_at(at("soldier_move_stand")).unwrap();
+    assert_eq!(mv.kind, GlobalKind::Structure);
+    assert!(mv.description.contains(&format!("+0x8 → stru_{:x}", at("soldier_frames_stand"))), "{mv:?}");
+    // The strings a letter long the code passes.
+    let f = bin.function_summary(at("InitGame"), 50).unwrap();
+    let texts: Vec<&str> = f.strings.iter().map(|s| s.text.as_str()).collect();
+    for t in ["0", "1", "m", "a", "mmnmmommommnonmmonqnmmo"] {
+        assert!(texts.contains(&t), "{t}: {texts:?}");
+    }
+    // The arguments of two calls popped together keep their names.
+    let d = bin.disassemble_function(at("_spawn_messages"), 100);
+    let slots: Vec<&str> = d
+        .instructions
+        .iter()
+        .filter_map(|i| i.target_symbol.as_deref())
+        .filter(|s| s.starts_with("arg"))
+        .collect();
+    assert_eq!(slots, ["arg1", "arg2", "arg2"]);
+    let s = named.function_signature(at("SP_monster_soldier")).unwrap();
+    assert_eq!(s.prototype, "void __cdecl SP_monster_soldier(void *arg1)");
+    // Callbacks stored into the edict are addresses the context explains, not calls.
+    let c = bin.decomp_context(at("SP_monster_soldier"), 400).unwrap();
+    assert!(c.callees.iter().all(|n| n.address != at("soldier_die")), "{:?}", c.callees);
+    assert!(
+        c.typed.iter().any(|t| t.address == at("soldier_die") && t.what.contains("callback")),
+        "{:?}",
+        c.typed
+    );
 }
 
 /// x86demo.exe with a Rich header like Visual C++ 6.0's linker writes, of

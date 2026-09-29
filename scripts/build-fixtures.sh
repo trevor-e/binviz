@@ -131,6 +131,25 @@ if command -v clang >/dev/null 2>&1; then
     rm -rf "$tmp"
 fi
 
+if command -v clang >/dev/null 2>&1; then
+    echo "gamedemo: a PE32 DLL shaped like Quake 2's game DLL (clang for the MSVC ABI, x87, lld-link) with a PDB"
+    tmp="$(mktemp -d)"
+    cp "$src/gamedemo.c" "$src/gamedemo-msvc.s" "$tmp"
+    ln -s "$lld" "$tmp/lld-link"
+    (
+        cd "$tmp"
+        clang -target i686-pc-windows-msvc -O2 -mno-sse -g -gcodeview -ffreestanding -fno-builtin \
+            -ffile-compilation-dir=. -c gamedemo.c -o gamedemo.obj
+        clang -target i686-pc-windows-msvc -c gamedemo-msvc.s -o gamedemo-msvc.obj
+        # Quake 2's game DLL loads at 0x20000000; functions stay unfolded but the two the .s folds.
+        ./lld-link /nologo /brepro /dll /noentry /nodefaultlib /debug /opt:noref,noicf /safeseh \
+            /base:0x20000000 /export:GetGameAPI /pdbsourcepath:c:/src gamedemo.obj gamedemo-msvc.obj \
+            /pdb:gamedemo.pdb /pdbaltpath:gamedemo.pdb /out:gamedemo.dll
+    )
+    cp "$tmp/gamedemo.dll" "$tmp/gamedemo.pdb" "$out"
+    rm -rf "$tmp"
+fi
+
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"
 python3 "$src/roms.py" "$out" 2>/dev/null || python "$src/roms.py" "$out"
 

@@ -534,6 +534,18 @@ pub fn definitions() -> Vec<Value> {
             true,
         ),
         tool(
+            "list_globals",
+            "List the data the code uses",
+            "Every address in data the code reads, writes, calls through or takes, or a pointer in data points at, typed by how it is used and named the way disassemblers do where nothing else names it: flt_/dbl_ (read as a float or double, with its value when never written), byte_/word_/dword_/qword_, ptr_ (a pointer read and dereferenced: the offsets reached through it, e.g. a cvar's value at 0x14), funcs_/strs_/ptrs_ (tables of code pointers, string pointers, other pointers), arr_ (indexed, with the element size), fptrs_ (function pointers filled at run time and called through: an engine's import table, with where it is filled), jpt_ (a switch's jump table), unk_ (only its address is taken). These names show in disassemble, decomp_context, xrefs and inspect; annotate an address to name it yourself. Filter matches names and descriptions (\"code pointers\", \"float\").",
+            json!({
+                "filter": { "type": "string" },
+                "offset": { "type": "integer" },
+                "limit": { "type": "integer", "description": "Default 50, max 1000." },
+            }),
+            &[],
+            true,
+        ),
+        tool(
             "hexdump",
             "Hex dump",
             "Raw bytes at an address or file offset, with the structure they belong to.",
@@ -763,6 +775,7 @@ impl Server {
                     "disassemble" => disassemble(o, args)?,
                     "list_symbols" => list_symbols(o, args),
                     "list_strings" => list_strings(o, args),
+                    "list_globals" => list_globals(o, args),
                     "hexdump" => hexdump(o, args)?,
                     "coverage" => coverage(o, args),
                     "annotate" => annotate(o, args)?,
@@ -1593,6 +1606,20 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
             s.address
         );
     }
+    if let Some(g) = &i.global {
+        let _ = writeln!(
+            out,
+            "Global: {}{} ({}, {} bytes at {:#x}): {}",
+            g.name,
+            i.address
+                .filter(|&a| a != g.address)
+                .map_or(String::new(), |a| format!(" + {:#x}", a - g.address)),
+            serde_json::to_value(g.kind).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default(),
+            g.size,
+            g.address,
+            g.description
+        );
+    }
     if let Some(src) = &i.source {
         let _ = writeln!(out, "Source: {}:{}:{}", src.path, src.line, src.column);
     }
@@ -1748,6 +1775,40 @@ fn list_symbols(o: &Open, args: &Value) -> String {
             format!("{:?}", s.kind).to_lowercase(),
             s.binding,
             clip(s.display_name(), 160)
+        );
+    }
+    out
+}
+
+fn list_globals(o: &Open, args: &Value) -> String {
+    if !o.bin.xrefs_supported() {
+        return "globals are found through the code's references, which aren't read for this architecture".into();
+    }
+    let filter = string(args, "filter").unwrap_or("");
+    let page = o.bin.globals(
+        filter,
+        int(args, "offset", 0, u32::MAX as u64) as u32,
+        int(args, "limit", 50, 1000) as u32,
+    );
+    let mut out = format!(
+        "{} globals{}; showing {} from {}:\n",
+        count(page.total),
+        if filter.is_empty() {
+            String::new()
+        } else {
+            format!(" matching {filter:?}")
+        },
+        page.globals.len(),
+        page.offset
+    );
+    for g in &page.globals {
+        let _ = writeln!(
+            out,
+            "  {:#x} {:>6}  {:<20} {}",
+            g.address,
+            g.size,
+            o.bin.symbols().at(g.address).map_or(g.name.clone(), |s| s.display_name().into_owned()),
+            clip(&g.description, 300)
         );
     }
     out
