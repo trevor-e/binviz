@@ -546,7 +546,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "export_asm",
             "A function as assembler source",
-            "A MIPS function (PlayStation, Nintendo 64) as GNU assembler source, the way splat writes it: glabel, branches to .L labels, calls by name, %hi/%lo where one lui starts an address on every path to the instruction that finishes it, %gp_rel into the small data, the jump tables its switches read (jtbl_, in .rodata), each instruction with its offset, address and word in a comment. Pseudo-instructions with more than one encoding (move, li) are spelled out, so it assembles back to the same words. It is what m2c takes to write a first draft of the C (m2c -t mips-gcc-c for GCC-built code), and what a decompilation keeps under asm/nonmatchings for a function not matched yet.",
+            "A MIPS function (PlayStation, Nintendo 64) as GNU assembler source, the way splat writes it: glabel, branches to .L labels, calls by name, %hi/%lo where one lui starts an address on every path to the instruction that finishes it, %gp_rel into the small data, and in .rodata the jump tables its switches read (jtbl_) and the strings it uses, each instruction with its offset, address and word in a comment. Pseudo-instructions with more than one encoding (move, li) are spelled out, so it assembles back to the same words. It is what m2c takes to write a first draft of the C (m2c -t mips-gcc-c for GCC-built code), and what a decompilation keeps under asm/nonmatchings for a function not matched yet.",
             json!({
                 "at": address("A function or address inside it"),
             }),

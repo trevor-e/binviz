@@ -18,9 +18,9 @@ impl Binary {
     /// each instruction with its file offset, address and word in a
     /// comment, branches to `.L` labels, calls by name, `%hi`/`%lo` where
     /// one `lui` starts an address on every path to the instruction that
-    /// finishes it, `%gp_rel` into the small data, and the jump tables its
-    /// `switch`es read, as `jtbl_` in `.rodata`. `None` for code that isn't
-    /// MIPS.
+    /// finishes it, `%gp_rel` into the small data, and in `.rodata` the jump
+    /// tables its `switch`es read (`jtbl_`) and the strings it uses. `None`
+    /// for code that isn't MIPS.
     pub fn gnu_asm(&self, address: u64) -> Option<String> {
         let little = self.mips_endian()? == crate::util::Endian::Little;
         let f = self.symbols().function_containing(address)?;
@@ -85,6 +85,19 @@ impl Binary {
                 low.insert(k, (j, t.address));
             }
         }
+        // The strings it takes the address of, moved in with it as splat does: m2c writes them as literals.
+        let strings: BTreeMap<u64, &[u8]> = low
+            .values()
+            .map(|&(_, t)| t)
+            .chain(gp_rel.values().copied())
+            .filter(|t| !tables.contains_key(t))
+            .filter_map(|t| {
+                self.string_at_address(t)?;
+                let bytes = self.data.get(self.address_to_offset(t)? as usize..)?;
+                let n = bytes.iter().take(4096).position(|&b| b == 0)?;
+                Some((t, &bytes[..n]))
+            })
+            .collect();
         // The addresses a `lui` starts share their high half: any of them names it.
         let mut high: HashMap<usize, u64> = HashMap::new();
         for &(j, t) in low.values() {
@@ -159,6 +172,13 @@ impl Binary {
             for &t in targets.iter() {
                 out.push_str(&format!(".word {}\n", label(t)));
             }
+        }
+        for (&address, bytes) in &strings {
+            let name = data_name(start, address);
+            out.push_str(&format!(
+                "\n.section .rodata\n\nglabel {name}\n.asciz \"{}\"\n",
+                escaped(bytes)
+            ));
         }
         Some(out)
     }
@@ -346,6 +366,23 @@ fn asm_name(name: &str, address: u64, code: bool) -> String {
     }
 }
 
+/// Bytes as the inside of an assembler string: printable ASCII as it is,
+/// the rest escaped (a Shift-JIS string's bytes in octal).
+fn escaped(bytes: &[u8]) -> String {
+    let mut out = String::new();
+    for &b in bytes {
+        match b {
+            b'"' => out.push_str("\\\""),
+            b'\\' => out.push_str("\\\\"),
+            b'\n' => out.push_str("\\n"),
+            b'\t' => out.push_str("\\t"),
+            0x20..0x7F => out.push(b as char),
+            _ => out.push_str(&format!("\\{b:03o}")),
+        }
+    }
+    out
+}
+
 /// The instruction word, from its bytes in hex.
 fn word(bytes: &str, little: bool) -> u32 {
     let mut b: Vec<&str> = bytes.split_whitespace().collect();
@@ -428,6 +465,7 @@ mod tests {
             spelled(0x0085_001A, "div", "$a0, $a1").as_deref(),
             Some("div $zero, $a0, $a1")
         );
+        assert_eq!(escaped(b"a \"b\"\\\n\x82\xA0"), "a \\\"b\\\"\\\\\\n\\202\\240");
         assert_eq!(hi_lo(MipsWord(0x3C08_1F80), MipsWord(0xAD00_1074)), 0x1F80_1074);
         assert_eq!(hi_lo(MipsWord(0x3C1D_8040), MipsWord(0x27BD_FFF0)), 0x803F_FFF0);
         assert_eq!(asm_name("sub_80010020", 0x8001_0020, true), "func_80010020");
@@ -546,6 +584,27 @@ mod tests {
             asm.ends_with(
                 ".section .rodata\n\nglabel jtbl_80010040\n.word .L80010020\n.word .L80010028\n.word .L80010030\n"
             ),
+            "{asm}"
+        );
+    }
+
+    #[test]
+    fn the_strings_it_uses_come_with_it() {
+        let mut words = vec![
+            0x3C04_8001, // lui   $a0, 0x8001
+            0x03E0_0008, // jr    $ra
+            0x2484_0010, // addiu $a0, $a0, 0x10: the string at 0x80010010
+            0x0000_0000,
+        ];
+        words.extend(
+            b"hi \"you\"\n\0\0\0"
+                .chunks(4)
+                .map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]])),
+        );
+        let asm = psx(&words).gnu_asm(0x8001_0000).expect("MIPS");
+        assert!(asm.contains("addiu     $a0, $a0, %lo(D_80010010)\n"), "{asm}");
+        assert!(
+            asm.ends_with(".section .rodata\n\nglabel D_80010010\n.asciz \"hi \\\"you\\\"\\n\"\n"),
             "{asm}"
         );
     }
