@@ -271,6 +271,7 @@ fn main() {
             name: format!("fn_{:x}", f.address),
             comment: "note".into(),
             reviewed: true,
+            kind: None,
         })
         .collect();
     time(&format!("set {} annotations", notes.len()), || {

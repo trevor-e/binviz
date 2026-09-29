@@ -358,7 +358,18 @@ impl Binary {
             .filter(|a| !a.name.is_empty())
             .map(|a| {
                 let section = self.section_at(a.address);
-                let code = section.is_some_and(|s| s.kind == RegionKind::Code);
+                let code = match a.kind.as_deref() {
+                    Some("function") => true,
+                    Some("data") => false,
+                    // A console mixes code and data in one area: four zero bytes start no function.
+                    _ if self.rom.is_some() => {
+                        section.is_some_and(|s| s.kind == RegionKind::Code)
+                            && !self
+                                .code_bytes(a.address)
+                                .is_some_and(|b| b.len() >= 4 && b[..4].iter().all(|&x| x == 0))
+                    }
+                    _ => section.is_some_and(|s| s.kind == RegionKind::Code),
+                };
                 (a.name.as_str(), a.address, a.size, section.map(|s| s.index), code)
             })
             .collect();

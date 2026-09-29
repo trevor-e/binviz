@@ -60,7 +60,8 @@ def symbols(tools, exe, elf):
 
 
 def notes_of(syms):
-    return [{"address": a, "size": s, "name": n, "comment": "", "reviewed": False} for a, s, k, n in syms if k in "tdrb"]
+    return [{"address": a, "size": s, "name": n, "comment": "", "reviewed": False, "kind": "function" if k == "t" else "data"}
+            for a, s, k, n in syms if k in "tdrb"]
 
 
 def main():

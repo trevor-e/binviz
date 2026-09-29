@@ -56,6 +56,7 @@ for line in out.splitlines():
     address, size, kind, name = parts
     if kind.lower() not in "tdrb" or name.startswith(("$", "__", ".L")):
         continue
-    annotations.append({"address": int(address, 16), "size": int(size, 16), "name": name, "comment": "", "reviewed": False})
+    annotations.append({"address": int(address, 16), "size": int(size, 16), "name": name, "comment": "", "reviewed": False,
+                        "kind": "function" if kind.lower() == "t" else "data"})
 json.dump(annotations, open(notes, "w"), indent=1)
 print(f"{exe}: {len(image)} bytes at {base:#x}, entry {e_entry:#x}; {len(annotations)} names in {notes}")

@@ -182,6 +182,7 @@ impl NameProposals {
                 name: p.proposed.clone(),
                 comment: format!("named from another build: {} ({:.0}%)", p.evidence, p.confidence * 100.0),
                 reviewed: false,
+                kind: Some("function".into()),
             })
             .collect()
     }

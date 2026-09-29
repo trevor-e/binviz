@@ -716,6 +716,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: "main".into(),
             comment: "builds shapes and prints the total area".into(),
             reviewed: true,
+            kind: None,
         },
         Annotation {
             address: main.address + 0x10,
@@ -723,6 +724,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: String::new(),
             comment: "calls __main".into(),
             reviewed: false,
+            kind: None,
         },
     ]);
     // The name becomes a symbol with the recovered function's exact size.

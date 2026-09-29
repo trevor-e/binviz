@@ -44,6 +44,7 @@ pub fn load(path: &Path) -> Result<(Vec<Annotation>, Option<String>), String> {
                 name: a.get("name").and_then(Value::as_str).unwrap_or("").to_string(),
                 comment: a.get("comment").and_then(Value::as_str).unwrap_or("").to_string(),
                 reviewed: a.get("reviewed").and_then(Value::as_bool).unwrap_or(false),
+                kind: a.get("kind").and_then(Value::as_str).map(str::to_string),
             })
         })
         .collect();

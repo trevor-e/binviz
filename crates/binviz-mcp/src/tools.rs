@@ -2345,6 +2345,7 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
             name: String::new(),
             comment: String::new(),
             reviewed: false,
+            kind: None,
         },
     };
     if let Some(s) = size {

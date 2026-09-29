@@ -191,9 +191,13 @@ pub fn parse_symbol_addrs(text: &str) -> Vec<Annotation> {
             continue;
         }
         let mut size = 0;
+        let mut kind = None;
         for attr in attrs.split_whitespace() {
             if let Some(v) = attr.strip_prefix("size:") {
                 size = u64::from_str_radix(v.trim_start_matches("0x"), 16).unwrap_or(0);
+            }
+            if let Some(v) = attr.strip_prefix("type:") {
+                kind = Some(if v == "func" { "function" } else { "data" }.to_string());
             }
         }
         out.push(Annotation {
@@ -202,6 +206,7 @@ pub fn parse_symbol_addrs(text: &str) -> Vec<Annotation> {
             name: name.to_string(),
             comment: String::new(),
             reviewed: false,
+            kind,
         });
     }
     out

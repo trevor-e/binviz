@@ -384,4 +384,9 @@ pub struct Annotation {
     /// Marked as fully understood.
     #[serde(default)]
     pub reviewed: bool,
+    /// What the range holds, when the note says: `function` or `data`.
+    /// Unsaid, a name in a code section is a function (but see the ROMs'
+    /// rule in `rebuild_user_symbols`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
 }
