@@ -1,7 +1,16 @@
 // Reading and writing annotations: binviz's own JSON, and symbol lists from
 // other tools (CSV with a header, `nm` output, IDA/Ghidra exports, or plain
 // "address name" lines).
-import type { Annotation } from './types';
+import type { Annotation, Decomp, DecompState } from './types';
+
+interface StoredDecomp {
+  state: DecompState;
+  percent?: number;
+  attempts?: number;
+  by?: string;
+  since?: number;
+  source?: string;
+}
 
 interface Stored {
   address: string;
@@ -9,6 +18,35 @@ interface Stored {
   name?: string;
   comment?: string;
   reviewed?: boolean;
+  decomp?: StoredDecomp;
+}
+
+const STATES: DecompState[] = ['todo', 'in-progress', 'matched', 'nonmatching', 'skipped', 'library'];
+
+function storeDecomp(d: Decomp): StoredDecomp {
+  return {
+    state: d.state,
+    ...(d.percent !== undefined ? { percent: d.percent } : {}),
+    ...(d.attempts ? { attempts: d.attempts } : {}),
+    ...(d.by ? { by: d.by } : {}),
+    ...(d.since ? { since: Number(d.since) } : {}),
+    ...(d.source ? { source: d.source } : {}),
+  };
+}
+
+function readDecomp(v: unknown): Decomp | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const o = v as Record<string, unknown>;
+  const state = STATES.find((s) => s === o.state);
+  if (!state) return undefined;
+  return {
+    state,
+    ...(typeof o.percent === 'number' ? { percent: o.percent } : {}),
+    attempts: typeof o.attempts === 'number' ? o.attempts : 0,
+    by: typeof o.by === 'string' ? o.by : '',
+    since: typeof o.since === 'number' && Number.isSafeInteger(o.since) && o.since > 0 ? BigInt(o.since) : 0n,
+    source: typeof o.source === 'string' ? o.source : '',
+  };
 }
 
 export function serializeAnnotations(list: Annotation[], file: string, fingerprint: string): string {
@@ -18,6 +56,7 @@ export function serializeAnnotations(list: Annotation[], file: string, fingerpri
     ...(a.name ? { name: a.name } : {}),
     ...(a.comment ? { comment: a.comment } : {}),
     ...(a.reviewed ? { reviewed: true } : {}),
+    ...(a.decomp ? { decomp: storeDecomp(a.decomp) } : {}),
   }));
   return JSON.stringify({ format: 'binviz-annotations', version: 1, file, fingerprint, annotations }, null, 2);
 }
@@ -53,12 +92,14 @@ function fromJson(value: unknown): Annotation[] | undefined {
     const o = item as Record<string, unknown>;
     const address = parseAddress(o.address ?? o.addr ?? o.ea ?? o.location);
     if (address === undefined) continue;
+    const decomp = readDecomp(o.decomp);
     out.push({
       address,
       size: parseSize(o.size ?? o.length),
       name: typeof o.name === 'string' ? o.name : '',
       comment: typeof o.comment === 'string' ? o.comment : '',
       reviewed: o.reviewed === true,
+      ...(decomp ? { decomp } : {}),
     });
   }
   return out;

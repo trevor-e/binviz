@@ -23,7 +23,15 @@ run such a project with binviz as the agent's eyes, and in what order.
 References:
 - Decomp: https://github.com/punpckhdq/halo (fork with ports: https://github.com/bnunu/halo-1)
 - Ports: https://github.com/cybersecurity/halo-ce-universal (SDL3 + OpenGL; assets from the user's disc image)
-- Agent workflow description: https://github.com/halo-re/halo
+- Incremental re-implementation (C patched into the original XBE, a `kb.json` of declarations): https://github.com/halo-re/halo.
+  Neither Halo repo describes the agent workflow itself; for that, see the next two.
+- Agent-driven matching, first-hand: https://gambiconf.substack.com/p/can-llms-really-do-matching-decompilation
+  (60 functions, 74 % matched, about half on the first try; one not matched by the third
+  try rarely matches after; the model's worst habit is believing it matched without checking)
+  and https://gambiconf.substack.com/p/starting-a-decompilation-project (Claude Code on a GBA game, 51 % of its code)
+- Echo (2026), matching decompilation with the compiler in the loop: https://arxiv.org/abs/2609.18706
+  (graded similarity feedback, rule-based rewrites before the model, compiler flags searched too;
+  2.4x the exact matches of the best baseline)
 - Symbol source (Anniversary PDB corpus): https://github.com/surreptitiousresearch/halocea
 - Ecosystem: https://decomp.wiki (tips per platform), https://decomp.dev (progress), https://decomp.me (scratches)
 - Scoring tool to emulate or feed: objdiff (https://github.com/encounter/objdiff)
@@ -125,7 +133,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       from symbols plus notes; import `symbol_addrs.txt` and splat's
       `undefined_funcs_auto.txt` back. Where: `rom/labels.rs` (new formats).
       Done when: a project set up from the export builds with splat unchanged.
-- [x] **A5. objdiff in, match score native** (2026-09-29, `matching.rs`; CLI `match`/`report`, MCP `match_function`/`match_object`/`place_report`; notes status still open). (a) Read objdiff's report JSON
+- [x] **A5. objdiff in, match score native** (2026-09-29, `matching.rs`; CLI `match`/`report`, MCP `match_function`/`match_object`/`place_report`; `place_report` records its verdicts as notes statuses, see the shared items). (a) Read objdiff's report JSON
       and mark each function `matched`/percent in notes and the coverage map,
       so binviz shows project progress by address. (b) Native score for a
       MIPS ELF `.o` against the original: bytes compared with relocations
@@ -133,7 +141,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       instructions, different register, different immediate, different
       `$gp`/`lui` split, missing `nop` in a delay slot). Extend `fndiff.rs`.
       Done when: binviz's percent agrees with objdiff's on the same pair.
-- [x] **A6. Agent bundle over MCP** (2026-09-29, `decomp.rs`; CLI `context`/`signature`, MCP `decomp_context`/`function_signature`; similar-matched-function examples still open). `decomp_context(function)`: disassembly
+- [x] **A6. Agent bundle over MCP** (2026-09-29, `decomp.rs`; CLI `context`/`signature`, MCP `decomp_context`/`function_signature`; worked examples from matched look-alikes, see the shared items). `decomp_context(function)`: disassembly
       with pseudo-ops, the signature guess, callers and callees with their
       prototypes where known, strings and globals used with inferred types,
       struct offset hints, and two or three already-matched functions that
@@ -218,8 +226,34 @@ below too.
 
 ## Shared: project bookkeeping and porting
 
-- [ ] **Function status in notes.** `matched` and `in_progress` beside
-      `named` and `reviewed`; coverage map and MCP `coverage` report them.
+- [x] **Function status in notes** (2026-09-29, 8e208bc). Each function's state rides
+      on its note (`decomp`: todo, in-progress with who and since, matched
+      with its source file, nonmatching, skipped, library; tries and best
+      percent), in the notes file the web UI keeps too. MCP `mark` sets it,
+      `place_report` records objdiff's verdicts (and sends back what stopped
+      matching), `identify_sdk` marks library code; `coverage`,
+      `binary_summary`, `inspect`, `function_info` and `disassemble` report
+      it. Not yet: a colour for it on the web UI's coverage map.
+- [x] **Work queue and look-alikes** (2026-09-29, 8e208bc, `queue.rs`, `similar.rs`;
+      MCP `next_functions`, `mark`, `similar_functions`). What to decompile
+      next, best first: near-copies of a matched function (90 % of the same
+      instruction shapes, 8 instructions or more), then functions whose
+      callees are all done, cheapest for what they unlock
+      (`(1 + 2·callers waiting only on it + log2(1 + callers)) / (1 + instructions/32)`),
+      then those still waiting, fewest missing first; three tries without a
+      match send one to the end until a callee is done after them. Claims
+      (an hour) keep parallel agents apart. Functions are compared by a MinHash
+      of their instruction shapes filed in LSH bands, the best candidates
+      diffed exactly: `decomp_context` gets matched look-alikes as worked
+      examples. 20 004 functions: 10–60 ms a ranking, 40 ms a claim-and-mark
+      round over MCP.
+- [ ] **Tightening the loop further.** A programmatic first draft before the
+      model (m2c for MIPS) and decomp-permuter in the background on
+      near-misses, with rule-based rewrites for the common mismatch classes
+      (Echo); compiler flags searched per unit; worked examples from sibling
+      decomps built with the same compiler, so the first functions have some
+      too; learned embeddings only where instruction shapes don't carry over
+      (the remaster's C# in A7, searching agents' summaries in words).
 - [ ] **Progress export** in the format decomp.dev consumes (or rely on
       objdiff's report and A5a).
 - [ ] **WASM reader.** Sections, function table, imports/exports, the name
@@ -238,6 +272,11 @@ below too.
   bugs, fixed: MIPS32 `movn`/`movz` stopping the follower, call clobbers applied before the
   delay slot (strings in slots lost), data notes followed as code into zeroed RAM, traces
   seeding only run starts.
+- 2026-09-29: function status in notes, the work queue (`next_functions`,
+  claims, `mark`) and look-alikes (`similar_functions`, worked examples in
+  `decomp_context`) landed in 8e208bc; `place_report` records objdiff's verdicts and
+  `identify_sdk` marks library code. Closes the matched-status and
+  similar-function-examples notes above.
 - 2026-09-29 (last): A1 Psy-Q signatures from LIB/OBJ files and A7 name proposals by shared
   strings and calls; strings are now found in console code areas (PS-X EXE had none before).
   Track A's eight items are all in; what remains are the notes above: SDK version detection,

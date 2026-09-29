@@ -826,6 +826,19 @@ impl SymbolTable {
             .map(|r| (r.address, r.address + r.size.max(1)))
     }
 
+    /// Like [`Self::static_functions_in`], without import stubs: the binary's own code.
+    pub(crate) fn own_functions_in(&self, lo: u64, hi: u64) -> impl Iterator<Item = (u64, u64)> + '_ {
+        let first = self
+            .base_by_addr
+            .partition_point(|&i| self.recs[i as usize].address < lo);
+        self.base_by_addr[first..]
+            .iter()
+            .map(|&i| &self.recs[i as usize])
+            .take_while(move |r| r.address < hi)
+            .filter(|r| r.kind == SymbolKind::Function && r.source != SymbolSource::Import)
+            .map(|r| (r.address, r.address + r.size.max(1)))
+    }
+
     /// Functions whose name (or hex address) contains `filter`, in address
     /// order; the result is kept so paging and position lookups are cheap.
     fn filtered_functions(&self, filter: &str) -> std::sync::MutexGuard<'_, Option<(String, Vec<u32>)>> {

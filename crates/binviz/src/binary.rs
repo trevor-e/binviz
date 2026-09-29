@@ -48,6 +48,8 @@ pub struct Binary {
     pub(crate) pointers: std::sync::OnceLock<crate::pointers::Scheme>,
     /// Objective-C metadata, read on first use.
     pub(crate) objc: std::sync::OnceLock<crate::objc::ObjcInfo>,
+    /// The functions summed up to find look-alikes, on first use.
+    pub(crate) similar: std::sync::OnceLock<crate::similar::SimilarIndex>,
     /// For a game ROM: its console, memory map and the code found in it.
     pub(crate) rom: Option<crate::rom::Rom>,
 }
@@ -534,6 +536,7 @@ impl Binary {
             xrefs: std::sync::OnceLock::new(),
             pointers: std::sync::OnceLock::new(),
             objc: std::sync::OnceLock::new(),
+            similar: std::sync::OnceLock::new(),
             rom: None,
         };
         drop(file);
@@ -613,6 +616,7 @@ impl Binary {
             xrefs: std::sync::OnceLock::new(),
             pointers: std::sync::OnceLock::new(),
             objc: std::sync::OnceLock::new(),
+            similar: std::sync::OnceLock::new(),
             rom: None,
         };
         binary.layout = binary.build_layout(Format::Unknown);

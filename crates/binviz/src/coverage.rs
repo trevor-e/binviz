@@ -356,7 +356,7 @@ impl Binary {
                 }
                 intervals.push((s.address, end, status));
             }
-            for a in self.annotations.iter().filter(|a| a.address < hi) {
+            for a in self.annotations.iter().filter(|a| a.address < hi && a.is_note()) {
                 let (s, e) = self.annotation_extent(a);
                 if e <= lo {
                     continue;
@@ -487,7 +487,7 @@ impl Binary {
             gaps,
             gap_count,
             functions,
-            annotations: self.annotations.len() as u32,
+            annotations: self.annotations.iter().filter(|a| a.is_note()).count() as u32,
             reviewed: self.annotations.iter().filter(|a| a.reviewed).count() as u32,
         }
     }

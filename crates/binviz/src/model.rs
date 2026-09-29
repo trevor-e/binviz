@@ -369,7 +369,7 @@ pub struct Inspection {
 }
 
 /// A note the user attached to an address range while reverse engineering.
-#[derive(Debug, Clone, Serialize, serde::Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Annotation {
     pub address: u64,
@@ -389,4 +389,90 @@ pub struct Annotation {
     /// rule in `rebuild_user_symbols`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind: Option<String>,
+    /// Where decompiling the function here stands, in a matching decompilation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub decomp: Option<Decomp>,
+}
+
+impl Annotation {
+    /// Whether it says something of its own (a name, a comment, a review),
+    /// rather than only where decompiling a function stands.
+    pub fn is_note(&self) -> bool {
+        !self.name.is_empty() || !self.comment.is_empty() || self.reviewed
+    }
+}
+
+/// Where decompiling a function stands, in a matching decompilation (C that
+/// compiles back to the same bytes).
+#[derive(Debug, Clone, Default, Serialize, serde::Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Decomp {
+    pub state: DecompState,
+    /// How much of it matched (0–100), at best, the times it was compiled.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub percent: Option<f32>,
+    /// Tries that didn't match.
+    #[serde(default)]
+    pub attempts: u32,
+    /// Who is working on it (an agent's name), while in progress.
+    #[serde(default)]
+    pub by: String,
+    /// When its state last changed: seconds since 1970.
+    #[serde(default)]
+    pub since: u64,
+    /// The source file its C is in (for library code, the library).
+    #[serde(default)]
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DecompState {
+    /// Not started, or tried and handed back.
+    #[default]
+    Todo,
+    /// Someone is working on it.
+    InProgress,
+    /// Its C compiles to the same bytes.
+    Matched,
+    /// Its C does the same, but doesn't compile to the same bytes.
+    Nonmatching,
+    /// Set aside, to come back to.
+    Skipped,
+    /// Library code (the SDK's, the C runtime's): linked, not decompiled.
+    Library,
+}
+
+impl DecompState {
+    /// Whether callers can be written against it: its C (or its library's
+    /// header) gives its prototype.
+    pub fn is_done(self) -> bool {
+        matches!(
+            self,
+            DecompState::Matched | DecompState::Nonmatching | DecompState::Library
+        )
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            DecompState::Todo => "todo",
+            DecompState::InProgress => "in-progress",
+            DecompState::Matched => "matched",
+            DecompState::Nonmatching => "nonmatching",
+            DecompState::Skipped => "skipped",
+            DecompState::Library => "library",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<DecompState> {
+        Some(match s.trim().to_ascii_lowercase().replace('_', "-").as_str() {
+            "todo" => DecompState::Todo,
+            "in-progress" => DecompState::InProgress,
+            "matched" => DecompState::Matched,
+            "nonmatching" | "non-matching" => DecompState::Nonmatching,
+            "skipped" => DecompState::Skipped,
+            "library" => DecompState::Library,
+            _ => return None,
+        })
+    }
 }

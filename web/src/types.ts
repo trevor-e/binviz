@@ -176,6 +176,23 @@ export interface Annotation {
   name: string;
   comment: string;
   reviewed: boolean;
+  /** Where decompiling the function here stands (set by agents through the MCP server). */
+  decomp?: Decomp;
+}
+
+export type DecompState = 'todo' | 'in-progress' | 'matched' | 'nonmatching' | 'skipped' | 'library';
+
+export interface Decomp {
+  state: DecompState;
+  /** How much of it matched, 0–100, at best. */
+  percent?: number;
+  attempts: number;
+  /** Who is working on it, while in progress. */
+  by: string;
+  /** When its state last changed, in seconds since 1970. */
+  since: bigint;
+  /** The source file its C is in. */
+  source: string;
 }
 
 export interface Disassembly {

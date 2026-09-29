@@ -715,6 +715,19 @@ impl Binary {
         XrefIndex { base, lists }
     }
 
+    /// Every call and tail call in the code: (site, target).
+    pub(crate) fn calls(&self) -> Vec<(u64, u64)> {
+        let index = self.xref_index();
+        [RefKind::Call, RefKind::Jump]
+            .into_iter()
+            .flat_map(|k| {
+                index.lists[k as usize]
+                    .iter()
+                    .map(|&v| (index.source(v), index.target(v)))
+            })
+            .collect()
+    }
+
     /// Number of references in the index, by kind.
     pub fn xref_counts(&self) -> RefCounts {
         let index = self.xref_index();

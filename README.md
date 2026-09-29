@@ -100,7 +100,10 @@ image, a trace and a jump table; the
 **Built for agents.** The MCP server loads a binary once and answers every
 question after that from memory, in milliseconds even for a 1 GB app: search,
 inspect, disassemble, xrefs, call graphs, DWARF, diffs, crash symbolication,
-and notes that the web UI can import.
+and notes that the web UI can import. For a matching decompilation it keeps
+the work queue too: which function to write C for next (callees first,
+near-copies of matched functions before anything), claims so parallel agents
+don't collide, and each function's outcome.
 
 ## Running the web UI
 

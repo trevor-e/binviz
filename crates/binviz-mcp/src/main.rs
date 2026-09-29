@@ -15,6 +15,7 @@ mod crash;
 mod diff;
 mod folders;
 mod notes;
+mod queue;
 mod tools;
 
 use std::io::{BufRead, Write};

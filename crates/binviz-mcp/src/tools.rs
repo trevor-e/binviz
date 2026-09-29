@@ -18,6 +18,7 @@ For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, G
 To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
 For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone or a stack trace, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
+For a matching decompilation (C that compiles back to the same bytes), the loop is: next_functions says what to do next, best first — functions shaped like one already matched (its C is a template), then those whose callees are all done, cheapest for what they unlock — and claim: true takes one, so parallel agents don't collide; decomp_context gives everything for writing it in one call (code, prototype guess, callers and callees with theirs, strings, globals, and the matched functions shaped like it with their source files); match_function scores the compiled object against the original and explains each difference; mark records the outcome (matched with its source file, nonmatching, attempted with its percent, skipped, library), which re-ranks the rest, and place_report records a whole objdiff report at once. After three tries without a match, move on: the function comes back once something it calls is done. identify_sdk marks the SDK's functions as library code, which callers don't wait on. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
 
 const MAX_OUTPUT: usize = 60_000;
@@ -451,14 +452,15 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "place_report",
             "Place an objdiff report on the binary",
-            "Reads objdiff's report JSON (what decomp.dev shows) and places its per-function verdicts on this binary's functions, by the virtual address the report records or by name: the totals, each function's match percent, and the entries no function was found for.",
+            "Reads objdiff's report JSON (what decomp.dev shows) and places its per-function verdicts on this binary's functions, by the virtual address the report records or by name: the totals, each function's match percent, and the entries no function was found for. Records them in the notes too (unless record is false), as mark would: functions at 100% matched, the others' best percent kept, and those that matched before and no longer do sent back to be done, so next_functions works from what actually compiles.",
             json!({
                 "report": { "type": "string", "description": "Path to the report JSON (objdiff-cli report generate)." },
                 "below": { "type": "number", "description": "List only functions matched below this percent (default 100: the unfinished ones)." },
                 "limit": { "type": "integer", "description": "Functions to list (default 100, max 5000)." },
+                "record": { "type": "boolean", "description": "Record the verdicts in the notes (default true)." },
             }),
             &["report"],
-            true,
+            false,
         ),
         tool(
             "splat_export",
@@ -578,6 +580,46 @@ pub fn definitions() -> Vec<Value> {
             "Your notes, in address order, optionally filtered by name or comment.",
             json!({ "filter": { "type": "string" } }),
             &[],
+            true,
+        ),
+        tool(
+            "next_functions",
+            "Pick functions to decompile",
+            "For a matching decompilation: the functions to write C for next, best first, each with why. Functions shaped like one already done come first (its C is a template: see similar_functions), then ready ones (everything they call is matched, nonmatching or library code), cheapest for what they unlock first (small functions that many callers wait on), then those still waiting on callees, and last those tried three times without matching (until something they call gets done). Leaves out what is done, set aside, or claimed by another agent in the last hour. claim: true claims the first one for you, so parallel agents don't take the same function. Also says how far the decompilation has come. Record each outcome with mark.",
+            json!({
+                "count": { "type": "integer", "description": "How many to list (default 10, max 200)." },
+                "within": { "type": "string", "description": "Only functions starting in this range of addresses: lo..hi (a source file's, say)." },
+                "claim": { "type": "boolean", "description": "Claim the first function listed (in progress, for agent)." },
+                "agent": { "type": "string", "description": "Your name, for claims (default \"agent\")." },
+                "include": { "type": "string", "enum": ["claimed", "skipped", "all"], "description": "Also list what others have claimed, what was set aside, or both." },
+            }),
+            &[],
+            false,
+        ),
+        tool(
+            "mark",
+            "Record where decompiling a function stands",
+            "Records a function's state in the notes: in-progress (you are working on it: claims it), attempted (a try that didn't match: counted, the best percent kept, handed back), matched (its C compiles to the same bytes; pass source, the file the C is in), nonmatching (equivalent C that doesn't match byte for byte), skipped (set aside for later), library (SDK or runtime code, not decompiled), or todo (cleared). next_functions ranks by these, and done functions become worked examples for the ones shaped like them. Says which callers a match makes ready.",
+            json!({
+                "at": address("The function (any address in it)"),
+                "state": { "type": "string", "enum": ["matched", "nonmatching", "attempted", "in-progress", "skipped", "library", "todo"] },
+                "percent": { "type": "number", "description": "How much of it matched (0-100), as objdiff or your compare says." },
+                "source": { "type": "string", "description": "The source file its C is in." },
+                "agent": { "type": "string", "description": "Your name, for in-progress (default \"agent\")." },
+            }),
+            &["at", "state"],
+            false,
+        ),
+        tool(
+            "similar_functions",
+            "Functions shaped like one",
+            "The functions whose instructions are most like a function's (the same operations on the same kinds of operands, whatever addresses and numbers they hold), most alike first, with where each stands in the decompilation. A matched one's C is the best worked example for writing this one; a near-copy of a function just matched likely takes the same C.",
+            json!({
+                "at": address("The function (any address in it)"),
+                "count": { "type": "integer", "description": "How many (default 8, max 50)." },
+                "done_only": { "type": "boolean", "description": "Only functions already matched or nonmatching." },
+            }),
+            &["at"],
             true,
         ),
     ]
@@ -726,6 +768,9 @@ impl Server {
                     "annotate" => annotate(o, args)?,
                     "remove_annotation" => remove_annotation(o, args)?,
                     "list_annotations" => list_annotations(o, args),
+                    "next_functions" => crate::queue::next_functions(o, args)?,
+                    "mark" => crate::queue::mark(o, args)?,
+                    "similar_functions" => crate::queue::similar_functions(o, args)?,
                     "function_info" => function_info(o, args)?,
                     "xrefs" => xrefs(o, args)?,
                     "callers" => call_list(o, args, true)?,
@@ -1239,12 +1284,23 @@ fn summary(o: &Open) -> String {
         let _ = writeln!(out, "{n}");
     }
     let notes = b.annotations();
-    if !notes.is_empty() {
+    if notes.iter().any(|a| a.is_note()) {
         let _ = writeln!(
             out,
             "Notes: {} ({} reviewed)",
-            notes.len(),
+            notes.iter().filter(|a| a.is_note()).count(),
             notes.iter().filter(|a| a.reviewed).count()
+        );
+    }
+    if notes.iter().any(|a| a.decomp.is_some()) {
+        let p = b.decomp_progress();
+        let _ = writeln!(
+            out,
+            "Decompilation: {} of {} functions matched, {} nonmatching, {} library (next_functions picks what to do)",
+            count(p.matched),
+            count(p.functions),
+            count(p.nonmatching),
+            count(p.library)
         );
     }
     match b.debug_info() {
@@ -1573,7 +1629,7 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
             let _ = writeln!(out, "Referenced by: {} (see xrefs)", ref_counts(&c));
         }
     }
-    if let Some(a) = &i.annotation {
+    if let Some(a) = i.annotation.as_ref().filter(|a| a.is_note()) {
         let _ = writeln!(
             out,
             "Note{}: {}{}{}",
@@ -1586,6 +1642,13 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
             },
             a.comment
         );
+    }
+    if let Some(d) = i
+        .address
+        .and_then(|a| o.bin.symbols().function_containing(a))
+        .and_then(|f| o.bin.decomp_at(f.address))
+    {
+        let _ = writeln!(out, "Decompilation: {}", crate::queue::state_text(d));
     }
     Ok(out)
 }
@@ -1622,6 +1685,9 @@ fn disassemble(o: &Open, args: &Value) -> Result<String, String> {
         && !a.comment.is_empty()
     {
         let _ = writeln!(out, "; {}", a.comment.replace('\n', "\n; "));
+    }
+    if let Some(dec) = o.bin.decomp_at(d.start) {
+        let _ = writeln!(out, "; decompilation: {}", crate::queue::state_text(dec));
     }
     let mut last_src: Option<(String, u32)> = None;
     for ins in &d.instructions {
@@ -1802,6 +1868,21 @@ fn coverage(o: &Open, args: &Value) -> String {
         count(c.annotations),
         count(c.reviewed)
     );
+    if o.bin.annotations().iter().any(|a| a.decomp.is_some()) {
+        let p = o.bin.decomp_progress();
+        let _ = writeln!(
+            out,
+            "Decompilation: {} of {} functions matched ({} of {} of code, library code aside), {} nonmatching, {} library, {} in progress, {} set aside (next_functions picks what to do)",
+            count(p.matched),
+            count(p.functions),
+            human(p.matched_bytes),
+            human(p.bytes.saturating_sub(p.library_bytes)),
+            count(p.nonmatching),
+            count(p.library),
+            count(p.in_progress),
+            count(p.skipped)
+        );
+    }
     let _ = writeln!(
         out,
         "\nPer section (size: reviewed/annotated/named/structure/recovered/padding/unexplored):"
@@ -2048,7 +2129,7 @@ fn labels(o: &mut Open, args: &Value) -> Result<String, String> {
     ))
 }
 
-fn save_notes(o: &Open) -> String {
+pub(crate) fn save_notes(o: &Open) -> String {
     match &o.notes {
         Some(path) => match notes::save(path, &o.label, &o.bin.summary().fingerprint, o.bin.annotations()) {
             Ok(()) => format!("saved to {}", path.display()),
@@ -2132,7 +2213,7 @@ fn match_object(o: &Open, args: &Value) -> Result<String, String> {
     Ok(out)
 }
 
-fn place_report(o: &Open, args: &Value) -> Result<String, String> {
+fn place_report(o: &mut Open, args: &Value) -> Result<String, String> {
     let path = string(args, "report").ok_or("report is required")?;
     let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
     let report = binviz::matching::ObjdiffReport::parse(&json).map_err(|e| e.to_string())?;
@@ -2159,6 +2240,24 @@ fn place_report(o: &Open, args: &Value) -> Result<String, String> {
     }
     if !p.unplaced.is_empty() {
         let _ = writeln!(out, "\nNot found here: {}", p.unplaced.iter().take(30).cloned().collect::<Vec<_>>().join(", "));
+    }
+    if args.get("record").and_then(Value::as_bool).unwrap_or(true) {
+        let (matched, lost) = crate::queue::record_report(o, &p.functions);
+        let _ = write!(out, "\nRecorded in the notes: {} newly matched", count(matched));
+        if !lost.is_empty() {
+            let names: Vec<String> = lost
+                .iter()
+                .take(20)
+                .map(|&a| {
+                    o.bin
+                        .symbols()
+                        .at(a)
+                        .map_or_else(|| format!("{a:#x}"), |s| s.display_name().into_owned())
+                })
+                .collect();
+            let _ = write!(out, "; {} no longer match: {}", lost.len(), names.join(", "));
+        }
+        let _ = writeln!(out, ". {}.", save_notes(o));
     }
     Ok(out)
 }
@@ -2345,7 +2444,7 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
             name: String::new(),
             comment: String::new(),
             reviewed: false,
-            kind: None,
+            kind: None, decomp: None,
         },
     };
     if let Some(s) = size {
@@ -2452,6 +2551,10 @@ fn list_annotations(o: &Open, args: &Value) -> String {
                 format!("— {}", clip(&a.comment, 200))
             }
         );
+        if let Some(d) = &a.decomp {
+            out.pop();
+            let _ = writeln!(out, " [{}]", crate::queue::state_text(d));
+        }
     }
     out
 }
@@ -2552,13 +2655,16 @@ fn function_info(o: &Open, args: &Value) -> Result<String, String> {
     if let Some(src) = &i.source {
         let _ = writeln!(out, "Source: {}:{}", src.path, src.line);
     }
-    if let Some(a) = &i.annotation {
+    if let Some(a) = i.annotation.as_ref().filter(|a| a.is_note()) {
         let _ = writeln!(
             out,
             "Your note{}: {}",
             if a.reviewed { " (reviewed)" } else { "" },
             clip(&a.comment, 300)
         );
+    }
+    if let Some(d) = o.bin.decomp_at(f.address) {
+        let _ = writeln!(out, "Decompilation: {}", crate::queue::state_text(d));
     }
     let _ = writeln!(out, "Referenced by: {}", ref_counts(&f.referenced_by));
     let _ = writeln!(
