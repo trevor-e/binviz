@@ -46,6 +46,7 @@ pub mod plist;
 mod pointers;
 pub mod rom;
 pub mod search;
+pub mod signature;
 pub mod size;
 mod strings;
 mod stubs;

@@ -319,6 +319,7 @@ pub(super) fn detect_with(data: &[u8], logged: Option<&[Option<u64>]>) -> Option
         labels,
         properties,
         data: None,
+        entries: Vec::new(),
         state: State::default(),
         layout,
     };

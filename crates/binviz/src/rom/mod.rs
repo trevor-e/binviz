@@ -211,6 +211,10 @@ pub(crate) struct RomParts {
     /// The file's bytes in the order the console reads them, when the file
     /// has them otherwise (a byte-swapped Nintendo 64 ROM).
     pub data: Option<Vec<u8>>,
+    /// More places to follow the code from: (name, address, size). A function
+    /// found by its prologue has no name (it gets a `sub_…` one); one another
+    /// image of the same game names brings its name and size (0: as followed).
+    pub entries: Vec<(String, u64, u64)>,
 }
 
 /// What a [`Binary`] keeps of a ROM: how to read its code, and what was found by following it.
@@ -219,6 +223,8 @@ pub(crate) struct Rom {
     pub cpu: Cpu,
     pub map: Map,
     pub vectors: Vec<(&'static str, u64)>,
+    /// Entry points besides the vectors (see [`RomParts::entries`]).
+    pub entries: Vec<(String, u64, u64)>,
     pub state: State,
     layout: fn(&mut Builder<'_>),
     pub analysis: analysis::Analysis,
@@ -240,6 +246,7 @@ pub(crate) fn detect(data: &[u8]) -> Option<RomParts> {
         .or_else(|| megadrive::detect(data))
         .or_else(|| n64::detect(data))
         .or_else(|| psx::detect(data))
+        .or_else(|| psx::detect_memory(data))
         .or_else(|| snes::detect(data))
 }
 
@@ -401,6 +408,7 @@ impl Binary {
             cpu: parts.cpu,
             map: parts.map,
             vectors: parts.vectors,
+            entries: parts.entries,
             state: parts.state,
             layout: parts.layout,
             analysis: Default::default(),
@@ -442,6 +450,24 @@ impl Binary {
                 });
             }
         }
+        // The other entry points, where the code was followed (a function
+        // found by its prologue; a function another image names): a symbol
+        // each, named functions first so that a name wins over `sub_…`.
+        for (name, address, size) in &rom.entries {
+            if !name.is_empty() && named.insert(*address) && section_of(*address).is_some() {
+                symbols.push(NewSym {
+                    name,
+                    address: *address,
+                    size: if *size > 0 { *size } else { size_of(*address) },
+                    kind: SymbolKind::Function,
+                    binding: Binding::Global,
+                    section: section_of(*address),
+                    source: SymbolSource::Symtab,
+                    defined: true,
+                    plain: true,
+                });
+            }
+        }
         let symbols = symbols.finish_unindexed();
         let bytes: &[u8] = &data;
         let mut properties = vec![prop("Platform", parts.platform.name())];
@@ -454,10 +480,15 @@ impl Binary {
         properties.push(prop(
             "Code found",
             format!(
-                "{} instructions in {} functions, following the code from {} vectors{}",
+                "{} instructions in {} functions, following the code from {} vectors{}{}",
                 rom.analysis.instructions,
                 rom.analysis.functions.len(),
                 rom.vectors.len(),
+                if rom.entries.is_empty() {
+                    String::new()
+                } else {
+                    format!(" and {} other entry points", rom.entries.len())
+                },
                 if rom.log.is_some() {
                     " and what the code/data log saw run"
                 } else {

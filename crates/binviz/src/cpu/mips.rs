@@ -19,6 +19,54 @@ const REGS: [&str; 32] = [
 /// Registers a call may change (the others are the caller's to keep).
 pub(crate) const CALL_CLOBBERS: u32 = 0b1000_0011_0000_0000_1111_1111_1111_1110;
 
+/// The fields of a MIPS instruction word.
+#[derive(Clone, Copy)]
+pub(crate) struct MipsWord(pub u32);
+
+impl MipsWord {
+    pub(crate) fn op(self) -> u32 {
+        self.0 >> 26
+    }
+    pub(crate) fn rs(self) -> u32 {
+        (self.0 >> 21) & 31
+    }
+    pub(crate) fn rt(self) -> u32 {
+        (self.0 >> 16) & 31
+    }
+    pub(crate) fn rd(self) -> u32 {
+        (self.0 >> 11) & 31
+    }
+    pub(crate) fn sa(self) -> u32 {
+        (self.0 >> 6) & 31
+    }
+    pub(crate) fn funct(self) -> u32 {
+        self.0 & 63
+    }
+    pub(crate) fn imm(self) -> u32 {
+        self.0 & 0xFFFF
+    }
+    pub(crate) fn simm(self) -> i64 {
+        (self.0 & 0xFFFF) as u16 as i16 as i64
+    }
+
+    /// The general register this instruction writes, if any.
+    pub(crate) fn writes(self) -> Option<u32> {
+        let reg = match self.op() {
+            0 => match self.funct() {
+                8 | 12 | 13 | 15 | 17 | 19 | 24..=31 | 48..=54 => return None,
+                _ => self.rd(),
+            },
+            1 => return (self.rt() >= 16).then_some(31),
+            3 => 31,
+            8..=15 | 24 | 25 => self.rt(),
+            16..=18 if self.rs() <= 2 => self.rt(),
+            26 | 27 | 32..=39 | 48 | 55 => self.rt(),
+            _ => return None,
+        };
+        (reg != 0).then_some(reg)
+    }
+}
+
 fn r(i: u32) -> &'static str {
     REGS[i as usize & 31]
 }

@@ -98,7 +98,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       Where: new `rom/psx_sdk.rs`; signature store in the notes file.
       Done when: the FF9 boot executable's SDK calls are all named and the
       version is reported.
-- [ ] **A2. Overlays and memory images.** (a) Open an emulator RAM dump or
+- [x] **A2. Overlays and memory images** (2026-09-29; FF9 archive parsing still open). (a) Open an emulator RAM dump or
       savestate (2 MiB) as a PS1 memory image at `0x80000000`, with the boot
       executable's symbols laid over it, so whatever overlay was loaded at the
       time is analysable in place. (b) Find overlay blobs in the disc's
@@ -109,7 +109,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       Where: `rom/psx.rs`, `disc.rs`, `symbols.rs`.
       Done when: a field overlay and a battle overlay both open with SDK and
       boot-exe calls resolved.
-- [ ] **A3. MIPS mapping quality.** Static switch tables (`sltiu`/`beq`
+- [x] **A3. MIPS mapping quality** (2026-09-29: switch tables, signatures, struct hints; data classification still open). Static switch tables (`sltiu`/`beq`
       guard, `sll 2`, `lui`/`addu`, `lw`, `jr` pattern, table in `.rodata`);
       `$gp`-relative small data named as symbols; function signature guess
       (`$a0-$a3` read before written, stack args above the frame, `$v0/$v1`
@@ -216,6 +216,9 @@ functions (`discover.rs` handles only `.pdata`, `.eh_frame`,
 ## Progress log
 
 - 2026-09-28: plan written; no implementation yet.
+- 2026-09-29: A3 switch tables (`rom/jumptable.rs`), function signatures and struct hints
+  (`signature.rs`), A2 memory images, overlays and `locate` (`rom/psx.rs`) landed; library only,
+  CLI and MCP wiring to follow once the other session's edits to those files are pushed.
 - 2026-09-28: first target chosen: Final Fantasy IX (PS1). Track A added from
   the decomp.wiki PS1 page (Psy-Q GCC via maspsx, splat, objdiff, Ghidra with
   ghidra_psx_ldr). Track B (x86) kept for later.

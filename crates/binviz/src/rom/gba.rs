@@ -131,6 +131,7 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         state: State::default(),
         layout,
         data: None,
+        entries: Vec::new(),
     })
 }
 

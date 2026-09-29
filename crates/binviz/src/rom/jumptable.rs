@@ -9,12 +9,17 @@
 //! - ARM `ldr pc, [pc, rn, lsl #2]`: 32-bit addresses right after it (past
 //!   one instruction), as many as a `cmp` before it allows;
 //! - Thumb `mov pc, rx` or `bx rx` after `ldr rx, [rx]` and `add rx, ra, rb`,
-//!   one of which a literal pool loaded with the table's address.
+//!   one of which a literal pool loaded with the table's address;
+//! - MIPS `jr $rx` after `lw $rx, lo(table)($at)`, the table's address built
+//!   by `lui` (and `addiu`) and the index added to it, scaled by `sll … 2`
+//!   (what GCC and IDO write for a `switch`): 32-bit addresses at the table,
+//!   as many as the `sltiu` guard before allows.
 //!
 //! A table ends where its entries stop pointing at code, where the code it
 //! points to begins, or at a bound the code checks the index against.
 
 use crate::cpu::Cpu;
+use crate::cpu::mips::MipsWord;
 
 /// What reading tables needs from the analysis.
 pub(crate) struct Code<'a, 'd> {
@@ -67,6 +72,8 @@ pub(crate) fn targets(cpu: Cpu, pc: u64, cpu_pc: u64, thumb: bool, code: &Code) 
         Cpu::M68000 => m68k(pc, cpu_pc, code),
         Cpu::Arm7Tdmi if thumb => thumb_table(pc, cpu_pc, code),
         Cpu::Arm7Tdmi => arm(pc, cpu_pc, code),
+        Cpu::MipsR3000 => mips(pc, code, false),
+        Cpu::MipsR4300 => mips(pc, code, true),
         _ => Vec::new(),
     };
     let mut seen = std::collections::HashSet::new();
@@ -299,6 +306,119 @@ fn thumb_table(pc: u64, cpu_pc: u64, code: &Code) -> Vec<(u64, Option<bool>)> {
         .collect()
 }
 
+/// MIPS: the `switch` idiom GCC and IDO write, read backwards from the `jr`:
+/// ```text
+/// sltiu $v0, $a0, N        (the guard, giving the table's length)
+/// beqz  $v0, default
+/// sll   $v0, $a0, 2        (the index scaled)
+/// lui   $at, %hi(table)
+/// addu  $at, $at, $v0      (or: addiu $v1, $v1, %lo(table); addu $v0, $v0, $v1)
+/// lw    $v0, %lo(table)($at)
+/// jr    $v0
+/// ```
+/// Each register is traced to the instruction that last wrote it; the table's
+/// address is the constant side of the `addu` (built by `lui`, `addiu` or
+/// `ori`) plus the load's offset, and the entries are 32-bit addresses.
+fn mips(pc: u64, code: &Code, big: bool) -> Vec<(u64, Option<bool>)> {
+    let word = |k: u64| -> Option<MipsWord> {
+        let b = code.bytes(pc.checked_sub(4 * k)?, 4)?;
+        let bytes = [b[0], b[1], b[2], b[3]];
+        Some(MipsWord(if big {
+            u32::from_be_bytes(bytes)
+        } else {
+            u32::from_le_bytes(bytes)
+        }))
+    };
+    const DEPTH: u64 = 32;
+    // The nearest instruction at or before `pc - 4 * from` writing `reg`.
+    let writer = |reg: u32, from: u64| -> Option<(u64, MipsWord)> {
+        (from..DEPTH).find_map(|k| {
+            let w = word(k)?;
+            (w.writes() == Some(reg)).then_some((k, w))
+        })
+    };
+    // A register's value when it was built from constants (lui, addiu, ori, move).
+    fn constant(
+        writer: &dyn Fn(u32, u64) -> Option<(u64, MipsWord)>,
+        reg: u32,
+        from: u64,
+        depth: u32,
+    ) -> Option<u32> {
+        if reg == 0 {
+            return Some(0);
+        }
+        let (k, w) = writer(reg, from)?;
+        match (w.op(), w.funct()) {
+            (15, _) => Some(w.imm() << 16),
+            (9, _) => constant(writer, w.rs(), k + 1, depth.checked_sub(1)?).map(|v| v.wrapping_add(w.simm() as u32)),
+            (13, _) => constant(writer, w.rs(), k + 1, depth.checked_sub(1)?).map(|v| v | w.imm()),
+            (0, 33 | 37) if w.rt() == 0 => constant(writer, w.rs(), k + 1, depth.checked_sub(1)?),
+            _ => None,
+        }
+    }
+    // jr $rx (not $ra).
+    let Some(jr) = word(0) else { return Vec::new() };
+    if jr.0 & 0xFC1F_FFFF != 0x0000_0008 || jr.rs() == 31 {
+        return Vec::new();
+    }
+    // lw $rx, off($base)
+    let Some((k1, lw)) = writer(jr.rs(), 1) else { return Vec::new() };
+    if lw.op() != 35 {
+        return Vec::new();
+    }
+    // addu $base, $a, $b: one side the table's address, the other the index.
+    let Some((k2, add)) = writer(lw.rs(), k1 + 1) else { return Vec::new() };
+    if add.op() != 0 || !matches!(add.funct(), 32 | 33) {
+        return Vec::new();
+    }
+    let (table, index) = match (
+        constant(&writer, add.rs(), k2 + 1, 4),
+        constant(&writer, add.rt(), k2 + 1, 4),
+    ) {
+        (Some(c), _) => (c, add.rt()),
+        (None, Some(c)) => (c, add.rs()),
+        _ => return Vec::new(),
+    };
+    let table = table.wrapping_add(lw.simm() as u32) as u64;
+    // sll $index, $i, 2: the index scaled to the entries.
+    let Some((k3, sll)) = writer(index, k2 + 1) else { return Vec::new() };
+    if sll.op() != 0 || sll.funct() != 0 || sll.sa() != 2 {
+        return Vec::new();
+    }
+    let i = sll.rt();
+    // sltiu $t, $i, N (or sltu $t, $i, $n with $n a constant): the guard.
+    let bound = (k3 + 1..DEPTH).find_map(|k| {
+        let w = word(k)?;
+        if w.op() == 11 && w.rs() == i {
+            Some(w.imm() as usize)
+        } else if w.op() == 0 && w.funct() == 43 && w.rs() == i {
+            constant(&writer, w.rt(), k + 1, 4).map(|n| n as usize)
+        } else {
+            None
+        }
+    });
+    let Some(table) = (code.resolve)(pc, table) else {
+        return Vec::new();
+    };
+    let entry = |at: u64| -> Option<u64> {
+        let b = code.bytes(at, 4)?;
+        let bytes = [b[0], b[1], b[2], b[3]];
+        Some(u64::from(if big {
+            u32::from_be_bytes(bytes)
+        } else {
+            u32::from_le_bytes(bytes)
+        }))
+    };
+    read_table(table, 4, bound.unwrap_or(MAX).min(MAX), |n| {
+        let t = entry(table + 4 * n as u64)?;
+        (t & 3 == 0).then_some(())?;
+        code.code(pc, t)
+    })
+    .into_iter()
+    .map(|t| (t, None))
+    .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -375,5 +495,54 @@ mod tests {
         b[0x10..0x14].copy_from_slice(&0x8020u32.to_le_bytes());
         b[0x20..0x28].copy_from_slice(&[0x31, 0x80, 0, 0, 0x35, 0x80, 0, 0]);
         assert_eq!(run(Cpu::Arm7Tdmi, &b, 0x800C, true), [0x8030, 0x8034]);
+    }
+
+    #[test]
+    fn mips_tables() {
+        // GCC (PlayStation, little-endian): sltiu $v0, $a0, 3 / beqz $v0 / sll $v0, $a0, 2 /
+        // lui $at, 1 / addu $at, $at, $v0 / lw $v0, -0x7fd0($at) / nop / jr $v0 / nop;
+        // the table at 0x8030 (= 0x10000 - 0x7fd0) holds four addresses, the guard allows three.
+        let mut b = vec![0u8; 0x60];
+        let code: [u32; 9] = [
+            0x2C82_0003,
+            0x1040_0005,
+            0x0004_1080,
+            0x3C01_0001,
+            0x0022_0821,
+            0x8C22_8030,
+            0x0000_0000,
+            0x0040_0008,
+            0x0000_0000,
+        ];
+        for (i, w) in code.iter().enumerate() {
+            b[4 * i..4 * i + 4].copy_from_slice(&w.to_le_bytes());
+        }
+        for (i, t) in [0x8040u32, 0x8044, 0x8048, 0x804C].iter().enumerate() {
+            b[0x30 + 4 * i..0x34 + 4 * i].copy_from_slice(&t.to_le_bytes());
+        }
+        assert_eq!(run(Cpu::MipsR3000, &b, 0x801C, false), [0x8040, 0x8044, 0x8048]);
+        // Not from `jr $ra`.
+        assert!(run(Cpu::MipsR3000, &b, 0x8018, false).is_empty());
+
+        // IDO (Nintendo 64, big-endian), the table built with lui + addiu and no guard:
+        // sll $t6, $a0, 2 / lui $v1, 1 / addiu $v1, $v1, -0x7fd0 / addu $t7, $t6, $v1 /
+        // lw $t8, 0($t7) / jr $t8 / nop; the table ends where its entries stop being aligned code.
+        let mut b = vec![0u8; 0x60];
+        let code: [u32; 7] = [
+            0x0004_7080,
+            0x3C03_0001,
+            0x2463_8030,
+            0x01C3_7821,
+            0x8DF8_0000,
+            0x0300_0008,
+            0x0000_0000,
+        ];
+        for (i, w) in code.iter().enumerate() {
+            b[4 * i..4 * i + 4].copy_from_slice(&w.to_be_bytes());
+        }
+        for (i, t) in [0x8040u32, 0x8044, 0x1234_5679].iter().enumerate() {
+            b[0x30 + 4 * i..0x34 + 4 * i].copy_from_slice(&t.to_be_bytes());
+        }
+        assert_eq!(run(Cpu::MipsR4300, &b, 0x8014, false), [0x8040, 0x8044]);
     }
 }
