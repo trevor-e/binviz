@@ -205,6 +205,95 @@ below too.
 - [ ] **Compiler identification.** Decode Rich header product IDs to
       compiler/linker versions (`layout/pe.rs`).
 
+### Phase B1b: what a blind decompile of a real x86 game needed
+
+Found by decompiling all 1 239 functions of Quake 2's `gamex86.dll` (id's
+3.20 release, MSVC 6, no PDB) with agents that had only binviz plus the
+headers, then grading them against id's GPL source: 927 of 945 game-code
+functions had the same logic, 13 the same behaviour, 4 differed (2 real
+errors, 2 that look like source-version differences). Caveat: the agents
+knew Quake 2 from training, so most of that is recall; see "A cleaner test"
+below. The binaries and source are outside the repo, in
+`~/.local/share/binviz-validation/quake2/` (see `build-game.sh` there); never
+commit them.
+
+Fixed (9be1f10, 31a7118, 78cae55):
+
+- [x] Float and double constants an instruction reads show their value
+      (`fsub st, [0x2003e108] ; f32 -1.0`), in `disasm`, `context` and its
+      Globals list; a double is no longer read as a string ("333333").
+      MSVC folds `x + 1` into `x - (-1)`, so without the value the code
+      cannot be read. Every agent hit this.
+- [x] `binviz … | head` no longer panics on a broken pipe.
+- [x] An export's extent no longer includes trailing `nop`/`int3` padding.
+- [x] `disasm` and `context` say when they stopped (default 4 000
+      instructions, was a silent 400); `disasm` starts at a mid-function address.
+- [x] `context` says how a function with no callers is referenced ("Also
+      referenced by: 5 address taken"), and labels a call through a pointer.
+
+Still to build, most useful first:
+
+- [ ] **Name the C runtime.** The last third of `gamex86.dll` (about 300 of
+      1 239 functions) is statically linked MSVC CRT and every function comes
+      out `sub_XXXX`; agents identified them from code shapes and strings.
+      Signatures (by bytes with relocations masked, the way A1 does for
+      Psy-Q) for MSVC 6 / 7 / 8 / 2010 CRTs and their `.lib` objects.
+      Shares the matcher with A1.
+- [ ] **Map field offsets to struct fields.** `[esi+0x21c]` has no name;
+      agents built an offset table by compiling the headers with clang
+      (`-fdump-record-layouts`). With headers or a PDB's types loaded, show
+      `[esi+0x21c] ; edict_t.enemy` and type the register from the
+      prototype. Needs B3's header/PDB type export first.
+- [ ] **Recognise an import table in data.** Quake 2 calls the engine
+      through a struct of function pointers (`gi`, at `0x20066ee0`, 4 bytes
+      per slot); each call is `call [0x20066f10]`. Detect a structure of
+      pointers filled at one site (GetGameAPI's `rep movsd`, then stores) and
+      label each slot `gi+0x30`, or with a type from the headers.
+- [ ] **Name globals.** `level`, `game`, `g_edicts`, cvar pointers and CRT
+      state show only as `.data+0x25ee0`. Cluster by access pattern (a
+      pointer read then `[ptr+0x14]` is a cvar's value; a base indexed by a
+      constant stride is an array of structs) and let a note name them.
+- [ ] **Tables of function pointers and structs in `.data`.** A run of code
+      addresses (a monster's `mmove_t` frame table, a `_fptrap` table, a
+      vtable) reports as pointers with no callers, and `write -> sub_20038960`
+      when the target is really a data table. Say "table of N code
+      pointers", and show what the stores into a struct field point at
+      (`mov [esi+0x304], 0x2004xxxx` is a pointer to a `.data` table).
+- [ ] **Stack frame and calling convention for x86** (item B1 above, still
+      open). MSVC merges `add esp, N` after several calls, so `[esp+N]`
+      shifts between calls: track the stack pointer's delta and show
+      arguments as `arg1`, `arg2` against the entry frame. Then a
+      `signature` line for x86 in `context` (today it is MIPS only).
+- [ ] **Functions in more than one piece.** MSVC puts the tail of a function
+      before its entry (`strchr`'s shared `lea eax,[edx-1]; pop ebx; ret` at
+      `0x200301d0`, three pieces of `getSystemCP`, x87 libm case stubs) and
+      identical functions are folded (`gib_die` and `debris_die` at one
+      address). The model has a function as one range, so these appear as
+      tiny functions with no callers. Needs a function to own several
+      ranges; `discover/x86.rs` has the jump analysis to find them.
+- [ ] **Say where a jump table starts.** Tables are already `dd` rows with
+      their targets, but nothing marks the boundary between a function's
+      code and its table (`; jump table, 10 cases`); they look like code
+      after a `ret`.
+- [ ] **Short strings.** One- and two-character strings (`"a"`, `"m"`, light
+      styles) referenced from code are shown as bare `.data` addresses.
+- [ ] **Shorter `context`.** It prints up to 4 000 callers, callees and
+      globals before any code; cap them (with "and N more") and put the code
+      first, or offer a `--brief`.
+- [ ] **Show which of a binary's functions have no counterpart in a given
+      source or older build** (`CheckNeedPass`, an extra `needpass` cvar and
+      a `SOLID_BBOX` check in `fire_rail` are 3.20 changes the GitHub source
+      lacks). `diff functions` does this for two binaries; not for source.
+
+A cleaner test (not run yet): agents reproduced Quake 2's source almost
+verbatim, comments included, so the 927 measure recall as much as binviz.
+Cheapest fix: mutate the source (change constants, swap conditions, add or
+drop calls, rename fields), compile it with clang for PE32 (`build-game.sh`),
+run the same blind decompile, and grade against the mutated source; a model
+working from memory reproduces the original and is wrong. Then an obscure
+open-source game, and `ref_soft.dll` (hand-written assembly), `ref_gl.dll`
+and `quake2.exe` from the same release.
+
 ### Phase B2: the matching loop for COFF
 
 - [ ] **COFF `.obj` input** with symbols and relocations, synthetic addresses.
@@ -266,6 +355,9 @@ below too.
 
 ## Progress log
 
+- 2026-09-29 (Quake 2): decompiled `gamex86.dll` blind with agents and graded it against id's source;
+  five fixes landed (float constants, broken pipe, padding, truncation, callbacks), the rest are
+  Phase B1b above.
 - 2026-09-28: plan written; no implementation yet.
 - 2026-09-30 (later): `samples/psx-vm/` (48 functions in four objects, a 24-way jump table,
   pointer-reached syscalls, two overlays at one address, struct returns, a look-alike family)
