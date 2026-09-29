@@ -324,6 +324,15 @@ impl Builder {
         v
     }
 
+    /// Addresses of the defined functions so far.
+    pub fn function_addresses(&self) -> Vec<u64> {
+        self.recs
+            .iter()
+            .filter(|r| r.kind == SymbolKind::Function && is_addressable(r))
+            .map(|r| r.address)
+            .collect()
+    }
+
     /// The file's symbols as a table (recovered and user symbols come later).
     pub fn finish(self, sections: &[Section]) -> SymbolTable {
         let mut table = self.finish_unindexed();

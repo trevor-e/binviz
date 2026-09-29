@@ -48,8 +48,10 @@ reads, writes, address-taken, and pointers stored in data (vtables,
 Objective-C metadata, callbacks), found however the loader relocates them.
 Callers and callees, the graph around a function, and a path of calls from
 one function to another. Stripped binaries get their functions back from
-unwind tables; name them, comment instructions and mark code reviewed, and a
-coverage map shows what is still unexplored. Mach-O images get their
+unwind tables, and 32-bit PE images, which have none, by following their code
+(jump tables and calls that never return included); name them, comment
+instructions and mark code reviewed, and a coverage map shows what is still
+unexplored. Mach-O images get their
 Objective-C classes, categories, protocols and selectors back.
 
 **Builds compared and crashes explained.** Compare two binaries, or two

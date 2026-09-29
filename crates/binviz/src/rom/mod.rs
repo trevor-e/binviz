@@ -565,6 +565,7 @@ impl Binary {
             image_base: 0,
             debug: None,
             discovered: Vec::new(),
+            code_tables: Vec::new(),
             debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),

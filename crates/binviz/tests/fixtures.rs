@@ -41,6 +41,8 @@ const ALL: &[&str] = &[
     "shapes-pe.exe",
     "shapes-pe.stripped.exe",
     "pdbdemo.exe",
+    "x86demo.exe",
+    "x86demo-fixed.exe",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -580,6 +582,92 @@ fn stripped_binaries_recover_functions() {
         .sum();
     assert!(thunks > 0);
     assert_eq!(text.bytes.named, thunks);
+}
+
+#[test]
+fn stripped_32_bit_pe_functions_are_found_by_following_the_code() {
+    // What the PDB names in the code: (address, size if it records one, name).
+    let mut full = open("x86demo.exe");
+    full.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    let in_code = |b: &Binary, a: u64| b.section_at(a).is_some_and(|s| s.kind == RegionKind::Code);
+    let named: Vec<(u64, Option<u64>, String)> = full
+        .symbols()
+        .functions()
+        .filter(|s| s.source != SymbolSource::Discovered && in_code(&full, s.address))
+        .map(|s| {
+            (
+                s.address,
+                (!s.size_inferred).then_some(s.size),
+                s.display_name().into_owned(),
+            )
+        })
+        .collect();
+    assert!(named.len() >= 40, "{named:?}");
+    let start_of = |f: &str| named.iter().find(|n| n.2 == f).unwrap_or_else(|| panic!("{f}")).0;
+    let text = |b: &Binary| {
+        let s = b.sections().iter().find(|s| s.name == ".text").unwrap();
+        b.data()[s.file_offset.unwrap() as usize..][..s.file_size as usize].to_vec()
+    };
+    for name in ["x86demo.exe", "x86demo-fixed.exe"] {
+        let bin = open(name);
+        // The same code at the same addresses, with base relocations or without.
+        assert!(text(&bin) == text(&full), "{name}: the code differs");
+        // Every function the PDB names is found where it starts, and with its
+        // size where the PDB records one (it doesn't for the assembly's)...
+        for (address, size, f) in &named {
+            let found = bin
+                .symbols()
+                .at(*address)
+                .filter(|s| s.kind == binviz::SymbolKind::Function)
+                .unwrap_or_else(|| panic!("{name}: {f} at {address:#x} not found"));
+            if let Some(size) = size {
+                assert_eq!(found.size, *size, "{name}: {f}");
+            }
+        }
+        // ...and nothing else is taken for a function.
+        let extra: Vec<String> = bin
+            .symbols()
+            .functions()
+            .filter(|s| named.iter().all(|n| n.0 != s.address))
+            .map(|s| s.name().to_string())
+            .collect();
+        assert!(extra.is_empty(), "{name}: {extra:?}");
+        let size = |f: &str| bin.symbols().at(start_of(f)).unwrap().size;
+        // MSVC's switch keeps its jump table and index table in the function,
+        assert_eq!(size("_msvc_switch"), 77, "{name}");
+        // its __finally block is called in place, and the unwinder's way in is there too,
+        assert_eq!(size("_with_finally"), 34, "{name}");
+        // and a call that doesn't return ends a function, whatever follows it.
+        assert_eq!(size("_checked_index"), 20, "{name}");
+        assert_eq!(size("_quit"), 10, "{name}");
+        // All of the code is in functions, or alignment filler between them.
+        let cov = bin.coverage(5);
+        let text = cov.sections.iter().find(|s| s.name == ".text").unwrap();
+        assert_eq!(text.bytes.unexplored, 0, "{name}: {:?}", cov.gaps);
+    }
+    // The tables read as data, each entry pointing at a case of the switch.
+    let bin = open("x86demo-fixed.exe");
+    let switch = start_of("_msvc_switch");
+    let d = bin.disassemble_function(switch, 100);
+    let entries: Vec<u64> = d
+        .instructions
+        .iter()
+        .filter(|i| i.mnemonic == "dd")
+        .map(|i| i.target.unwrap())
+        .collect();
+    let indexes: Vec<&str> = d
+        .instructions
+        .iter()
+        .filter(|i| i.mnemonic == "db")
+        .map(|i| i.operands.as_str())
+        .collect();
+    assert_eq!(entries.len(), 4, "{d:?}");
+    assert_eq!(indexes, ["0, 1, 1, 2, 3, 3, 0, 2", "1"]);
+    for case in entries {
+        assert!(case > switch && case < switch + 77);
+        let refs = bin.references_to(case, case + 1, 0, 10);
+        assert!(refs.refs.iter().any(|r| r.kind == binviz::RefKind::Pointer), "{refs:?}");
+    }
 }
 
 fn total(b: &StatusBytes) -> u64 {

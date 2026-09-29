@@ -118,6 +118,27 @@ impl Binary {
                         break;
                     }
                     let pos = decoder.position();
+                    // A jump table in the code: its entries, not instructions.
+                    if let Some(row) = self.table_row(start + pos as u64, &bytes[pos..]) {
+                        let (address, len) = (start + pos as u64, row.len);
+                        out.instructions.push(Instruction {
+                            address,
+                            offset: Some(offset + pos as u64),
+                            len: len as u32,
+                            bytes: util::hex_bytes(&bytes[pos..pos + len]),
+                            mnemonic: row.mnemonic.into(),
+                            operands: row.operands,
+                            flow: FlowKind::Normal,
+                            target: row.target,
+                            target_symbol: row.target.and_then(|t| self.symbol_name(t)),
+                            source: source_for(address),
+                        });
+                        if decoder.set_position(pos + len).is_err() {
+                            break;
+                        }
+                        decoder.set_ip(address + len as u64);
+                        continue;
+                    }
                     decoder.decode_out(&mut ins);
                     let len = ins.len();
                     let mut mnemonic = String::new();
@@ -339,6 +360,16 @@ impl Binary {
                 let mut ins = iced_x86::Instruction::default();
                 while decoder.can_decode() && out.len() < limit {
                     let pos = decoder.position();
+                    // A jump table: a token per entry, whatever its address.
+                    if let Some(row) = self.table_row(start + pos as u64, &bytes[pos..]) {
+                        out.push(token(&|h| row.mnemonic.hash(h)));
+                        real = (out.len(), (pos + row.len) as u64);
+                        if decoder.set_position(pos + row.len).is_err() {
+                            break;
+                        }
+                        decoder.set_ip(start + (pos + row.len) as u64);
+                        continue;
+                    }
                     decoder.decode_out(&mut ins);
                     out.push(token(&|h| {
                         (ins.mnemonic() as u32).hash(h);
@@ -490,6 +521,42 @@ impl Binary {
         }
     }
 
+    /// The jump table (or index table) of the code at `address`, if one is there.
+    pub(crate) fn code_table_at(&self, address: u64) -> Option<&crate::discover::x86::Table> {
+        let i = self
+            .code_tables
+            .partition_point(|t| t.address <= address)
+            .checked_sub(1)?;
+        let t = &self.code_tables[i];
+        (address < t.end()).then_some(t)
+    }
+
+    /// A row of a jump table at `address` (with its bytes from there): an
+    /// address, or up to 8 of the bytes an index table picks entries with.
+    fn table_row(&self, address: u64, bytes: &[u8]) -> Option<TableRow> {
+        let t = self.code_table_at(address)?;
+        let into = (address - t.address) as usize % t.entry as usize;
+        if t.entry == 4 && into == 0 && bytes.len() >= 4 {
+            let v = u32::from_le_bytes(bytes[..4].try_into().expect("4 bytes")) as u64;
+            return Some(TableRow {
+                len: 4,
+                mnemonic: "dd",
+                operands: format!("{v:#x}"),
+                target: Some(v),
+            });
+        }
+        // Index bytes (or what is left of an entry a disassembly starts in).
+        let n = ((t.end() - address) as usize)
+            .min(if t.entry == 4 { 4 - into } else { 8 })
+            .min(bytes.len());
+        (n > 0).then(|| TableRow {
+            len: n,
+            mnemonic: "db",
+            operands: bytes[..n].iter().map(|b| b.to_string()).collect::<Vec<_>>().join(", "),
+            target: None,
+        })
+    }
+
     fn symbol_name(&self, address: u64) -> Option<String> {
         let r = self.symbols.lookup(address)?;
         let name = r.demangled.as_deref().unwrap_or(&r.name);
@@ -499,6 +566,14 @@ impl Binary {
             format!("{name}+{:#x}", r.offset)
         })
     }
+}
+
+/// A row of a jump table, shown in place of instructions.
+struct TableRow {
+    len: usize,
+    mnemonic: &'static str,
+    operands: String,
+    target: Option<u64>,
 }
 
 /// Operands with their numbers (`$2000`, `#$3f`, `0x1c`) read as `N`: the shape of an addressing mode.

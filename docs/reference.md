@@ -117,10 +117,19 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   functions that send it (through `objc_msgSend` or an `objc_msgSend$` stub).
   Swift classes visible to Objective-C are listed as `Module.Class`.
 - **Reverse-engineering coverage.** Stripped binaries get their functions back
-  from `.pdata`, `.eh_frame` and `LC_FUNCTION_STARTS` (`sub_<address>`). Name
-  functions, comment instructions and mark code as reviewed; a coverage map
-  shows what is named, recovered, reviewed or still unexplored, and lists the
-  largest gaps with a guess at what they hold.
+  from `.pdata`, `.eh_frame` and `LC_FUNCTION_STARTS` (`sub_<address>`). A
+  32-bit PE has none of these, so its code is followed instead, the way a
+  disassembler maps it: from the entry point, exports, TLS callbacks and safe
+  exception handlers, through every call, branch and jump table (MSVC's, kept
+  in the code with a table of index bytes, too), knowing which calls never
+  return (`ExitProcess`, and what only ends in it); then from the vtables,
+  callbacks and other code addresses the image holds, its base relocations
+  saying which words are addresses when it has them; then whatever else reads
+  as a function. MSVC's `__finally` blocks stay in their functions, jump tables
+  show as data in the disassembly, and each case's address says which table
+  entry leads there. Name functions, comment instructions and mark code as
+  reviewed; a coverage map shows what is named, recovered, reviewed or still
+  unexplored, and lists the largest gaps with a guess at what they hold.
 - **Folders of binaries.** Open a folder or a zip, and every binary in it is
   found by its header (Mach-O, ELF or PE, zips inside opened too), so an
   `.ipa`, an `.app` or `.xcarchive`, an APK or a build folder are all just
@@ -457,7 +466,8 @@ crates/binviz        the library
   src/inspect.rs     the "what is here?" query, separate debug files, annotations
   src/search.rs      the search box: query forms and ranking
   src/coverage.rs    reverse-engineering coverage and gap hints
-  src/discover.rs    function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS
+  src/discover/      function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS,
+                     and by following x86 code (x86.rs) for 32-bit PE images
   src/strings.rs     strings in data sections
   src/xrefs.rs       cross-references and the call graph
   src/pointers.rs    pointers stored in data: chained fixups, dyld binds, ELF relocations, plain addresses
