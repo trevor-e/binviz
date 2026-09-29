@@ -38,6 +38,7 @@ mod error;
 pub mod fndiff;
 mod inspect;
 mod layout;
+pub mod matching;
 pub mod model;
 pub mod objc;
 pub mod package;

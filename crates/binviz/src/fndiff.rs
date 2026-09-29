@@ -376,14 +376,14 @@ fn distance(a: &[u32], b: &[u32], max: usize) -> Option<usize> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Edit {
+pub(crate) enum Edit {
     Keep,
     Delete,
     Insert,
 }
 
 /// The shortest edit script turning `a` into `b` (Myers), or None past `max` edits.
-fn edit_script(a: &[u32], b: &[u32], max: usize) -> Option<Vec<Edit>> {
+pub(crate) fn edit_script(a: &[u32], b: &[u32], max: usize) -> Option<Vec<Edit>> {
     let (n, m) = (a.len() as isize, b.len() as isize);
     let off = max as isize + 1;
     let idx = |k: isize| (k + off) as usize;
