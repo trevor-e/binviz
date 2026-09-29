@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Browser front end for binviz: see what every byte and address of a binary is",
+  "license": "MIT",
   "scripts": {
     "wasm": "node scripts/build-wasm.mjs",
     "wasm:debug": "node scripts/build-wasm.mjs --debug",
