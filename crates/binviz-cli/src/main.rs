@@ -81,7 +81,7 @@ COMMANDS:
     labels <rom> <file | format>   An emulator's label file (Mesen .mlb, FCEUX .nl, a .sym:
                                    RGBDS, WLA DX, no$gba) as notes, JSON for --notes; or with a
                                    format (mlb, nl, sym, nocash), the --notes as that label file
-  Decompilation (MIPS: PlayStation, Nintendo 64)
+  Decompilation (MIPS: PlayStation, Nintendo 64; match and sdk: 32- and 64-bit x86 too)
     signature <file> <addr|symbol> What a function's code says about its prototype: register
                                    and stack arguments, return, frame, saved registers, the
                                    structures it walks
@@ -89,9 +89,11 @@ COMMANDS:
                                    Everything needed to write a function's C: its code with
                                    names, its signature, callers and callees with theirs,
                                    strings, globals, notes
-    match <file> <object.o> [name] The compiler's object file scored against the original,
-                                   function by function (relocations masked), each difference
-                                   explained; with a name, that function only
+    match <file> <object> [name]   The compiler's object file (ELF .o, or COFF .obj from MSVC
+                                   or clang-cl) scored against the original, function by
+                                   function (relocations masked), each difference explained;
+                                   with a name, that function only; with a folder of objects,
+                                   the whole project, unit by unit, worst first
     report <file> <report.json>    objdiff's report placed on the file's functions
     splat <file> <name> [dir] [split...]
                                    A splat config and symbol_addrs.txt (in dir, or printed)
@@ -99,8 +101,10 @@ COMMANDS:
     splat <file> import <symbol_addrs.txt>
                                    A splat symbol file as notes, JSON for --notes
     sdk <file> <lib|folder...> [notes]
-                                   The Psy-Q SDK's functions in the file, found by the
-                                   signatures of its .LIB/.OBJ files; notes: as notes JSON
+                                   The library functions in the file (Psy-Q's SDK, MSVC's C
+                                   runtime…), found by the signatures of the libraries' objects:
+                                   Psy-Q .LIB/.OBJ, MSVC .lib/.obj (COFF), .a/.o; notes: as
+                                   notes JSON
     locate <ram.bin> <file>        Where a file from the disc (an overlay) sits in a PlayStation
                                    memory image
     names <file> <candidates.json> [min%]
@@ -1111,27 +1115,52 @@ fn run(
             print!("{}", c.describe());
         }
         "match" => {
-            let object = arg(2).ok_or("which object file? binviz match <file> <object.o> [name]")?;
+            let object = arg(2).ok_or("which object file? binviz match <file> <object.o|folder> [name]")?;
+            let folder = std::path::Path::new(object);
+            if folder.is_dir() {
+                // A project's build output: every object, unit by unit.
+                let mut objects = Vec::new();
+                for path in binviz::matching::object_files(folder).map_err(|e| format!("{object}: {e}"))? {
+                    let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+                    let unit = path
+                        .strip_prefix(folder)
+                        .unwrap_or(&path)
+                        .to_string_lossy()
+                        .into_owned();
+                    objects.push((unit, bytes));
+                }
+                if objects.is_empty() {
+                    return Err(format!("no object files (.o, .obj) in {object}"));
+                }
+                print!("{}", bin.match_project(&objects).to_text(50));
+                return Ok(());
+            }
             let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
             match arg(3) {
                 Some(name) => {
                     let funcs = binviz::matching::object_functions(&bytes).map_err(|e| e.to_string())?;
-                    let f = funcs
-                        .iter()
-                        .find(|f| f.name == name)
+                    let f = binviz::matching::find_function(&funcs, name)
                         .ok_or_else(|| format!("no function {name} in {object}"))?;
-                    let addr = resolve_address(&bin, name)?;
+                    bin.check_isa(f.isa).map_err(|e| e.to_string())?;
+                    let addr = match bin.object_symbol_address(&f.name) {
+                        Some(a) => a,
+                        None => resolve_address(&bin, name)?,
+                    };
                     let m = bin.match_function(addr, f).ok_or("not in a function")?;
                     print!("{}", m.to_text());
                 }
                 None => {
-                    let results = bin.match_object(&bytes).map_err(|e| e.to_string())?;
-                    if results.is_empty() {
+                    let unit = bin.match_unit(object, &bytes).map_err(|e| e.to_string())?;
+                    if unit.functions.is_empty() {
                         return Err("no function of the object has a name the binary knows".into());
                     }
-                    let matched = results.iter().filter(|m| m.percent >= 100.0).count();
-                    println!("{} functions compared, {matched} match exactly\n", results.len());
-                    for m in &results {
+                    let matched = unit.exact();
+                    print!("{} functions compared, {matched} match exactly", unit.functions.len());
+                    if !unit.unplaced.is_empty() {
+                        print!("; not named in the binary: {}", unit.unplaced.join(", "));
+                    }
+                    println!("\n");
+                    for m in &unit.functions {
                         print!("{}", m.to_text());
                     }
                 }
@@ -1193,7 +1222,7 @@ fn run(
             }
         }
         "sdk" => {
-            let mut sigs = binviz::rom::psyq::SignatureSet::default();
+            let mut sigs = binviz::sigs::SignatureSet::default();
             let mut paths: Vec<std::path::PathBuf> = Vec::new();
             let mut as_notes = false;
             for a in args.get(2..).unwrap_or(&[]) {
@@ -1203,6 +1232,7 @@ fn run(
                 }
                 let path = std::path::Path::new(a);
                 if path.is_dir() {
+                    // Psy-Q's .LIB and .OBJ, MSVC's .lib and .obj, a GNU toolchain's .a and .o.
                     let mut found: Vec<_> = std::fs::read_dir(path)
                         .map_err(|e| format!("{a}: {e}"))?
                         .flatten()
@@ -1210,7 +1240,7 @@ fn run(
                         .filter(|p| {
                             p.extension()
                                 .and_then(|e| e.to_str())
-                                .is_some_and(|e| e.eq_ignore_ascii_case("lib") || e.eq_ignore_ascii_case("obj"))
+                                .is_some_and(|e| ["lib", "obj", "a", "o"].iter().any(|x| e.eq_ignore_ascii_case(x)))
                         })
                         .collect();
                     found.sort();
@@ -1228,6 +1258,9 @@ fn run(
                     Ok(n) => eprintln!("{}: {n} signatures", path.display()),
                     Err(e) => eprintln!("{}: {e}", path.display()),
                 }
+            }
+            for note in &sigs.notes {
+                eprintln!("{note}");
             }
             let r = bin.identify_sdk(&sigs);
             if as_notes {

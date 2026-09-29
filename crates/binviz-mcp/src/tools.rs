@@ -18,7 +18,7 @@ For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, G
 To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
 For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone or a stack trace, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
-For a matching decompilation (C that compiles back to the same bytes), the loop is: next_functions says what to do next, best first — functions shaped like one already matched (its C is a template), then those whose callees are all done, cheapest for what they unlock — and claim: true takes one, so parallel agents don't collide; decomp_context gives everything for writing it in one call (code, prototype guess, callers and callees with theirs, strings, globals, and the matched functions shaped like it with their source files); match_function scores the compiled object against the original and explains each difference; mark records the outcome (matched with its source file, nonmatching, attempted with its percent, skipped, library), which re-ranks the rest, and place_report records a whole objdiff report at once. After three tries without a match, move on: the function comes back once something it calls is done. identify_sdk marks the SDK's functions as library code, which callers don't wait on. \
+For a matching decompilation (C that compiles back to the same bytes), the loop is: next_functions says what to do next, best first — functions shaped like one already matched (its C is a template), then those whose callees are all done, cheapest for what they unlock — and claim: true takes one, so parallel agents don't collide; decomp_context gives everything for writing it in one call (code, prototype guess, callers and callees with theirs, strings, globals, and the matched functions shaped like it with their source files); match_function scores the compiled object (MIPS ELF, or x86 and x86-64 COFF from MSVC or clang-cl, or ELF) against the original and explains each difference; mark records the outcome (matched with its source file, nonmatching, attempted with its percent, skipped, library), which re-ranks the rest, and place_report records a whole objdiff report at once, as match_project (record: true) does for a build folder of objects. After three tries without a match, move on: the function comes back once something it calls is done. identify_sdk marks library code (a console SDK's, a statically linked C runtime's) found by the signatures of its libraries, which callers don't wait on. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
 
 const MAX_OUTPUT: usize = 60_000;
@@ -429,11 +429,11 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "match_function",
             "Score a rebuilt function against the original",
-            "Compares a function in the compiler's object file (ELF, MIPS) with the original's: instructions lined up, the fields the linker fills in masked (call targets, address halves), each relocation checked against where the original points, and every difference explained (registers allocated differently, a stack frame or slot of another size, a branch of another length, reordered instructions, a nop missing from a delay slot). Returns the percent matched and the lined-up code.",
+            "Compares a function in the compiler's object file (MIPS ELF; x86 or x86-64 COFF from MSVC or clang-cl, or ELF) with the original's: instructions lined up by their shape, the fields the linker fills in masked (call targets, globals' addresses, address halves), each relocation checked against where the original points, jumps inside the function compared by where they land, and every difference explained (registers allocated differently, a stack frame or slot of another size, another constant, a constant for a variable, a signed type for an unsigned one, a condition inverted, a short jump for a near one, reordered instructions, a call to another function, a nop missing from a delay slot). Returns the percent matched and the lined-up code.",
             json!({
-                "object": { "type": "string", "description": "Path to the compiled object file (.o)." },
-                "symbol": { "type": "string", "description": "The function's name in the object file." },
-                "at": address("The original's function; defaults to the one named like the symbol"),
+                "object": { "type": "string", "description": "Path to the compiled object file (.o, .obj)." },
+                "symbol": { "type": "string", "description": "The function's name in the object file, as the object has it (_foo, ?foo@@YAXH@Z) or as the source writes it (foo, Shape::scaled)." },
+                "at": address("The original's function; defaults to the one named like the symbol (undecorated or demangled too)"),
             }),
             &["object", "symbol"],
             true,
@@ -441,13 +441,25 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "match_object",
             "Score every function of an object file",
-            "Every function of the compiler's object file (ELF, MIPS) that the original names, scored against it, worst first, with the kinds of difference in each. The project's progress in one call.",
+            "Every function of the compiler's object file (MIPS ELF; x86 or x86-64 COFF or ELF) that the original names (as the object has the name, undecorated, or demangled), scored against it, worst first, with the kinds of difference in each, and the functions the original has no name for.",
             json!({
-                "object": { "type": "string", "description": "Path to the compiled object file (.o)." },
+                "object": { "type": "string", "description": "Path to the compiled object file (.o, .obj)." },
                 "limit": { "type": "integer", "description": "Functions to list (default 50, max 1000)." },
             }),
             &["object"],
             true,
+        ),
+        tool(
+            "match_project",
+            "Score a whole project's objects",
+            "Every function of every object file of a decompilation project (a build folder, searched with its subfolders, or a list of objects) matched against the original, as match_object does each: the totals (functions compared and matching exactly, bytes of code in exact matches, the size-weighted percent), each object (unit) worst first with its worst functions, and the functions not matching yet, worst first, with the kinds of difference in each. With record, the outcomes go into the notes as place_report records objdiff's: functions at 100% matched with their object as the source file, the others' best percent kept, and those that matched before and no longer do sent back to be done.",
+            json!({
+                "paths": { "type": "array", "items": { "type": "string" }, "description": "Object files (.o, .obj), or folders of them." },
+                "limit": { "type": "integer", "description": "Functions not matching yet to list (default 50, max 1000)." },
+                "record": { "type": "boolean", "description": "Record the outcomes in the notes (default false)." },
+            }),
+            &["paths"],
+            false,
         ),
         tool(
             "place_report",
@@ -484,10 +496,10 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "identify_sdk",
-            "Find the Psy-Q SDK's functions",
-            "PlayStation: matches the binary's functions against the signatures of Sony's SDK libraries (.LIB/.OBJ files from a Psy-Q installation, given as files or a folder), naming the SDK's code (GsSortObject4, CdRead, SpuSetKey…) and saying which libraries the game was linked with. With apply, the matches become notes with an `sdk:` comment, so a decompilation can leave them be.",
+            "Find the functions of an SDK or C runtime",
+            "Matches the binary's functions against the signatures of the libraries it was linked with, naming that code and saying which libraries were used: a PlayStation game's Psy-Q SDK (.LIB/.OBJ files from a Psy-Q installation: GsSortObject4, CdRead, SpuSetKey…) or a Windows program's statically linked C runtime (MSVC's .lib archives of COFF objects, .obj files: strlen, memset, _aulldiv…; import library members are skipped), or any .a/.o of ELF objects. A signature is a library function's code with the bytes the linker fills in masked; on x86 it names only a function as long as it, padding aside. With apply, the matches become notes with an `sdk:` comment, marked library code, so a decompilation can leave them be.",
             json!({
-                "paths": { "type": "array", "items": { "type": "string" }, "description": "Library and object files, or folders of them." },
+                "paths": { "type": "array", "items": { "type": "string" }, "description": "Library and object files, or folders of them (.lib, .obj, .a, .o)." },
                 "apply": { "type": "boolean", "description": "Name the matched functions in the notes (default false: report only)." },
                 "limit": { "type": "integer", "description": "Matches to list (default 200, max 5000)." },
             }),
@@ -793,6 +805,7 @@ impl Server {
                     "function_signature" => function_signature(o, args)?,
                     "match_function" => match_function(o, args)?,
                     "match_object" => match_object(o, args)?,
+                    "match_project" => match_project(o, args)?,
                     "place_report" => place_report(o, args)?,
                     "splat_export" => splat_export(o, args)?,
                     "import_symbol_addrs" => import_symbol_addrs(o, args)?,
@@ -2164,14 +2177,20 @@ fn match_function(o: &Open, args: &Value) -> Result<String, String> {
     let symbol = string(args, "symbol").ok_or("symbol is required")?;
     let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
     let funcs = binviz::matching::object_functions(&bytes).map_err(|e| e.to_string())?;
-    let f = funcs.iter().find(|f| f.name == symbol).ok_or_else(|| {
+    let f = binviz::matching::find_function(&funcs, symbol).ok_or_else(|| {
         format!(
             "no function {symbol} in {object}; it has: {}",
             funcs.iter().map(|f| f.name.as_str()).take(40).collect::<Vec<_>>().join(", ")
         )
     })?;
-    let at = string(args, "at").unwrap_or(symbol);
-    let start = function_at(&o.bin, at)?;
+    o.bin.check_isa(f.isa).map_err(|e| e.to_string())?;
+    let start = match string(args, "at") {
+        Some(at) => function_at(&o.bin, at)?,
+        None => match o.bin.object_symbol_address(&f.name) {
+            Some(a) => a,
+            None => function_at(&o.bin, symbol)?,
+        },
+    };
     let m = o.bin.match_function(start, f).ok_or("not in a function")?;
     Ok(m.to_text())
 }
@@ -2179,7 +2198,8 @@ fn match_function(o: &Open, args: &Value) -> Result<String, String> {
 fn match_object(o: &Open, args: &Value) -> Result<String, String> {
     let object = string(args, "object").ok_or("object is required")?;
     let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
-    let results = o.bin.match_object(&bytes).map_err(|e| e.to_string())?;
+    let unit = o.bin.match_unit(object, &bytes).map_err(|e| e.to_string())?;
+    let results = unit.functions;
     if results.is_empty() {
         return Err("no function of the object has a name the binary knows (name them with annotate or import_symbol_addrs first)".into());
     }
@@ -2209,7 +2229,71 @@ fn match_object(o: &Open, args: &Value) -> Result<String, String> {
     if results.len() > limit {
         let _ = writeln!(out, "  … {} more", results.len() - limit);
     }
+    if !unit.unplaced.is_empty() {
+        let _ = writeln!(
+            out,
+            "\nNot named in the binary (name them with annotate first): {}",
+            unit.unplaced.iter().take(40).cloned().collect::<Vec<_>>().join(", ")
+        );
+    }
     out.push_str("\nmatch_function shows one function's instructions lined up with the original's.");
+    Ok(out)
+}
+
+fn match_project(o: &mut Open, args: &Value) -> Result<String, String> {
+    let paths = args
+        .get("paths")
+        .and_then(Value::as_array)
+        .ok_or("paths is required")?
+        .iter()
+        .filter_map(Value::as_str)
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    let mut objects = Vec::new();
+    for p in &paths {
+        let (files, base) = if p.is_dir() {
+            let files = binviz::matching::object_files(p).map_err(|e| format!("{}: {e}", p.display()))?;
+            (files, Some(p.as_path()))
+        } else {
+            (vec![p.clone()], None)
+        };
+        for f in files {
+            let bytes = std::fs::read(&f).map_err(|e| format!("{}: {e}", f.display()))?;
+            // Units are named by their path in the folder given, as a build's objects are.
+            let unit = base
+                .and_then(|b| f.strip_prefix(b).ok())
+                .unwrap_or(&f)
+                .to_string_lossy()
+                .into_owned();
+            objects.push((unit, bytes));
+        }
+    }
+    if objects.is_empty() {
+        return Err("no object files (.o, .obj) found".into());
+    }
+    let p = o.bin.match_project(&objects);
+    let limit = int(args, "limit", 50, 1000) as usize;
+    let mut out = p.to_text(limit);
+    if args.get("record").and_then(Value::as_bool).unwrap_or(false) {
+        let (matched, lost) = crate::queue::record_report(o, &p.progress());
+        let _ = write!(out, "\nRecorded in the notes: {} newly matched", count(matched));
+        if !lost.is_empty() {
+            let names: Vec<String> = lost
+                .iter()
+                .take(20)
+                .map(|&a| {
+                    o.bin
+                        .symbols()
+                        .at(a)
+                        .map_or_else(|| format!("{a:#x}"), |s| s.display_name().into_owned())
+                })
+                .collect();
+            let _ = write!(out, "; {} no longer match: {}", lost.len(), names.join(", "));
+        }
+        let _ = writeln!(out, ". {}.", save_notes(o));
+    } else {
+        out.push_str("\nrecord: true records these outcomes in the notes; match_function shows one function lined up.");
+    }
     Ok(out)
 }
 
@@ -2363,6 +2447,7 @@ fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
     let mut files = Vec::new();
     for p in paths {
         if p.is_dir() {
+            // Psy-Q's .LIB and .OBJ, MSVC's .lib and .obj, a GNU toolchain's .a and .o.
             let mut found: Vec<PathBuf> = std::fs::read_dir(&p)
                 .map_err(|e| format!("{}: {e}", p.display()))?
                 .flatten()
@@ -2370,7 +2455,7 @@ fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
                 .filter(|f| {
                     f.extension()
                         .and_then(|e| e.to_str())
-                        .is_some_and(|e| e.eq_ignore_ascii_case("lib") || e.eq_ignore_ascii_case("obj"))
+                        .is_some_and(|e| ["lib", "obj", "a", "o"].iter().any(|x| e.eq_ignore_ascii_case(x)))
                 })
                 .collect();
             found.sort();
@@ -2380,9 +2465,9 @@ fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
         }
     }
     if files.is_empty() {
-        return Err("no .LIB or .OBJ files found".into());
+        return Err("no library or object files (.lib, .obj, .a, .o) found".into());
     }
-    let mut sigs = binviz::rom::psyq::SignatureSet::default();
+    let mut sigs = binviz::sigs::SignatureSet::default();
     let mut loaded = String::new();
     for f in &files {
         let bytes = std::fs::read(f).map_err(|e| format!("{}: {e}", f.display()))?;
@@ -2394,6 +2479,9 @@ fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
                 let _ = writeln!(loaded, "  {}: {e}", f.display());
             }
         }
+    }
+    for note in &sigs.notes {
+        let _ = writeln!(loaded, "  {note}");
     }
     let r = o.bin.identify_sdk(&sigs);
     let limit = int(args, "limit", 200, 5000) as usize;

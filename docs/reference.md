@@ -352,7 +352,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
-| `next_functions` · `mark` · `similar_functions` · … | For a matching decompilation: see [Decompilation](#decompilation-mips-playstation-nintendo-64) |
+| `next_functions` · `mark` · `similar_functions` · `match_project` · … | For a matching decompilation: see [Decompilation](#decompilation-playstation-nintendo-64-x86-pc) |
 
 Notes are saved next to the binary in `<file>.binviz-notes.json`, the format
 the web UI imports and exports (Layout → Coverage → Import), so an agent can map
@@ -363,7 +363,7 @@ the code that parses deep links and name what you find"*, *"Which functions
 use this error string, and how are they reached from main?"*, *"What haven't
 we looked at yet?"*.
 
-## Decompilation (MIPS: PlayStation, Nintendo 64)
+## Decompilation (PlayStation, Nintendo 64, x86 PC)
 
 What a matching decompilation needs from the binary side, wired into the
 CLI and the MCP server:
@@ -377,11 +377,12 @@ CLI and the MCP server:
 | — | `next_functions` · `mark` | The work queue (any architecture): what to write C for next, best first, and claiming it so parallel agents don't collide; each outcome recorded in the notes (see below) |
 | — | `similar_functions` | The functions whose instructions are shaped most like a function's, with where each stands: a matched one's C is the worked example |
 | `context <file> <fn> [n]` | `decomp_context` | The code with names resolved, the signature, callers and callees with theirs, strings, globals and notes, where decompiling it stands, and the matched functions shaped like it with their source files: one call per function |
-| `match <file> <obj> [name]` | `match_function`, `match_object` | The compiler's object file (ELF, MIPS) scored against the original: instructions lined up by shape, relocation fields masked, each relocation's symbol checked against where the original points, every difference explained (registers allocated differently, stack frame or slot size, branch length, reordering, a nop missing from a delay slot) |
+| `match <file> <obj> [name]` | `match_function`, `match_object` | The compiler's object file (MIPS ELF; x86 or x86-64 COFF from MSVC or clang-cl, or ELF) scored against the original: instructions lined up by shape, relocation fields masked, each relocation's symbol checked against where the original points, every difference explained (registers allocated differently, stack frame or slot size, branch length, reordering, a nop missing from a delay slot; for x86, see below). Functions are found by the object's names as they are, undecorated (`_foo`, `_foo@8`, `@foo@8`) or demangled (`?scaled@Shape@@QBEHH@Z` is `Shape::scaled`), so a PDB's names and the user's notes work |
+| `match <file> <folder>` | `match_project` | Every object of a build folder (and its subfolders; or a list, over MCP) matched against the original: the totals (functions compared and matching exactly, bytes of code in exact matches, the percent weighted by size), each object (unit) worst first with its worst functions, and the functions not matching yet with their kinds of difference; over MCP, `record` puts the outcomes in the notes as `place_report` does, each unit the source file of its matches |
 | `report <file> <json>` | `place_report` | objdiff's report placed on the binary's functions by virtual address or name; over MCP, recorded in the notes too (matched, best percent, what no longer matches) |
 | `splat <file> <name> [dir] [splits…]` | `splat_export` | A splat YAML config (header, the code segment at its load address split into units, the bytes after the last function as data, the BSS size) and `symbol_addrs.txt` naming every function and known place |
 | `splat <file> import <syms>` | `import_symbol_addrs` | A splat symbol file's names into the notes (splat's own `func_…`/`D_…` names left out) |
-| `sdk <file> <libs…> [notes]` | `identify_sdk` | The Psy-Q SDK's functions in the binary, found by the signatures of its `.LIB`/`.OBJ` files (Sony's `LNK` object format, the linker's fields masked): each named, with an `sdk:` note and marked library code so a decompilation leaves it be (its callers don't wait on it), and the libraries the game was linked with |
+| `sdk <file> <libs…> [notes]` | `identify_sdk` | Library code in the binary, found by the signatures of the libraries' functions (their code with the linker's fields masked): a PlayStation game's Psy-Q SDK (its `.LIB`/`.OBJ` files, Sony's `LNK` object format), or a Windows program's statically linked C runtime (MSVC's `.lib` archives of COFF objects, `.obj` files; ELF `.a`/`.o` too). Each function found is named, with an `sdk:` note, and marked library code so a decompilation leaves it be (its callers don't wait on it); the libraries it was linked with are counted. Import library members and objects with no machine code (compiled with `/GL` or `-flto`) are skipped, and said so. Signatures shorter than 16 bytes aren't used (they match by chance); an x86 function takes a signature's name only when it is as long as the signature, padding aside |
 | `locate <ram.bin> <file>` | (`Binary::psx_locate`) | Where a file from the disc sits in a memory image: which of the overlays sharing an address is the one loaded |
 | `names <file> <json> [min%]` | `propose_names` | Names from another build of the game (a port with its source, a symbolized build): its functions with the strings they use and the functions they call, matched to functions here by shared strings, then through the calls; each with a confidence and the evidence |
 
@@ -404,6 +405,26 @@ of functions.
 MIPS switch tables (the `sltiu` guard, `sll … 2`, `lui`/`addu`/`lw`, `jr`
 idiom GCC and IDO write) are followed for PlayStation and Nintendo 64 code,
 so the cases of a `switch` are part of their function.
+
+For x86 and x86-64, instructions are lined up by their shape (the operation,
+the kinds of its operands, the registers in them and the size of what it
+reads), not their numbers. The bytes a relocation covers are masked on both
+sides, and its symbol, when the binary knows the name, is checked against
+where the original points (`call target differs: calls _diff in the rebuild;
+the original calls clamp`, `global differs: …`). A jump inside the function
+is compared by where it lands, so code of another length before it counts
+once; MSVC's jump tables in the code after a function are compared entry by
+entry, by the case each leads to. The kinds of difference, counted per
+function: `registers differ`, `stack slot offset differs` (`[esp+0x4]` for
+`[esp+0x8]`), `stack frame size differs` (`sub esp, N`), `arguments popped
+differ` (`add esp, N` after a call, `ret N`), `immediate differs`, `offset
+differs` (another structure field), a register or memory where the other
+has a constant (a variable became a constant), `memory vs register`,
+`operand size differs`, `signedness differs` (`movzx`/`movsx`, `jl`/`jb`),
+`condition inverted` and `condition differs`, `short vs near jump`, `branch
+target differs`, `call target differs`, `global differs`, `jump table
+differs`, `encoding differs`, `reordered`, `alignment padding differs`,
+missing and extra instructions.
 
 ## The library
 
@@ -510,6 +531,9 @@ crates/binviz        the library
   src/search.rs      the search box: query forms and ranking
   src/coverage.rs    reverse-engineering coverage and gap hints
   src/decomp.rs      a matching decompilation: where it stands, what to do next
+  src/matching/      a decompilation's objects matched against the original and each
+                     difference explained (MIPS; x86 and x86-64 in x86.rs); objdiff's reports
+  src/sigs.rs        library code found by its bytes: signatures from Psy-Q and COFF libraries
   src/similar.rs     functions shaped alike (MinHash of instruction shapes, banded)
   src/discover/      function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS,
                      and by following x86 code (x86.rs) for 32-bit PE images
@@ -569,6 +593,11 @@ cargo test
   not decoded entry by entry (chained fixups are walked to find pointers).
 - Disassembly covers x86, x86-64, AArch64 and ARM (A32); cross-references and
   the call graph x86, x86-64 and AArch64.
+- Matching x86 objects: relocations other than absolute and relative ones
+  (through the GOT, image- or section-relative) are masked but not checked,
+  and an instruction a linker rewrote (a `mov` from the GOT relaxed into a
+  `lea`) reads as a difference. MSVC x86-64's jump tables in the code (entries
+  relative to the image base) are read as tables in the rebuild only.
 - Calls through registers are followed only when the register was just loaded
   from a pointer slot (`ldr x16, [got]; blr x16`, `call r14`); virtual calls are
   not resolved to their targets yet. Objective-C messages are followed by
