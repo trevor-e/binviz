@@ -351,9 +351,9 @@ impl Symbolicated {
 impl Binary {
     /// The address the file's first byte is linked at: what an image's load
     /// address in a crash report corresponds to (a Mach-O file's `__TEXT`,
-    /// the lowest ELF `PT_LOAD`, a PE image base).
+    /// the lowest ELF `PT_LOAD`, a PE image base, an XBE's base address).
     pub fn link_base(&self) -> u64 {
-        if self.summary.format == crate::Format::Pe {
+        if matches!(self.summary.format, crate::Format::Pe | crate::Format::Xbe) {
             return self.image_base;
         }
         self.segments

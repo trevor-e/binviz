@@ -299,8 +299,9 @@ impl AddressMap {
 struct Scan<'a> {
     map: &'a AddressMap,
     symbols: &'a SymbolTable,
-    /// The image is not loaded near zero, so absolute numbers (immediates,
-    /// displacements) that fall inside it are addresses rather than constants.
+    /// The image is not loaded near zero (or is an XBE, loaded at 0x10000
+    /// and never moved), so absolute numbers (immediates, displacements)
+    /// that fall inside it are addresses rather than constants.
     absolute: bool,
     /// Jump tables in the code, sorted.
     tables: &'a [crate::discover::x86::Table],
@@ -684,7 +685,7 @@ impl Binary {
         let cx = Scan {
             map: &map,
             symbols: &self.symbols,
-            absolute: base >= 0x10_0000,
+            absolute: base >= 0x10_0000 || self.summary.format == crate::model::Format::Xbe,
             tables: &self.code_tables,
         };
         let top = base + u32::MAX as u64;
@@ -808,7 +809,8 @@ impl Binary {
             let cx = Scan {
                 map: &map,
                 symbols: &self.symbols,
-                absolute: map.ranges.first().is_some_and(|r| r.0 >= 0x10_0000),
+                absolute: map.ranges.first().is_some_and(|r| r.0 >= 0x10_0000)
+                    || self.summary.format == crate::model::Format::Xbe,
                 tables: &self.code_tables,
             };
             self.scan_code(bytes, lo, &cx, &mut |s, t, k| {

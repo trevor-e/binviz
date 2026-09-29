@@ -7,7 +7,7 @@
 # Optional: a MinGW g++ on PATH (for the C++ PE fixture), clang (any build with
 # the x86 target, Apple's included: for the 32-bit PE with a PDB), the llvm-tools
 # component (for the split-debug ELF pair) and the x86_64-pc-windows-msvc
-# target (for the PE with a PDB). Python 3 writes the game ROMs.
+# target (for the PE with a PDB). Python 3 writes the game ROMs and the XBE.
 #
 # Pass --large to also build the std-linked "demo" binaries (~5 MB each) into
 # tests/fixtures/large (git-ignored), which are handy for manual testing.
@@ -133,6 +133,9 @@ fi
 
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"
 python3 "$src/roms.py" "$out" 2>/dev/null || python "$src/roms.py" "$out"
+
+echo "XBE: an original Xbox executable (hand-assembled x86, retail keys)"
+python3 "$src/xbe.py" "$out" 2>/dev/null || python "$src/xbe.py" "$out"
 
 if command -v g++ >/dev/null 2>&1; then
     echo "C++: PE x86-64 (MinGW g++, DWARF 5)"

@@ -12,6 +12,7 @@ pub(crate) mod elf;
 pub(crate) mod fields;
 pub(crate) mod macho;
 pub(crate) mod pe;
+pub(crate) mod xbe;
 
 use std::cmp::Reverse;
 use std::ops::Range;

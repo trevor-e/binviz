@@ -421,7 +421,7 @@ export class OverviewView extends View {
       start: s.address,
       end: s.address + s.memSize,
       label: s.name,
-      kind: f.summary.format === 'pe' ? (f.sections.find((x) => x.address === s.address)?.kind ?? permKind(s.perms, s.fileSize)) : permKind(s.perms, s.fileSize),
+      kind: f.summary.format === 'pe' || f.summary.format === 'xbe' ? (f.sections.find((x) => x.address === s.address)?.kind ?? permKind(s.perms, s.fileSize)) : permKind(s.perms, s.fileSize),
       perms: s.perms,
       fileBacked: s.fileSize < s.memSize ? s.fileSize : s.memSize,
     }));
@@ -522,7 +522,7 @@ export class OverviewView extends View {
     const x1 = xM;
     const mid = (x0 + x1) / 2;
     // Faint whole-segment bands: headers and other unnamed bytes are mapped too.
-    if (f.summary.format !== 'pe') {
+    if (f.summary.format !== 'pe' && f.summary.format !== 'xbe') {
       for (const s of segs.filter((s) => s.fileSize > 0n)) {
         const yf0 = offY(num(s.fileOffset));
         const yf1 = Math.max(yf0 + 1.5, offY(num(s.fileOffset + s.fileSize)));
