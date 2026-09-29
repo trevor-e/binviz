@@ -1036,7 +1036,7 @@ mod tests {
             (imports as usize, 0x11018),
             (imports as usize + 4, base + name),
         ] {
-            put(&mut d, at as usize, v);
+            put(&mut d, at, v);
         }
         d[names as usize..][..6].copy_from_slice(b".text\0");
         for at in [libraries, features, features + 16] {

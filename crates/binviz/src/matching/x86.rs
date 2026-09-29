@@ -914,7 +914,7 @@ impl Match<'_> {
                             let at = self.start + x.at as u64;
                             let frame = self.bin.stack_frame(self.start);
                             let names = frame.as_ref().and_then(|f| {
-                                Some((f.slot_at(at)?, f.slot_moved(at, db as i64 - da as i64)?))
+                                Some((f.slot_at(at)?, f.slot_moved(at, db - da)?))
                             });
                             match names {
                                 Some((na, nb)) if na.starts_with("arg") && nb.starts_with("arg") => format!(

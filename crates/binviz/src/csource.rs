@@ -523,6 +523,41 @@ impl SourceCounterparts {
     }
 }
 
+/// The C and C++ files under `dir` (sources and headers), read: (path under `dir`, text).
+pub fn read_source_tree(dir: &std::path::Path) -> std::io::Result<Vec<(String, String)>> {
+    let mut out = Vec::new();
+    let mut stack = vec![dir.to_path_buf()];
+    while let Some(d) = stack.pop() {
+        let mut entries: Vec<_> = std::fs::read_dir(&d)?
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .collect();
+        entries.sort();
+        for p in entries {
+            if p.is_dir() {
+                stack.push(p);
+                continue;
+            }
+            let ext = p
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("")
+                .to_ascii_lowercase();
+            if !matches!(
+                ext.as_str(),
+                "c" | "cc" | "cpp" | "cxx" | "h" | "hh" | "hpp" | "hxx" | "inl" | "m" | "mm"
+            ) {
+                continue;
+            }
+            let bytes = std::fs::read(&p)?;
+            let name = p.strip_prefix(dir).unwrap_or(&p).to_string_lossy().into_owned();
+            out.push((name, String::from_utf8_lossy(&bytes).into_owned()));
+        }
+    }
+    out.sort();
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{scan_sources, source_name};
@@ -587,39 +622,4 @@ extern "C" { void from_c(void) {} }
         assert_eq!(source_name("@scale@8"), "scale");
         assert_eq!(source_name("int __cdecl geo::Shape::area(void)"), "area");
     }
-}
-
-/// The C and C++ files under `dir` (sources and headers), read: (path under `dir`, text).
-pub fn read_source_tree(dir: &std::path::Path) -> std::io::Result<Vec<(String, String)>> {
-    let mut out = Vec::new();
-    let mut stack = vec![dir.to_path_buf()];
-    while let Some(d) = stack.pop() {
-        let mut entries: Vec<_> = std::fs::read_dir(&d)?
-            .filter_map(|e| e.ok())
-            .map(|e| e.path())
-            .collect();
-        entries.sort();
-        for p in entries {
-            if p.is_dir() {
-                stack.push(p);
-                continue;
-            }
-            let ext = p
-                .extension()
-                .and_then(|e| e.to_str())
-                .unwrap_or("")
-                .to_ascii_lowercase();
-            if !matches!(
-                ext.as_str(),
-                "c" | "cc" | "cpp" | "cxx" | "h" | "hh" | "hpp" | "hxx" | "inl" | "m" | "mm"
-            ) {
-                continue;
-            }
-            let bytes = std::fs::read(&p)?;
-            let name = p.strip_prefix(dir).unwrap_or(&p).to_string_lossy().into_owned();
-            out.push((name, String::from_utf8_lossy(&bytes).into_owned()));
-        }
-    }
-    out.sort();
-    Ok(out)
 }
