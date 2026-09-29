@@ -60,13 +60,21 @@ pub struct DecompContext {
     pub signature: Option<FunctionSignature>,
     pub instructions: Vec<Instruction>,
     pub truncated: bool,
+    /// The first callers and callees (most call sites first) of how many.
     pub callers: Vec<Neighbour>,
+    pub caller_count: u32,
     pub callees: Vec<Neighbour>,
+    pub callee_count: u32,
     /// How the rest of the image refers to it: a function only reached through
     /// a pointer in data (a callback) has no callers, but is referenced.
     pub referenced_by: RefCounts,
+    /// Where its address is taken or stored (a callback's), the first of them.
+    pub taken_from: Vec<Reference>,
+    /// The first strings and globals it uses, of how many.
     pub strings: Vec<StringUse>,
+    pub string_count: u32,
     pub data: Vec<Reference>,
+    pub data_count: u32,
     /// What the data in `data` is, where that says more than its name.
     pub typed: Vec<TypedData>,
     /// The vtable slots holding it (a virtual function): `const Square::`vftable'[1]`.
@@ -92,7 +100,8 @@ pub struct DecompContext {
 
 impl Binary {
     /// The context for decompiling the function containing `address`: up to
-    /// `limit` instructions, and that many callers, callees, strings and globals.
+    /// `limit` instructions, and the first callers, callees, strings and
+    /// globals (up to [`CONTEXT_LIST`] of each, with how many there are).
     pub fn decomp_context(&self, address: u64, limit: usize) -> Option<DecompContext> {
         let f = self.symbols().function_containing(address)?;
         let (lo, hi) = (f.address, f.address + f.size.max(1));
@@ -101,7 +110,7 @@ impl Binary {
             self.prepare_xrefs();
         }
         let dis = self.disassemble_function(lo, limit);
-        let summary = self.function_summary(lo, limit)?;
+        let summary = self.function_summary(lo, CONTEXT_LIST.min(limit.max(1)))?;
         let neighbour = |e: &crate::xrefs::CallEdge| Neighbour {
             address: e.address,
             name: e.name.clone(),
@@ -198,10 +207,15 @@ impl Binary {
             instructions: dis.instructions,
             truncated: dis.truncated,
             callers: summary.callers.iter().map(neighbour).collect(),
+            caller_count: summary.caller_count,
             callees: summary.callees.iter().map(neighbour).collect(),
+            callee_count: summary.callee_count,
             referenced_by: summary.referenced_by,
+            taken_from: self.taken_from(lo, hi, 8),
             strings: summary.strings,
+            string_count: summary.string_count,
             data: summary.data,
+            data_count: summary.data_count,
             typed,
             vtables,
             parts: dis.parts.clone(),
@@ -213,6 +227,17 @@ impl Binary {
             decomp: self.decomp_at(lo).cloned(),
             examples,
         })
+    }
+}
+
+/// At most this many callers, callees, strings and globals each in a
+/// context: a function called from everywhere would bury its code.
+pub const CONTEXT_LIST: usize = 24;
+
+/// `  … and 12 more` after a list showing `shown` of `count`.
+fn more(out: &mut String, count: u32, shown: usize) {
+    if count as usize > shown {
+        let _ = writeln!(out, "  … and {} more", count as usize - shown);
     }
 }
 
@@ -258,7 +283,10 @@ impl DecompContext {
                 );
             }
         }
-        for (label, list) in [("Called by", &self.callers), ("Calls", &self.callees)] {
+        for (label, list, count) in [
+            ("Called by", &self.callers, self.caller_count),
+            ("Calls", &self.callees, self.callee_count),
+        ] {
             if list.is_empty() {
                 continue;
             }
@@ -279,6 +307,7 @@ impl DecompContext {
                     n.prototype.as_deref().map_or(String::new(), |p| format!("  {p}"))
                 );
             }
+            more(&mut out, count, list.len());
         }
         if !self.aliases.is_empty() {
             let _ = writeln!(
@@ -309,25 +338,48 @@ impl DecompContext {
         if !self.vtables.is_empty() {
             let _ = writeln!(out, "In vtables (a virtual function): {}", self.vtables.join(", "));
         }
-        let r = &self.referenced_by;
-        let uses: Vec<String> = [
-            (r.jump, "jump"),
-            (r.pointer, "pointer in data"),
-            (r.address, "address taken"),
-            (r.read + r.write, "data access"),
-        ]
-        .iter()
-        .filter(|(n, _)| *n > 0)
-        .map(|(n, what)| format!("{n} {what}{}", if *n > 1 && !what.ends_with("data") && !what.ends_with("taken") { "s" } else { "" }))
-        .collect();
+        // Besides the calls: tail calls, and the address taken or stored (a callback's).
+        let r = RefCounts {
+            call: 0,
+            jump: 0,
+            ..self.referenced_by.clone()
+        };
+        let uses = r.describe();
         if !uses.is_empty() {
-            let _ = writeln!(out, "Also referenced by: {} (a callback has no callers)", uses.join(", "));
+            let _ = writeln!(out, "Also referenced by: {uses}");
+        }
+        if !self.taken_from.is_empty() {
+            let callback = if self.callers.is_empty() {
+                " (a callback: called through a pointer, not by name)"
+            } else {
+                ""
+            };
+            let _ = writeln!(out, "Its address is taken or stored at{callback}:");
+            for t in &self.taken_from {
+                let _ = writeln!(
+                    out,
+                    "  {:#x} {} {}",
+                    t.source,
+                    t.kind.as_str(),
+                    t.from.as_deref().unwrap_or("")
+                );
+            }
+            // A callback whose code reads no argument may still be passed some.
+            if self.callers.is_empty()
+                && self.signature.as_ref().is_some_and(|s| s.prototype.ends_with("(void)"))
+            {
+                let _ = writeln!(
+                    out,
+                    "Its code reads no arguments; called through a pointer, it may be passed some it ignores (the pointer's type says which)"
+                );
+            }
         }
         if !self.strings.is_empty() {
             let _ = writeln!(out, "Strings:");
             for s in &self.strings {
                 let _ = writeln!(out, "  {:#x} {:?} (at {:#x})", s.address, s.text, s.site);
             }
+            more(&mut out, self.string_count, self.strings.len());
         }
         if !self.data.is_empty() {
             let _ = writeln!(out, "Globals:");
@@ -345,6 +397,7 @@ impl DecompContext {
                     d.to.as_deref().unwrap_or("")
                 );
             }
+            more(&mut out, self.data_count, self.data.len());
         }
         if !self.notes.is_empty() {
             let _ = writeln!(out, "Notes:");

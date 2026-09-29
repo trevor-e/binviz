@@ -98,8 +98,9 @@ COMMANDS:
                                    structures it walks; for x86 the calling convention too
     context <file> <addr|symbol> [n]
                                    Everything needed to write a function's C: its code with
-                                   names, its signature, callers and callees with theirs,
-                                   strings, globals, notes
+                                   names (n instructions, default 4000), its signature, callers
+                                   and callees with theirs, strings, globals, notes (the first
+                                   24 of each list; func and refs list them all)
     match <file> <object> [name]   The compiler's object file (ELF .o, or COFF .obj from MSVC
                                    or clang-cl) scored against the original, function by
                                    function (relocations masked), each difference explained;
@@ -1150,23 +1151,36 @@ fn run(
         "func" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
             let f = bin.function_summary(addr, 30).ok_or("not in a function")?;
-            println!(
-                "{} at {:#x}, {} bytes; referenced by {:?}",
-                f.name, f.address, f.size, f.referenced_by
-            );
-            println!("{} callers:", f.caller_count);
+            println!("{} at {:#x}, {} bytes", f.name, f.address, f.size);
+            let refs = f.referenced_by.describe();
+            println!("referenced by: {}", if refs.is_empty() { "nothing" } else { &refs });
+            // Each list says how long it is: an empty heading reads as output cut short.
+            let heading = |n: u32, one: &str, many: &str| match n {
+                0 => println!("no {many}"),
+                1 => println!("1 {one}:"),
+                n => println!("{n} {many}:"),
+            };
+            let more = |n: u32, shown: usize| {
+                if n as usize > shown {
+                    println!("  … and {} more", n as usize - shown);
+                }
+            };
+            heading(f.caller_count, "caller", "callers");
             for e in &f.callers {
                 println!("  {:>4}x {}", e.calls, e.name);
             }
-            println!("{} callees:", f.callee_count);
+            more(f.caller_count, f.callers.len());
+            heading(f.callee_count, "callee", "callees");
             for e in &f.callees {
                 println!("  {:>4}x {}", e.calls, e.name);
             }
-            println!("strings:");
+            more(f.callee_count, f.callees.len());
+            heading(f.string_count, "string", "strings");
             for s in &f.strings {
                 println!("  {:#x} {:?}", s.address, s.text);
             }
-            println!("data:");
+            more(f.string_count, f.strings.len());
+            heading(f.data_count, "global", "globals");
             for r in &f.data {
                 println!(
                     "  {:<8} {:#x} {}",
@@ -1175,6 +1189,7 @@ fn run(
                     r.to.as_deref().unwrap_or("")
                 );
             }
+            more(f.data_count, f.data.len());
         }
         "signature" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;

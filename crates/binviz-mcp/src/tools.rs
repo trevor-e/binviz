@@ -435,7 +435,7 @@ pub fn definitions() -> Vec<Value> {
             "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, and the notes on it. The prototype for MIPS, x86 and x86-64; the rest for any binary.",
             json!({
                 "at": address("A function or address inside it"),
-                "limit": { "type": "integer", "description": "Instructions, and entries per list (default 400, max 5000)." },
+                "limit": { "type": "integer", "description": "Instructions (default 400, max 5000). Each list (callers, callees, strings, globals) shows its first 24 entries and how many more there are; function_info and xrefs list them all." },
             }),
             &["at"],
             true,

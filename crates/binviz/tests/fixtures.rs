@@ -1281,6 +1281,28 @@ fn a_function_in_more_than_one_piece_reads_as_one() {
     assert!(c.describe().contains("folded into one by the linker"));
 }
 
+#[test]
+fn a_context_keeps_its_lists_short_and_says_where_a_callback_is_stored() {
+    let (bin, named) = gamedemo();
+    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    // Each list is the first few, with how many there are.
+    let f = bin.function_summary(at("InitGame"), 2).unwrap();
+    assert!(f.string_count as usize > f.strings.len() && f.strings.len() == 2, "{f:?}");
+    let c = bin.decomp_context(at("InitGame"), 2).unwrap();
+    assert_eq!((c.strings.len(), c.string_count), (2, f.string_count));
+    let text = c.describe();
+    assert!(text.contains(&format!("  … and {} more\n", f.string_count - 2)), "{text}");
+    assert_eq!(c.strings.len(), 2);
+    // A bare `ret` only its address reaches: where that is taken, and that it may ignore arguments.
+    let c = bin.decomp_context(at("player_pain"), 100).unwrap();
+    assert_eq!(c.taken_from.len(), 1);
+    assert!(c.callers.is_empty());
+    let text = c.describe();
+    assert!(text.contains("Its address is taken or stored at (a callback"), "{text}");
+    assert!(text.contains(&format!("  {:#x} address sub_", c.taken_from[0].source)), "{text}");
+    assert!(text.contains("it may be passed some it ignores"), "{text}");
+}
+
 /// The marks before the instruction at `address` in the disassembly of the function holding it.
 fn marks_at(bin: &Binary, address: u64) -> Vec<String> {
     let f = bin.symbols().function_containing(address).unwrap().address;

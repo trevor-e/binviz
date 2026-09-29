@@ -154,6 +154,26 @@ impl RefCounts {
     pub fn total(&self) -> u32 {
         self.call + self.jump + self.read + self.write + self.address + self.pointer
     }
+
+    /// The kinds there are, counted: `2 calls, 1 pointer in data`; empty when none.
+    pub fn describe(&self) -> String {
+        let parts: Vec<String> = [
+            (self.call, "call"),
+            (self.jump, "jump"),
+            (self.read, "read"),
+            (self.write, "write"),
+            (self.address, "address taken"),
+            (self.pointer, "pointer in data"),
+        ]
+        .iter()
+        .filter(|(n, _)| *n > 0)
+        .map(|&(n, what)| {
+            let plural = n > 1 && !what.ends_with("data") && !what.ends_with("taken");
+            format!("{n} {what}{}", if plural { "s" } else { "" })
+        })
+        .collect();
+        parts.join(", ")
+    }
 }
 
 /// What kind of thing a call graph node is.
@@ -268,7 +288,11 @@ pub struct FunctionSummary {
     pub callers: Vec<CallEdge>,
     pub callee_count: u32,
     pub callees: Vec<CallEdge>,
+    /// How many strings it uses, of which `strings` holds the first.
+    pub string_count: u32,
     pub strings: Vec<StringUse>,
+    /// How many other data it uses, of which `data` holds the first.
+    pub data_count: u32,
     /// Other data it reads, writes or takes the address of (one per target).
     pub data: Vec<Reference>,
     /// References to the function, by kind: calls, tail calls, pointers to it
@@ -827,13 +851,7 @@ impl Binary {
     fn reference_counts_from_outside(&self, lo: u64, hi: u64) -> RefCounts {
         let index = self.xref_index();
         let mut counts = RefCounts::default();
-        // Its pieces away from its entry, and its switches' tables, are its own.
-        let parts = self.symbols.parts_of(lo);
-        let own = |a: u64| {
-            (lo..hi).contains(&a)
-                || parts.iter().any(|p| (p.0..p.1).contains(&a))
-                || self.jump_table_holding(a).is_some_and(|t| (lo..hi).contains(&t.jump))
-        };
+        let own = self.own_places(lo, hi);
         for k in KINDS {
             let outside = index
                 .range(k, lo, hi)
@@ -843,6 +861,31 @@ impl Binary {
             counts.add(k, outside as u32);
         }
         counts
+    }
+
+    /// Whether an address is the function at `lo..hi`'s own: its code, its
+    /// pieces away from its entry, its switches' tables.
+    fn own_places(&self, lo: u64, hi: u64) -> impl Fn(u64) -> bool + '_ {
+        let parts = self.symbols.parts_of(lo);
+        move |a: u64| {
+            (lo..hi).contains(&a)
+                || parts.iter().any(|p| (p.0..p.1).contains(&a))
+                || self.jump_table_holding(a).is_some_and(|t| (lo..hi).contains(&t.jump))
+        }
+    }
+
+    /// Where the address of the function at `lo..hi` is taken or stored, from
+    /// outside it (a callback's): up to `limit` references.
+    pub(crate) fn taken_from(&self, lo: u64, hi: u64, limit: usize) -> Vec<Reference> {
+        let index = self.xref_index();
+        let own = self.own_places(lo, hi);
+        [RefKind::Address, RefKind::Pointer]
+            .into_iter()
+            .flat_map(|k| index.range(k, lo, hi).iter().map(move |&v| (k, v)))
+            .filter(|&(_, v)| !own(index.source(v)))
+            .take(limit)
+            .map(|(k, v)| self.describe_ref(index.source(v), index.target(v), k))
+            .collect()
     }
 
     /// References made from `lo..hi`: code is scanned again, data is read for pointers.
@@ -1262,6 +1305,7 @@ impl Binary {
         let callees = self.callees(lo);
         let mut strings = Vec::new();
         let mut data = Vec::new();
+        let (mut string_count, mut data_count) = (0u32, 0u32);
         let mut seen = HashSet::new();
         for (site, target, kind) in self.scan_function(lo, hi - lo) {
             // Its own code and jump tables aren't data it uses.
@@ -1274,6 +1318,7 @@ impl Binary {
             }
             // A float or double read (its bytes can pass for a short string) is data with a value.
             if let Some(value) = self.float_operand_at(site) {
+                data_count += 1;
                 if data.len() < limit {
                     let mut r = self.describe_ref(site, target, kind);
                     r.to = Some(value);
@@ -1282,14 +1327,22 @@ impl Binary {
                 continue;
             }
             match self.string_at_address(target) {
-                Some(text) if strings.len() < limit => strings.push(StringUse {
-                    address: target,
-                    text,
-                    site,
-                }),
-                Some(_) => {}
-                None if data.len() < limit => data.push(self.describe_ref(site, target, kind)),
-                None => {}
+                Some(text) => {
+                    string_count += 1;
+                    if strings.len() < limit {
+                        strings.push(StringUse {
+                            address: target,
+                            text,
+                            site,
+                        });
+                    }
+                }
+                None => {
+                    data_count += 1;
+                    if data.len() < limit {
+                        data.push(self.describe_ref(site, target, kind));
+                    }
+                }
             }
         }
         Some(FunctionSummary {
@@ -1300,7 +1353,9 @@ impl Binary {
             callers: callers.into_iter().take(limit).collect(),
             callee_count: callees.len() as u32,
             callees: callees.into_iter().take(limit).collect(),
+            string_count,
             strings,
+            data_count,
             data,
             referenced_by: self.reference_counts_from_outside(lo, hi),
         })
