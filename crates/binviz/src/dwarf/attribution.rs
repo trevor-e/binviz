@@ -19,6 +19,8 @@ pub(crate) struct GlobalVar {
     pub file: Option<u32>,
     pub line: u32,
     pub unit: u32,
+    /// Its type's DIE.
+    pub ty: Option<(u32, UnitOffset)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -190,10 +192,8 @@ fn collect_globals(debug: &DebugInfo) -> Vec<GlobalVar> {
                 die.attr_value(at)
                     .or_else(|| spec.as_ref().and_then(|s| s.attr_value(at)))
             };
-            let size = get(gimli::DW_AT_type)
-                .and_then(|v| debug.resolve_ref(ui, v))
-                .and_then(|(u, o)| debug.type_size(u, o, 0))
-                .unwrap_or(0);
+            let ty = get(gimli::DW_AT_type).and_then(|v| debug.resolve_ref(ui, v));
+            let size = ty.and_then(|(u, o)| debug.type_size(u, o, 0)).unwrap_or(0);
             let file = match get(gimli::DW_AT_decl_file) {
                 Some(AttributeValue::FileIndex(f)) => debug.files.unit_file(ui, f),
                 _ => None,
@@ -209,6 +209,7 @@ fn collect_globals(debug: &DebugInfo) -> Vec<GlobalVar> {
                 file,
                 line,
                 unit: ui,
+                ty,
             });
         }
     }

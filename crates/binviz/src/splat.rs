@@ -208,6 +208,7 @@ pub fn parse_symbol_addrs(text: &str) -> Vec<Annotation> {
             reviewed: false,
             kind,
             decomp: None,
+            ctype: None,
         });
     }
     out

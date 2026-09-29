@@ -1019,6 +1019,10 @@ impl Binary {
         if let Some(text) = self.string_at_address(address) {
             return Some(short_quote(&text, 80));
         }
+        // A field of a global a note gives a structure type: `level.framenum`.
+        if let Some(field) = self.global_field(address) {
+            return Some(field);
+        }
         if let Some(s) = sym {
             return Some(format!("{}+{:#x}", s.demangled.unwrap_or(s.name), s.offset));
         }

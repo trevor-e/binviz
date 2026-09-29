@@ -60,6 +60,19 @@ Xbox executables (**XBE**).
   `geo__Rect`), the original in a comment. The same model names the member at
   an offset of a structure (`[esi+0x21c]` in an `edict_t`: `enemy`,
   `s.origin[1]`).
+- **Fields named in the code.** Where the code reaches through a pointer whose
+  type is known, `disasm` and `context` name the member:
+  `mov [esi+0xc], eax  <edict_t.health>`, `fld [ecx+0x14]  <cvar_t.value>`,
+  `fstp [0x2000306c]  <level.time>`. The stack walk follows each argument into
+  the registers that hold it, and each pointer loaded from a field or a global
+  on to what is read through it (`level.sight_client->health`); the types
+  come from the function's parameters and the globals' types in the debug
+  info (a PDB's too), or, for a stripped binary, from notes: a function's
+  prototype (`"type": "void SP_monster_soldier(edict_t *self)"`) or a global's
+  type (`"level_locals_t"`, `"cvar_t *"`), with the structures from a types
+  file (`--types`, MCP `types_file`): the program's headers compiled with
+  `clang -g -fno-eliminate-unused-debug-types -c -x c game.h` for the
+  binary's target, or a PDB.
 - **Disassembly** for x86/x86-64 (iced-x86) and AArch64/ARM (yaxpeax-arm), with
   branch targets resolved to symbols, the strings and globals an instruction
   uses named inline (AArch64 `adrp` pairs included), and source lines
@@ -393,8 +406,10 @@ The commands before these (`at`, `xrefs`, `refs-from`, `callers`, `callees`,
 `--debug <file>` attaches a separate debug file (or names the folder holding
 the object files of a Mach-O debug map); `--member <n>` picks a slice of
 a universal binary or an archive member; `--notes <file.json>` loads
-annotations first; `--log <file.cdl>` follows a game ROM's code with an
-emulator's code/data log.
+annotations first (each `{"address", "size", "name", "comment", "reviewed",
+"kind", "type"}`, all but the address optional); `--types <file>` takes the
+structures notes' types name from another file's debug info; `--log
+<file.cdl>` follows a game ROM's code with an emulator's code/data log.
 
 A folder or a zip (an `.ipa`, an `.app`, a build) works in place of a file:
 `info` lists every binary in it with its debug file, what the other files are,
@@ -448,7 +463,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `list_globals` | The data the code uses, typed by its use: floats and doubles with their values, integers by width, pointers to structures with the offsets reached through them, tables of functions, strings or pointers, records holding pointers, arrays, jump tables, and tables of function pointers filled at run time and called through (an engine's import table, with where it is filled) |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
-| `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
+| `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed, give a function its prototype or data its type (which names the fields reached through them) |
 | `next_functions` · `mark` · `similar_functions` · `match_project` · … | For a matching decompilation: see [Decompilation](#decompilation-playstation-nintendo-64-x86-pc) |
 
 Notes are saved next to the binary in `<file>.binviz-notes.json`, the format

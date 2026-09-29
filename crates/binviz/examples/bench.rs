@@ -271,7 +271,7 @@ fn main() {
             name: format!("fn_{:x}", f.address),
             comment: "note".into(),
             reviewed: true,
-            kind: None, decomp: None,
+            kind: None, decomp: None, ctype: None,
         })
         .collect();
     time(&format!("set {} annotations", notes.len()), || {
@@ -306,6 +306,7 @@ fn main() {
                 since: round,
                 ..Default::default()
             }),
+            ctype: None,
         }));
         bin.set_annotations(done.clone());
         let n = done.len();

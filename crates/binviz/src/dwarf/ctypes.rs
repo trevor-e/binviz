@@ -661,6 +661,13 @@ struct Builder<'a> {
 }
 
 impl DebugInfo {
+    /// Whether field lookups are cheap enough to make unasked: the types are
+    /// read already, or there are few enough to read (a large program's
+    /// take seconds).
+    pub(crate) fn types_cheap(&self) -> bool {
+        self.c_types.get().is_some() || self.dwarf.debug_info.reader().len() < 16 << 20
+    }
+
     /// The C types of the debug info, worked out on first use.
     pub(crate) fn c_types(&self) -> &Types {
         self.c_types.get_or_init(|| Types::build(self))
@@ -2526,6 +2533,126 @@ impl DebugInfo {
     /// `edict_t`.
     pub fn struct_field(&self, name: &str, offset: u64) -> Option<FieldAt> {
         self.field_at(&self.find_struct(name)?, offset)
+    }
+
+    /// What each parameter of the function at `address` points at, in
+    /// order (`this` first): the structure or union, with the name its type
+    /// spells it by (`edict_t` for `edict_t *self`); `None` for a parameter
+    /// that doesn't point at one. From the function's debug info; empty
+    /// when there is none.
+    pub fn parameter_structs(&self, address: u64) -> Vec<Option<(String, StructType)>> {
+        let mut out = Vec::new();
+        let Some(f) = self.frames(address).pop() else {
+            return out;
+        };
+        let (Some(unit_index), Some(die)) = (f.unit, f.die) else {
+            return out;
+        };
+        // An out-of-line copy of an inlined function: its abstract instance lists them all.
+        let offset = UnitOffset(die as usize);
+        let (list_index, list_offset) = self
+            .unit(unit_index)
+            .and_then(|u| u.entry(offset).ok()?.attr_value(gimli::DW_AT_abstract_origin))
+            .and_then(|v| self.resolve_ref(unit_index, v))
+            .unwrap_or((unit_index, offset));
+        let Some(unit) = self.unit(list_index) else {
+            return out;
+        };
+        let Ok(mut cursor) = unit.entries_at_offset(list_offset) else {
+            return out;
+        };
+        if !matches!(cursor.next_entry(), Ok(true))
+            || !cursor.current().is_some_and(|d| d.has_children())
+            || !matches!(cursor.next_entry(), Ok(true))
+        {
+            return out;
+        }
+        let types = self.c_types();
+        while let Some(child) = cursor.current() {
+            if child.tag() == gimli::DW_TAG_formal_parameter {
+                let ty = child
+                    .attr_value(gimli::DW_AT_type)
+                    .and_then(|v| self.resolve_ref(list_index, v));
+                out.push(ty.and_then(|t| self.pointee_struct(types, t)));
+            }
+            if !matches!(cursor.next_sibling(), Ok(Some(_))) {
+                break;
+            }
+        }
+        out
+    }
+
+    /// The static variable at `address`, when its type is a structure or a
+    /// pointer to one: its name, whether it is the pointer, and the
+    /// structure with the name its type spells it by.
+    pub(crate) fn variable_struct(&self, address: u64) -> Option<(String, bool, String, StructType)> {
+        let globals = self.globals();
+        let v = &globals[globals.binary_search_by_key(&address, |g| g.address).ok()?];
+        let ty = v.ty?;
+        let types = self.c_types();
+        if let Some((spelled, st)) = self.pointee_struct(types, ty) {
+            return Some((v.name.clone(), true, spelled, st));
+        }
+        let (spelled, st) = self.value_struct(types, ty)?;
+        Some((v.name.clone(), false, spelled, st))
+    }
+
+    /// The structure or union the type at `at` is, through typedefs and qualifiers.
+    fn value_struct(&self, types: &Types, mut at: (u32, UnitOffset)) -> Option<(String, StructType)> {
+        let mut spelled: Option<String> = None;
+        for _ in 0..16 {
+            let unit = self.unit(at.0)?;
+            let die = unit.entry(at.1).ok()?;
+            match die.tag() {
+                gimli::DW_TAG_typedef => {
+                    if spelled.is_none() {
+                        spelled = string_attr(&unit, &die, gimli::DW_AT_name);
+                    }
+                }
+                gimli::DW_TAG_const_type | gimli::DW_TAG_volatile_type => {}
+                gimli::DW_TAG_structure_type | gimli::DW_TAG_class_type | gimli::DW_TAG_union_type => {
+                    let st = types.struct_type(types.entity_at(at.0, at.1)?);
+                    return Some((spelled.unwrap_or_else(|| st.name.clone()), st));
+                }
+                _ => return None,
+            }
+            at = self.resolve_ref(at.0, die.attr_value(gimli::DW_AT_type)?)?;
+        }
+        None
+    }
+
+    /// The structure or union the pointer type at `at` points at, through
+    /// typedefs and qualifiers, with the name the pointed-at type spells.
+    fn pointee_struct(&self, types: &Types, mut at: (u32, UnitOffset)) -> Option<(String, StructType)> {
+        let mut pointer = false;
+        let mut spelled: Option<String> = None;
+        for _ in 0..16 {
+            let unit = self.unit(at.0)?;
+            let die = unit.entry(at.1).ok()?;
+            match die.tag() {
+                gimli::DW_TAG_pointer_type | gimli::DW_TAG_reference_type | gimli::DW_TAG_rvalue_reference_type
+                    if !pointer =>
+                {
+                    pointer = true
+                }
+                gimli::DW_TAG_typedef if pointer => {
+                    if spelled.is_none() {
+                        spelled = string_attr(&unit, &die, gimli::DW_AT_name);
+                    }
+                }
+                gimli::DW_TAG_typedef
+                | gimli::DW_TAG_const_type
+                | gimli::DW_TAG_volatile_type
+                | gimli::DW_TAG_restrict_type => {}
+                gimli::DW_TAG_structure_type | gimli::DW_TAG_class_type | gimli::DW_TAG_union_type if pointer => {
+                    let st = types.struct_type(types.entity_at(at.0, at.1)?);
+                    return Some((spelled.unwrap_or_else(|| st.name.clone()), st));
+                }
+                _ => return None,
+            }
+            at = self.resolve_ref(at.0, die.attr_value(gimli::DW_AT_type)?)?;
+        }
+        None
     }
 }
 

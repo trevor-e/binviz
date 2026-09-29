@@ -44,6 +44,7 @@ const ALL: &[&str] = &[
     "x86demo.exe",
     "x86demo-fixed.exe",
     "gamedemo.dll",
+    "gamedemo-types.obj",
     "rttidemo32.dll",
     "rttidemo64.dll",
     "x86match.exe",
@@ -1303,6 +1304,56 @@ fn a_context_keeps_its_lists_short_and_says_where_a_callback_is_stored() {
     assert!(text.contains("it may be passed some it ignores"), "{text}");
 }
 
+/// What an instruction's operand names, in the disassembly of the function holding it.
+fn operand_name(bin: &Binary, address: u64) -> Option<String> {
+    let f = bin.symbols().function_containing(address).unwrap().address;
+    let d = bin.disassemble_function(f, 1000);
+    d.instructions.iter().find(|i| i.address == address)?.target_symbol.clone()
+}
+
+#[test]
+fn fields_are_named_through_typed_pointers() {
+    let (bin, named) = gamedemo();
+    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let soldier = at("SP_monster_soldier");
+    // With the PDB: the parameter's type, a cvar pointer read from a global, a global structure,
+    // and a pointer read from one of its fields.
+    let name = |a: u64| operand_name(&named, a);
+    assert_eq!(name(soldier + 0x4c).as_deref(), Some("edict_s.health"));
+    assert_eq!(name(soldier + 0x59).as_deref(), Some("edict_s.pain; player_pain"));
+    let run = at("G_RunFrame");
+    assert_eq!(name(run + 0x29).as_deref(), Some("cvar_s.value"));
+    assert_eq!(name(run + 0x1d).as_deref(), Some("level.time = f32 0.0"));
+    assert_eq!(name(run + 0xa3).as_deref(), Some("edict_s.health"));
+
+    // Stripped: notes type the function and the global, a types file (the headers compiled with -g) has the structures.
+    let mut bin = bin;
+    assert_eq!(operand_name(&bin, soldier + 0x4c), None);
+    bin.attach_types("gamedemo-types.obj", fixture("gamedemo-types.obj")).unwrap();
+    let note = |address: u64, name: &str, ctype: &str| Annotation {
+        address,
+        size: 0,
+        name: name.into(),
+        comment: String::new(),
+        reviewed: false,
+        kind: None,
+        decomp: None,
+        ctype: Some(ctype.into()),
+    };
+    bin.set_annotations(vec![
+        note(soldier, "SP_monster_soldier", "void SP_monster_soldier(edict_t *self)"),
+        note(at("level"), "level", "level_locals_t"),
+        note(at("deathmatch"), "deathmatch", "cvar_t *"),
+    ]);
+    let name = |a: u64| operand_name(&bin, a);
+    assert_eq!(name(soldier + 0x4c).as_deref(), Some("edict_t.health"));
+    assert_eq!(name(soldier + 0x67).as_deref(), Some("level.time = f32 0.0"));
+    assert_eq!(name(run + 0x29).as_deref(), Some("cvar_t.value"));
+    assert_eq!(name(run + 0xa3).as_deref(), Some("edict_t.health"));
+    // A types file must have debug info.
+    assert!(bin.attach_types("gamedemo.dll", fixture("gamedemo.dll")).is_err());
+}
+
 /// The marks before the instruction at `address` in the disassembly of the function holding it.
 fn marks_at(bin: &Binary, address: u64) -> Vec<String> {
     let f = bin.symbols().function_containing(address).unwrap().address;
@@ -1470,6 +1521,7 @@ fn decompilation_goes_from_what_is_ready() {
             reviewed: false,
             kind: None,
             decomp: Some(decomp),
+            ctype: None,
         });
         bin.set_annotations(notes);
     };
@@ -1785,7 +1837,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: "main".into(),
             comment: "builds shapes and prints the total area".into(),
             reviewed: true,
-            kind: None, decomp: None,
+            kind: None, decomp: None, ctype: None,
         },
         Annotation {
             address: main.address + 0x10,
@@ -1793,7 +1845,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: String::new(),
             comment: "calls __main".into(),
             reviewed: false,
-            kind: None, decomp: None,
+            kind: None, decomp: None, ctype: None,
         },
     ]);
     // The name becomes a symbol with the recovered function's exact size.

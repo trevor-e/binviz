@@ -76,12 +76,19 @@ impl Convention {
 }
 
 /// What a value in a register came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Origin {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum Origin {
     /// An argument on the stack, at this offset from the entry.
     Stack(i64),
     /// The argument register with this number (`ecx` is 1), as it was at the entry.
     Register(usize),
+    /// A pointer loaded from a field: `Frame::loads[n]`, what it was read
+    /// through and at which offset (`mov esi, [esi+0x21c]`).
+    Loaded(u32),
+    /// A pointer loaded from the global at this address (`mov eax, [g_edicts]`).
+    Global(u64),
+    /// The address of a global itself (`mov ecx, offset level`).
+    Address(u64),
 }
 
 /// One path's state at an instruction.
@@ -159,6 +166,12 @@ pub(crate) struct Frame {
     pub slots: Vec<(u64, Slot)>,
     /// Offsets walked off each base register.
     pub accesses: Vec<Access>,
+    /// Each memory operand off a register whose value came from somewhere
+    /// known: (instruction, where the register's value came from, offset).
+    pub uses: Vec<(u64, Origin, i32)>,
+    /// The pointers loaded from fields (`Origin::Loaded` indexes these):
+    /// what each was read through, and at which offset.
+    pub loads: Vec<(Origin, i32)>,
 }
 
 /// An argument on the stack.
@@ -298,6 +311,7 @@ impl Binary {
         let mut uses_float = false;
         let mut slots = Vec::new();
         let mut groups: BTreeMap<(usize, u32), (Option<Origin>, Vec<Field>)> = BTreeMap::new();
+        let (mut uses, mut loads) = (Vec::new(), Vec::new());
         let mut budget = MAX_INSTRUCTIONS;
         while let Some((pc, mut st)) = paths.pop() {
             let mut pc = pc;
@@ -365,6 +379,8 @@ impl Binary {
                 }
                 // The stack slot it uses.
                 let memory = (0..ins.op_count()).any(|i| ins.op_kind(i) == OpKind::Memory);
+                // A register this loads a pointer into, and where the pointer came from.
+                let mut loaded: Option<(usize, Origin)> = None;
                 if memory {
                     let disp = if bits == 32 {
                         ins.memory_displacement32() as i32 as i64
@@ -410,7 +426,6 @@ impl Binary {
                     } else if let Some(b) = gpr(ins.memory_base())
                         && b != ESP
                         && !(b == EBP && st.fp != Sp::Unknown)
-                        && st.constant & (1 << b) == 0
                     {
                         // Memory walked off a base register: a structure, perhaps.
                         let from = if st.written & (1 << b) == 0 && is_argument_register(bits, self.summary.format, b) {
@@ -419,7 +434,23 @@ impl Binary {
                             st.origin[b]
                         };
                         let width = ins.memory_size().size();
-                        if ins.mnemonic() != Mnemonic::Lea && (1..=16).contains(&width) {
+                        if let Some(o) = from
+                            && ins.mnemonic() != Mnemonic::Lea
+                        {
+                            uses.push((pc, o, disp as i32));
+                            // A pointer read from it: where the register loaded now points came from.
+                            if ins.mnemonic() == Mnemonic::Mov
+                                && ins.op0_kind() == OpKind::Register
+                                && let Some(n) = gpr(ins.op0_register())
+                                && ins.memory_index() == Register::None
+                                && width == word as usize
+                            {
+                                loads.push((o, disp as i32));
+                                loaded = Some((n, Origin::Loaded(loads.len() as u32 - 1)));
+                            }
+                        }
+                        // What is read off an address the code names is a global's, not a structure's.
+                        if st.constant & (1 << b) == 0 && ins.mnemonic() != Mnemonic::Lea && (1..=16).contains(&width) {
                             let (store, width) = (stores, width as u8);
                             let fields = &mut groups.entry((b, st.instance[b])).or_insert((from, Vec::new())).1;
                             let mode = if store { "w" } else { "r" };
@@ -434,6 +465,22 @@ impl Binary {
                                 }),
                             }
                         }
+                    } else if ins.memory_index() == Register::None
+                        && (ins.memory_base() == Register::None || ins.is_ip_rel_memory_operand())
+                        && ins.mnemonic() == Mnemonic::Mov
+                        && ins.op0_kind() == OpKind::Register
+                        && let Some(n) = gpr(ins.op0_register())
+                        && ins.memory_size().size() == word as usize
+                    {
+                        // A pointer read from a global.
+                        let address = if ins.is_ip_rel_memory_operand() {
+                            ins.ip_rel_memory_address()
+                        } else if bits == 32 {
+                            ins.memory_displacement32() as u64
+                        } else {
+                            ins.memory_displacement64()
+                        };
+                        loaded = Some((n, Origin::Global(address)));
                     }
                 }
                 // What it does to the stack pointer, the frame pointer and the registers.
@@ -624,6 +671,32 @@ impl Binary {
                             before.origin[src]
                         };
                 }
+                if let Some((n, o)) = loaded {
+                    st.origin[n] = Some(o);
+                }
+                // The address of a global, which what is read off it is a field of.
+                if let Some(n) = gpr(ins.op0_register()).filter(|_| ins.op0_kind() == OpKind::Register) {
+                    let address = match ins.mnemonic() {
+                        Mnemonic::Mov
+                            if matches!(
+                                ins.op1_kind(),
+                                OpKind::Immediate32 | OpKind::Immediate32to64 | OpKind::Immediate64
+                            ) =>
+                        {
+                            Some(ins.immediate(1))
+                        }
+                        Mnemonic::Lea if ins.is_ip_rel_memory_operand() => Some(ins.ip_rel_memory_address()),
+                        Mnemonic::Lea
+                            if ins.memory_base() == Register::None && ins.memory_index() == Register::None =>
+                        {
+                            Some(ins.memory_displacement64())
+                        }
+                        _ => None,
+                    };
+                    if let Some(a) = address.filter(|&a| self.section_at(a).is_some()) {
+                        st.origin[n] = Some(Origin::Address(a));
+                    }
+                }
                 match flow {
                     FlowControl::UnconditionalBranch => {
                         match near_target(&ins) {
@@ -726,6 +799,8 @@ impl Binary {
             unbalanced,
             slots,
             accesses: Vec::new(),
+            uses,
+            loads,
         };
         // Offsets walked off each base register, named after the argument it holds.
         let mut seen_bases: Vec<usize> = Vec::new();
@@ -1023,7 +1098,18 @@ impl Frame {
                 let i = self.registers.iter().position(|&x| x == name)?;
                 Some(format!("arg{}", i + 1))
             }
+            Origin::Loaded(_) | Origin::Global(_) | Origin::Address(_) => None,
         }
+    }
+
+    /// Which argument, counting from 0, a value came in as (`this` is the first).
+    pub(crate) fn argument_index(&self, o: Origin) -> Option<usize> {
+        let name = self.origin_name(o)?;
+        if name == "this" {
+            return Some(0);
+        }
+        let n: usize = name.strip_prefix("arg")?.parse().ok()?;
+        n.checked_sub(1)
     }
 
     /// The first stack argument's number: after those passed in registers.

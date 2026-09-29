@@ -175,12 +175,15 @@ if command -v clang >/dev/null 2>&1; then
         clang -target i686-pc-windows-msvc -O2 -mno-sse -g -gcodeview -ffreestanding -fno-builtin \
             -ffile-compilation-dir=. -c gamedemo.c -o gamedemo.obj
         clang -target i686-pc-windows-msvc -c gamedemo-msvc.s -o gamedemo-msvc.obj
+        # Its types alone, as a decompilation would compile its headers: a types file for the stripped DLL.
+        clang -target i686-pc-windows-msvc -g -gdwarf -fno-eliminate-unused-debug-types -ffreestanding \
+            -fno-builtin -ffile-compilation-dir=. -c gamedemo.c -o gamedemo-types.obj
         # Quake 2's game DLL loads at 0x20000000; functions stay unfolded but the two the .s folds.
         ./lld-link /nologo /brepro /dll /noentry /nodefaultlib /debug /opt:noref,noicf /safeseh \
             /base:0x20000000 /export:GetGameAPI /pdbsourcepath:c:/src gamedemo.obj gamedemo-msvc.obj \
             /pdb:gamedemo.pdb /pdbaltpath:gamedemo.pdb /out:gamedemo.dll
     )
-    cp "$tmp/gamedemo.dll" "$tmp/gamedemo.pdb" "$out"
+    cp "$tmp/gamedemo.dll" "$tmp/gamedemo.pdb" "$tmp/gamedemo-types.obj" "$out"
     rm -rf "$tmp"
 fi
 

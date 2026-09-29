@@ -131,7 +131,12 @@ Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
                          map names
          --member <n>    pick a slice/member of a universal binary or archive, or
                          a binary of a folder (its name, path or number)
-         --notes <file>  load annotations (a JSON array) first
+         --notes <file>  load annotations (a JSON array) first; a note's type (a
+                         function's prototype, a global's type) names the fields its
+                         pointers reach: [esi+0x21c] reads as edict_t.enemy
+         --types <file>  take the types those name from this file's debug info (an
+                         object compiled from the program's headers with -g
+                         -fno-eliminate-unused-debug-types, or a PDB)
          --log <file>    a game ROM: follow its code with an emulator's code/data log
                          (FCEUX's or Mesen's .cdl): the code the game ran, the data it read
          --psx-exe <file> a PlayStation memory image (2 MiB of RAM dumped by an emulator)
@@ -178,6 +183,7 @@ fn main() -> ExitCode {
     let debug = take_opt("--debug");
     let member = take_opt("--member");
     let notes = take_opt("--notes");
+    let types = take_opt("--types");
     let log = take_opt("--log");
     let psx_exe = take_opt("--psx-exe");
     let overlay_at = take_opt("--overlay-at");
@@ -190,7 +196,10 @@ fn main() -> ExitCode {
         &args,
         debug.as_deref(),
         member.as_deref(),
-        notes.as_deref(),
+        Notes {
+            notes: notes.as_deref(),
+            types: types.as_deref(),
+        },
         log.as_deref(),
         Psx {
             exe: psx_exe.as_deref(),
@@ -365,11 +374,17 @@ struct Psx<'a> {
     trace: Option<&'a str>,
 }
 
+/// Loaded after the binary: the user's notes, and a file describing its types.
+struct Notes<'a> {
+    notes: Option<&'a str>,
+    types: Option<&'a str>,
+}
+
 fn run(
     args: &[String],
     debug: Option<&str>,
     member: Option<&str>,
-    notes: Option<&str>,
+    Notes { notes, types }: Notes<'_>,
     log: Option<&str>,
     psx: Psx<'_>,
 ) -> Result<(), String> {
@@ -468,6 +483,10 @@ fn run(
         let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
         let list: Vec<binviz::Annotation> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
         bin.set_annotations(list);
+    }
+    if let Some(path) = types {
+        let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+        bin.attach_types(path, bytes).map_err(|e| e.to_string())?;
     }
     let bin = bin;
     let arg = |i: usize| args.get(i).map(String::as_str);

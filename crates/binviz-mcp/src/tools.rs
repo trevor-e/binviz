@@ -82,6 +82,7 @@ pub fn definitions() -> Vec<Value> {
                 "member": { "type": "string", "description": "For universal binaries or archives: the slice/member index or architecture (e.g. arm64, x86_64). Universal binaries default to arm64." },
                 "debug_file": { "type": "string", "description": "Separate debug info to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, a PE's PDB (read as DWARF), or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
+                "types_file": { "type": "string", "description": "A file whose debug info describes the program's types, for a binary without them: an object compiled from its headers (clang -g -fno-eliminate-unused-debug-types -c -x c game.h, for the binary's target), or a PDB. With notes typing functions and globals (annotate's type), the fields code reaches through pointers are named: [esi+0x21c] reads as edict_t.enemy." },
                 "psx_exe": { "type": "string", "description": "PlayStation: the game's boot executable (PS-X EXE), whose functions are named in the file being opened when it is a memory image (2 MiB of RAM dumped by an emulator) or an overlay." },
                 "overlay_at": { "type": "string", "description": "PlayStation: open the file as a code overlay loaded at this address (0x80100000)." },
                 "trace": { "type": "string", "description": "PlayStation: a trace of the code an emulator ran (any text with an address per line: a CPU trace, a list of PCs); code it saw run that following the code didn't reach is followed too." },
@@ -616,6 +617,7 @@ pub fn definitions() -> Vec<Value> {
                 "name": { "type": "string" },
                 "comment": { "type": "string" },
                 "reviewed": { "type": "boolean", "description": "Mark as understood." },
+                "type": { "type": "string", "description": "Its type in C, which names the fields code reaches through it: a function's prototype (void SP_monster_soldier(edict_t *self), the name optional), or the data's type (level_locals_t, cvar_t *). Structures come from the debug info or the types file." },
             }),
             &["at"],
             false,
@@ -998,6 +1000,10 @@ impl Server {
                     .attach_debug_file(debug, data)
                     .map_err(|e| format!("{debug}: {e}"))?;
             }
+        }
+        if let Some(types) = string(args, "types_file") {
+            let data = binviz::read_file(types).map_err(|e| format!("{types}: {e}"))?;
+            open.bin.attach_types(types, data).map_err(|e| format!("{types}: {e}"))?;
         }
         // Built without dsymutil, a Mach-O binary's DWARF is in the objects its debug map names.
         if open.bin.debug_info().is_none() && !open.bin.debug_map().is_empty() {
@@ -2665,7 +2671,7 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
             name: String::new(),
             comment: String::new(),
             reviewed: false,
-            kind: None, decomp: None,
+            kind: None, decomp: None, ctype: None,
         },
     };
     if let Some(s) = size {
@@ -2679,6 +2685,10 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
     }
     if let Some(r) = args.get("reviewed").and_then(Value::as_bool) {
         a.reviewed = r;
+    }
+    if let Some(t) = args.get("type").and_then(Value::as_str) {
+        let t = t.trim();
+        a.ctype = (!t.is_empty()).then(|| t.to_string());
     }
     let summary = format!(
         "{} note at {address:#x}{}{}{}",
@@ -2695,6 +2705,10 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
         },
         if a.reviewed { " (reviewed)" } else { "" }
     );
+    let summary = match &a.ctype {
+        Some(t) => format!("{summary}, typed {t}"),
+        None => summary,
+    };
     list.push(a);
     o.bin.set_annotations(list);
     Ok(format!(

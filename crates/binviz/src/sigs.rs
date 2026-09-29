@@ -335,6 +335,7 @@ impl SdkReport {
                     source: m.library.clone(),
                     ..Default::default()
                 }),
+                ctype: None,
             })
             .collect()
     }

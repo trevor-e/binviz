@@ -36,6 +36,7 @@ pub mod disc;
 mod discover;
 pub mod dwarf;
 mod error;
+mod fields;
 pub mod fndiff;
 pub mod globals;
 mod inspect;

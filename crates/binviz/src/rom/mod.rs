@@ -570,6 +570,7 @@ impl Binary {
             endian: parts.endian,
             image_base: 0,
             debug: None,
+            types_file: None,
             discovered: Vec::new(),
             code_tables: Vec::new(),
             code_switches: Vec::new(),

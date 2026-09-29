@@ -401,6 +401,12 @@ pub struct Annotation {
     /// Where decompiling the function here stands, in a matching decompilation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub decomp: Option<Decomp>,
+    /// Its type in C: a function's prototype (`void (edict_t *self)`, the
+    /// name optional), or the type of the data here (`level_locals_t`,
+    /// `edict_t *`). The structures it names are looked up in the debug info
+    /// or the types file, and name the fields the code reaches through it.
+    #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
+    pub ctype: Option<String>,
 }
 
 impl Annotation {

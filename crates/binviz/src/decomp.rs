@@ -342,7 +342,7 @@ impl DecompContext {
         let r = RefCounts {
             call: 0,
             jump: 0,
-            ..self.referenced_by.clone()
+            ..self.referenced_by
         };
         let uses = r.describe();
         if !uses.is_empty() {
@@ -466,7 +466,7 @@ mod tests {
             name: "GetState".into(),
             comment: "reads the state word".into(),
             reviewed: false,
-            kind: None, decomp: None,
+            kind: None, decomp: None, ctype: None,
         }]);
         let c = bin.decomp_context(0x8001_0000, 64).unwrap();
         assert_eq!((c.name.as_str(), c.size), ("entry", 0x1C));

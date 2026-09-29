@@ -31,6 +31,9 @@ pub struct Binary {
     pub(crate) endian: Endian,
     pub(crate) image_base: u64,
     pub(crate) debug: Option<crate::dwarf::DebugInfo>,
+    /// A file whose debug info describes the program's types, attached for
+    /// them alone (an object compiled from its headers, a PDB).
+    pub(crate) types_file: Option<crate::dwarf::DebugInfo>,
     /// Function boundaries recovered from unwind tables, function starts, or the code itself.
     pub(crate) discovered: Vec<(u64, u64)>,
     /// Jump tables found following the code, sorted by address: data, even inside code.
@@ -533,6 +536,7 @@ impl Binary {
             endian,
             image_base,
             debug: None,
+            types_file: None,
             discovered: discovery.functions,
             code_tables: discovery.tables,
             code_switches: discovery.switches,
@@ -615,6 +619,7 @@ impl Binary {
             endian: Endian::Little,
             image_base: 0,
             debug: None,
+            types_file: None,
             discovered: Vec::new(),
             code_tables: Vec::new(),
             code_switches: Vec::new(),

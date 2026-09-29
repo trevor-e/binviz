@@ -206,11 +206,14 @@ impl Binary {
 
         match isa {
             Isa::X86(bits) => {
-                // The function's stack frame names what `[esp+N]` and `[ebp-N]` hold.
-                let frame = self
-                    .symbols
-                    .function_containing(start)
-                    .and_then(|f| self.stack_frame(f.address));
+                // The function's stack frame names what `[esp+N]` and `[ebp-N]` hold,
+                // and the fields reached through the pointers it knows the types of.
+                let function = self.symbols.function_containing(start).map(|f| f.address);
+                let frame = function.and_then(|f| self.stack_frame(f));
+                let fields = match (function, &frame) {
+                    (Some(f), Some(frame)) => self.field_labels(f, frame),
+                    _ => Default::default(),
+                };
                 // An image loaded well above zero: numbers in it that fall inside it are its addresses
                 // (`push offset string`, `mov eax, [global]`), as the reference index takes them.
                 let absolute = self.summary.format == crate::model::Format::Xbe
@@ -332,10 +335,11 @@ impl Binary {
                                 (Some(name), Some(value)) => Some(format!("{name} = {value}")),
                                 (name, value) => name.or(value),
                             };
-                            // A stack slot, and what is stored in it or read with it.
-                            match (frame.as_ref().and_then(|f| f.slot_at(address)), named) {
-                                (Some(slot), Some(named)) => Some(format!("{slot}; {named}")),
-                                (slot, named) => slot.or(named),
+                            // A stack slot or a structure's field, and what is stored in it or read with it.
+                            let place = frame.as_ref().and_then(|f| f.slot_at(address)).or_else(|| fields.get(&address).cloned());
+                            match (place, named) {
+                                (Some(place), Some(named)) => Some(format!("{place}; {named}")),
+                                (place, named) => place.or(named),
                             }
                         },
                         target,

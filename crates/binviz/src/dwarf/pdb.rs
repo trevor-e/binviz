@@ -336,6 +336,7 @@ pub(crate) fn convert(data: &[u8], image_base: u64, address_size: u8) -> Result<
     // names (mangled, or plain for C) for whatever nothing else names.
     let mut described: std::collections::HashSet<u64> = symbols.iter().map(|s| s.1).collect();
     let (mut data, mut publics) = (Vec::new(), Vec::new());
+    let mut global_data = Vec::new();
     if let Ok(globals) = pdb.global_symbols() {
         let mut syms = globals.iter();
         while let Ok(Some(s)) = syms.next() {
@@ -353,6 +354,9 @@ pub(crate) fn convert(data: &[u8], image_base: u64, address_size: u8) -> Result<
                 Ok(pdb::SymbolData::Data(d)) => {
                     if let Some(a) = at(d.offset) {
                         data.push((d.name.to_string().into_owned(), a, SymbolKind::Data));
+                        if !described.contains(&a) {
+                            global_data.push((d.name.to_string().into_owned(), a, d.global, d.type_index));
+                        }
                     }
                 }
                 Ok(pdb::SymbolData::UserDefinedType(u)) => {
@@ -361,6 +365,31 @@ pub(crate) fn convert(data: &[u8], image_base: u64, address_size: u8) -> Result<
                 _ => {}
             }
         }
+    }
+    // The data only the global symbols list (lld moves it there), as
+    // variables of their types in a unit of their own.
+    if !global_data.is_empty()
+        && let Some(t) = types.as_mut()
+    {
+        let mut unit = Unit::new(encoding, LineProgram::none());
+        let root = unit.root();
+        unit.get_mut(root)
+            .set(gimli::DW_AT_name, AttributeValue::String(b"(globals)".to_vec()));
+        let mut refs: Vec<Fixup> = Vec::new();
+        for (name, address, global, type_index) in &global_data {
+            let id = unit.add(root, gimli::DW_TAG_variable);
+            let e = unit.get_mut(id);
+            e.set(gimli::DW_AT_name, AttributeValue::String(name.clone().into_bytes()));
+            let mut location = Expression::new();
+            location.op_addr(Address::Constant(*address));
+            e.set(gimli::DW_AT_location, AttributeValue::Exprloc(location));
+            e.set(gimli::DW_AT_external, AttributeValue::Flag(*global));
+            if let Some(target) = t.die(*type_index) {
+                refs.push((id, gimli::DW_AT_type, target));
+            }
+        }
+        let unit_id = dwarf.units.add(unit);
+        fixups.extend(refs.into_iter().map(|r| (unit_id, r)));
     }
     for (name, a, kind) in data {
         if described.insert(a) {

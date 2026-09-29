@@ -797,6 +797,7 @@ impl Binary {
             endian: Endian::Little,
             image_base: h.base,
             debug: None,
+            types_file: None,
             discovered: found.functions,
             code_tables: found.tables,
             code_switches: found.switches,
