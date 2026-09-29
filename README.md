@@ -199,3 +199,7 @@ cargo test
 - Master System, Game Gear and PC Engine ROMs are not recognized yet.
 
 The [reference](docs/reference.md#limitations-and-ideas) has the full list.
+
+## License
+
+[MIT](LICENSE)
