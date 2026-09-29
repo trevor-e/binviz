@@ -49,6 +49,7 @@ pub mod rom;
 pub mod search;
 pub mod signature;
 pub mod size;
+pub mod splat;
 mod strings;
 mod stubs;
 mod symbols;
