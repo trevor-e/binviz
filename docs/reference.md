@@ -4,10 +4,11 @@ The full description of every feature, view, command and design decision.
 The [README](../README.md) is the short version.
 
 binviz is a Rust library, with a WebAssembly-powered browser UI and a CLI, that
-explains **ELF**, **Mach-O** and **PE/COFF** files down to individual header
-fields, and maps machine code back to source through **DWARF** debug info.
-It reads **game ROMs** too (NES, SNES, Game Boy, Game Boy Advance, Mega Drive,
-Nintendo 64, PlayStation), with disassemblers for their CPUs.
+explains **ELF**, **Mach-O**, **PE/COFF** and **WebAssembly** files down to
+individual header fields, and maps machine code back to source through
+**DWARF** debug info. It reads **game ROMs** too (NES, SNES, Game Boy, Game Boy
+Advance, Mega Drive, Nintendo 64, PlayStation), with disassemblers for their
+CPUs.
 
 - **Every byte accounted for.** The file is described as a tree of regions:
   headers and their fields, program/section headers, load commands, sections,
@@ -42,10 +43,10 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   (references to no DIE, ranges that end before they start, files the line
   table doesn't define), each at its unit, DIE and section offset. Units that
   can't be read are reported rather than silently skipped.
-- **Disassembly** for x86/x86-64 (iced-x86) and AArch64/ARM (yaxpeax-arm), with
-  branch targets resolved to symbols, the strings and globals an instruction
-  uses named inline (AArch64 `adrp` pairs included), and source lines
-  interleaved.
+- **Disassembly** for x86/x86-64 (iced-x86), AArch64/ARM (yaxpeax-arm) and
+  WebAssembly (binviz's own decoder), with branch targets resolved to symbols,
+  the strings and globals an instruction uses named inline (AArch64 `adrp`
+  pairs included), and source lines interleaved.
 - **Call graph and cross-references.** Who calls a function, what it calls, a
   path of calls from one function to another, and every reference to an
   address: calls, tail calls, reads, writes, address-taken, and pointers stored
@@ -80,6 +81,42 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   and search take them too. PlayStation discs (`.bin` raw images or `.iso`)
   open to their files, the executable `SYSTEM.CNF` boots first; only the
   sectors needed are read. Files of no format binviz knows open as raw bytes.
+- **WebAssembly, for a browser port.** A module (Emscripten's, wasm-ld's,
+  rustc's, or a relocatable `.o`) is laid out section by section down to each
+  entry: types, imports, functions, tables, memories, globals, exports, the
+  start function, element and data segments, each function body's locals and
+  code, and the custom sections (the name section's subsections, `producers`,
+  `target_features`, `build_id`, `sourceMappingURL`, `external_debug_info`, an
+  object's `linking` and `reloc.*`, and `.debug_*`, decoded as DWARF is
+  anywhere else). Its code has no address space of its own, so a module's
+  addresses are its file offsets, the numbers browsers and Node print
+  (`wasm-function[12]:0x1a2b`); a function is at its body's locals, where its
+  DWARF says it starts once moved. Linear memory is placed at `0x80000000`
+  (memory address `0x400` is `0x80000400`): each data segment is a section
+  there, named as the linker named it (`.rodata`, `.data`), and the
+  zero-filled memory above them is `.bss` up to the last variable known or,
+  with none known, `bss and stack` up to where the stack pointer starts.
+  Functions are named by the name section, an object's symbol table, DWARF or
+  their exports, else `func[N]` (the index stack traces give); imports sit at
+  their import entries, globals at theirs, and variables come from DWARF, the
+  symbol table or exported globals. DWARF 4 and 5 are read with their
+  addresses moved: code offsets counted from the code section's contents
+  become module offsets, memory addresses move up to `0x80000000`, and what
+  the linker dropped (its tombstones) stays out. A source map (`emcc
+  -gsource-map`) attaches as a debug file and becomes a line table, and so
+  does the module with the DWARF (`emcc -gseparate-dwarf`'s `.debug.wasm`, or
+  an unstripped build of the same code, which names functions too); the CLI
+  and the MCP server attach the one a module names when it is beside it. The
+  disassembler reads the MVP, sign extension, the `0xFC` group (saturating
+  truncation, bulk memory, tables), reference types, tail calls, exception
+  handling (both encodings), typed function references, SIMD and relaxed SIMD,
+  and atomics: branches go to where their block ends or their loop starts,
+  calls name their functions, a `call_indirect` says how many functions of its
+  type its table holds, and loads and stores off a constant address name the
+  variable. Calls, `ref.func`, globals read and written, memory at constant
+  addresses, the function tables' slots and pointers between data are
+  cross-references, so callers, the call graph and coverage work as they do
+  for native code, and two builds compare by size and function by function.
 - **Text and graphics in games.** Relative search finds text in a game's own
   encoding from a word it shows; table files (`.tbl`) read, search and dump the
   text, and the hex view reads it through the table. A tile viewer draws the
@@ -152,7 +189,12 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   its function, source line and inlined calls from the binaries that are open,
   each of the report's images found by UUID or build ID (open the app's folder
   with its dSYMs and they are all there). Images of another build are called
-  out rather than symbolicated wrongly.
+  out rather than symbolicated wrongly. A browser's or Node's stack trace
+  through WebAssembly works the same way: Chrome's and Node's
+  (`at f (https://…/app.wasm:wasm-function[12]:0x1a2b)`, `wasm://wasm/…` for
+  a module compiled from bytes), Firefox's (`f@…:wasm-function[12]:0x1a2b`)
+  and Safari's (`wasm-function[12]@[wasm code]`, the function alone), the
+  JavaScript frames between them kept as they are.
 
 Everything runs locally; in the browser the file never leaves your machine.
 
@@ -283,7 +325,7 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `objc <file> [name]` | Objective-C classes, categories and protocols; with a name, one declared as its header would, or a selector's implementations and senders |
 | `dwarf <file> [check \| find \| die \| offset \| list \| at \| lines \| sources \| file]` | DWARF units, and: everything wrong with it; DIEs by name, a DIE, the DIE at a `.debug_info` offset, a unit's DIEs by tag; scopes and variables at an address; line tables, source files and their address ranges |
 | `attribution <file> [unit] [id]` | Code and data per source file (or unit); with an id, that one's address ranges |
-| `crash <file> <report>` | Symbolicate a crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace) with a binary or a folder's binaries |
+| `crash <file> <report>` | Symbolicate a crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace, a browser's or Node's through WebAssembly) with a binary or a folder's binaries |
 | `diff <old> <new>` · `diff <old> <new> functions [name]` | What changed in size between two builds (binaries, or folders or zips); which functions are which, and one function's code next to its match's |
 | `patch <file> <patch> [out]` · `patch <old> <new> <out.ips>` | What an IPS, UPS or BPS patch changes, placed in banks and functions (`out`: the patched file); or the patch from one file to another |
 | `relsearch <file> <word> [16] [tbl]` | Relative search: a word in the file's own text encoding; `tbl` prints the table it implies |
@@ -297,7 +339,9 @@ The commands before these (`at`, `xrefs`, `refs-from`, `callers`, `callees`,
 `attributed`, `json`) still work.
 
 `--debug <file>` attaches a separate debug file (or names the folder holding
-the object files of a Mach-O debug map); `--member <n>` picks a slice of
+the object files of a Mach-O debug map; for a WebAssembly module, a source map
+or the module with its DWARF, which are attached without it when the module
+names one that is beside it); `--member <n>` picks a slice of
 a universal binary or an archive member; `--notes <file.json>` loads
 annotations first; `--log <file.cdl>` follows a game ROM's code with an
 emulator's code/data log.
@@ -329,9 +373,9 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 
 | Tool | |
 |---|---|
-| `open_binary` | Load a file (universal binaries pick arm64 unless told otherwise; `debug_file` attaches a dSYM's DWARF), or a folder or zip: every binary in it opens, paired with its debug file |
+| `open_binary` | Load a file (universal binaries pick arm64 unless told otherwise; `debug_file` attaches a dSYM's DWARF, a PDB, or a WebAssembly module's source map or DWARF module), or a folder or zip: every binary in it opens, paired with its debug file |
 | `size_diff` | What changed in size between two builds on disk: two binaries, or two folders or zips |
-| `symbolicate` | A crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace) symbolicated with the open binaries, each image found by UUID or build ID |
+| `symbolicate` | A crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace, a browser's or Node's through WebAssembly) symbolicated with the open binaries, each image found by UUID or build ID |
 | `folder_summary` | An opened folder: its binaries and debug files, what its size is made of, the largest and duplicated files; `analyze` sums the code of every binary by owner |
 | `binary_summary` | Format, platform, entry point, build ID, segments, sections, DWARF |
 | `size_report` | Why the binary is as big as it is: bytes by kind and section, the largest functions and data, and the owners of the code — Swift modules, Objective-C classes, C++ namespaces / Rust crates, C prefixes, compiler-generated helpers — and source files with DWARF |
@@ -537,12 +581,15 @@ crates/binviz        the library
   src/dwarf/check.rs         the DWARF checker
   src/dwarf/debugmap.rs      Mach-O debug maps: the objects' DWARF, linked to the binary
   src/dwarf/pdb.rs           PDBs: modules, procedures and line records, written as DWARF
+  src/wasm/          WebAssembly: reading modules (read.rs), their layout (layout.rs),
+                     the bytecode (code.rs) and what it refers to (analysis.rs), DWARF
+                     moved to binviz's addresses (dwarf.rs), source maps (sourcemap.rs)
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
 crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents
 web/                 TypeScript UI; the WASM runs in a Web Worker
-tests/fixtures/      small ELF / Mach-O / PE test binaries and their sources, and
-                     hand-assembled ROMs (src/roms.py writes them)
+tests/fixtures/      small ELF / Mach-O / PE / WebAssembly test binaries and their
+                     sources, and hand-assembled ROMs (src/roms.py writes them)
 scripts/build-fixtures.sh   regenerates the fixtures with rust-lld (no SDKs needed)
 ```
 
@@ -567,8 +614,8 @@ cargo test
 - Split DWARF (`.dwo`/`.dwp`) is detected but not followed.
 - `.eh_frame`, dyld opcode streams and chained fixups are shown as regions but
   not decoded entry by entry (chained fixups are walked to find pointers).
-- Disassembly covers x86, x86-64, AArch64 and ARM (A32); cross-references and
-  the call graph x86, x86-64 and AArch64.
+- Disassembly covers x86, x86-64, AArch64, ARM (A32) and WebAssembly;
+  cross-references and the call graph x86, x86-64, AArch64 and WebAssembly.
 - Calls through registers are followed only when the register was just loaded
   from a pointer slot (`ldr x16, [got]; blr x16`, `call r14`); virtual calls are
   not resolved to their targets yet. Objective-C messages are followed by
@@ -587,3 +634,15 @@ cargo test
   sectors; XA audio and video files (Form 2) read as if they were data.
 - Objective-C metadata is read from images outside the dyld shared cache;
   Swift's own metadata (beyond classes visible to Objective-C) is not.
+- WebAssembly: only memory 0, and only a 32-bit one, is placed at
+  `0x80000000`. A passive data segment is placed where the start function
+  copies it (`__wasm_init_memory`, in a build with threads); one copied
+  elsewhere, or placed at a global's value (a side module's
+  `__memory_base`), stays at its bytes in the file. The GC proposal's
+  instructions (`0xFB`) aren't decoded: a body stops decoding there, the
+  rest shown as bytes. A `call_indirect` isn't followed to the functions it
+  may reach (the disassembly says how many there are). Without DWARF or a
+  symbol table, where the zero-filled variables end and the stack begins
+  isn't known (`bss and stack`), and the heap above is no section. A source
+  map gives lines, not inlined calls or variables. Modules in a folder or
+  zip aren't recognized as binaries yet: open the `.wasm`.

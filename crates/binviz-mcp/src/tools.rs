@@ -9,14 +9,15 @@ use serde_json::{Value, json};
 
 use crate::notes;
 
-pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O and PE binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
+pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O, PE and WebAssembly binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
 Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file, a PDB) by UUID, build ID or the name the binary records; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
 Addresses: 0x401000 (or 401000), a symbol, name+0x10, @0x200 for a file offset, and for banked ROMs bank:address (03:C000; $80:8000 on the SNES). To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
 For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. \
 For Objective-C (Mach-O apps and frameworks): objc lists the classes, categories and protocols; given a name it declares one as its header would (ivars, properties, methods with their types and implementations), or for a selector lists the methods implementing it and the functions that send it. The metadata also names a stripped binary's methods (-[Class selector]), its metadata and its selector references (@selector(name)), so those names work everywhere. \
 For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, Game Boy Advance, Mega Drive / Genesis, Nintendo 64, PlayStation PS-X EXE): open_binary recognizes them by their headers (files of no known format open as raw bytes); banks get addresses of their own (bank 3's $C000 is 0x3c000), the hardware registers are named (PPUCTRL, LCDC, INIDISP, DISPCNT, VDP_CTRL, VI_STATUS, GP1), and the code is found by following it from the reset and interrupt vectors, so disassemble, function_info, xrefs (who writes PPUCTRL?) and call_graph work as for any binary. For their text: relative_search finds a word in the game's own encoding, and table_text reads, searches and dumps text with a table file. With emulators: code_log follows the code with an FCEUX or Mesen code/data log (what the game ran when played: code behind jump tables, where an NES game's banks were mapped), and labels imports a Mesen, FCEUX, RGBDS, WLA DX or no$gba label file into the notes, or writes the notes as one for the emulator's debugger. \
+For WebAssembly (a browser port's module, from Emscripten, wasm-ld or rustc): an address is an offset in the module file, as browsers print one (wasm-function[12]:0x1a2b); a function's is where its body starts, and linear memory sits at 0x80000000 (memory address 0x400 is 0x80000400), its data segments and zero-filled variables as sections there. Functions are named by the name section, else DWARF, else exports, else func[N] (the index traces give); disassemble shows the bytecode with calls, globals and memory named, and what a call_indirect can reach. Its DWARF is read with addresses moved to the module's; a source map (emcc -gsource-map) or the module with the DWARF (emcc -gseparate-dwarf's .debug.wasm, or an unstripped build) attach as debug_file, found beside the module when it names them. \
 To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
-For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone or a stack trace, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
+For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone, a stack trace, or a browser's or Node's stack trace through WebAssembly, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
 To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
 For a matching decompilation (C that compiles back to the same bytes), the loop is: next_functions says what to do next, best first — functions shaped like one already matched (its C is a template), then those whose callees are all done, cheapest for what they unlock — and claim: true takes one, so parallel agents don't collide; decomp_context gives everything for writing it in one call (code, prototype guess, callers and callees with theirs, strings, globals, and the matched functions shaped like it with their source files); match_function scores the compiled object against the original and explains each difference; mark records the outcome (matched with its source file, nonmatching, attempted with its percent, skipped, library), which re-ranks the rest, and place_report records a whole objdiff report at once. After three tries without a match, move on: the function comes back once something it calls is done. identify_sdk marks the SDK's functions as library code, which callers don't wait on. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
@@ -75,11 +76,11 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "open_binary",
             "Open a binary",
-            "Loads an ELF, Mach-O or PE file (also universal/fat binaries and .a archives) and keeps it in memory for the other tools, or a folder or zip of binaries (an .ipa, an .xcarchive, a build folder; zips inside open too): every binary inside opens under its own id, and its debug file there (a dSYM, a .debug file or a PDB, paired by UUID, build ID or the name the binary records) attaches on first use. Loads notes from <path>.binviz-notes.json (<folder>.<id>.binviz-notes.json) if present. Returns ids and a summary.",
+            "Loads an ELF, Mach-O, PE or WebAssembly file (also universal/fat binaries and .a archives) and keeps it in memory for the other tools, or a folder or zip of binaries (an .ipa, an .xcarchive, a build folder; zips inside open too): every binary inside opens under its own id, and its debug file there (a dSYM, a .debug file or a PDB, paired by UUID, build ID or the name the binary records) attaches on first use. Loads notes from <path>.binviz-notes.json (<folder>.<id>.binviz-notes.json) if present. Returns ids and a summary.",
             json!({
                 "path": { "type": "string", "description": "Path to the binary, or to a folder or zip of binaries." },
                 "member": { "type": "string", "description": "For universal binaries or archives: the slice/member index or architecture (e.g. arm64, x86_64). Universal binaries default to arm64." },
-                "debug_file": { "type": "string", "description": "Separate debug info to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, a PE's PDB (read as DWARF), or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
+                "debug_file": { "type": "string", "description": "Separate debug info to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, a PE's PDB (read as DWARF), a WebAssembly module's source map or the module with its DWARF (found by themselves beside the module when it names them), or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
                 "psx_exe": { "type": "string", "description": "PlayStation: the game's boot executable (PS-X EXE), whose functions are named in the file being opened when it is a memory image (2 MiB of RAM dumped by an emulator) or an overlay." },
                 "overlay_at": { "type": "string", "description": "PlayStation: open the file as a code overlay loaded at this address (0x80100000)." },
@@ -132,7 +133,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "symbolicate",
             "Symbolicate a crash report",
-            "Turns a crash report (an Apple .crash or .ips, an Android tombstone, or a stack trace that gives images and offsets) into the function, source line and inlined calls of every frame, with the open binaries: each of the report's images is found by UUID or build ID, and binaries of another build are called out. Open the app first — its folder or zip with the dSYMs gives every binary at once.",
+            "Turns a crash report (an Apple .crash or .ips, an Android tombstone, a stack trace that gives images and offsets, or a browser's or Node's stack trace through WebAssembly) into the function, source line and inlined calls of every frame, with the open binaries: each of the report's images is found by UUID or build ID, and binaries of another build are called out. Open the app first — its folder or zip with the dSYMs gives every binary at once.",
             json!({
                 "report": { "type": "string", "description": "The crash report's text." },
                 "report_file": { "type": "string", "description": "Or the path of a file holding it." },
@@ -191,7 +192,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "disassemble",
             "Disassemble a function",
-            "Disassembles the function containing an address (x86, x86-64, AArch64, ARM), with branch targets named, source lines interleaved (DWARF) and notes shown as comments.",
+            "Disassembles the function containing an address (x86, x86-64, AArch64, ARM, WebAssembly), with branch targets named, source lines interleaved (DWARF) and notes shown as comments.",
             json!({
                 "at": address("A function or address inside it"),
                 "max_instructions": { "type": "integer", "description": "Default 400, max 5000." },
@@ -951,6 +952,9 @@ impl Server {
                 debug_map_note(open.bin.attach_debug_map_from_disk(&folders))
             );
         }
+        if string(args, "debug_file").is_none() && open.bin.debug_info().is_none() {
+            note.push_str(&wasm_debug_beside(&mut open.bin, &path));
+        }
         // Swift names read better through `swift-demangle`, where it is installed.
         open.bin.demangle_swift_with_tool();
         // Notes: <path>.binviz-notes.json unless told otherwise.
@@ -1326,6 +1330,7 @@ fn summary(o: &Open) -> String {
                 match s.format {
                     binviz::Format::MachO => " (for Mach-O it usually lives in a .dSYM: pass its DWARF file as debug_file; without one, in the object files the debug map names: pass their folder)".to_string(),
                     binviz::Format::Pe => pdb_hint(s),
+                    binviz::Format::Wasm => wasm_hint(s),
                     _ => String::new(),
                 }
             );
@@ -3002,10 +3007,31 @@ fn debug_of(o: &Open) -> Result<&binviz::DebugInfo, String> {
             match s.format {
                 binviz::Format::MachO => "; for Mach-O it usually lives in a .dSYM: open_binary with debug_file pointing at …/Contents/Resources/DWARF/<name>, or for a build without one, at the folder of the object files its debug map names".to_string(),
                 binviz::Format::Pe => pdb_hint(s),
+                binviz::Format::Wasm => wasm_hint(s),
                 _ => String::new(),
             }
         )
     })
+}
+
+/// Attaches the debug info a WebAssembly module names (its DWARF module,
+/// its source map) when the file is beside the module: the name's last
+/// part, a URL's too. What happened, as a line of the note.
+fn wasm_debug_beside(bin: &mut Binary, path: &Path) -> String {
+    let dir = path.parent().unwrap_or(Path::new(""));
+    let mut out = String::new();
+    for named in bin.wasm_debug_files() {
+        let file = named.split(['?', '#']).next().unwrap_or(&named);
+        let file = dir.join(file.rsplit(['/', '\\']).next().unwrap_or(file));
+        let Ok(bytes) = binviz::read_file(&file) else { continue };
+        match bin.attach_debug_file(&file.to_string_lossy(), bytes) {
+            Ok(()) => return format!("Debug info from {}, which the module names.\n", file.display()),
+            Err(e) => {
+                let _ = writeln!(out, "{}: {e}", file.display());
+            }
+        }
+    }
+    out
 }
 
 /// Where a PE's debug info is: the PDB it names, to pass as debug_file.
@@ -3013,6 +3039,14 @@ fn pdb_hint(s: &binviz::Summary) -> String {
     match &s.debug_link {
         Some(pdb) => format!(" (it is in a PDB, {pdb}: open_binary with debug_file pointing at it)"),
         None => " (MSVC builds keep it in a PDB, which this image doesn't name)".to_string(),
+    }
+}
+
+/// Where a WebAssembly module's debug info is: the file it names, to pass as debug_file.
+fn wasm_hint(s: &binviz::Summary) -> String {
+    match &s.debug_link {
+        Some(file) => format!(" (the module names {file}: open_binary with debug_file pointing at it)"),
+        None => " (a build keeps it in the module, a source map (emcc -gsource-map) or a module of its own (emcc -gseparate-dwarf): pass one as debug_file)".to_string(),
     }
 }
 

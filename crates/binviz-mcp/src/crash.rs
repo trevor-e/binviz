@@ -14,7 +14,7 @@ impl Server {
             _ => return Err("pass the report's text as report, or its path as report_file".into()),
         };
         let report = parse(&text).ok_or(
-            "not a crash report: an Apple .crash or .ips, an Android tombstone, or a stack trace with images and offsets",
+            "not a crash report: an Apple .crash or .ips, an Android tombstone, a stack trace with images and offsets, or one through WebAssembly (wasm-function[12]:0x1a2b)",
         )?;
         if self.open.is_empty() {
             return Err(
