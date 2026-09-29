@@ -72,7 +72,7 @@ export class OverviewView extends View {
     if (s.buildId && s.format !== 'rom') facts.push([s.format === 'mach-o' ? 'UUID' : s.format === 'pe' ? 'PDB signature' : 'Build ID', h('span', { class: 'mono' }, s.buildId)]);
     if (s.debugLink) facts.push([s.format === 'pe' ? 'PDB path' : 'Debug link', h('span', { class: 'mono' }, s.debugLink)]);
     facts.push(['Contents', `${s.sectionCount} sections · ${s.segmentCount} segments · ${formatCount(s.symbolCount)} symbols`]);
-    if (s.syntheticAddresses) facts.push(['Addresses', 'Relocatable object: binviz laid out its sections at synthetic addresses and applied relocations to the DWARF']);
+    if (s.syntheticAddresses) facts.push(['Addresses', 'Relocatable object: its sections are laid out at synthetic addresses, with relocations applied to the DWARF']);
     for (const p of s.properties) facts.push([p.key, p.value]);
     return h(
       'div',
@@ -153,7 +153,7 @@ export class OverviewView extends View {
       { class: 'card' },
       h('h2', null, 'Code'),
       h('p', { class: 'sub' }, found),
-      h('p', { class: 'secondary' }, 'A ROM mixes code with graphics, tables and text. binviz follows the code from the reset and interrupt vectors, each call and branch in turn; what nothing reaches stays unexplored until you name it.'),
+      h('p', { class: 'secondary' }, 'A ROM mixes code with graphics, tables and text. Code is followed from the reset and interrupt vectors, each call and branch in turn; what nothing reaches stays unexplored until you name it.'),
       open,
       h('h3', { class: 'card-sub' }, 'From emulators'),
       h('p', { class: 'secondary' }, 'Play the game with FCEUX’s or Mesen’s code/data logger on, then load its log (or drop the .cdl here): code only reached through jump tables is followed too, data the game read isn’t taken for code, and an NES game’s switched banks go where they ran.'),
@@ -641,7 +641,7 @@ export async function importLabels(file: File) {
   try {
     const r = await store.importLabels(file.name, await file.text());
     if (!r) return;
-    const extra = [r.skipped ? `${formatCount(r.skipped)} for places binviz can’t place (a switched bank’s address without its bank)` : '', r.directives ? `${formatCount(r.directives)} directives` : ''].filter(Boolean);
+    const extra = [r.skipped ? `${formatCount(r.skipped)} for places that can’t be placed (a switched bank’s address without its bank)` : '', r.directives ? `${formatCount(r.directives)} directives` : ''].filter(Boolean);
     toast(`Imported ${formatCount(r.labels.length)} labels from ${file.name}${extra.length ? `; skipped ${extra.join(' and ')}` : ''}`);
   } catch (e) {
     toast(e instanceof Error ? e.message : String(e), 'error');

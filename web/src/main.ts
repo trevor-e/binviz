@@ -142,7 +142,7 @@ const inspectorBtn = button('', 'Toggle inspector', 'chevron', () => {
 const topbar = h(
   'header',
   { class: 'topbar' },
-  h('div', { class: 'brand' }, h('div', { class: 'brand-mark', 'aria-hidden': 'true' }, ...['code', 'header', 'rodata', 'debug'].map((f) => h('span', { style: `background:var(--f-${f})` }))), 'binviz'),
+  h('div', { class: 'brand' }, h('div', { class: 'brand-mark', 'aria-hidden': 'true' }, ...['code', 'header', 'rodata', 'debug'].map((f) => h('span', { style: `background:var(--f-${f})` }))), h('span', { class: 'brand-name' }, 'Decompilation Kit')),
   fileInfo,
   palette.el,
   h('div', { class: 'actions' }, openBtn, debugBtn, sourcesBtn, themeBtn, inspectorBtn),
@@ -636,7 +636,7 @@ window.addEventListener('paste', async (e) => {
   const text = e.clipboardData?.getData('text/plain') ?? '';
   if (text.length < 20) return;
   if (await store.api.crashParse(text)) await store.openCrash('Pasted crash report', text);
-  else toast('The pasted text isn’t a crash report binviz can read (Apple .crash or .ips, an Android tombstone, a stack trace)', 'error');
+  else toast('The pasted text isn’t a crash report that can be read (Apple .crash or .ips, an Android tombstone, a stack trace)', 'error');
 });
 
 /** The earlier build to compare sizes with, dropped on the Compare view. */
