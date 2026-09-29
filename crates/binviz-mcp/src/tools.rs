@@ -444,7 +444,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "coverage",
             "Reverse-engineering coverage",
-            "How much of the code and data is mapped out: bytes that are reviewed, annotated, named (symbols/DWARF), format structure, recovered (functions from unwind info / function starts, strings), padding, or unexplored — per section — plus the largest unexplored gaps with a guess at what they hold.",
+            "How much of the code and data is mapped out: bytes that are reviewed, annotated, named (symbols/DWARF), format structure, recovered (functions from unwind info / function starts or found by following the code, strings), padding, or unexplored — per section — plus the largest unexplored gaps with a guess at what they hold.",
             json!({ "gaps": { "type": "integer", "description": "How many gaps to list (default 20, max 500)." } }),
             &[],
             true,

@@ -31,8 +31,10 @@ pub struct Binary {
     pub(crate) endian: Endian,
     pub(crate) image_base: u64,
     pub(crate) debug: Option<crate::dwarf::DebugInfo>,
-    /// Function boundaries recovered from unwind tables / function starts.
+    /// Function boundaries recovered from unwind tables, function starts, or the code itself.
     pub(crate) discovered: Vec<(u64, u64)>,
+    /// Jump tables found following the code, sorted by address: data, even inside code.
+    pub(crate) code_tables: Vec<crate::discover::x86::Table>,
     /// The symbol table of an attached debug file (a dSYM's), for stripped binaries.
     pub(crate) debug_symbols: crate::inspect::DebugSymbols,
     pub(crate) annotations: Vec<Annotation>,
@@ -409,10 +411,20 @@ impl Binary {
                 });
             }
         }
-        let discovered = crate::discover::discover(&file, format, &b, &sections, &segments, image_base, is64);
+        let stubs = crate::stubs::import_stubs(&file, format, &b, &sections, &imports, is64);
+        // Import thunks are functions too, for following the code.
+        let mut known = crate::discover::Known {
+            entry: Some(file.entry()).filter(|&e| e != 0),
+            functions: symbols.function_addresses(),
+            imports: &imports,
+        };
+        known
+            .functions
+            .extend(stubs.iter().filter(|s| s.code).map(|s| s.address));
+        let discovery = crate::discover::discover(&file, format, &b, &sections, &segments, image_base, is64, &known);
         // Import stubs and slots, where the file's own symbols name nothing.
         let named = symbols.defined_addresses();
-        for stub in crate::stubs::import_stubs(&file, format, &b, &sections, &imports, is64) {
+        for stub in stubs {
             if named.binary_search(&stub.address).is_ok() {
                 continue;
             }
@@ -490,6 +502,12 @@ impl Binary {
             }
         }
         summary.properties = properties(&file, format, &b, &segments, &imports);
+        if let Some(note) = discovery.note {
+            summary.properties.push(Property {
+                key: "Code found".into(),
+                value: note,
+            });
+        }
         summary.fingerprint = fingerprint(bytes, summary.build_id.as_deref());
 
         let mut binary = Binary {
@@ -507,7 +525,8 @@ impl Binary {
             endian,
             image_base,
             debug: None,
-            discovered,
+            discovered: discovery.functions,
+            code_tables: discovery.tables,
             debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),
@@ -586,6 +605,7 @@ impl Binary {
             image_base: 0,
             debug: None,
             discovered: Vec::new(),
+            code_tables: Vec::new(),
             debug_symbols: Default::default(),
             annotations: Vec::new(),
             strings: std::sync::OnceLock::new(),

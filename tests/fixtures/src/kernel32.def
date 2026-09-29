@@ -1,0 +1,8 @@
+; The part of kernel32.dll x86demo.exe imports, for an import library made
+; without the Windows SDK: stdcall functions by their decorated names,
+; imported by their plain ones, as the SDK's kernel32.lib has them.
+LIBRARY KERNEL32.dll
+EXPORTS
+    _ExitProcess@4 == ExitProcess
+    _GetTickCount@0 == GetTickCount
+    _Sleep@4 == Sleep

@@ -4,7 +4,8 @@
 # Everything is produced with the Rust toolchain's bundled rust-lld, so no
 # platform SDKs are needed. Required rustup targets:
 #   rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl aarch64-apple-darwin
-# Optional: a MinGW g++ on PATH (for the C++ PE fixture), the llvm-tools
+# Optional: a MinGW g++ on PATH (for the C++ PE fixture), clang (any build with
+# the x86 target, Apple's included: for the 32-bit PE with a PDB), the llvm-tools
 # component (for the split-debug ELF pair) and the x86_64-pc-windows-msvc
 # target (for the PE with a PDB). Python 3 writes the game ROMs.
 #
@@ -103,6 +104,31 @@ if rustup target list --installed 2>/dev/null | grep -qx x86_64-pc-windows-msvc;
         -C linker="$lld" -C linker-flavor=lld-link \
         -C link-arg=-NODEFAULTLIB -C link-arg=-ENTRY:start -C link-arg=-SUBSYSTEM:CONSOLE \
         -o "$out/pdbdemo.exe"
+fi
+
+if command -v clang >/dev/null 2>&1; then
+    echo "x86demo: PE32 (clang for the MSVC ABI, lld-link, no C runtime) with a PDB, and linked /FIXED"
+    tmp="$(mktemp -d)"
+    cp "$src/x86demo.cpp" "$src/x86demo-msvc.s" "$src/kernel32.def" "$tmp"
+    ln -s "$lld" "$tmp/lld-link"
+    (
+        # Relative paths only, so that none of this machine's end up in the PDB.
+        cd "$tmp"
+        clang -target i686-pc-windows-msvc -O2 -g -gcodeview -fno-exceptions -fno-rtti \
+            -ffile-compilation-dir=. -c x86demo.cpp -o x86demo.obj
+        clang -target i686-pc-windows-msvc -c x86demo-msvc.s -o x86demo-msvc.obj
+        ./lld-link /lib /machine:x86 /def:kernel32.def /out:kernel32.lib
+        link=(/nologo /brepro /nodefaultlib /entry:start /subsystem:console /debug /opt:noref,noicf
+            /safeseh /pdbsourcepath:c:/src x86demo.obj x86demo-msvc.obj kernel32.lib)
+        ./lld-link "${link[@]}" /pdb:x86demo.pdb /pdbaltpath:x86demo.pdb /out:x86demo.exe
+        # Without base relocations, as games of the time were linked: the same code at the
+        # same addresses (under the same names, so that the tables in .rdata don't move).
+        mkdir fixed
+        ./lld-link "${link[@]}" /fixed /pdb:fixed/x86demo.pdb /pdbaltpath:x86demo.pdb /out:fixed/x86demo.exe
+    )
+    cp "$tmp/x86demo.exe" "$tmp/x86demo.pdb" "$out"
+    cp "$tmp/fixed/x86demo.exe" "$out/x86demo-fixed.exe"
+    rm -rf "$tmp"
 fi
 
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"

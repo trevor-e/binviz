@@ -302,6 +302,8 @@ struct Scan<'a> {
     /// The image is not loaded near zero, so absolute numbers (immediates,
     /// displacements) that fall inside it are addresses rather than constants.
     absolute: bool,
+    /// Jump tables in the code, sorted.
+    tables: &'a [crate::discover::x86::Table],
 }
 
 impl Scan<'_> {
@@ -455,6 +457,31 @@ fn scan_x86(bits: u32, bytes: &[u8], addr: u64, cx: &Scan, emit: &mut dyn FnMut(
     let mut loaded = [0u64; 16];
     while decoder.can_decode() {
         let ip = decoder.ip();
+        // A jump table is data: each entry points at a case.
+        let t = cx
+            .tables
+            .partition_point(|t| t.address <= ip)
+            .checked_sub(1)
+            .map(|i| cx.tables[i]);
+        if let Some(t) = t.filter(|t| ip < t.end()) {
+            if t.entry == 4 {
+                let first = ip.next_multiple_of(4).max(t.address);
+                for at in (first..t.end()).step_by(4) {
+                    if let Some(w) = bytes.get((at - addr) as usize..(at - addr) as usize + 4) {
+                        emit(
+                            at,
+                            u32::from_le_bytes(w.try_into().expect("4 bytes")) as u64,
+                            RefKind::Pointer,
+                        );
+                    }
+                }
+            }
+            if decoder.set_position((t.end().min(end) - addr) as usize).is_err() {
+                break;
+            }
+            decoder.set_ip(t.end().min(end));
+            continue;
+        }
         while let Some(&(s, e)) = functions.peek() {
             if s > ip {
                 break;
@@ -658,6 +685,7 @@ impl Binary {
             map: &map,
             symbols: &self.symbols,
             absolute: base >= 0x10_0000,
+            tables: &self.code_tables,
         };
         let top = base + u32::MAX as u64;
         let mut lists: [Vec<u64>; 6] = Default::default();
@@ -734,6 +762,21 @@ impl Binary {
         counts
     }
 
+    /// References to addresses in `lo..hi` from elsewhere, counted by kind.
+    fn reference_counts_from_outside(&self, lo: u64, hi: u64) -> RefCounts {
+        let index = self.xref_index();
+        let mut counts = RefCounts::default();
+        for k in KINDS {
+            let outside = index
+                .range(k, lo, hi)
+                .iter()
+                .filter(|&&v| !(lo..hi).contains(&index.source(v)))
+                .count();
+            counts.add(k, outside as u32);
+        }
+        counts
+    }
+
     /// References made from `lo..hi`: code is scanned again, data is read for pointers.
     fn scan_range(&self, lo: u64, hi: u64) -> Vec<(u64, u64, RefKind)> {
         let mut out = Vec::new();
@@ -753,6 +796,7 @@ impl Binary {
                 map: &map,
                 symbols: &self.symbols,
                 absolute: map.ranges.first().is_some_and(|r| r.0 >= 0x10_0000),
+                tables: &self.code_tables,
             };
             self.scan_code(bytes, lo, &cx, &mut |s, t, k| {
                 if map.get(t).is_some() {
@@ -1089,7 +1133,8 @@ impl Binary {
         let mut data = Vec::new();
         let mut seen = HashSet::new();
         for (site, target, kind) in self.scan_range(lo, hi) {
-            if kind.is_call() || !seen.insert(target) {
+            // Its own code and jump tables aren't data it uses.
+            if kind.is_call() || (lo..hi).contains(&target) || !seen.insert(target) {
                 continue;
             }
             match self.string_at_address(target) {
@@ -1113,7 +1158,7 @@ impl Binary {
             callees: callees.into_iter().take(limit).collect(),
             strings,
             data,
-            referenced_by: self.reference_counts(lo, hi),
+            referenced_by: self.reference_counts_from_outside(lo, hi),
         })
     }
 }

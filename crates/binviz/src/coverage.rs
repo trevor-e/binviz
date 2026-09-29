@@ -11,7 +11,8 @@
 //! | `named`      | inside a symbol from the file or its debug info                |
 //! | `structure`  | inside a format structure binviz decodes (import tables...)    |
 //! | `recovered`  | inside a function found from unwind tables / function starts,  |
-//! |              | or by following a ROM's code; strings; data a code/data log saw |
+//! |              | or by following the code (32-bit PE, ROMs); strings; data a    |
+//! |              | code/data log saw                                              |
 //! | `padding`    | alignment filler (zeros, int3, nops) between the above         |
 //! | `unexplored` | anything else                                                  |
 
@@ -118,7 +119,7 @@ pub struct Gap {
 pub struct FunctionCounts {
     /// Functions named by the file or its debug info.
     pub named: u32,
-    /// Functions recovered from unwind tables / function starts, still unnamed.
+    /// Functions recovered from unwind tables / function starts or by following the code, still unnamed.
     pub recovered: u32,
     /// Functions the user named.
     pub user: u32,
@@ -198,8 +199,20 @@ pub(crate) fn tail_padding(bytes: &[u8], code: bool, arch: Architecture) -> usiz
         &[0x0f, 0x1f, 0x40, 0],
         &[0x0f, 0x1f, 0x00],
     ];
+    // MSVC's `npad` filler in 32-bit code: `lea r, [r+0]` in its lengths.
+    const LEAS: [&[u8]; 4] = [
+        &[0x8d, 0xa4, 0x24, 0, 0, 0, 0],
+        &[0x8d, 0x9b, 0, 0, 0, 0],
+        &[0x8d, 0x64, 0x24, 0],
+        &[0x8d, 0x49, 0],
+    ];
+    let leas: &[&[u8]] = if arch == Architecture::I386 { &LEAS } else { &[] };
     loop {
         let t = &bytes[..end];
+        if let Some(p) = leas.iter().find(|p| t.ends_with(p)) {
+            end -= p.len();
+            continue;
+        }
         let multi = NOPS.iter().find(|p| t.ends_with(p)).map(|p| p.len());
         let strip = match multi {
             Some(n) => n,
@@ -676,6 +689,10 @@ mod tests {
         // `mov dword [rbp-4], 0xff` ends in zeros that aren't filler.
         assert_eq!(tail_padding(&[0xc7, 0x45, 0xfc, 0xff, 0, 0, 0], true, arch), 0);
         assert_eq!(tail_padding(&[0, 0, 0, 0], true, arch), 4);
+        // MSVC's lea forms, in 32-bit code only.
+        let msvc = [0xc3, 0x8d, 0xa4, 0x24, 0, 0, 0, 0, 0x8d, 0x64, 0x24, 0];
+        assert_eq!(tail_padding(&msvc, true, Architecture::I386), 11);
+        assert_eq!(tail_padding(&msvc, true, arch), 0);
         assert_eq!(tail_padding(&[0x01, 0x00, 0x00], false, arch), 2);
         let a64 = Architecture::Aarch64;
         assert_eq!(
