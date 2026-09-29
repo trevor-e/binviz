@@ -464,6 +464,91 @@ fn agents_work_through_a_decompilation() {
 }
 
 #[test]
+fn x86_objects_are_matched_project_by_project() {
+    let path = fixture_copy_for("x86match.exe", "match-");
+    let dir = path.parent().unwrap().to_path_buf();
+    let bin = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin");
+    let pdb = dir.join("x86match.pdb");
+    std::fs::copy(bin.join("x86match.pdb"), &pdb).unwrap();
+    // A build folder: the game's object (edited, not matching yet) and the library's.
+    let build = dir.join("build");
+    for (from, to) in [
+        ("x86match-edited.obj", "src/game.obj"),
+        ("x86lib-a.obj", "lib/x86lib-a.obj"),
+        ("x86lib-b.obj", "lib/x86lib-b.obj"),
+    ] {
+        let to = build.join(to);
+        std::fs::create_dir_all(to.parent().unwrap()).unwrap();
+        std::fs::copy(bin.join(from), to).unwrap();
+    }
+    let edited = bin.join("x86match-edited.obj");
+    let mut s = Session::start();
+    s.ok(
+        "open_binary",
+        json!({ "path": path.to_str().unwrap(), "debug_file": pdb.to_str().unwrap() }),
+    );
+
+    // One function, by its C name or as the object decorates it.
+    let diff = s.ok(
+        "match_function",
+        json!({ "object": edited.to_str().unwrap(), "symbol": "diff" }),
+    );
+    assert!(
+        diff.contains("diff: 33.3%") && diff.contains("stack slot offset differs"),
+        "{diff}"
+    );
+    let damage = s.ok(
+        "match_function",
+        json!({ "object": edited.to_str().unwrap(), "symbol": "_damage@8" }),
+    );
+    assert!(
+        damage.contains("immediate differs: -0x5 in the original, -0x7 in the rebuild"),
+        "{damage}"
+    );
+    let all = s.ok(
+        "match_object",
+        json!({ "object": bin.join("x86match.obj").to_str().unwrap() }),
+    );
+    assert!(all.contains("15 functions compared, 15 match exactly"), "{all}");
+
+    // The whole project, recorded in the notes.
+    let project = s.ok(
+        "match_project",
+        json!({ "paths": [build.to_str().unwrap()], "record": true }),
+    );
+    assert!(
+        project.contains("3 objects, 20 functions compared")
+            && project.contains("src/game.obj")
+            && project.contains("Recorded in the notes: 12 newly matched"),
+        "{project}"
+    );
+    let info = s.ok("function_info", json!({ "at": "_lib_checksum" }));
+    assert!(info.contains("Decompilation: matched in lib/x86lib-a.obj"), "{info}");
+    let info = s.ok("function_info", json!({ "at": "diff" }));
+    assert!(
+        info.contains("Decompilation: todo in src/game.obj, best 33.3%"),
+        "{info}"
+    );
+
+    // The library's functions named in a copy with no PDB, by their signatures.
+    let stripped = fixture_copy_for("x86match.exe", "match-sdk-");
+    s.ok("open_binary", json!({ "path": stripped.to_str().unwrap() }));
+    let sdk = s.ok(
+        "identify_sdk",
+        json!({ "paths": [bin.join("x86lib.lib").to_str().unwrap()], "apply": true }),
+    );
+    assert!(
+        sdk.contains("skipped 6 import library members")
+            && sdk.contains("4 of")
+            && sdk.contains("lib_checksum  (x86lib.lib/x86lib-a.obj"),
+        "{sdk}"
+    );
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
+    let _ = std::fs::remove_dir_all(stripped.parent().unwrap());
+}
+
+#[test]
 fn a_rom_with_an_emulators_log_and_labels() {
     let path = fixture_copy_for("tiny.nes", "emulators-");
     let dir = path.parent().unwrap().to_path_buf();

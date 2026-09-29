@@ -46,6 +46,10 @@ const ALL: &[&str] = &[
     "gamedemo.dll",
     "rttidemo32.dll",
     "rttidemo64.dll",
+    "x86match.exe",
+    "x86match.obj",
+    "x86match-x64",
+    "x86match-x64.o",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -1127,6 +1131,155 @@ fn decompilation_goes_from_what_is_ready() {
     };
     let list = bin.next_functions(&within);
     assert_eq!(list.functions.iter().map(|f| f.address).collect::<Vec<_>>(), [ammo]);
+}
+
+/// The kinds of difference in `name`'s match.
+fn differences(unit: &binviz::matching::UnitMatch, name: &str) -> Vec<String> {
+    let m = unit
+        .functions
+        .iter()
+        .find(|m| m.name == name)
+        .unwrap_or_else(|| panic!("{name} not matched"));
+    m.differences.iter().map(|(k, _)| k.clone()).collect()
+}
+
+#[test]
+fn a_decompilations_x86_objects_are_matched_and_explained() {
+    // x86match.exe with its PDB, which names functions as C and C++ write
+    // them; the object built from the same source, which decorates them.
+    let mut bin = open("x86match.exe");
+    bin.attach_debug_file("x86match.pdb", fixture("x86match.pdb")).unwrap();
+    let unit = bin.match_unit("x86match.obj", &fixture("x86match.obj")).unwrap();
+    let names: Vec<&str> = unit.functions.iter().map(|m| m.name.as_str()).collect();
+    // cdecl, stdcall, fastcall, a function in a namespace, a method.
+    for want in [
+        "clamp",
+        "damage",
+        "add_ammo",
+        "switch_op",
+        "game::level_up",
+        "Counter::bump",
+        "start",
+    ] {
+        assert!(names.contains(&want), "{want}: {names:?}");
+    }
+    assert!(unit.unplaced.is_empty(), "{:?}", unit.unplaced);
+    for m in &unit.functions {
+        assert_eq!(m.percent, 100.0, "{}", m.to_text());
+    }
+
+    // An edited copy: each edit is a difference the matcher names.
+    let edited = bin
+        .match_unit("x86match-edited.obj", &fixture("x86match-edited.obj"))
+        .unwrap();
+    let expect = [
+        ("diff", "stack slot offset differs"),
+        ("damage", "immediate differs"),
+        ("add_ammo", "call target differs"),
+        ("sum_local", "stack frame size differs"),
+        (
+            "scale_by",
+            "reads memory in the original, a constant in the rebuild (a variable became a constant?)",
+        ),
+        ("flag_bits", "signedness differs"),
+    ];
+    for (name, kind) in expect {
+        let found = differences(&edited, name);
+        assert!(found.iter().any(|k| k == kind), "{name}: {found:?}");
+    }
+    assert!(
+        differences(&edited, "below").iter().any(|k| k.starts_with("condition")),
+        "{:?}",
+        differences(&edited, "below")
+    );
+    let add_ammo = edited.functions.iter().find(|m| m.name == "add_ammo").unwrap();
+    assert!(
+        add_ammo
+            .lines
+            .iter()
+            .any(|l| l.note.as_deref()
+                == Some("call target differs: calls _diff in the rebuild; the original calls clamp")),
+        "{}",
+        add_ammo.to_text()
+    );
+    // What the edits leave alone still matches, whatever moved around it.
+    for name in [
+        "clamp",
+        "switch_op",
+        "name_of",
+        "scaled_speed",
+        "ticks_since",
+        "game::level_up",
+        "Counter::bump",
+    ] {
+        assert!(differences(&edited, name).is_empty(), "{name}");
+    }
+
+    // The project: the edited object and the library's, unit by unit.
+    let objects: Vec<(String, Vec<u8>)> = ["x86match-edited.obj", "x86lib-a.obj", "x86lib-b.obj"]
+        .iter()
+        .map(|n| (n.to_string(), fixture(n)))
+        .collect();
+    let p = bin.match_project(&objects);
+    assert!(p.failed.is_empty(), "{:?}", p.failed);
+    assert_eq!(p.units[0].unit, "x86match-edited.obj");
+    assert_eq!((p.units.len(), p.functions), (3, 20));
+    // lib_unused was never linked in.
+    assert_eq!(p.unplaced, 1);
+    assert!(p.matched_bytes < p.code_bytes && p.exact >= 12, "{}", p.to_text(10));
+    let progress = p.progress();
+    let lib = progress.iter().find(|f| f.name == "_lib_checksum").unwrap();
+    assert_eq!((lib.unit.as_str(), lib.percent), ("x86lib-a.obj", 100.0));
+}
+
+#[test]
+fn x86_64_elf_objects_are_matched_too() {
+    let bin = open("x86match-x64");
+    let unit = bin.match_unit("x86match-x64.o", &fixture("x86match-x64.o")).unwrap();
+    assert_eq!(unit.functions.len(), 8);
+    assert!(unit.functions.iter().all(|m| m.percent == 100.0));
+    let edited = bin
+        .match_unit("x86match-x64-edited.o", &fixture("x86match-x64-edited.o"))
+        .unwrap();
+    // Arguments in registers: operands swapped are registers swapped.
+    assert_eq!(differences(&edited, "diff"), ["registers differ"]);
+    assert_eq!(differences(&edited, "damage"), ["immediate differs"]);
+    let ammo = edited.functions.iter().find(|m| m.name == "ammo_left").unwrap();
+    let note = ammo.lines.iter().find_map(|l| l.note.as_deref()).unwrap();
+    assert!(
+        note.starts_with("global differs: g_frames in the rebuild; the original refers to")
+            && note.ends_with("(g_player+0x4)"),
+        "{note}"
+    );
+}
+
+#[test]
+fn a_static_librarys_functions_are_named_by_their_signatures() {
+    // The program without its PDB: nothing names its functions.
+    let bin = open("x86match.exe");
+    let mut sigs = binviz::sigs::SignatureSet::default();
+    // lib_tiny is too short to tell apart; kernel32's import stubs are no code.
+    assert_eq!(sigs.add_file("x86lib.lib", &fixture("x86lib.lib")).unwrap(), 5);
+    assert!(sigs.notes[0].contains("import library members"), "{:?}", sigs.notes);
+    let r = bin.identify_sdk(&sigs);
+    // Where the PDB says they are, and nothing else.
+    let mut named = open("x86match.exe");
+    named
+        .attach_debug_file("x86match.pdb", fixture("x86match.pdb"))
+        .unwrap();
+    let at = |n: &str| named.symbols().by_name(n).unwrap().address;
+    let found: Vec<(u64, &str)> = r.matches.iter().map(|m| (m.address, m.name.as_str())).collect();
+    let want: Vec<(u64, &str)> = ["lib_checksum", "lib_fill", "lib_find", "lib_mix"]
+        .iter()
+        .map(|&n| (at(n), n))
+        .collect();
+    assert_eq!(found, want, "{}", r.to_text());
+    assert_eq!(r.matches[0].library, "x86lib.lib/x86lib-a.obj");
+    assert!(
+        r.annotations()
+            .iter()
+            .all(|a| a.comment.starts_with("sdk: x86lib.lib/"))
+    );
 }
 
 fn total(b: &StatusBytes) -> u64 {
