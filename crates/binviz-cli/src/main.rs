@@ -5,7 +5,7 @@ use std::process::ExitCode;
 use binviz::{Binary, Container, SymbolQuery, Target};
 
 const USAGE: &str = "\
-binviz — explain every byte and address of ELF, Mach-O and PE binaries
+binviz — explain every byte and address of ELF, Mach-O, PE and XBE binaries
 
 USAGE:
     binviz <command> <file> [args]
@@ -15,7 +15,8 @@ stands for the binaries in it, each paired with its debug file (dSYM, .debug, PD
 info lists them all and sums their code by owner, search searches them all,
 info json describes the folder, and every other command works on the first
 binary (an app's own executable) or the one --member names. A CD image opens
-the executable the disc boots.
+the executable the disc boots. An original Xbox game's default.xbe opens like
+a 32-bit PE: its kernel imports named, its code followed from the entry point.
 
 COMMANDS:
   The file

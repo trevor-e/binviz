@@ -7,7 +7,8 @@ binviz is a Rust library, with a WebAssembly-powered browser UI and a CLI, that
 explains **ELF**, **Mach-O** and **PE/COFF** files down to individual header
 fields, and maps machine code back to source through **DWARF** debug info.
 It reads **game ROMs** too (NES, SNES, Game Boy, Game Boy Advance, Mega Drive,
-Nintendo 64, PlayStation), with disassemblers for their CPUs.
+Nintendo 64, PlayStation), with disassemblers for their CPUs, and original
+Xbox executables (**XBE**).
 
 - **Every byte accounted for.** The file is described as a tree of regions:
   headers and their fields, program/section headers, load commands, sections,
@@ -51,7 +52,8 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   address: calls, tail calls, reads, writes, address-taken, and pointers stored
   in data (vtables, Objective-C metadata, callbacks). Import stubs, PLT entries
   and GOT/IAT slots are named after what they import (`_objc_msgSend`,
-  `printf@plt`, `__imp_CreateFileW`), so calls into libraries read as such.
+  `printf@plt`, `__imp_CreateFileW`, an XBE's `__imp_KeBugCheck`), so calls
+  into libraries read as such, in 32-bit code too (`call dword ptr [0x4021b4]`).
   Pointers are found however the loader relocates them: Mach-O chained fixups,
   ELF `RELATIVE`/RELR relocations, or plain addresses.
 - **One search box for everything**: addresses, file offsets, symbols (raw and
@@ -80,6 +82,27 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   and search take them too. PlayStation discs (`.bin` raw images or `.iso`)
   open to their files, the executable `SYSTEM.CNF` boots first; only the
   sectors needed are read. Files of no format binviz knows open as raw bytes.
+- **Original Xbox executables.** An XBE (a game's `default.xbe`) opens like a
+  32-bit PE. Its headers are decoded field by field: the image header (the
+  entry point and the kernel thunk table's address shown encoded and decoded,
+  with the key that decodes them), the certificate (title ID and name,
+  alternate title IDs, media, regions, ratings, version, keys), the section
+  headers with their names and shared page counters, the library versions,
+  the debug file names and the logo; so are the kernel thunk table and the
+  TLS directory inside the sections. Which keys decode the entry point and the
+  thunk table's address into the image says whether it is a retail or a debug
+  (development kit) build, and XAPILIB's library version says which XDK built
+  it (`XDK 5849`), next to every library linked (`D3D8 1.0.5849 (QFE 1)`).
+  Each section is placed at its address, its permissions and kind from its
+  flags. The kernel is imported by ordinal: each thunk slot becomes an import
+  from `xboxkrnl.exe` and a `__imp_` symbol named after the export (the
+  ordinals of the open-source Xbox toolchain and emulator, nxdk and
+  Cxbx-Reloaded, for exports 1 to 366; others read `xboxkrnl.exe #N`). The
+  code is followed as a 32-bit PE's is, from the entry point and TLS
+  callbacks, knowing which kernel calls never return (`HalReturnToFirmware`,
+  `KeBugCheck`, `KeBugCheckEx`, `PsTerminateSystemThread`), so disassembly,
+  references, the call graph, coverage and the decompilation context work on
+  it. A folder of a game's files lists its XBEs like other binaries.
 - **Text and graphics in games.** Relative search finds text in a game's own
   encoding from a word it shows; table files (`.tbl`) read, search and dump the
   text, and the hex view reads it through the table. A tile viewer draws the
@@ -118,7 +141,7 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   Swift classes visible to Objective-C are listed as `Module.Class`.
 - **Reverse-engineering coverage.** Stripped binaries get their functions back
   from `.pdata`, `.eh_frame` and `LC_FUNCTION_STARTS` (`sub_<address>`). A
-  32-bit PE has none of these, so its code is followed instead, the way a
+  32-bit PE (or an XBE) has none of these, so its code is followed instead, the way a
   disassembler maps it: from the entry point, exports, TLS callbacks and safe
   exception handlers, through every call, branch and jump table (MSVC's, kept
   in the code with a table of index bytes, too), knowing which calls never
@@ -131,7 +154,7 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   reviewed; a coverage map shows what is named, recovered, reviewed or still
   unexplored, and lists the largest gaps with a guess at what they hold.
 - **Folders of binaries.** Open a folder or a zip, and every binary in it is
-  found by its header (Mach-O, ELF or PE, zips inside opened too), so an
+  found by its header (Mach-O, ELF, PE or XBE, zips inside opened too), so an
   `.ipa`, an `.app` or `.xcarchive`, an APK or a build folder are all just
   folders. Each binary is paired with its separate debug file (a dSYM, an ELF
   `.debug` file, a PDB) by UUID or build ID, whatever the names, or by the
@@ -502,8 +525,10 @@ cargo run --release -p binviz --example bench -- path/to/binary
 ```
 crates/binviz        the library
   src/binary.rs      parsing into the model (sections, segments, symbols, imports, exports)
-  src/layout/        the byte-level region tree: ELF, Mach-O, PE/COFF builders,
+  src/layout/        the byte-level region tree: ELF, Mach-O, PE/COFF, XBE builders,
                      struct field specs, on-demand decoders, DWARF section decoders
+  src/xbe.rs         original Xbox executables: headers, keys, sections, the kernel's
+                     exports by ordinal, the code followed as in a 32-bit PE
   src/dwarf/         units, DIEs, types, expressions, line tables (gimli + addr2line)
   src/disasm.rs      iced-x86 and yaxpeax-arm
   src/inspect.rs     the "what is here?" query, separate debug files, annotations
@@ -512,7 +537,7 @@ crates/binviz        the library
   src/decomp.rs      a matching decompilation: where it stands, what to do next
   src/similar.rs     functions shaped alike (MinHash of instruction shapes, banded)
   src/discover/      function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS,
-                     and by following x86 code (x86.rs) for 32-bit PE images
+                     and by following x86 code (x86.rs) for 32-bit PE images and XBEs
   src/strings.rs     strings in data sections
   src/xrefs.rs       cross-references and the call graph
   src/pointers.rs    pointers stored in data: chained fixups, dyld binds, ELF relocations, plain addresses
@@ -542,7 +567,7 @@ crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents
 web/                 TypeScript UI; the WASM runs in a Web Worker
 tests/fixtures/      small ELF / Mach-O / PE test binaries and their sources, and
-                     hand-assembled ROMs (src/roms.py writes them)
+                     hand-assembled ROMs and an XBE (src/roms.py, src/xbe.py write them)
 scripts/build-fixtures.sh   regenerates the fixtures with rust-lld (no SDKs needed)
 ```
 
@@ -585,5 +610,14 @@ cargo test
   as raw bytes).
 - CD images: the ISO 9660 file system on Mode 1 and Mode 2 Form 1 data
   sectors; XA audio and video files (Form 2) read as if they were data.
+- XBEs: an Xbox disc image (XDVDFS) doesn't open to its files yet; open the
+  extracted `default.xbe`. The XDK's library functions are not named yet
+  (nothing matches them by signature, as the Psy-Q SDK's are); the section
+  digests and the header signature are shown, not checked; the non-kernel
+  import directory (development builds only) is laid out as recalled, not
+  confirmed, and its imports aren't read; the header and certificate fields
+  some later XDKs add past 0x178 and 0x1D0 carry Cxbx-Reloaded's names,
+  unconfirmed. Kernel exports past ordinal 366 (development kits' `MmDbg…`)
+  are left unnamed.
 - Objective-C metadata is read from images outside the dyld shared cache;
   Swift's own metadata (beyond classes visible to Objective-C) is not.
