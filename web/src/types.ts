@@ -63,7 +63,7 @@ export interface Segment {
 
 export type SymbolKind = 'function' | 'data' | 'section' | 'file' | 'label' | 'tls' | 'debug' | 'unknown';
 
-export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import' | 'debug-file' | 'objc';
+export type SymbolSource = 'symtab' | 'dynsym' | 'export' | 'dwarf' | 'discovered' | 'user' | 'import' | 'debug-file' | 'objc' | 'rtti';
 
 export interface Sym {
   index: number;

@@ -174,6 +174,9 @@ pub enum SymbolSource {
     /// Objective-C metadata: method implementations (`-[Greeter hello]`),
     /// the metadata itself and selector references (`@selector(hello)`).
     Objc,
+    /// C++ run-time type information (MSVC's): vtables and the descriptors
+    /// of classes, under the names MSVC gives them.
+    Rtti,
     /// Import stubs and slots, named after what they import: Mach-O stubs
     /// (`_printf`) and pointers (`_printf@got`), ELF PLT entries (`printf@plt`)
     /// and GOT slots, PE import thunks and address table slots (`__imp_printf`).

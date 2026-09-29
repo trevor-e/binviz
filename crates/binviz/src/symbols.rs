@@ -221,7 +221,7 @@ fn lookup_rank(r: &Rec) -> (u8, u8, u8, u8, u8) {
         SymbolSource::Export => 3,
         SymbolSource::DebugFile => 4,
         SymbolSource::Dwarf => 5,
-        SymbolSource::Objc => 6,
+        SymbolSource::Objc | SymbolSource::Rtti => 6,
         SymbolSource::Import => 7,
         SymbolSource::Discovered => 8,
     };

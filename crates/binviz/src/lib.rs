@@ -50,6 +50,7 @@ pub mod plist;
 mod pointers;
 pub mod queue;
 pub mod rom;
+pub mod rtti;
 pub mod search;
 pub mod signature;
 pub mod similar;

@@ -534,6 +534,14 @@ pub fn definitions() -> Vec<Value> {
             true,
         ),
         tool(
+            "cpp_classes",
+            "C++ classes from RTTI",
+            "The C++ classes an MSVC-built (or clang-cl) Windows binary's run-time type information describes, even stripped: each class with its bases and where their sub-objects sit, and its vtables (one per polymorphic base) with the virtual functions in each slot. The vtables and descriptors are named as MSVC names them (const Foo::`vftable', Foo::`RTTI Type Descriptor'), so they read the same with or without the PDB; decomp_context lists the vtable slots a function fills.",
+            json!({ "filter": { "type": "string", "description": "Part of a class name." } }),
+            &[],
+            true,
+        ),
+        tool(
             "list_globals",
             "List the data the code uses",
             "Every address in data the code reads, writes, calls through or takes, or a pointer in data points at, typed by how it is used and named the way disassemblers do where nothing else names it: flt_/dbl_ (read as a float or double, with its value when never written), byte_/word_/dword_/qword_, ptr_ (a pointer read and dereferenced: the offsets reached through it, e.g. a cvar's value at 0x14), funcs_/strs_/ptrs_ (tables of code pointers, string pointers, other pointers), arr_ (indexed, with the element size), fptrs_ (function pointers filled at run time and called through: an engine's import table, with where it is filled), jpt_ (a switch's jump table), unk_ (only its address is taken). These names show in disassemble, decomp_context, xrefs and inspect; annotate an address to name it yourself. Filter matches names and descriptions (\"code pointers\", \"float\").",
@@ -776,6 +784,7 @@ impl Server {
                     "list_symbols" => list_symbols(o, args),
                     "list_strings" => list_strings(o, args),
                     "list_globals" => list_globals(o, args),
+                    "cpp_classes" => cpp_classes(o, args),
                     "hexdump" => hexdump(o, args)?,
                     "coverage" => coverage(o, args),
                     "annotate" => annotate(o, args)?,
@@ -1776,6 +1785,42 @@ fn list_symbols(o: &Open, args: &Value) -> String {
             s.binding,
             clip(s.display_name(), 160)
         );
+    }
+    out
+}
+
+fn cpp_classes(o: &Open, args: &Value) -> String {
+    let filter = string(args, "filter").unwrap_or("").to_ascii_lowercase();
+    let classes = o.bin.cpp_classes();
+    if classes.is_empty() {
+        return "No C++ run-time type information (RTTI) found: binviz reads MSVC's, in PE files.".into();
+    }
+    let word = if o.bin.summary().bits == 64 { 8 } else { 4 };
+    let mut out = format!("{} classes with RTTI\n", classes.len());
+    for c in classes.iter().filter(|c| c.name.to_ascii_lowercase().contains(&filter)) {
+        let bases: Vec<String> = c.bases.iter().map(|b| format!("{} at {:#x}", b.name, b.offset)).collect();
+        let _ = writeln!(
+            out,
+            "\n{}{}",
+            c.name,
+            if bases.is_empty() { String::new() } else { format!(" : {}", bases.join(", ")) }
+        );
+        for v in &c.vtables {
+            let _ = writeln!(
+                out,
+                "  vtable {:#x}{}",
+                v.address,
+                v.for_base.as_deref().map_or(String::new(), |b| format!(" for {b} (at {:#x})", v.offset))
+            );
+            for (i, f) in v.functions.iter().enumerate() {
+                let name = o.bin.symbols().at(*f).map_or(format!("{f:#x}"), |s| s.display_name().into_owned());
+                let _ = writeln!(out, "    [{i}] +{:#x} {:#x} {name}", i * word, f);
+            }
+        }
+        if out.len() > MAX_OUTPUT {
+            out.push_str("… (use filter)\n");
+            break;
+        }
     }
     out
 }

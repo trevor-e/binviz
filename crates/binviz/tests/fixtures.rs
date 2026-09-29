@@ -44,6 +44,8 @@ const ALL: &[&str] = &[
     "x86demo.exe",
     "x86demo-fixed.exe",
     "gamedemo.dll",
+    "rttidemo32.dll",
+    "rttidemo64.dll",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -786,6 +788,65 @@ fn data_the_code_uses_is_typed_and_named_by_its_use() {
     );
     let listed = bin.globals("code pointers", 0, 100);
     assert!(listed.globals.iter().any(|g| g.address == 0x403004), "{listed:?}");
+}
+
+#[test]
+fn x86_64_leaf_functions_without_unwind_data_are_found_by_following_the_code() {
+    // .pdata lists only make(); the virtual functions are leaves, with no unwind data.
+    let bin = open("rttidemo64.dll");
+    let mut named = open("rttidemo64.dll");
+    named.attach_debug_file("rttidemo64.pdb", fixture("rttidemo64.pdb")).unwrap();
+    let theirs: Vec<(u64, u64)> = named
+        .symbols()
+        .functions()
+        .filter(|s| s.source == binviz::SymbolSource::DebugFile || s.source == binviz::SymbolSource::Export)
+        .map(|s| (s.address, s.size))
+        .collect();
+    let ours: Vec<(u64, u64)> = bin.symbols().functions().map(|s| (s.address, s.size)).collect();
+    assert!(theirs.len() >= 10, "{theirs:?}");
+    assert_eq!(ours, theirs);
+}
+
+#[test]
+fn msvc_rtti_names_a_stripped_binarys_classes_as_its_pdb_does() {
+    for (dll, pdb) in [("rttidemo32.dll", "rttidemo32.pdb"), ("rttidemo64.dll", "rttidemo64.pdb")] {
+        let bin = open(dll);
+        let mut named = open(dll);
+        named.attach_debug_file(pdb, fixture(pdb)).unwrap();
+        // Every vtable, locator and type descriptor found has the name the PDB gives it.
+        let found: Vec<(u64, String)> = bin
+            .symbols()
+            .iter()
+            .filter(|s| s.source == binviz::SymbolSource::Rtti)
+            .map(|s| (s.address, s.display_name().into_owned()))
+            .collect();
+        assert!(found.len() >= 25, "{dll}: {found:?}");
+        let mut compared = 0;
+        for (address, name) in &found {
+            let Some(theirs) = named.symbols().at(*address).filter(|s| s.source == binviz::SymbolSource::DebugFile)
+            else {
+                continue;
+            };
+            // The demanglers write a type descriptor's name two ways; the rest must agree.
+            if !name.contains("Type Descriptor") {
+                assert_eq!(*name, theirs.display_name(), "{dll} at {address:#x}");
+                compared += 1;
+            }
+        }
+        assert!(compared >= 20, "{dll}: {compared}");
+        // The classes, their bases and vtables.
+        let classes = bin.cpp_classes();
+        let label = classes.iter().find(|c| c.name == "Label").unwrap();
+        let bases: Vec<(&str, i32)> = label.bases.iter().map(|b| (b.name.as_str(), b.offset)).collect();
+        let named_at = if dll.contains("64") { 24 } else { 12 };
+        assert_eq!(bases, [("shapes::Square", 0), ("shapes::Shape", 0), ("Named", named_at)]);
+        let fors: Vec<Option<&str>> = label.vtables.iter().map(|v| v.for_base.as_deref()).collect();
+        assert_eq!(fors, [Some("shapes::Square"), Some("Named")]);
+        // A virtual function's context says which slots hold it.
+        let area = named.symbols().by_name("shapes::Square::area").unwrap().address;
+        let c = bin.decomp_context(area, 100).unwrap();
+        assert_eq!(c.vtables, ["const shapes::Square::`vftable'[0]"], "{dll}");
+    }
 }
 
 /// gamedemo.dll and, to look its functions and data up by name, the same with its PDB.

@@ -42,8 +42,44 @@ pub(crate) fn discover(
     is64: bool,
     known: &Known,
 ) -> Discovery {
+    // x86-64 PE lists its functions in .pdata, but not the leaf functions, which
+    // need no unwind data: following the code from those finds them.
+    if format == Format::Pe && file.architecture() == object::Architecture::X86_64 {
+        let listed = pdata(b, sections, image_base, is64, file.architecture());
+        let mut known = Known {
+            entry: known.entry,
+            functions: known.functions.clone(),
+            imports: known.imports,
+        };
+        known.functions.extend(listed.iter().map(|f| f.0));
+        let image = pe_image(b, sections, image_base, &known, 64);
+        let found = x86::follow(&image);
+        let mut covered: Vec<(u64, u64)> = listed.iter().map(|&(s, n)| (s, s + n.max(1))).collect();
+        covered.sort_unstable();
+        let mut functions = listed.clone();
+        functions.extend(
+            found
+                .functions
+                .iter()
+                .copied()
+                .filter(|&(s, _)| covered.binary_search_by(|c| c.0.cmp(&s)).is_err() && !within_ranges(&covered, s)),
+        );
+        functions.sort_unstable();
+        functions.dedup_by_key(|f| f.0);
+        let note = format!(
+            "{} functions from the exception directory (.pdata), and {} more (leaf functions, which have no \
+             unwind data) following the code from those",
+            listed.len(),
+            functions.len() - listed.len()
+        );
+        return Discovery {
+            functions,
+            tables: found.tables,
+            note: Some(note),
+        };
+    }
     if format == Format::Pe && file.architecture() == object::Architecture::I386 {
-        let image = pe_image(b, sections, image_base, known);
+        let image = pe_image(b, sections, image_base, known, 32);
         let found = x86::follow(&image);
         let switches = found.tables.iter().filter(|t| t.entry == 4).count();
         let note = format!(
@@ -91,7 +127,7 @@ pub(crate) fn discover(
 /// A 32-bit PE image as the code follower sees it: its sections' bytes; the
 /// entry point, exports, import thunks, TLS callbacks and safe exception
 /// handlers as starts; its base relocations; and its import slots.
-fn pe_image<'a>(b: &Bytes<'a>, sections: &[Section], image_base: u64, known: &Known) -> x86::Image<'a> {
+fn pe_image<'a>(b: &Bytes<'a>, sections: &[Section], image_base: u64, known: &Known, bits: u32) -> x86::Image<'a> {
     let mut regions: Vec<x86::Region<'a>> = sections
         .iter()
         .filter(|s| s.loaded && !s.compressed)
@@ -109,7 +145,7 @@ fn pe_image<'a>(b: &Bytes<'a>, sections: &[Section], image_base: u64, known: &Kn
     starts.extend(tls_callbacks(b, sections, image_base));
     starts.extend(safe_seh_handlers(b, sections, image_base));
     x86::Image {
-        bits: 32,
+        bits,
         regions,
         starts,
         relocations: base_relocations(b, sections, image_base),
@@ -121,33 +157,51 @@ fn pe_image<'a>(b: &Bytes<'a>, sections: &[Section], image_base: u64, known: &Kn
     }
 }
 
-/// The (RVA, size) of a PE32 data directory, if it is there.
+/// Whether a PE image's optional header is PE32+ (a 64-bit image).
+fn pe32_plus(b: &Bytes) -> bool {
+    b.u32(60).and_then(|lfanew| b.u16(lfanew as u64 + 24)) == Some(0x20B)
+}
+
+/// The (RVA, size) of a PE data directory, if it is there.
 fn pe32_directory(b: &Bytes, index: u64) -> Option<(u64, u64)> {
     let lfanew = b.u32(60)? as u64;
-    let at = lfanew + 24 + 96 + index * 8;
+    // The directories follow the optional header's fields, 16 bytes further in PE32+.
+    let wide = if pe32_plus(b) { 16 } else { 0 };
+    let at = lfanew + 24 + 96 + wide + index * 8;
     let (rva, size) = (b.u32(at)? as u64, b.u32(at + 4)? as u64);
     // NumberOfRvaAndSizes says how many directories the header has.
-    (index < b.u32(lfanew + 24 + 92)? as u64 && rva != 0 && size != 0).then_some((rva, size))
+    (index < b.u32(lfanew + 24 + 92 + wide)? as u64 && rva != 0 && size != 0).then_some((rva, size))
+}
+
+/// Whether `a` is in one of the sorted, non-overlapping ranges.
+fn within_ranges(ranges: &[(u64, u64)], a: u64) -> bool {
+    let i = ranges.partition_point(|r| r.0 <= a);
+    i > 0 && a < ranges[i - 1].1
 }
 
 /// The functions the TLS directory lists, which the loader calls as threads start and end.
 fn tls_callbacks(b: &Bytes, sections: &[Section], image_base: u64) -> Vec<u64> {
     let va_to_offset = |va: u64| rva_to_offset(sections, image_base, va.checked_sub(image_base)?);
+    // AddressOfCallBacks, and the words of the list: 32 or 64 bits.
+    let wide = pe32_plus(b);
+    let word = |at: u64| if wide { b.u64(at) } else { b.u32(at).map(u64::from) };
     let Some(list) = pe32_directory(b, 9)
         .and_then(|(rva, _)| rva_to_offset(sections, image_base, rva))
-        .and_then(|dir| b.u32(dir + 12))
-        .and_then(|va| va_to_offset(va as u64))
+        .and_then(|dir| word(dir + if wide { 24 } else { 12 }))
+        .and_then(va_to_offset)
     else {
         return Vec::new();
     };
-    (0..256)
-        .map_while(|i| b.u32(list + 4 * i).filter(|&va| va != 0))
-        .map(|va| va as u64)
-        .collect()
+    let size = if wide { 8 } else { 4 };
+    (0..256).map_while(|i| word(list + size * i).filter(|&va| va != 0)).collect()
 }
 
 /// The exception handlers the load configuration lists as safe (`/SAFESEH`).
 fn safe_seh_handlers(b: &Bytes, sections: &[Section], image_base: u64) -> Vec<u64> {
+    // 64-bit code unwinds by table, with no handler list.
+    if pe32_plus(b) {
+        return Vec::new();
+    }
     let Some(config) = pe32_directory(b, 10).and_then(|(rva, _)| rva_to_offset(sections, image_base, rva)) else {
         return Vec::new();
     };

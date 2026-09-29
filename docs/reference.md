@@ -116,6 +116,15 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   clang gives it. For a selector: the methods implementing it, and the
   functions that send it (through `objc_msgSend` or an `objc_msgSend$` stub).
   Swift classes visible to Objective-C are listed as `Module.Class`.
+- **C++ classes, recovered.** A Windows binary built by MSVC (or clang-cl)
+  with RTTI keeps, stripped, a type descriptor for each polymorphic class, a
+  class hierarchy descriptor listing its bases and where their sub-objects
+  sit, and before each vtable a complete object locator. binviz reads them
+  back and names each structure as MSVC does (`const Label::`vftable'{for
+  `Named'}`, `shapes::Square::`RTTI Class Hierarchy Descriptor'`), so a
+  stripped binary reads as its PDB would; each class lists its bases and its
+  vtables with the virtual function in every slot, and a function's context
+  says which vtable slots hold it.
 - **Reverse-engineering coverage.** Stripped binaries get their functions back
   from `.pdata`, `.eh_frame` and `LC_FUNCTION_STARTS` (`sub_<address>`). A
   32-bit PE has none of these, so its code is followed instead, the way a
@@ -125,7 +134,9 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   return (`ExitProcess`, and what only ends in it); then from the vtables,
   callbacks and other code addresses the image holds, its base relocations
   saying which words are addresses when it has them; then whatever else reads
-  as a function. MSVC's `__finally` blocks stay in their functions, jump tables
+  as a function. An x86-64 PE lists its functions in `.pdata`, all but the
+  leaf functions, which need no unwind data: its code is followed from those
+  to find them. MSVC's `__finally` blocks stay in their functions, jump tables
   show as data in the disassembly, and each case's address says which table
   entry leads there. Name functions, comment instructions and mark code as
   reviewed; a coverage map shows what is named, recovered, reviewed or still
@@ -309,6 +320,7 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
 | `globals <file> [filter]` | The data the code uses, typed by its use and named where nothing names it (see below) |
 | `objc <file> [name]` | Objective-C classes, categories and protocols; with a name, one declared as its header would, or a selector's implementations and senders |
+| `classes <file> [filter]` | C++ classes from an MSVC binary's RTTI: bases with their offsets, vtables with their virtual functions |
 | `dwarf <file> [check \| find \| die \| offset \| list \| at \| lines \| sources \| file]` | DWARF units, and: everything wrong with it; DIEs by name, a DIE, the DIE at a `.debug_info` offset, a unit's DIEs by tag; scopes and variables at an address; line tables, source files and their address ranges |
 | `attribution <file> [unit] [id]` | Code and data per source file (or unit); with an id, that one's address ranges |
 | `crash <file> <report>` | Symbolicate a crash report (Apple `.crash` or `.ips`, Android tombstone, stack trace) with a binary or a folder's binaries |
@@ -370,6 +382,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `callers` · `callees` · `call_graph` · `call_path` | Follow calls: who calls what, the tree around a function, how one function reaches another |
 | `xrefs` | Every reference to an address, symbol or string: calls, reads, writes, address-taken, pointers in data |
 | `objc` | Objective-C classes, categories and protocols; one declared as its header would; a selector's implementations and the functions sending it |
+| `cpp_classes` | C++ classes from an MSVC-built binary's RTTI, even stripped: bases and where their sub-objects sit, vtables and their virtual functions |
 | `relative_search` · `table_text` | Games' text: find a word in the game's own encoding, then read, search and dump the text with a table file |
 | `diff_functions` | Two builds compared function by function (stripped ones too): matches, what changed, what was added and removed, one function's code next to its match's |
 | `patch` | What an IPS, UPS or BPS patch changes in the open file (checked by CRC-32, each change placed in its bank, function and region); or the patch that turns it into a modified copy |

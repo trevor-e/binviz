@@ -618,6 +618,7 @@ impl Binary {
                     SymbolSource::Import => parts.push("import stub".into()),
                     SymbolSource::DebugFile => parts.push("from the debug file".into()),
                     SymbolSource::Objc => parts.push("from Objective-C metadata".into()),
+                    SymbolSource::Rtti => parts.push("from C++ RTTI".into()),
                     _ => {}
                 }
                 if s.demangled().is_some() {

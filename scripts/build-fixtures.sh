@@ -150,6 +150,27 @@ if command -v clang >/dev/null 2>&1; then
     rm -rf "$tmp"
 fi
 
+if command -v clang >/dev/null 2>&1; then
+    echo "rttidemo: C++ classes with MSVC's RTTI, a PE32 and a PE32+ DLL with PDBs (clang, lld-link)"
+    tmp="$(mktemp -d)"
+    cp "$src/rttidemo.cpp" "$tmp"
+    ln -s "$lld" "$tmp/lld-link"
+    (
+        cd "$tmp"
+        flags=(-O2 -frtti -g -gcodeview -ffreestanding -fno-builtin -ffile-compilation-dir=.)
+        link=(/nologo /brepro /dll /noentry /nodefaultlib /debug /export:make /pdbsourcepath:c:/src)
+        clang -target i686-pc-windows-msvc "${flags[@]}" -c rttidemo.cpp -o rttidemo32.obj
+        # The type descriptors point at type_info's vtable, which the C runtime has; a stand-in takes its name.
+        ./lld-link "${link[@]}" /safeseh:no '/alternatename:??_7type_info@@6B@=_fake_type_info_vftable' \
+            rttidemo32.obj /pdb:rttidemo32.pdb /pdbaltpath:rttidemo32.pdb /out:rttidemo32.dll
+        clang -target x86_64-pc-windows-msvc "${flags[@]}" -c rttidemo.cpp -o rttidemo64.obj
+        ./lld-link "${link[@]}" /machine:x64 '/alternatename:??_7type_info@@6B@=fake_type_info_vftable' \
+            rttidemo64.obj /pdb:rttidemo64.pdb /pdbaltpath:rttidemo64.pdb /out:rttidemo64.dll
+    )
+    cp "$tmp"/rttidemo32.dll "$tmp"/rttidemo32.pdb "$tmp"/rttidemo64.dll "$tmp"/rttidemo64.pdb "$out"
+    rm -rf "$tmp"
+fi
+
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"
 python3 "$src/roms.py" "$out" 2>/dev/null || python "$src/roms.py" "$out"
 

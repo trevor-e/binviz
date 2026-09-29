@@ -69,6 +69,8 @@ pub struct DecompContext {
     pub data: Vec<Reference>,
     /// What the data in `data` is, where that says more than its name.
     pub typed: Vec<TypedData>,
+    /// The vtable slots holding it (a virtual function): `const Square::`vftable'[1]`.
+    pub vtables: Vec<String>,
     /// Notes on the function and the addresses in it.
     pub notes: Vec<Annotation>,
     /// Where decompiling it stands.
@@ -153,6 +155,19 @@ impl Binary {
                 })
             })
             .collect();
+        // The vtables it is a slot of: a virtual function of those classes.
+        let word = if self.is64 { 8 } else { 4 };
+        let vtables = self
+            .references_to(lo, lo + 1, 0, 64)
+            .refs
+            .iter()
+            .filter(|r| r.kind == crate::xrefs::RefKind::Pointer)
+            .filter_map(|r| {
+                let s = self.symbols().lookup(r.source)?;
+                let name = s.demangled.unwrap_or(s.name);
+                name.contains("`vftable'").then(|| format!("{name}[{}]", s.offset / word))
+            })
+            .collect();
         Some(DecompContext {
             address: lo,
             name: f.display_name().into_owned(),
@@ -166,6 +181,7 @@ impl Binary {
             strings: summary.strings,
             data: summary.data,
             typed,
+            vtables,
             notes,
             decomp: self.decomp_at(lo).cloned(),
             examples,
@@ -236,6 +252,9 @@ impl DecompContext {
                     n.prototype.as_deref().map_or(String::new(), |p| format!("  {p}"))
                 );
             }
+        }
+        if !self.vtables.is_empty() {
+            let _ = writeln!(out, "In vtables (a virtual function): {}", self.vtables.join(", "));
         }
         let r = &self.referenced_by;
         let uses: Vec<String> = [

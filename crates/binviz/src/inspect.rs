@@ -287,6 +287,15 @@ impl Binary {
             })
             .collect();
         merge(&mut named, &mut objc.iter().map(|o| o.1).collect());
+        // C++ vtables and the descriptors of classes, from an MSVC binary's RTTI.
+        let rtti: Vec<(String, u64, u64, u32)> = self
+            .read_rtti()
+            .symbols
+            .into_iter()
+            .filter(|s| named.binary_search(&s.1).is_err())
+            .filter_map(|(name, address, size)| Some((name, address, size, section_of(address)?)))
+            .collect();
+        merge(&mut named, &mut rtti.iter().map(|r| r.1).collect());
         // Recovered functions go where nothing is named: `named` is sorted, so check by search.
         let recovered: Vec<(u64, u64, Option<u32>)> = self
             .discovered
@@ -330,6 +339,17 @@ impl Binary {
                 source: SymbolSource::Objc,
                 defined: true,
                 plain: true,
+            }))
+            .chain(rtti.iter().map(|(name, address, size, section)| NewSym {
+                name,
+                address: *address,
+                size: *size,
+                kind: SymbolKind::Data,
+                binding: Binding::Local,
+                section: Some(*section),
+                source: SymbolSource::Rtti,
+                defined: true,
+                plain: false,
             }))
             .chain(recovered.iter().map(|&(address, size, section)| NewSym {
                 // An empty recovered name is written as `sub_<address>`.

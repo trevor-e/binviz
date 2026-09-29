@@ -44,6 +44,8 @@ COMMANDS:
                                    nothing names it: floats, integers, pointers to structures
                                    (the offsets reached through them), tables of functions,
                                    strings or pointers, arrays, function pointers called through
+    classes <file> [filter]        C++ classes from an MSVC binary's RTTI: bases with their
+                                   offsets, vtables with their virtual functions
     objc <file> [name]             Objective-C classes, categories and protocols; with a name,
                                    one declared as its header would, or a selector's
                                    implementations and the functions that send it
@@ -881,6 +883,33 @@ fn run(
                             String::new()
                         }
                     );
+                }
+            }
+        }
+        "classes" => {
+            let filter = arg(2).unwrap_or("").to_ascii_lowercase();
+            let classes = bin.cpp_classes();
+            if classes.is_empty() {
+                return Err("no C++ run-time type information (RTTI) found: it is MSVC's, in PE files".into());
+            }
+            let word = if bin.summary().bits == 64 { 8 } else { 4 };
+            for c in classes.iter().filter(|c| c.name.to_ascii_lowercase().contains(&filter)) {
+                let bases: Vec<String> = c.bases.iter().map(|b| format!("{} at {:#x}", b.name, b.offset)).collect();
+                println!(
+                    "{}{}",
+                    c.name,
+                    if bases.is_empty() { String::new() } else { format!(" : {}", bases.join(", ")) }
+                );
+                for v in &c.vtables {
+                    println!(
+                        "  vtable {:#x}{}",
+                        v.address,
+                        v.for_base.as_deref().map_or(String::new(), |b| format!(" for {b} (at {:#x})", v.offset))
+                    );
+                    for (i, f) in v.functions.iter().enumerate() {
+                        let name = bin.symbols().at(*f).map_or(format!("{f:#x}"), |s| s.display_name().into_owned());
+                        println!("    [{i}] {:#x} {name}  (vtable+{:#x})", f, i * word);
+                    }
                 }
             }
         }
