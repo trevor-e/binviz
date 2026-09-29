@@ -89,7 +89,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
 
 ### Items, in order
 
-- [ ] **A1. Psy-Q SDK identification.** Build byte signatures from a folder
+- [x] **A1. Psy-Q SDK identification** (2026-09-29, `rom/psyq.rs`; CLI `sdk`, MCP `identify_sdk`; SDK version reporting still open). Build byte signatures from a folder
       of Psy-Q `.LIB`/`.OBJ` files the user supplies (like `xsig` /
       `ghidra_psx_ldr`), match them against the executable and overlays, name
       the library functions (`GsSortObject4`, `CdRead`, `SpuSetKey`...), tag
@@ -140,7 +140,7 @@ feeds splat and the agent, and reads objdiff's verdicts back.
       look most similar as worked examples. `explain_mismatch(function, obj)`
       wrapping A5. `mark(function, status)`. One call per function instead of
       eight. Where: `crates/binviz-mcp/src/tools.rs`.
-- [ ] **A7. Names from the remaster.** Import a name list from the Unity
+- [x] **A7. Names from the remaster** (2026-09-29, `names.rs`; CLI `names`, MCP `propose_names`; takes any build's functions with their strings and calls as JSON). Import a name list from the Unity
       port's C# (function names, enum and struct members) and propose matches
       to MIPS functions by shared string literals, call-graph shape and
       constant tables; the agent confirms. Where: `fndiff.rs` matching by
@@ -229,6 +229,10 @@ below too.
 ## Progress log
 
 - 2026-09-28: plan written; no implementation yet.
+- 2026-09-29 (last): A1 Psy-Q signatures from LIB/OBJ files and A7 name proposals by shared
+  strings and calls; strings are now found in console code areas (PS-X EXE had none before).
+  Track A's eight items are all in; what remains are the notes above: SDK version detection,
+  FF9's archive format, data classification, a `matched` note status, similar-function examples.
 - 2026-09-29 (later): A4 splat export/import, A5 match scoring with explained diffs and objdiff
   report placement, A6 decomp context bundle, A8 trace input, all wired into the CLI and the
   MCP server (`--psx-exe`, `--overlay-at`, `--trace`; `signature`, `context`, `match`, `report`,

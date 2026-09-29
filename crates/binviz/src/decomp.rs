@@ -172,7 +172,7 @@ mod tests {
             0x8C42_002C,
             0x03E0_0008,
             0,
-            0x4142_4344,
+            0x0000_0001,
         ];
         data.extend(words.iter().flat_map(|w| w.to_le_bytes()));
         let mut bin = Binary::parse(data).unwrap();

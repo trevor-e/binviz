@@ -41,6 +41,7 @@ mod inspect;
 mod layout;
 pub mod matching;
 pub mod model;
+pub mod names;
 pub mod objc;
 pub mod package;
 pub mod patch;

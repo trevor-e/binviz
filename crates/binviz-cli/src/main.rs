@@ -98,6 +98,14 @@ COMMANDS:
                                    for a PS-X EXE, the code split into units at the splits
     splat <file> import <symbol_addrs.txt>
                                    A splat symbol file as notes, JSON for --notes
+    sdk <file> <lib|folder...> [notes]
+                                   The Psy-Q SDK's functions in the file, found by the
+                                   signatures of its .LIB/.OBJ files; notes: as notes JSON
+    names <file> <candidates.json> [min%]
+                                   Names from another build (each function with the strings
+                                   it uses and the functions it calls) proposed for the
+                                   file's functions; min%: as notes JSON for those at or
+                                   above that confidence
 
 Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
                          PDB), or for a Mach-O binary linked without dsymutil,
@@ -1143,6 +1151,63 @@ fn run(
                         print!("{}", e.symbol_addrs);
                     }
                 }
+            }
+        }
+        "sdk" => {
+            let mut sigs = binviz::rom::psyq::SignatureSet::default();
+            let mut paths: Vec<std::path::PathBuf> = Vec::new();
+            let mut as_notes = false;
+            for a in args.get(2..).unwrap_or(&[]) {
+                if a == "notes" {
+                    as_notes = true;
+                    continue;
+                }
+                let path = std::path::Path::new(a);
+                if path.is_dir() {
+                    let mut found: Vec<_> = std::fs::read_dir(path)
+                        .map_err(|e| format!("{a}: {e}"))?
+                        .flatten()
+                        .map(|e| e.path())
+                        .filter(|p| {
+                            p.extension()
+                                .and_then(|e| e.to_str())
+                                .is_some_and(|e| e.eq_ignore_ascii_case("lib") || e.eq_ignore_ascii_case("obj"))
+                        })
+                        .collect();
+                    found.sort();
+                    paths.extend(found);
+                } else {
+                    paths.push(path.to_path_buf());
+                }
+            }
+            if paths.is_empty() {
+                return Err("which libraries? binviz sdk <file> <lib|folder...> [notes]".into());
+            }
+            for path in &paths {
+                let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+                match sigs.add_file(&path.to_string_lossy(), &bytes) {
+                    Ok(n) => eprintln!("{}: {n} signatures", path.display()),
+                    Err(e) => eprintln!("{}: {e}", path.display()),
+                }
+            }
+            let r = bin.identify_sdk(&sigs);
+            if as_notes {
+                println!("{}", serde_json::to_string_pretty(&r.annotations()).map_err(|e| e.to_string())?);
+            } else {
+                print!("{}", r.to_text());
+            }
+        }
+        "names" => {
+            let path = arg(2).ok_or("which candidates? binviz names <file> <candidates.json> [min%]")?;
+            let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+            let candidates = binviz::names::parse_candidates(&json).map_err(|e| e.to_string())?;
+            let p = bin.propose_names(&candidates);
+            match arg(3) {
+                Some(min) => {
+                    let min = num(min.trim_end_matches('%'))? as f32 / 100.0;
+                    println!("{}", serde_json::to_string_pretty(&p.annotations(min)).map_err(|e| e.to_string())?);
+                }
+                None => print!("{}", p.to_text()),
             }
         }
         _ => return Err(format!("unknown command {cmd}\n\n{USAGE}")),

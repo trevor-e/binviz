@@ -102,7 +102,9 @@ impl Binary {
     /// UTF-16LE; at most `max` characters, and `None` for anything else.
     pub(crate) fn string_preview(&self, address: u64, max: usize) -> Option<String> {
         let sec = self.section_at(address)?;
-        if !matches!(sec.kind, RegionKind::Rodata | RegionKind::Data | RegionKind::Tls) {
+        // A console's code and data share one area.
+        let mixed = self.rom.is_some() && sec.kind == RegionKind::Code && sec.file_offset.is_some();
+        if !matches!(sec.kind, RegionKind::Rodata | RegionKind::Data | RegionKind::Tls) && !mixed {
             return None;
         }
         let off = self.address_to_offset(address)? as usize;
@@ -243,7 +245,9 @@ impl Binary {
             let wanted = matches!(
                 s.kind,
                 RegionKind::Rodata | RegionKind::Data | RegionKind::Tls | RegionKind::Resources | RegionKind::Metadata
-            ) || (s.kind == RegionKind::Notes && s.loaded);
+            ) || (s.kind == RegionKind::Notes && s.loaded)
+                // A console's code and data share one area (a PlayStation executable, a ROM's banks).
+                || (self.rom.is_some() && s.kind == RegionKind::Code && s.loaded);
             let Some(off) = s.file_offset else { continue };
             if !wanted || s.compressed || s.file_size == 0 {
                 continue;

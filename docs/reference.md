@@ -378,6 +378,12 @@ CLI and the MCP server:
 | `report <file> <json>` | `place_report` | objdiff's report placed on the binary's functions by virtual address or name |
 | `splat <file> <name> [dir] [splits…]` | `splat_export` | A splat YAML config (header, the code segment at its load address split into units, the bytes after the last function as data, the BSS size) and `symbol_addrs.txt` naming every function and known place |
 | `splat <file> import <syms>` | `import_symbol_addrs` | A splat symbol file's names into the notes (splat's own `func_…`/`D_…` names left out) |
+| `sdk <file> <libs…> [notes]` | `identify_sdk` | The Psy-Q SDK's functions in the binary, found by the signatures of its `.LIB`/`.OBJ` files (Sony's `LNK` object format, the linker's fields masked): each named, with an `sdk:` note so a decompilation leaves it be, and the libraries the game was linked with |
+| `names <file> <json> [min%]` | `propose_names` | Names from another build of the game (a port with its source, a symbolized build): its functions with the strings they use and the functions they call, matched to functions here by shared strings, then through the calls; each with a confidence and the evidence |
+
+Strings in a console's code area (a PlayStation executable's one section, a
+ROM's banks) are found like those in data sections, so the strings a
+function uses show for PlayStation games too.
 
 MIPS switch tables (the `sltiu` guard, `sll … 2`, `lui`/`addu`/`lw`, `jr`
 idiom GCC and IDO write) are followed for PlayStation and Nintendo 64 code,

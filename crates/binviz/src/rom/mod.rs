@@ -20,6 +20,7 @@ mod megadrive;
 mod n64;
 mod nes;
 mod psx;
+pub mod psyq;
 mod snes;
 
 use std::sync::Arc;

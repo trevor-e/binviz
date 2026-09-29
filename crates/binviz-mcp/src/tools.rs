@@ -481,6 +481,30 @@ pub fn definitions() -> Vec<Value> {
             false,
         ),
         tool(
+            "identify_sdk",
+            "Find the Psy-Q SDK's functions",
+            "PlayStation: matches the binary's functions against the signatures of Sony's SDK libraries (.LIB/.OBJ files from a Psy-Q installation, given as files or a folder), naming the SDK's code (GsSortObject4, CdRead, SpuSetKey…) and saying which libraries the game was linked with. With apply, the matches become notes with an `sdk:` comment, so a decompilation can leave them be.",
+            json!({
+                "paths": { "type": "array", "items": { "type": "string" }, "description": "Library and object files, or folders of them." },
+                "apply": { "type": "boolean", "description": "Name the matched functions in the notes (default false: report only)." },
+                "limit": { "type": "integer", "description": "Matches to list (default 200, max 5000)." },
+            }),
+            &["paths"],
+            false,
+        ),
+        tool(
+            "propose_names",
+            "Propose names from another build",
+            "Names from another build of the game (a port with its source, a symbolized build): a JSON list of its functions, each with the string literals it uses and the functions it calls ([{\"name\": \"InitField\", \"strings\": [\"field.bin\"], \"calls\": [\"LoadFile\"]}, …]). Functions here using the same strings are proposed as the same functions, then their neighbours through the calls, each with a confidence and the evidence. With apply, proposals at or above min_confidence become notes.",
+            json!({
+                "path": { "type": "string", "description": "Path to the candidates JSON." },
+                "apply": { "type": "boolean", "description": "Name the functions in the notes (default false: report only)." },
+                "min_confidence": { "type": "number", "description": "0 to 1; proposals below it aren't applied (default 0.6)." },
+            }),
+            &["path"],
+            false,
+        ),
+        tool(
             "list_symbols",
             "List symbols",
             "Pages through the symbol table: filter by name, kind (function, data, …), sort by address, name or size.",
@@ -727,6 +751,8 @@ impl Server {
                     "place_report" => place_report(o, args)?,
                     "splat_export" => splat_export(o, args)?,
                     "import_symbol_addrs" => import_symbol_addrs(o, args)?,
+                    "identify_sdk" => identify_sdk(o, args)?,
+                    "propose_names" => propose_names(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -2196,6 +2222,111 @@ fn import_symbol_addrs(o: &mut Open, args: &Value) -> Result<String, String> {
         o.bin.annotations().len(),
         save_notes(o)
     ))
+}
+
+/// Adds `notes` to the binary's, names replacing names at the same address.
+fn merge_notes(o: &mut Open, notes: Vec<Annotation>) -> (usize, usize) {
+    let mut list: Vec<Annotation> = o.bin.annotations().to_vec();
+    let (mut added, mut updated) = (0, 0);
+    for n in notes {
+        match list.iter_mut().find(|a| a.address == n.address) {
+            Some(a) => {
+                if a.name != n.name || a.comment != n.comment {
+                    a.name = n.name;
+                    if !n.comment.is_empty() {
+                        a.comment = n.comment;
+                    }
+                    if n.size > 0 {
+                        a.size = n.size;
+                    }
+                    updated += 1;
+                }
+            }
+            None => {
+                list.push(n);
+                added += 1;
+            }
+        }
+    }
+    o.bin.set_annotations(list);
+    (added, updated)
+}
+
+fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
+    let paths = args
+        .get("paths")
+        .and_then(Value::as_array)
+        .ok_or("paths is required")?
+        .iter()
+        .filter_map(Value::as_str)
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    let mut files = Vec::new();
+    for p in paths {
+        if p.is_dir() {
+            let mut found: Vec<PathBuf> = std::fs::read_dir(&p)
+                .map_err(|e| format!("{}: {e}", p.display()))?
+                .flatten()
+                .map(|e| e.path())
+                .filter(|f| {
+                    f.extension()
+                        .and_then(|e| e.to_str())
+                        .is_some_and(|e| e.eq_ignore_ascii_case("lib") || e.eq_ignore_ascii_case("obj"))
+                })
+                .collect();
+            found.sort();
+            files.extend(found);
+        } else {
+            files.push(p);
+        }
+    }
+    if files.is_empty() {
+        return Err("no .LIB or .OBJ files found".into());
+    }
+    let mut sigs = binviz::rom::psyq::SignatureSet::default();
+    let mut loaded = String::new();
+    for f in &files {
+        let bytes = std::fs::read(f).map_err(|e| format!("{}: {e}", f.display()))?;
+        match sigs.add_file(&f.to_string_lossy(), &bytes) {
+            Ok(n) => {
+                let _ = writeln!(loaded, "  {}: {n} signatures", f.display());
+            }
+            Err(e) => {
+                let _ = writeln!(loaded, "  {}: {e}", f.display());
+            }
+        }
+    }
+    let r = o.bin.identify_sdk(&sigs);
+    let limit = int(args, "limit", 200, 5000) as usize;
+    let mut out = format!("Libraries read:\n{loaded}\n");
+    let mut text = r.to_text();
+    if r.matches.len() > limit {
+        let keep: usize = text.lines().take(1 + r.libraries.len() + limit).map(|l| l.len() + 1).sum();
+        text.truncate(keep);
+        let _ = writeln!(text, "… {} more", r.matches.len() - limit);
+    }
+    out.push_str(&text);
+    if args.get("apply").and_then(Value::as_bool).unwrap_or(false) {
+        let (added, updated) = merge_notes(o, r.annotations());
+        let _ = writeln!(out, "\n{added} names added, {updated} changed; {}.", save_notes(o));
+    }
+    Ok(out)
+}
+
+fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "path").ok_or("path is required")?;
+    let json = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let candidates = binviz::names::parse_candidates(&json).map_err(|e| e.to_string())?;
+    let p = o.bin.propose_names(&candidates);
+    let mut out = p.to_text();
+    if args.get("apply").and_then(Value::as_bool).unwrap_or(false) {
+        let min = args.get("min_confidence").and_then(Value::as_f64).unwrap_or(0.6) as f32;
+        let notes = p.annotations(min);
+        let n = notes.len();
+        let (added, updated) = merge_notes(o, notes);
+        let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
+    }
+    Ok(out)
 }
 
 fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
