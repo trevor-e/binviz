@@ -352,6 +352,7 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed |
+| `next_functions` · `mark` · `similar_functions` · … | For a matching decompilation: see [Decompilation](#decompilation-mips-playstation-nintendo-64) |
 
 Notes are saved next to the binary in `<file>.binviz-notes.json`, the format
 the web UI imports and exports (Layout → Coverage → Import), so an agent can map
@@ -373,17 +374,31 @@ CLI and the MCP server:
 | `--overlay-at <addr>` | `open_binary` `overlay_at` | Open a file as a code overlay loaded at an address. `Binary::psx_locate` finds where a file from the disc sits in a memory image |
 | `--trace <file>` | `open_binary` `trace` | A trace of the code an emulator ran (any text with an address per line): each run of traced code the following hadn't reached is followed as a function, after everything reachable, so functions aren't split |
 | `signature <file> <fn>` | `function_signature` | What a function's code says about its prototype: `$a0`–`$a3` read before written, stack arguments, whether `$v0` carries a result, frame size, saved registers, calls, GTE/FPU use, and the offsets loaded and stored off each base register (structure layout hints, named after the argument they came from) |
-| `context <file> <fn> [n]` | `decomp_context` | The code with names resolved, the signature, callers and callees with theirs, strings, globals and notes: one call per function |
+| — | `next_functions` · `mark` | The work queue (any architecture): what to write C for next, best first, and claiming it so parallel agents don't collide; each outcome recorded in the notes (see below) |
+| — | `similar_functions` | The functions whose instructions are shaped most like a function's, with where each stands: a matched one's C is the worked example |
+| `context <file> <fn> [n]` | `decomp_context` | The code with names resolved, the signature, callers and callees with theirs, strings, globals and notes, where decompiling it stands, and the matched functions shaped like it with their source files: one call per function |
 | `match <file> <obj> [name]` | `match_function`, `match_object` | The compiler's object file (ELF, MIPS) scored against the original: instructions lined up by shape, relocation fields masked, each relocation's symbol checked against where the original points, every difference explained (registers allocated differently, stack frame or slot size, branch length, reordering, a nop missing from a delay slot) |
-| `report <file> <json>` | `place_report` | objdiff's report placed on the binary's functions by virtual address or name |
+| `report <file> <json>` | `place_report` | objdiff's report placed on the binary's functions by virtual address or name; over MCP, recorded in the notes too (matched, best percent, what no longer matches) |
 | `splat <file> <name> [dir] [splits…]` | `splat_export` | A splat YAML config (header, the code segment at its load address split into units, the bytes after the last function as data, the BSS size) and `symbol_addrs.txt` naming every function and known place |
 | `splat <file> import <syms>` | `import_symbol_addrs` | A splat symbol file's names into the notes (splat's own `func_…`/`D_…` names left out) |
-| `sdk <file> <libs…> [notes]` | `identify_sdk` | The Psy-Q SDK's functions in the binary, found by the signatures of its `.LIB`/`.OBJ` files (Sony's `LNK` object format, the linker's fields masked): each named, with an `sdk:` note so a decompilation leaves it be, and the libraries the game was linked with |
+| `sdk <file> <libs…> [notes]` | `identify_sdk` | The Psy-Q SDK's functions in the binary, found by the signatures of its `.LIB`/`.OBJ` files (Sony's `LNK` object format, the linker's fields masked): each named, with an `sdk:` note and marked library code so a decompilation leaves it be (its callers don't wait on it), and the libraries the game was linked with |
 | `names <file> <json> [min%]` | `propose_names` | Names from another build of the game (a port with its source, a symbolized build): its functions with the strings they use and the functions they call, matched to functions here by shared strings, then through the calls; each with a confidence and the evidence |
 
 Strings in a console's code area (a PlayStation executable's one section, a
 ROM's banks) are found like those in data sections, so the strings a
 function uses show for PlayStation games too.
+
+The notes keep where each function stands: matched (and its source file),
+nonmatching, tried and how close it came, claimed by an agent, set aside, or
+library code. `next_functions` ranks the rest from what they call, for any
+binary binviz disassembles: first the functions shaped like one already
+matched (90 % of the same instructions, so its C is a template), then those
+whose callees are all done, small ones that many callers wait on first, then
+those still waiting; a function tried three times without matching waits
+until something it calls is done. Functions are compared by a MinHash of
+their instructions' shapes (operations and operand kinds, never addresses or
+numbers), so `similar_functions` answers at once even for tens of thousands
+of functions.
 
 MIPS switch tables (the `sltiu` guard, `sll … 2`, `lui`/`addu`/`lw`, `jr`
 idiom GCC and IDO write) are followed for PlayStation and Nintendo 64 code,
@@ -493,6 +508,8 @@ crates/binviz        the library
   src/inspect.rs     the "what is here?" query, separate debug files, annotations
   src/search.rs      the search box: query forms and ranking
   src/coverage.rs    reverse-engineering coverage and gap hints
+  src/decomp.rs      a matching decompilation: where it stands, what to do next
+  src/similar.rs     functions shaped alike (MinHash of instruction shapes, banded)
   src/discover/      function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS,
                      and by following x86 code (x86.rs) for 32-bit PE images
   src/strings.rs     strings in data sections

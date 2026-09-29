@@ -334,7 +334,7 @@ fn overlap(a: &[u32], b: &[u32]) -> f32 {
 }
 
 /// How similar two token sequences are, in order: 1 − edits / length.
-fn similarity(a: &[u32], b: &[u32]) -> f32 {
+pub(crate) fn similarity(a: &[u32], b: &[u32]) -> f32 {
     if a.is_empty() && b.is_empty() {
         return 1.0;
     }

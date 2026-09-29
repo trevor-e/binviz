@@ -670,6 +670,122 @@ fn stripped_32_bit_pe_functions_are_found_by_following_the_code() {
     }
 }
 
+#[test]
+fn decompilation_goes_from_what_is_ready() {
+    use binviz::{Decomp, DecompState, NextQuery, Readiness};
+    let mut bin = open("x86demo.exe");
+    bin.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    let at = |bin: &Binary, name: &str| bin.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let set = |bin: &mut Binary, address: u64, decomp: Decomp| {
+        let mut notes: Vec<Annotation> = bin.annotations().to_vec();
+        notes.retain(|a| a.address != address);
+        notes.push(Annotation {
+            address,
+            size: 0,
+            name: String::new(),
+            comment: String::new(),
+            reviewed: false,
+            decomp: Some(decomp),
+        });
+        bin.set_annotations(notes);
+    };
+    let matched = |since: u64| Decomp {
+        state: DecompState::Matched,
+        since,
+        ..Default::default()
+    };
+    let q = NextQuery {
+        limit: 100,
+        now: 1000,
+        ..Default::default()
+    };
+    let find = |list: &binviz::NextList, address: u64| list.functions.iter().find(|f| f.address == address).cloned();
+
+    // The program's own functions, its import thunks left out, all to do.
+    let list = bin.next_functions(&q);
+    assert_eq!(list.progress.functions as usize, list.functions.len());
+    assert!(list.functions.len() >= 40, "{}", list.functions.len());
+    assert!(!list.functions.iter().any(|f| f.address == at(&bin, "Sleep")));
+    // fatal leads: two instructions, and the one thing both its callers wait on.
+    let (fatal, checked_div) = (at(&bin, "fatal"), at(&bin, "checked_div"));
+    assert_eq!((list.functions[0].address, list.functions[0].unblocks), (fatal, 2));
+    assert_eq!(find(&list, checked_div).unwrap().waiting_on, [fatal]);
+    // start calls most of the program: it waits.
+    let start = find(&list, bin.summary().entry.unwrap()).unwrap();
+    assert_eq!(start.readiness, Readiness::Waiting);
+    assert!(start.waiting_on.len() >= 8, "{:?}", start.waiting_on);
+
+    // Once fatal matches, its callers are ready and it isn't listed.
+    set(&mut bin, fatal, matched(10));
+    let list = bin.next_functions(&q);
+    assert!(find(&list, fatal).is_none());
+    assert_eq!(find(&list, checked_div).unwrap().readiness, Readiness::Ready);
+    let mut ready = bin.callers_now_ready(fatal);
+    ready.sort_unstable();
+    assert_eq!(ready, [checked_div, at(&bin, "_checked_index")]);
+    assert_eq!((list.progress.matched, list.progress.matched_bytes), (1, 10));
+
+    // A claim keeps a function from others for an hour.
+    let claimed = Decomp {
+        state: DecompState::InProgress,
+        by: "agent-1".into(),
+        since: 1000,
+        ..Default::default()
+    };
+    set(&mut bin, checked_div, claimed);
+    let list = bin.next_functions(&q);
+    assert!(find(&list, checked_div).is_none());
+    assert_eq!(list.claimed, 1);
+    let later = NextQuery {
+        now: 1000 + 3600,
+        ..q.clone()
+    };
+    assert!(find(&bin.next_functions(&later), checked_div).is_some());
+
+    // Three tries without a match send a function to the end of the list,
+    // until something it calls is done after the last try.
+    let (dispatch, sum3) = (at(&bin, "dispatch"), at(&bin, "sum3"));
+    let tried = Decomp {
+        attempts: 3,
+        percent: Some(71.0),
+        since: 20,
+        ..Default::default()
+    };
+    set(&mut bin, dispatch, tried);
+    let list = bin.next_functions(&q);
+    assert_eq!(list.functions.last().unwrap().address, dispatch);
+    assert_eq!(find(&list, dispatch).unwrap().readiness, Readiness::Hard);
+    set(&mut bin, sum3, matched(30));
+    assert_eq!(
+        find(&bin.next_functions(&q), dispatch).unwrap().readiness,
+        Readiness::Waiting
+    );
+
+    // A function copied and edited from one done is a template: first in line.
+    let (health, ammo) = (at(&bin, "clamp_health"), at(&bin, "clamp_ammo"));
+    let like = bin.similar_functions(ammo, 3);
+    assert_eq!(like[0].address, health);
+    assert!(like[0].similarity >= 0.9, "{like:?}");
+    set(&mut bin, health, matched(40));
+    let list = bin.next_functions(&q);
+    let first = &list.functions[0];
+    assert_eq!((first.address, first.readiness), (ammo, Readiness::LikeDone));
+    assert_eq!(first.like.unwrap().address, health);
+    // Its C is the worked example the context for writing the copy offers.
+    assert_eq!(bin.worked_examples(ammo, 3).first().map(|e| e.address), Some(health));
+    let context = bin.decomp_context(ammo, 100).unwrap();
+    assert_eq!(context.examples[0].name, "clamp_health");
+    assert!(context.describe().contains("Worked examples"), "{}", context.describe());
+
+    // Only what starts in a range, when asked.
+    let within = NextQuery {
+        within: Some((ammo, ammo + 1)),
+        ..q.clone()
+    };
+    let list = bin.next_functions(&within);
+    assert_eq!(list.functions.iter().map(|f| f.address).collect::<Vec<_>>(), [ammo]);
+}
+
 fn total(b: &StatusBytes) -> u64 {
     b.reviewed + b.annotated + b.named + b.structure + b.recovered + b.padding + b.unexplored
 }
@@ -716,6 +832,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: "main".into(),
             comment: "builds shapes and prints the total area".into(),
             reviewed: true,
+            decomp: None,
         },
         Annotation {
             address: main.address + 0x10,
@@ -723,6 +840,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: String::new(),
             comment: "calls __main".into(),
             reviewed: false,
+            decomp: None,
         },
     ]);
     // The name becomes a symbol with the recovered function's exact size.

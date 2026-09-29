@@ -17,7 +17,7 @@ use serde::Serialize;
 
 use crate::binary::Binary;
 use crate::error::{Error, Result};
-use crate::model::Annotation;
+use crate::model::{Annotation, Decomp, DecompState};
 
 /// A function from an object file: its bytes, and which of them the linker
 /// fills in (1 bits in `mask` are compared, 0 bits are not).
@@ -427,7 +427,8 @@ impl Binary {
 
 impl SdkReport {
     /// The matches as notes: each function named, with an `sdk:` comment
-    /// saying which library it is from, so that it can be skipped.
+    /// saying which library it is from, and marked library code, so that a
+    /// decompilation skips it (and its callers don't wait on it).
     pub fn annotations(&self) -> Vec<Annotation> {
         self.matches
             .iter()
@@ -437,6 +438,11 @@ impl SdkReport {
                 name: m.name.clone(),
                 comment: format!("sdk: {}", m.library),
                 reviewed: true,
+                decomp: Some(Decomp {
+                    state: DecompState::Library,
+                    source: m.library.clone(),
+                    ..Default::default()
+                }),
             })
             .collect()
     }
@@ -562,8 +568,8 @@ mod tests {
         let mut bin = Binary::parse(data).unwrap();
         // Functions the follower wouldn't find (the bytes are made up): name them so they exist.
         bin.set_annotations(vec![
-            Annotation { address: 0x8001_0000, size: 28, name: "f1".into(), comment: String::new(), reviewed: false },
-            Annotation { address: 0x8001_001C, size: 16, name: "f2".into(), comment: String::new(), reviewed: false },
+            Annotation { address: 0x8001_0000, size: 28, name: "f1".into(), comment: String::new(), reviewed: false, decomp: None },
+            Annotation { address: 0x8001_001C, size: 16, name: "f2".into(), comment: String::new(), reviewed: false, decomp: None },
         ]);
         let r = bin.identify_sdk(&sigs);
         let names: Vec<(u64, &str)> = r.matches.iter().map(|m| (m.address, m.name.as_str())).collect();

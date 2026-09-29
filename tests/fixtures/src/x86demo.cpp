@@ -7,8 +7,9 @@
 // thunk), from a table of callbacks, by an address passed as an argument, by
 // the export table and the TLS callback list, as the cases of a switch
 // compiled to a jump table, and not at all. It has every calling convention
-// (cdecl, stdcall, fastcall, thiscall) and floating point constants.
-// x86demo-msvc.s adds what MSVC's code does and clang's doesn't.
+// (cdecl, stdcall, fastcall, thiscall), floating point constants, and a
+// function copied and edited into another. x86demo-msvc.s adds what MSVC's
+// code does and clang's doesn't.
 
 extern "C" {
 __declspec(dllimport) __declspec(noreturn) void __stdcall ExitProcess(unsigned code);
@@ -58,6 +59,24 @@ __declspec(noinline) int checked_div(int a, int b) {
 
 __declspec(noinline) double ratio(int a, int b) {
     return (double)a / (double)b * 1.25 + 0.5;
+}
+
+// One function copied and edited into another, as game code is: the same
+// instructions but for their numbers.
+__declspec(noinline) int clamp_health(int v, int bonus) {
+    if (v < 0) {
+        return 0;
+    }
+    v = v * 3 + bonus;
+    return v > 100 ? 100 : v;
+}
+
+__declspec(noinline) int clamp_ammo(int v, int bonus) {
+    if (v < 0) {
+        return 0;
+    }
+    v = v * 5 + bonus;
+    return v > 250 ? 250 : v;
 }
 
 // thiscall: virtual methods, reached only through their vtables.
@@ -242,6 +261,7 @@ extern "C" void start() {
     r += apply(thrice, x);
     r += checked_div(r, x + 1);
     r += (int)ratio(r, x + 3);
+    r += clamp_health(r, x) + clamp_ammo(r, x);
     r += msvc_switch(x) + checked_index(x) + tail_caller(x) + with_handler(x);
     r += with_finally(x) + cond_tail(x);
     Sleep((unsigned)r & 3);

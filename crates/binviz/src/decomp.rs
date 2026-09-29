@@ -1,14 +1,16 @@
 //! Everything someone (an agent, say) needs to write a function's C in one
 //! place: its code with names resolved, what its code says about its
 //! prototype, the callers and callees with theirs, the strings and globals
-//! it touches, the structures it walks, and the notes already left on it.
+//! it touches, the structures it walks, the notes already left on it, where
+//! decompiling it stands, and the functions already decompiled that are
+//! shaped like it (their C is the best worked example).
 
 use std::fmt::Write;
 
 use serde::Serialize;
 
 use crate::binary::Binary;
-use crate::model::{Annotation, Instruction};
+use crate::model::{Annotation, Decomp, DecompState, Instruction};
 use crate::signature::FunctionSignature;
 use crate::xrefs::{Reference, StringUse};
 
@@ -20,6 +22,20 @@ pub struct Neighbour {
     pub name: String,
     pub calls: u32,
     pub prototype: Option<String>,
+}
+
+/// A function already decompiled that is shaped like the one to write: its C
+/// is a worked example.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Example {
+    pub address: u64,
+    pub name: String,
+    /// How alike their instructions are: 1 for the same, down to 0.5.
+    pub similarity: f32,
+    pub state: DecompState,
+    /// The source file its C is in.
+    pub source: String,
 }
 
 /// The context for decompiling one function.
@@ -38,6 +54,10 @@ pub struct DecompContext {
     pub data: Vec<Reference>,
     /// Notes on the function and the addresses in it.
     pub notes: Vec<Annotation>,
+    /// Where decompiling it stands.
+    pub decomp: Option<Decomp>,
+    /// Functions already decompiled that are shaped like it, most alike first.
+    pub examples: Vec<Example>,
 }
 
 impl Binary {
@@ -57,8 +77,25 @@ impl Binary {
         let notes = self
             .annotations()
             .iter()
-            .filter(|a| a.address >= lo && a.address < hi)
+            .filter(|a| a.address >= lo && a.address < hi && a.is_note())
             .cloned()
+            .collect();
+        let examples = self
+            .worked_examples(lo, 3)
+            .into_iter()
+            .map(|s| {
+                let d = self.decomp_at(s.address).cloned().unwrap_or_default();
+                Example {
+                    address: s.address,
+                    name: self
+                        .symbols()
+                        .at(s.address)
+                        .map_or_else(|| format!("{:#x}", s.address), |f| f.display_name().into_owned()),
+                    similarity: s.similarity,
+                    state: d.state,
+                    source: d.source,
+                }
+            })
             .collect();
         Some(DecompContext {
             address: lo,
@@ -72,6 +109,8 @@ impl Binary {
             strings: summary.strings,
             data: summary.data,
             notes,
+            decomp: self.decomp_at(lo).cloned(),
+            examples,
         })
     }
 }
@@ -81,8 +120,42 @@ impl DecompContext {
     pub fn describe(&self) -> String {
         let mut out = String::new();
         let _ = writeln!(out, "{} at {:#x}, {} bytes", self.name, self.address, self.size);
+        if let Some(d) = &self.decomp {
+            let _ = write!(out, "Decompilation: {}", d.state.as_str());
+            if !d.source.is_empty() {
+                let _ = write!(out, " in {}", d.source);
+            }
+            if d.attempts > 0 {
+                let _ = write!(out, ", tried {}×", d.attempts);
+            }
+            if let Some(p) = d.percent.filter(|&p| p < 100.0) {
+                let _ = write!(out, ", best {p:.1}%");
+            }
+            out.push('\n');
+        }
         if let Some(s) = &self.signature {
             out.push_str(&s.describe());
+        }
+        if !self.examples.is_empty() {
+            let _ = writeln!(
+                out,
+                "Worked examples (already decompiled, shaped like it: their C is the place to start):"
+            );
+            for e in &self.examples {
+                let _ = writeln!(
+                    out,
+                    "  {:>3.0}%  {:#x} {}  {}{}",
+                    e.similarity * 100.0,
+                    e.address,
+                    e.name,
+                    e.state.as_str(),
+                    if e.source.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" in {}", e.source)
+                    }
+                );
+            }
         }
         for (label, list) in [("Called by", &self.callers), ("Calls", &self.callees)] {
             if list.is_empty() {
@@ -182,6 +255,7 @@ mod tests {
             name: "GetState".into(),
             comment: "reads the state word".into(),
             reviewed: false,
+            decomp: None,
         }]);
         let c = bin.decomp_context(0x8001_0000, 64).unwrap();
         assert_eq!((c.name.as_str(), c.size), ("entry", 0x1C));

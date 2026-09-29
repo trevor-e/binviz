@@ -271,6 +271,7 @@ fn main() {
             name: format!("fn_{:x}", f.address),
             comment: "note".into(),
             reviewed: true,
+            decomp: None,
         })
         .collect();
     time(&format!("set {} annotations", notes.len()), || {
@@ -279,6 +280,43 @@ fn main() {
     time("coverage after annotating", || bin.coverage(100).gap_count);
     time("clear annotations", || bin.set_annotations(Vec::new()));
     time("coverage, no annotations again", || bin.coverage(100).gap_count);
+
+    println!("decompilation queue");
+    let q = binviz::NextQuery::default();
+    time("next_functions (summing functions up)", || {
+        bin.next_functions(&q).functions.len()
+    });
+    time("next_functions again", || bin.next_functions(&q).functions.len());
+    // A decompilation under way: the queue's first picks matched, a thousand at a time.
+    let mut done: Vec<Annotation> = Vec::new();
+    for round in 1..=3 {
+        let batch = bin.next_functions(&binviz::NextQuery {
+            limit: 1000,
+            ..Default::default()
+        });
+        done.extend(batch.functions.iter().map(|f| Annotation {
+            address: f.address,
+            size: 0,
+            name: String::new(),
+            comment: String::new(),
+            reviewed: false,
+            decomp: Some(binviz::Decomp {
+                state: binviz::DecompState::Matched,
+                since: round,
+                ..Default::default()
+            }),
+        }));
+        bin.set_annotations(done.clone());
+        let n = done.len();
+        time(&format!("next_functions with {n} matched"), || {
+            bin.next_functions(&q).functions.len()
+        });
+    }
+    if let Some(f) = bin.next_functions(&q).functions.first() {
+        let a = f.address;
+        time("similar_functions", || bin.similar_functions(a, 8).len());
+        time("callers_now_ready", || bin.callers_now_ready(a).len());
+    }
 
     println!(
         "total held {:.1} MB (file {:.1} MB)",

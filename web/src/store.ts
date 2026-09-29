@@ -645,8 +645,10 @@ class Store {
 
   /** Adds or replaces the annotation starting at `a.address`. */
   async annotate(a: Annotation) {
-    const rest = this.annotations.filter((x) => !(x.address === a.address && x.size === a.size));
-    await this.setAnnotations([...rest, a]);
+    const old = this.annotations.find((x) => x.address === a.address && x.size === a.size);
+    const rest = this.annotations.filter((x) => x !== old);
+    // Editing a note keeps where decompiling the function stands.
+    await this.setAnnotations([...rest, old?.decomp && !a.decomp ? { ...a, decomp: old.decomp } : a]);
   }
 
   async removeAnnotation(a: Annotation) {
@@ -684,7 +686,12 @@ class Store {
       const same = a.size === 0n ? this.annotations.find((x) => x.address === a.address) : undefined;
       const key = same ? `${same.address}:${same.size}` : `${a.address}:${a.size}`;
       const old = byKey.get(key);
-      byKey.set(key, old ? { ...old, name: a.name || old.name, comment: a.comment || old.comment, reviewed: a.reviewed || old.reviewed } : a);
+      byKey.set(
+        key,
+        old
+          ? { ...old, name: a.name || old.name, comment: a.comment || old.comment, reviewed: a.reviewed || old.reviewed, decomp: a.decomp ?? old.decomp }
+          : a,
+      );
     }
     await this.setAnnotations([...byKey.values()]);
   }

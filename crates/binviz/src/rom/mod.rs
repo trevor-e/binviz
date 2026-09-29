@@ -579,6 +579,7 @@ impl Binary {
             xrefs: std::sync::OnceLock::new(),
             pointers: std::sync::OnceLock::new(),
             objc: std::sync::OnceLock::new(),
+            similar: std::sync::OnceLock::new(),
             rom: None,
         };
         binary.discovered = rom.analysis.functions.clone();

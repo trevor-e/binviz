@@ -361,6 +361,109 @@ fn objective_c_classes_and_senders() {
 }
 
 #[test]
+fn agents_work_through_a_decompilation() {
+    let path = fixture_copy_for("x86demo.exe", "decomp-");
+    let dir = path.parent().unwrap().to_path_buf();
+    let pdb = dir.join("x86demo.pdb");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin/x86demo.pdb"),
+        &pdb,
+    )
+    .unwrap();
+    let open = json!({ "path": path.to_str().unwrap(), "debug_file": pdb.to_str().unwrap() });
+    let mut s = Session::start();
+    s.ok("open_binary", open.clone());
+
+    // Two agents claim, and don't get the same function.
+    let a = s.ok("next_functions", json!({ "claim": true, "agent": "a" }));
+    assert!(
+        a.contains("Claimed fatal") && a.contains("0 of 42 functions matched"),
+        "{a}"
+    );
+    let b = s.ok("next_functions", json!({ "claim": true, "agent": "b", "count": 3 }));
+    assert!(
+        b.contains("1 claimed") && b.contains("Claimed ") && !b.contains("Claimed fatal"),
+        "{b}"
+    );
+
+    // A match says what it made ready; a try that didn't match keeps its best.
+    let done = s.ok(
+        "mark",
+        json!({ "at": "fatal", "state": "matched", "source": "src/main.c" }),
+    );
+    assert!(
+        done.contains("matched in src/main.c") && done.contains("Now ready") && done.contains("checked_div"),
+        "{done}"
+    );
+    let tried = s.ok(
+        "mark",
+        json!({ "at": "clamp_ammo", "state": "attempted", "percent": 62.5 }),
+    );
+    assert!(tried.contains("tried 1×, best 62.5%"), "{tried}");
+
+    // Matching a function points at its copy, which then comes first.
+    let health = s.ok(
+        "mark",
+        json!({ "at": "clamp_health", "state": "matched", "source": "src/stats.c" }),
+    );
+    assert!(health.contains("likely the same C: clamp_ammo"), "{health}");
+    let next = s.ok("next_functions", json!({ "count": 1 }));
+    assert!(
+        next.contains("clamp_ammo") && next.contains("like a done one"),
+        "{next}"
+    );
+    let like = s.ok("similar_functions", json!({ "at": "clamp_ammo", "done_only": true }));
+    assert!(
+        like.contains("clamp_health") && like.contains("matched in src/stats.c"),
+        "{like}"
+    );
+    let info = s.ok("function_info", json!({ "at": "fatal" }));
+    assert!(info.contains("Decompilation: matched in src/main.c"), "{info}");
+    let context = s.ok("decomp_context", json!({ "at": "clamp_ammo" }));
+    assert!(
+        context.contains("Worked examples") && context.contains("clamp_health  matched in src/stats.c"),
+        "{context}"
+    );
+
+    // objdiff's report, recorded: a new match, a match lost, a percent.
+    let report = dir.join("report.json");
+    let unit = |functions: &str| format!(r#"{{"units": [{{"name": "main/demo", "functions": [{functions}]}}]}}"#);
+    std::fs::write(
+        &report,
+        unit(
+            r#"{"name": "sum3", "size": 16, "fuzzy_match_percent": 100.0},
+               {"name": "mix", "size": 14, "fuzzy_match_percent": 80.5},
+               {"name": "fatal", "size": 10, "fuzzy_match_percent": 90.0}"#,
+        ),
+    )
+    .unwrap();
+    let placed = s.ok("place_report", json!({ "report": report.to_str().unwrap() }));
+    assert!(
+        placed.contains("1 newly matched") && placed.contains("1 no longer match: fatal"),
+        "{placed}"
+    );
+    let mix = s.ok("function_info", json!({ "at": "mix" }));
+    assert!(mix.contains("Decompilation: todo in main/demo, best 80.5%"), "{mix}");
+    let (text, error) = s.call("mark", json!({ "at": "fatal", "state": "done" }));
+    assert!(error && text.contains("unknown state"), "{text}");
+    drop(s);
+
+    // The notes file keeps it all, for the next session and the web UI.
+    let notes = std::fs::read_to_string(dir.join("x86demo.exe.binviz-notes.json")).unwrap();
+    assert!(
+        notes.contains("\"state\": \"matched\"") && notes.contains("\"source\": \"src/main.c\""),
+        "{notes}"
+    );
+    let mut s = Session::start();
+    s.ok("open_binary", open);
+    let cov = s.ok("coverage", json!({ "gaps": 0 }));
+    assert!(cov.contains("Decompilation: 2 of 42 functions matched"), "{cov}");
+    let listed = s.ok("list_annotations", json!({}));
+    assert!(listed.contains("[matched in src/stats.c]"), "{listed}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn a_rom_with_an_emulators_log_and_labels() {
     let path = fixture_copy_for("tiny.nes", "emulators-");
     let dir = path.parent().unwrap().to_path_buf();

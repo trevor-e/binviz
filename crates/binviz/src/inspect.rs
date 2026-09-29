@@ -345,8 +345,9 @@ impl Binary {
         let sections = &self.sections;
         let symbols = &mut self.symbols;
         symbols.set_static(extra, sections);
-        // Function boundaries shape the references found in code.
+        // Function boundaries shape the references found in code, and what is summed up.
         self.xrefs = std::sync::OnceLock::new();
+        self.similar = std::sync::OnceLock::new();
         self.rebuild_user_symbols();
     }
 

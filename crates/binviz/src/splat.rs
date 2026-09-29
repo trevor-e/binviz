@@ -202,6 +202,7 @@ pub fn parse_symbol_addrs(text: &str) -> Vec<Annotation> {
             name: name.to_string(),
             comment: String::new(),
             reviewed: false,
+            decomp: None,
         });
     }
     out

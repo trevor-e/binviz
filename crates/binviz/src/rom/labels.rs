@@ -252,6 +252,7 @@ fn note(address: u64, size: u64, name: &str, comment: &str) -> Annotation {
         name: name.trim().to_string(),
         comment: comment.trim().to_string(),
         reviewed: false,
+        decomp: None,
     }
 }
 
