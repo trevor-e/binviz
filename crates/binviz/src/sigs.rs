@@ -118,7 +118,11 @@ impl SignatureSet {
                     },
                     code: f.code,
                     mask: f.mask,
-                    releases: if release.is_empty() { Vec::new() } else { vec![release.clone()] },
+                    releases: if release.is_empty() {
+                        Vec::new()
+                    } else {
+                        vec![release.clone()]
+                    },
                 });
                 n += 1;
             }
@@ -356,7 +360,10 @@ impl Binary {
         if all.len() > 1 {
             for r in all {
                 let functions = matches.iter().filter(|m| m.releases.contains(r)).count() as u32;
-                let only = matches.iter().filter(|m| m.releases.len() == 1 && m.releases[0] == *r).count() as u32;
+                let only = matches
+                    .iter()
+                    .filter(|m| m.releases.len() == 1 && m.releases[0] == *r)
+                    .count() as u32;
                 releases.push(ReleaseMatch {
                     release: r.clone(),
                     functions,
@@ -438,7 +445,10 @@ impl SdkReport {
                 ));
             }
             for r in &self.releases {
-                out.push_str(&format!("  {:>5} functions ({:>4} only it has)  {}\n", r.functions, r.only, r.release));
+                out.push_str(&format!(
+                    "  {:>5} functions ({:>4} only it has)  {}\n",
+                    r.functions, r.only, r.release
+                ));
             }
         }
         for m in &self.matches {
