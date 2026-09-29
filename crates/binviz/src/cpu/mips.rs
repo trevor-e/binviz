@@ -192,11 +192,20 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
                 }
                 12 => {
                     writes = None;
-                    Insn::new(4, "syscall", String::new(), Flow::Trap)
+                    let code = (w >> 6) & 0xF_FFFF;
+                    let ops = if code == 0 { String::new() } else { format!("{code:#x}") };
+                    Insn::new(4, "syscall", ops, Flow::Trap)
                 }
                 13 => {
                     writes = None;
-                    Insn::new(4, "break", String::new(), Flow::Trap)
+                    // The code, as GNU as reads it back: `break 7` (GCC's division by zero), `break 7, 1`.
+                    let (code, low) = ((w >> 16) & 0x3FF, (w >> 6) & 0x3FF);
+                    let ops = match (code, low) {
+                        (0, 0) => String::new(),
+                        (c, 0) => format!("{c:#x}"),
+                        (c, l) => format!("{c:#x}, {l:#x}"),
+                    };
+                    Insn::new(4, "break", ops, Flow::Trap)
                 }
                 15 => {
                     writes = None;
@@ -240,8 +249,11 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
                 48..=54 => {
                     writes = None;
                     let m = ["tge", "tgeu", "tlt", "tltu", "teq", "", "tne"][funct as usize - 48];
+                    let code = (w >> 6) & 0x3FF;
                     if m.is_empty() {
                         Insn::bad(4, word)
+                    } else if code != 0 {
+                        insn(m, format!("{}, {}, {code:#x}", r(rs), r(rt)))
                     } else {
                         insn(m, format!("{}, {}", r(rs), r(rt)))
                     }
@@ -492,11 +504,14 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
     };
     // An address in a register (lui + addiu, lui + ori) is a reference too; a
     // plain `li` (from $zero) of a small number is a number (0xa0 and up may
-    // be the PlayStation kernel's entry points).
+    // be the PlayStation kernel's entry points), and so is one worked out
+    // from small numbers (a loop's counter, `li 10` then `addiu -1`): an
+    // address has its high half, as a `lui` leaves it.
+    let li = matches!(op, 9 | 13 | 25) && rs == 0;
     if let (Some(v), Some(reg)) = (value, writes)
         && out.data.is_none()
         && op != 15
-        && !(matches!(op, 9 | 13 | 25) && rs == 0 && v < 0x80)
+        && if li { v >= 0x80 } else { v >= 0x1_0000 }
         && reg != 0
     {
         out.data = Some((v as u64, RefKind::Address));
@@ -557,6 +572,22 @@ mod tests {
             (text(&i).as_str(), i.data),
             ("addiu $a0, $a0, -0x10", Some((0x800F_FFF0, RefKind::Address)))
         );
+    }
+
+    #[test]
+    fn codes_and_counters() {
+        let one = |w: u32, s: &mut State| decode(&be(&[w]), 0x8000_0400, s, true);
+        let mut s = State::default();
+        // The codes, as an assembler writes them back: GCC's division by zero, a trap's.
+        assert_eq!(text(&one(0x0007_000D, &mut s)), "break 0x7");
+        assert_eq!(text(&one(0x0007_004D, &mut s)), "break 0x7, 0x1");
+        assert_eq!(text(&one(0x0000_000D, &mut s)), "break");
+        assert_eq!(text(&one(0x0000_000C, &mut s)), "syscall");
+        assert_eq!(text(&one(0x0020_01F4, &mut s)), "teq $at, $zero, 0x7");
+        // A number worked out from small ones (a loop's counter) is no address.
+        one(0x2406_000A, &mut s);
+        let i = one(0x24C6_FFFF, &mut s);
+        assert_eq!((text(&i).as_str(), i.data), ("addiu $a2, $a2, -0x1", None));
     }
 
     #[test]
