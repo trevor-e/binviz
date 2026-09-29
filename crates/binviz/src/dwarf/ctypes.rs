@@ -268,6 +268,13 @@ pub(crate) struct Types {
     /// Structures' and unions' layouts, by entity (for those defined).
     pub layouts: Vec<Option<Layout>>,
     pub pointer_size: u64,
+    /// Some type is a `long` of 64 bits, which only an LP64 target (not
+    /// 64-bit Windows) compiles to the same size.
+    pub long_is_64: bool,
+    /// The size of the binary's `long double` when some type is one (x87's
+    /// 80 bits in 12 or 16 bytes, or a 128-bit float), which compilers for
+    /// one CPU disagree on (MSVC's is a double).
+    pub long_double: Option<u64>,
     /// Each type or function DIE's entity.
     by_die: HashMap<(u32, usize), usize>,
     /// Structures, unions and typedefs by source name and by C name.
@@ -640,6 +647,9 @@ struct Builder<'a> {
     function_names: HashMap<(u32, usize), String>,
     /// External functions with code: DIE and qualified name.
     functions: Vec<(u32, UnitOffset, String)>,
+    /// External functions with code named by a DIE later in the unit (an
+    /// abstract instance after its out-of-line copy): DIE and that DIE.
+    named_later: Vec<(u32, UnitOffset, (u32, UnitOffset))>,
     entities: Vec<Entity>,
     by_die: HashMap<(u32, usize), usize>,
     ctypes: HashMap<(u32, usize), CType>,
@@ -676,6 +686,7 @@ impl Types {
             typedefs: HashMap::new(),
             function_names: HashMap::new(),
             functions: Vec::new(),
+            named_later: Vec::new(),
             entities: Vec::new(),
             by_die: HashMap::new(),
             ctypes: HashMap::new(),
@@ -686,6 +697,11 @@ impl Types {
             building: Vec::new(),
         };
         b.walk();
+        for (unit, offset, origin) in std::mem::take(&mut b.named_later) {
+            if let Some(name) = b.function_names.get(&(origin.0, origin.1.0)) {
+                b.functions.push((unit, offset, name.clone()));
+            }
+        }
         b.merge();
         for i in 0..b.found.len() {
             if b.found[i].kind == Kind::Typedef {
@@ -713,10 +729,26 @@ impl Types {
                 }
             }
         }
+        // The sizes of C types that compilers for one target disagree on.
+        let long_is_64 = b
+            .ctypes
+            .values()
+            .any(|t| matches!(t, CType::Base("long" | "unsigned long", 8)));
+        let long_double = b
+            .ctypes
+            .values()
+            .filter_map(|t| match t {
+                CType::Base("long double", size) => Some(*size),
+                CType::Base("long double _Complex", size) => Some(size / 2),
+                _ => None,
+            })
+            .max();
         Types {
             entities: b.entities,
             layouts: b.layouts,
             pointer_size,
+            long_is_64,
+            long_double,
             by_die: b.by_die,
             by_name,
         }
@@ -1028,11 +1060,13 @@ impl Builder<'_> {
             })
             .unwrap_or(false);
         let code = die.attr_value(gimli::DW_AT_low_pc).is_some() || die.attr_value(gimli::DW_AT_ranges).is_some();
-        if external
-            && code
-            && let Some(n) = name
-        {
-            self.functions.push((ui, die.offset(), n));
+        if external && code {
+            match (name, origin) {
+                (Some(n), _) => self.functions.push((ui, die.offset(), n)),
+                // Its origin comes later in the unit: named after the walk.
+                (None, Some(o)) => self.named_later.push((ui, die.offset(), o)),
+                (None, None) => {}
+            }
         }
     }
 
@@ -1331,8 +1365,15 @@ impl Builder<'_> {
         if let Some((_, AttributeValue::CallingConvention(cc))) = attr(gimli::DW_AT_calling_convention) {
             func.convention = Convention::from_dwarf(cc);
         }
+        // The out-of-line copy of an inlined function may leave out parameters
+        // it doesn't use: its abstract instance lists them all.
+        let (list_index, list_offset) = die
+            .attr_value(gimli::DW_AT_abstract_origin)
+            .and_then(|v| debug.resolve_ref(unit_index, v))
+            .unwrap_or((unit_index, offset));
         let mut params = Vec::new();
-        if let Ok(mut cursor) = unit.entries_at_offset(offset)
+        if let Some(unit) = debug.unit(list_index)
+            && let Ok(mut cursor) = unit.entries_at_offset(list_offset)
             && matches!(cursor.next_entry(), Ok(true))
             && cursor.current().is_some_and(|d| d.has_children())
             && matches!(cursor.next_entry(), Ok(true))
@@ -1342,12 +1383,12 @@ impl Builder<'_> {
                     gimli::DW_TAG_formal_parameter => {
                         let origin = child
                             .attr_value(gimli::DW_AT_abstract_origin)
-                            .and_then(|v| debug.resolve_ref(unit_index, v))
+                            .and_then(|v| debug.resolve_ref(list_index, v))
                             .and_then(|(u, o)| Some((u, debug.unit(u)?, o)))
                             .and_then(|(u, unit, o)| Some((u, unit.entry(o).ok()?, unit)));
                         let ty = child
                             .attr_value(gimli::DW_AT_type)
-                            .and_then(|v| debug.resolve_ref(unit_index, v))
+                            .and_then(|v| debug.resolve_ref(list_index, v))
                             .or_else(|| {
                                 let (u, d, _) = origin.as_ref()?;
                                 debug.resolve_ref(*u, d.attr_value(gimli::DW_AT_type)?)
@@ -2751,5 +2792,36 @@ mod tests {
         );
         assert_eq!(d.struct_field("Tail", 3).unwrap().path, "len");
         assert!(d.struct_field("Tail", 4).is_none());
+    }
+
+    #[test]
+    fn a_function_named_by_its_abstract_instance_after_it() {
+        // clang writes an inlined function's out-of-line copy before its
+        // abstract instance, and may leave out a parameter it doesn't use.
+        let mut m = Made::new(gimli::DW_LANG_C99);
+        let int = m.int;
+        let copy = m.add(None, gimli::DW_TAG_subprogram, None);
+        let abstract_instance = m.add(None, gimli::DW_TAG_subprogram, Some("pick"));
+        let e = m.unit.get_mut(abstract_instance);
+        e.set(gimli::DW_AT_external, V::Flag(true));
+        e.set(gimli::DW_AT_prototyped, V::Flag(true));
+        e.set(gimli::DW_AT_type, V::UnitRef(int));
+        let mut params = Vec::new();
+        for name in ["unused", "which"] {
+            let p = m.add(Some(abstract_instance), gimli::DW_TAG_formal_parameter, Some(name));
+            m.unit.get_mut(p).set(gimli::DW_AT_type, V::UnitRef(int));
+            params.push(p);
+        }
+        let e = m.unit.get_mut(copy);
+        e.set(gimli::DW_AT_abstract_origin, V::UnitRef(abstract_instance));
+        e.set(gimli::DW_AT_low_pc, V::Address(Address::Constant(0x1000)));
+        let p = m.add(Some(copy), gimli::DW_TAG_formal_parameter, None);
+        m.unit
+            .get_mut(p)
+            .set(gimli::DW_AT_abstract_origin, V::UnitRef(params[1]));
+        let d = load(vec![m.unit]);
+        let h = d.c_header(&["pick"]);
+        assert_eq!(h.functions, 1, "{}", h.text);
+        assert_has(&h.text, &["int pick(int unused, int which);"]);
     }
 }

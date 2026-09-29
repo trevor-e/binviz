@@ -336,18 +336,32 @@ impl<'a> Writer<'a> {
         let types = self.types;
         let mut text = String::new();
         let bits = types.pointer_size * 8;
+        // `long` and `long double` are written as the binary's C has them,
+        // and not every compiler for the target makes them that size.
+        let mut sizes = String::new();
+        if types.long_is_64 {
+            sizes.push_str("\n * The target's long must be 8 bytes, as the binary's (64-bit Windows's is 4).");
+        }
+        if let Some(size) = types.long_double {
+            let _ = write!(
+                sizes,
+                "\n * The target's long double must be {size} bytes, as the binary's (MSVC's is 8)."
+            );
+        }
         let _ = writeln!(
             text,
-            "/* Types and functions from {source}, written by binviz as C.\n *\n * Every gap in a structure is a padding member, and _Static_assert checks\n * each structure's size and its members' offsets, so compiling this header\n * checks it against the debug info on any compiler for a {bits}-bit target\n * (clang -fsyntax-only{} -x c). C++ classes are structures, with their\n * bases embedded first; names are flattened (geo::Rect is geo__Rect). */",
+            "/* Types and functions from {source}, written by binviz as C.\n *\n * Every gap in a structure is a padding member, and _Static_assert checks\n * each structure's size and its members' offsets, so compiling this header\n * checks it against the debug info on any compiler for a {bits}-bit target\n * (clang -fsyntax-only{} -x c). C++ classes are structures, with their\n * bases embedded first; names are flattened (geo::Rect is geo__Rect).{sizes} */",
             if bits == 32 { " -m32" } else { "" }
         );
         if !not_found.is_empty() {
             let _ = writeln!(text, "\n/* Not found: {}. */", not_found.join(", "));
         }
         let _ = writeln!(text, "\n#ifndef BINVIZ_TYPES_H\n#define BINVIZ_TYPES_H");
+        // Elsewhere, offsetof as <stddef.h> has it on MSVC, without including
+        // <stddef.h>, whose typedefs (size_t, wchar_t) the header may have too.
         let _ = writeln!(
             text,
-            "\n#if defined(__GNUC__) || defined(__clang__)\n#define BINVIZ_OFFSETOF(type, member) __builtin_offsetof(type, member)\n#else\n#include <stddef.h>\n#define BINVIZ_OFFSETOF(type, member) offsetof(type, member)\n#endif"
+            "\n#if defined(__GNUC__) || defined(__clang__)\n#define BINVIZ_OFFSETOF(type, member) __builtin_offsetof(type, member)\n#else\n#define BINVIZ_OFFSETOF(type, member) ((unsigned long long)&((type *)0)->member)\n#endif"
         );
         let defined = self.ordered();
         let enums: Vec<usize> = (0..types.entities.len())

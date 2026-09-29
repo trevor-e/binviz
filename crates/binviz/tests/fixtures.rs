@@ -712,6 +712,12 @@ fn headers_of_cpp_and_rust() {
     // Everything it has, with libstdc++'s templates: their names made C.
     let all = d.c_header(&[]);
     assert!(all.structs > 20 && all.functions > 10, "{}", all.text);
+    // MinGW's long double is x87's in 16 bytes, which MSVC's isn't.
+    assert!(
+        all.text.contains("The target's long double must be 16 bytes"),
+        "{}",
+        all.text
+    );
     let vector = "struct std__vector_geo__Shape_p_std__allocator_geo__Shape_p";
     assert!(all.text.contains(&format!("{vector} {{")));
     let total = format!("double total_area(const {vector} *shapes);");

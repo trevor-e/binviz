@@ -604,7 +604,10 @@ cargo test
   no size (a Rust zero-sized type) is declared but not defined. A PDB has no
   typedefs in its type records, so members name the types themselves; for a C
   program, every structure gets a typedef of its own name, since a PDB can't
-  tell `typedef struct {…} T` from `struct T`.
+  tell `typedef struct {…} T` from `struct T`. A `long` and a `long double`
+  keep the binary's sizes, which not every compiler for its CPU shares (64-bit
+  Windows's `long` is 4 bytes, MSVC's `long double` 8); the header says when
+  it needs them.
 - Split DWARF (`.dwo`/`.dwp`) is detected but not followed.
 - `.eh_frame`, dyld opcode streams and chained fixups are shown as regions but
   not decoded entry by entry (chained fixups are walked to find pointers).
