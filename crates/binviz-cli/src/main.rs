@@ -490,8 +490,14 @@ fn run(
         }
         "disasm" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
-            let n = arg(3).map(num).transpose()?.unwrap_or(400) as usize;
-            let d = bin.disassemble_function(addr, n);
+            let n = arg(3).map(num).transpose()?.unwrap_or(4000) as usize;
+            // An address inside a function starts there, not at the function's start.
+            let d = match bin.symbols().function_containing(addr) {
+                Some(f) if f.address != addr && addr < f.address + f.size => {
+                    bin.disassemble(addr, f.address + f.size, n)
+                }
+                _ => bin.disassemble_function(addr, n),
+            };
             if !d.supported {
                 return Err(format!("no disassembler for {}", bin.summary().arch));
             }
@@ -515,6 +521,9 @@ fn run(
                     "  {:>12x}:  {:<30} {:<8} {}{target}",
                     i.address, i.bytes, i.mnemonic, i.operands
                 );
+            }
+            if d.truncated {
+                println!("  … stopped at {n} instructions; pass a larger count for the rest");
             }
         }
         "dwarf" => {
@@ -1097,7 +1106,7 @@ fn run(
         }
         "context" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
-            let n = arg(3).map(num).transpose()?.unwrap_or(400) as usize;
+            let n = arg(3).map(num).transpose()?.unwrap_or(4000) as usize;
             let c = bin.decomp_context(addr, n).ok_or("not in a function")?;
             print!("{}", c.describe());
         }

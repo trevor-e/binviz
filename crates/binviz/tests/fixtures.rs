@@ -694,6 +694,30 @@ fn a_float_read_from_an_absolute_address_shows_its_value() {
 }
 
 #[test]
+fn a_function_ends_at_its_code_not_at_its_padding() {
+    let bin = open("x86demo.exe");
+    let mut checked = 0;
+    for f in bin.symbols().functions() {
+        let d = bin.disassemble_function(f.address, 4000);
+        let last = d.instructions.last().unwrap();
+        assert!(!matches!(last.mnemonic.as_str(), "nop" | "int3"), "{:#x}: {last:?}", f.address);
+        checked += 1;
+    }
+    assert!(checked > 10);
+}
+
+#[test]
+fn context_says_when_it_stops_short_of_the_end() {
+    let bin = open("x86demo.exe");
+    let f = bin.symbols().function_containing(0x4010b7).unwrap().address;
+    let short = bin.decomp_context(f, 3).unwrap();
+    assert!(short.truncated);
+    assert!(short.describe().contains("stopped at 3 instructions"), "{}", short.describe());
+    let all = bin.decomp_context(f, 4000).unwrap();
+    assert!(!all.truncated && !all.describe().contains("stopped at"));
+}
+
+#[test]
 fn decompilation_goes_from_what_is_ready() {
     use binviz::{Decomp, DecompState, NextQuery, Readiness};
     let mut bin = open("x86demo.exe");

@@ -24,6 +24,28 @@ pub struct Disassembly {
     pub supported: bool,
 }
 
+impl Disassembly {
+    /// Ends the block where its code does: the `nop`s and `int3`s that pad a
+    /// function out to the next one's alignment (an export's extent, cut at
+    /// the next symbol, takes them in) are not part of it.
+    fn drop_padding(&mut self) {
+        if self.truncated {
+            return;
+        }
+        while self.instructions.len() > 1
+            && self
+                .instructions
+                .last()
+                .is_some_and(|i| matches!(i.mnemonic.as_str(), "nop" | "int3") && matches!(i.flow, FlowKind::Normal | FlowKind::Interrupt))
+        {
+            self.instructions.pop();
+        }
+        if let Some(last) = self.instructions.last() {
+            self.end = self.end.min(last.address + last.len as u64);
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Isa {
     X86(u32),
@@ -519,7 +541,9 @@ impl Binary {
             {
                 end = end.min(hi);
             }
-            return self.disassemble(sym.address, end, limit);
+            let mut d = self.disassemble(sym.address, end, limit);
+            d.drop_padding();
+            return d;
         }
         let start = self.instruction_boundary_before(address);
         let end = self.section_at(address).map_or(address + 0x400, |s| s.address + s.size);

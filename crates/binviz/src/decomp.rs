@@ -100,7 +100,7 @@ impl Binary {
         Some(DecompContext {
             address: lo,
             name: f.display_name().into_owned(),
-            size: hi - lo,
+            size: if dis.end > lo && !dis.truncated { dis.end - lo } else { hi - lo },
             signature: self.function_signature(lo),
             instructions: dis.instructions,
             truncated: dis.truncated,
@@ -215,7 +215,7 @@ impl DecompContext {
             );
         }
         if self.truncated {
-            out.push_str("  …\n");
+            let _ = writeln!(out, "  … stopped at {} instructions of a {}-byte function; pass a larger count for the rest", self.instructions.len(), self.size);
         }
         out
     }
