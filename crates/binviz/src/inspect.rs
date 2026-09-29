@@ -92,6 +92,13 @@ impl Binary {
         if dwarf::pdb::is_pdb(&data) {
             return self.attach_pdb(name, &data);
         }
+        // A WebAssembly module's: a source map, or a module with its DWARF.
+        if self.wasm.is_some() {
+            return self.attach_wasm_debug(name, &data);
+        }
+        if crate::wasm::sourcemap::looks_like(&data) {
+            bail!("{name} is a source map, the debug info of a WebAssembly module; this binary isn't one");
+        }
         // dSYMs of universal binaries are universal too: pick our architecture.
         if let Ok(object::FileKind::MachOFat32 | object::FileKind::MachOFat64) = object::FileKind::parse(&*data) {
             let Machine::MachO(cputype) = self.machine else {
@@ -442,6 +449,14 @@ impl Binary {
 
     /// Names of the sections that hold DWARF in this binary (for display).
     pub fn dwarf_section_names(&self) -> Vec<String> {
+        if let Some(m) = &self.wasm {
+            return m
+                .sections
+                .iter()
+                .filter(|s| s.id == 0 && s.name.starts_with(".debug"))
+                .map(|s| s.name.clone())
+                .collect();
+        }
         let Ok(file) = object::File::parse(&*self.data) else {
             return Vec::new();
         };

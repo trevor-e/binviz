@@ -43,6 +43,8 @@ pub(crate) struct Ctx<'a> {
     pub symbols: Option<&'a SymbolTable>,
     /// DWARF, for byte-level decoding of the debug sections.
     pub dwarf: Option<&'a crate::dwarf::DebugInfo>,
+    /// A WebAssembly module's sections, for decoding their entries.
+    pub wasm: Option<&'a crate::wasm::Module>,
 }
 
 impl<'a> Ctx<'a> {

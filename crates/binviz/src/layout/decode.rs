@@ -110,6 +110,8 @@ pub(crate) enum Decoder {
     DwarfAbbrev,
     /// .debug_line: line program headers.
     DwarfLine,
+    /// A WebAssembly section's entries (see [`crate::wasm::layout`]).
+    Wasm(crate::wasm::layout::Vector),
 }
 
 impl Decoder {
@@ -138,7 +140,7 @@ impl Decoder {
                 let n = symbols.in_range(*address, address + (node.end - node.start)).count();
                 Some(n as u32)
             }
-            Decoder::CoffSymbols { .. } => Some(self.starts(ctx, node).len() as u32),
+            Decoder::CoffSymbols { .. } | Decoder::Wasm(_) => Some(self.starts(ctx, node).len() as u32),
             _ => None,
         }
     }
@@ -153,6 +155,7 @@ impl Decoder {
                 | Decoder::DwarfAbbrev
                 | Decoder::DwarfLine
                 | Decoder::Strings { .. }
+                | Decoder::Wasm(_)
         )
     }
 
@@ -165,6 +168,7 @@ impl Decoder {
             Decoder::DwarfAbbrev => dwarf::abbrev_entry(ctx, node, pos),
             Decoder::DwarfLine => dwarf::line_entry(ctx, node, pos),
             Decoder::Strings { skip } => string_at(ctx, node, *skip, pos),
+            Decoder::Wasm(v) => crate::wasm::layout::entry(ctx, node, *v, pos, self.index_of(ctx, node, pos)?),
             _ => None,
         }
     }
@@ -186,6 +190,8 @@ impl Decoder {
                 let data = &b.data[pos as usize..node.end as usize];
                 data.iter().position(|&c| c == 0).map_or(data.len(), |i| i + 1) as u64
             }
+            // Never through `decode_at`, which looks up the entry's index in the starts this builds.
+            Decoder::Wasm(v) => crate::wasm::layout::entry_len(ctx, *v, pos, node.end)?,
             _ => {
                 let e = self.decode_at(ctx, node, pos)?;
                 e.end.saturating_sub(pos)
@@ -369,8 +375,10 @@ impl Decoder {
                     }
                     let end = starts.get(i + 1).map_or(node.end, |&n| node.start + n as u64);
                     let kind = match self {
-                        // Only DWARF entries override the region's kind.
-                        Decoder::DwarfAbbrev | Decoder::DwarfLine => {
+                        // Only DWARF entries and WebAssembly's (a data segment's) override the region's kind.
+                        Decoder::DwarfAbbrev
+                        | Decoder::DwarfLine
+                        | Decoder::Wasm(crate::wasm::layout::Vector::Data) => {
                             self.decode_at(ctx, node, start).and_then(|e| e.kind)
                         }
                         _ => None,

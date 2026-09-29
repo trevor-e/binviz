@@ -178,7 +178,8 @@ impl DebugInfo {
         Self::from_dwarf(dwarf, found, source, sections, arch)
     }
 
-    fn from_dwarf(
+    /// DWARF sections already loaded (some of a WebAssembly module's moved to binviz's addresses).
+    pub(crate) fn from_dwarf(
         mut dwarf: gimli::Dwarf<R>,
         found: Vec<DwarfSection>,
         source: &str,

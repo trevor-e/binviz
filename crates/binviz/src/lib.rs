@@ -59,6 +59,7 @@ mod stubs;
 mod symbols;
 pub mod tables;
 mod util;
+mod wasm;
 pub mod xrefs;
 pub mod zip;
 
