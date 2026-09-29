@@ -12,7 +12,7 @@ use serde::Serialize;
 use crate::binary::Binary;
 use crate::model::{Annotation, Decomp, DecompState, Instruction};
 use crate::signature::FunctionSignature;
-use crate::xrefs::{Reference, StringUse};
+use crate::xrefs::{NodeKind, RefCounts, Reference, StringUse};
 
 /// A function a function calls or is called by, with what is known of its prototype.
 #[derive(Debug, Clone, Serialize)]
@@ -22,6 +22,8 @@ pub struct Neighbour {
     pub name: String,
     pub calls: u32,
     pub prototype: Option<String>,
+    /// `Data` for a call through a pointer (`call [0x20066f10]`): the address is where the pointer is.
+    pub kind: NodeKind,
 }
 
 /// A function already decompiled that is shaped like the one to write: its C
@@ -50,6 +52,9 @@ pub struct DecompContext {
     pub truncated: bool,
     pub callers: Vec<Neighbour>,
     pub callees: Vec<Neighbour>,
+    /// How the rest of the image refers to it: a function only reached through
+    /// a pointer in data (a callback) has no callers, but is referenced.
+    pub referenced_by: RefCounts,
     pub strings: Vec<StringUse>,
     pub data: Vec<Reference>,
     /// Notes on the function and the addresses in it.
@@ -73,6 +78,7 @@ impl Binary {
             name: e.name.clone(),
             calls: e.calls,
             prototype: self.function_signature(e.address).map(|s| s.prototype),
+            kind: e.kind,
         };
         let notes = self
             .annotations()
@@ -106,6 +112,7 @@ impl Binary {
             truncated: dis.truncated,
             callers: summary.callers.iter().map(neighbour).collect(),
             callees: summary.callees.iter().map(neighbour).collect(),
+            referenced_by: summary.referenced_by,
             strings: summary.strings,
             data: summary.data,
             notes,
@@ -163,15 +170,34 @@ impl DecompContext {
             }
             let _ = writeln!(out, "{label}:");
             for n in list {
+                let name = if n.kind == NodeKind::Data {
+                    format!("(indirect, through the pointer at {:#x})", n.address)
+                } else {
+                    n.name.clone()
+                };
                 let _ = writeln!(
                     out,
                     "  {:#x} {}{}{}",
                     n.address,
-                    n.name,
+                    name,
                     if n.calls > 1 { format!(" (×{})", n.calls) } else { String::new() },
                     n.prototype.as_deref().map_or(String::new(), |p| format!("  {p}"))
                 );
             }
+        }
+        let r = &self.referenced_by;
+        let uses: Vec<String> = [
+            (r.jump, "jump"),
+            (r.pointer, "pointer in data"),
+            (r.address, "address taken"),
+            (r.read + r.write, "data access"),
+        ]
+        .iter()
+        .filter(|(n, _)| *n > 0)
+        .map(|(n, what)| format!("{n} {what}{}", if *n > 1 && !what.ends_with("data") && !what.ends_with("taken") { "s" } else { "" }))
+        .collect();
+        if !uses.is_empty() {
+            let _ = writeln!(out, "Also referenced by: {} (a callback has no callers)", uses.join(", "));
         }
         if !self.strings.is_empty() {
             let _ = writeln!(out, "Strings:");
