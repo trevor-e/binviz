@@ -3,6 +3,9 @@
 Status: planning. Nothing below is built yet unless marked **have**.
 Keep this file current: tick items as they land, and note the commit.
 
+Chosen first target: **Final Fantasy IX (PlayStation 1)**, Track A below.
+Track B (32-bit x86 PC) is kept for later.
+
 ## Why
 
 In 2026 a Halo: Combat Evolved decompilation went from nothing to 99.5 %
@@ -22,11 +25,12 @@ References:
 - Ports: https://github.com/cybersecurity/halo-ce-universal (SDL3 + OpenGL; assets from the user's disc image)
 - Agent workflow description: https://github.com/halo-re/halo
 - Symbol source (Anniversary PDB corpus): https://github.com/surreptitiousresearch/halocea
-- Scoring tools to emulate: objdiff (https://github.com/encounter/objdiff), decomp.dev progress API
+- Ecosystem: https://decomp.wiki (tips per platform), https://decomp.dev (progress), https://decomp.me (scratches)
+- Scoring tool to emulate or feed: objdiff (https://github.com/encounter/objdiff)
 
 ## How a matching decomp works (for whoever picks this up cold)
 
-1. Identify the exact compiler and flags from the binary (Rich header, XDK version).
+1. Identify the exact compiler and flags from the binary.
 2. Map the binary: every function's bounds, signature, the globals and strings it touches.
 3. Borrow names and types from any symbolized build of the same engine.
 4. Per function: write C, compile to an object, compare bytes with relocations
@@ -41,120 +45,177 @@ from the user's own copy of the game.
 ## Phase 0: what binviz already has
 
 - **have** PE/COFF, ELF, Mach-O readers; PDB read into DWARF (`crates/binviz/src/dwarf`)
+- **have** PS-X EXE reader with the PS1 memory map, I/O registers and DMA channels (`rom/psx.rs`);
+  PS1 discs (`.bin`/`.iso`) opened to their files, `SYSTEM.CNF` boot executable first (`disc.rs`)
+- **have** MIPS disassembler with delay slots, `lui`/`addiu` pairs and `$gp` (`cpu/mips.rs`);
+  code followed from the entry point (`rom/analysis.rs`); MIPS switch tables only when a code/data log saw them
 - **have** x86/x86-64 disassembly with targets, strings and globals named inline
 - **have** xrefs, callers/callees, call graph, call path (`xrefs.rs`, `symbols.rs`)
-- **have** notes: name functions, comment addresses, mark reviewed; JSON import/export
+- **have** notes: name functions, comment addresses, mark reviewed; JSON import/export;
+  label files in and out (`rom/labels.rs`)
 - **have** function-by-function diff of two builds with an instruction-hash similarity (`fndiff.rs`, MCP `diff_functions`)
+- **have** relocatable ELF/Mach-O objects opened with synthetic addresses and relocated DWARF
 - **have** MCP server exposing all of the above (`crates/binviz-mcp`)
 - **have** Rich header located and its size accounted for (`layout/pe.rs`), but not decoded
 - **have** `Format::Wasm` as a name only (`model.rs`); no wasm reader
 
-## Phase 1: map a stripped 32-bit x86 binary
+## Track A: Final Fantasy IX (PS1)
 
-This unblocks everything else. A 32-bit PE has no `.pdata`, so today a
-stripped x86 game yields almost no functions (`discover.rs` handles only
-`.pdata`, `.eh_frame`, `LC_FUNCTION_STARTS`).
+### The standard PS1 pipeline binviz plugs into
+
+- **Compiler**: Psy-Q GCC 2.x, reproduced through maspsx (https://github.com/mkst/maspsx),
+  which massages GCC's assembly so GNU `as` yields the bytes ASPSX would.
+  decomp.me packages the Psy-Q compiler versions.
+- **Splitting**: splat (https://github.com/ethteck/splat) turns the executable
+  into per-file `asm`/`c`/`data`/`rodata`/`bin` segments from a YAML config
+  plus `symbol_addrs.txt`.
+- **Scoring**: objdiff compares the target `.o` with the freshly built `.o`
+  per unit and writes the report decomp.dev shows.
+- **Mapping**: Ghidra with `ghidra_psx_ldr` (memory regions, Psy-Q library
+  signatures). This is the slot binviz takes over, plus the agent's context.
+
+binviz does not replace the compiler, splat or objdiff. It maps the binary,
+feeds splat and the agent, and reads objdiff's verdicts back.
+
+### Prerequisites (not tooling)
+
+- Your own dumps of the FF9 discs (US: SLUS-01251, four discs). Never fetch
+  ROMs. Open the `.bin` in binviz; it boots `SLUS_012.51`.
+- FF9 keeps almost everything outside the boot executable, in overlays loaded
+  from the disc's big archive file per field, battle and menu. Mapping the
+  overlays is most of the work (A2).
+- The 2016 Unity remaster's C# (decompiled with ILSpy) carries original names
+  and logic. It is the "symbolized relative" for A7. Own that copy too.
+
+### Items, in order
+
+- [ ] **A1. Psy-Q SDK identification.** Build byte signatures from a folder
+      of Psy-Q `.LIB`/`.OBJ` files the user supplies (like `xsig` /
+      `ghidra_psx_ldr`), match them against the executable and overlays, name
+      the library functions (`GsSortObject4`, `CdRead`, `SpuSetKey`...), tag
+      them `sdk` so coverage and the agent skip them, and report which SDK
+      version matched, which fixes the GCC and ASPSX versions to use.
+      Where: new `rom/psx_sdk.rs`; signature store in the notes file.
+      Done when: the FF9 boot executable's SDK calls are all named and the
+      version is reported.
+- [ ] **A2. Overlays and memory images.** (a) Open an emulator RAM dump or
+      savestate (2 MiB) as a PS1 memory image at `0x80000000`, with the boot
+      executable's symbols laid over it, so whatever overlay was loaded at the
+      time is analysable in place. (b) Find overlay blobs in the disc's
+      archive, work out their load addresses (from the loader's tables, or by
+      matching bytes against a RAM dump), and open each as its own image with
+      the boot executable's symbols shared. (c) Symbol scopes per overlay so
+      two overlays at the same address do not collide.
+      Where: `rom/psx.rs`, `disc.rs`, `symbols.rs`.
+      Done when: a field overlay and a battle overlay both open with SDK and
+      boot-exe calls resolved.
+- [ ] **A3. MIPS mapping quality.** Static switch tables (`sltiu`/`beq`
+      guard, `sll 2`, `lui`/`addu`, `lw`, `jr` pattern, table in `.rodata`);
+      `$gp`-relative small data named as symbols; function signature guess
+      (`$a0-$a3` read before written, stack args above the frame, `$v0/$v1`
+      return, leaf or not, frame size, saved registers); data classification
+      (pointer tables, string tables, fixed-point constant tables); struct
+      offset hints (offsets accessed off the same base register, grouped).
+      Where: `cpu/mips.rs`, `rom/jumptable.rs`, `rom/analysis.rs`.
+      Done when: function count on the boot exe is within a few percent of
+      Ghidra's and every switch in a sample of 50 functions is followed.
+- [ ] **A4. Splat and symbol interchange.** Export a splat YAML with segments
+      derived from the map (SDK ranges as `bin`/`asm`, code as `c` units split
+      at chosen boundaries, `data`/`rodata` extents) and `symbol_addrs.txt`
+      from symbols plus notes; import `symbol_addrs.txt` and splat's
+      `undefined_funcs_auto.txt` back. Where: `rom/labels.rs` (new formats).
+      Done when: a project set up from the export builds with splat unchanged.
+- [ ] **A5. objdiff in, match score native.** (a) Read objdiff's report JSON
+      and mark each function `matched`/percent in notes and the coverage map,
+      so binviz shows project progress by address. (b) Native score for a
+      MIPS ELF `.o` against the original: bytes compared with relocations
+      masked, per-function percent, and an explained diff (reordered
+      instructions, different register, different immediate, different
+      `$gp`/`lui` split, missing `nop` in a delay slot). Extend `fndiff.rs`.
+      Done when: binviz's percent agrees with objdiff's on the same pair.
+- [ ] **A6. Agent bundle over MCP.** `decomp_context(function)`: disassembly
+      with pseudo-ops, the signature guess, callers and callees with their
+      prototypes where known, strings and globals used with inferred types,
+      struct offset hints, and two or three already-matched functions that
+      look most similar as worked examples. `explain_mismatch(function, obj)`
+      wrapping A5. `mark(function, status)`. One call per function instead of
+      eight. Where: `crates/binviz-mcp/src/tools.rs`.
+- [ ] **A7. Names from the remaster.** Import a name list from the Unity
+      port's C# (function names, enum and struct members) and propose matches
+      to MIPS functions by shared string literals, call-graph shape and
+      constant tables; the agent confirms. Where: `fndiff.rs` matching by
+      strings, `rom/labels.rs` import.
+- [ ] **A8. Emulator traces.** Read an execution or coverage log from
+      PCSX-Redux or DuckStation (check what each can emit) the way NES/SNES
+      code/data logs are read, to find code reached only through pointers and
+      to catch overlay load addresses. Where: `rom/cdl.rs`.
+
+### Prove the loop first
+
+Before FF9: take a small Psy-Q sample program (or any open-source PS1
+homebrew built with the same GCC), build it, strip it, and drive the agent to
+re-match it end to end with A3, A5 and A6. Then the boot executable of FF9,
+then one overlay.
+
+## Track B: 32-bit x86 PC (later)
+
+### Phase B1: map a stripped 32-bit x86 binary
+
+A 32-bit PE has no `.pdata`, so today a stripped x86 game yields almost no
+functions (`discover.rs` handles only `.pdata`, `.eh_frame`,
+`LC_FUNCTION_STARTS`).
 
 - [ ] **Recursive-descent function discovery for x86.** Follow calls and
       branches from the entry point, exports, TLS callbacks, vtable slots and
       pointers in data, the way `rom/` follows a ROM from its vectors. Then a
-      prologue scan (`push ebp; mov ebp, esp`, `sub esp, N`, `push ebx/esi/edi`)
-      for code nothing reaches. Where: `discover.rs`, reuse the ROM follower.
+      prologue scan for code nothing reaches. Where: `discover.rs`.
       Done when: a stripped MSVC 32-bit exe recovers >95 % of the functions
-      its PDB names (test with a fixture built with and without the PDB).
+      its PDB names.
 - [ ] **x86 jump tables.** MSVC `jmp dword ptr [table + reg*4]`, with the
       optional byte index table, bounded by the preceding `cmp reg, N; ja`.
-      Tables become data regions; targets become basic blocks of the function.
-      Where: `cpu/` x86 follower.
-- [ ] **Stack frame and calling convention.** Per function: `cdecl` /
-      `stdcall` (`ret N`) / `fastcall` (ecx, edx read before write) /
-      `thiscall` (ecx only); argument bytes from `ret N` or callers' `add esp, N`;
-      local frame size; callee-saved registers; whether ebp is a frame pointer.
-      Output in `function_info` and `inspect`. This is the prototype the agent writes.
-- [ ] **Data typing.** Global extents from access widths and xrefs; float
-      and double constants in `.rdata` (shown as numbers in disassembly);
-      vtables (runs of code pointers in `.rdata`, RTTI `??_7` when present)
-      and the class each implies; string tables.
+- [ ] **Stack frame and calling convention.** `cdecl` / `stdcall` (`ret N`) /
+      `fastcall` / `thiscall`; argument bytes; frame size; saved registers.
+- [ ] **Data typing.** Global extents, float constants, vtables and RTTI,
+      string tables.
 - [ ] **Compiler identification.** Decode Rich header product IDs to
-      compiler/linker versions and object counts (`layout/pe.rs`). Report it in
-      `binary_summary`. Done when: a known MSVC 6/7/7.1/8 build names the right toolset.
+      compiler/linker versions (`layout/pe.rs`).
 
-## Phase 2: the matching loop
+### Phase B2: the matching loop for COFF
 
-The agent's reward signal. Model on objdiff.
+- [ ] **COFF `.obj` input** with symbols and relocations, synthetic addresses.
+- [ ] **Byte match score with relocations masked** and an explained diff
+      (shares the engine with A5).
+- [ ] **MCP tools** `match_function`, `match_project` (shares A6).
 
-- [ ] **COFF `.obj` input.** Open a relocatable COFF object (the compiler's
-      output), with its symbols and relocations, and give its functions
-      synthetic addresses the way ELF/Mach-O `.o` already get them.
-- [ ] **Byte match score with relocations masked.** For a target function
-      in the original and a candidate in the `.obj`: compare instruction bytes
-      with relocated operands masked, report matched/total bytes and a
-      percent; also an instruction-level diff. Extend `fndiff.rs` alongside
-      the existing similarity.
-- [ ] **Explained diff.** Classify each mismatch: instructions reordered,
-      different register allocation, stack slot offset differs, missing or
-      extra inlined call, different immediate, different condition code.
-      Agents converge faster on "ecx was a parameter" than on two asm columns.
-- [ ] **MCP tools.** `match_function(target, obj_path, symbol?)` returning
-      score + explained diff; `match_project(obj_dir)` scoring every function
-      that has a candidate. Keep results cached per object mtime.
-- [ ] **Project total.** Matched bytes over total code bytes, by section and
-      by translation unit.
-
-## Phase 3: borrow symbols from other builds
+### Phase B3: borrow symbols from other builds
 
 - [ ] **C header export from PDB/DWARF types.** Structs with explicit
-      padding, enums, typedefs, unions, function prototypes, grouped by the
-      compilation unit or header that declared them. Must round-trip: the
-      header compiles and `sizeof`/offsets match the DWARF layout.
-- [ ] **Symbol porting.** Match functions of a symbolized build to a
-      stripped build (existing similarity in `fndiff.rs`, plus call-graph
-      context and string references as tie-breakers) and write the names onto
-      the stripped binary as notes, with a confidence. Review UI in Compare.
+      padding, enums, typedefs, unions, prototypes; must round-trip.
+- [ ] **Symbol porting** from a symbolized build to a stripped one (shares A7).
 
-## Phase 4: project bookkeeping
+### Phase B4: containers
 
-- [ ] **Function status in notes.** Add `matched` (and `in_progress`) beside
+- [ ] **XBE reader** (original Xbox) only if an Xbox target is chosen; the
+      XDK compiler is not public, so matching Xbox games is a sourcing problem
+      before it is a tooling one.
+
+## Shared: project bookkeeping and porting
+
+- [ ] **Function status in notes.** `matched` and `in_progress` beside
       `named` and `reviewed`; coverage map and MCP `coverage` report them.
-- [ ] **Translation-unit splitting.** Group address ranges into source files
-      from PDB module info, from object ordering hints (Rich header counts,
-      string pooling boundaries), or by hand; emit the link order file the
-      build uses.
-- [ ] **Progress export** in the format decomp.dev consumes.
-- [ ] **Symbol list export** the build can consume (address, name, size,
-      calling convention) and an import path back from the project's own
-      symbol file.
-
-## Phase 5: the target's container
-
-- [ ] **XBE reader** (original Xbox). Header, certificate, section headers,
-      library versions (tells the XDK, hence the compiler), kernel thunk table
-      XOR-decoded (retail and debug keys), entry point decoded likewise. Map
-      to the same `Section`/`Segment` model so everything above works. Only
-      needed for an Xbox target; a PC target skips this.
-
-## Phase 6: porting and verifying the result
-
-- [ ] **WASM reader.** Sections, type/function/table/memory/global/export
-      /import sections, the name section, Emscripten's DWARF and source maps.
-      Then size diffs between builds, symbolicated browser stack traces, and
-      the function table explained. Fill in `Format::Wasm`.
+- [ ] **Progress export** in the format decomp.dev consumes (or rely on
+      objdiff's report and A5a).
+- [ ] **WASM reader.** Sections, function table, imports/exports, the name
+      section, Emscripten's DWARF and source maps, so the browser port's
+      build can be opened, size-diffed and its stack traces symbolicated.
+      Fill in `Format::Wasm`.
 - [ ] **Behavioral comparison** (runtime; furthest from binviz's shape):
-      run one function in the original (under an emulator or a harness) and in
-      the port on the same asset and compare outputs. Consider last.
-
-## Order and first target
-
-Build 1, then 2, then 3 and 4 together; 5 only if committing to Xbox; 6 when
-a port exists.
-
-Do not start with Halo Xbox: matching it needs the Xbox XDK compiler, which
-Microsoft never released publicly. Start with a 32-bit x86 PC game built by a
-retail MSVC (1999-2005 titles are plentiful), ideally one with a symbolized
-build somewhere (a leaked debug exe, a console version with a PDB, a later
-re-release). Prove the loop on a small exe first: build a fixture with MSVC,
-strip it, and drive the agent to re-match it end to end before touching a game.
+      the same function on the same asset in the original (under an emulator)
+      and in the port. Consider last.
 
 ## Progress log
 
 - 2026-09-28: plan written; no implementation yet.
+- 2026-09-28: first target chosen: Final Fantasy IX (PS1). Track A added from
+  the decomp.wiki PS1 page (Psy-Q GCC via maspsx, splat, objdiff, Ghidra with
+  ghidra_psx_ldr). Track B (x86) kept for later.
