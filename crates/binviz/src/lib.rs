@@ -24,6 +24,7 @@
 //! }
 //! ```
 
+mod asm;
 mod binary;
 mod container;
 pub mod coverage;

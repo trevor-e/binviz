@@ -41,16 +41,17 @@ pub struct Mark {
 impl Disassembly {
     /// Ends the block where its code does: the `nop`s and `int3`s that pad a
     /// function out to the next one's alignment (an export's extent, cut at
-    /// the next symbol, takes them in) are not part of it.
-    fn drop_padding(&mut self) {
+    /// the next symbol, takes them in) are not part of it. With
+    /// `delay_slots` (MIPS), a `nop` after a jump or branch is its delay
+    /// slot, and stays.
+    fn drop_padding(&mut self, delay_slots: bool) {
         if self.truncated {
             return;
         }
-        while self.instructions.len() > 1
-            && self
-                .instructions
-                .last()
-                .is_some_and(|i| matches!(i.mnemonic.as_str(), "nop" | "int3") && matches!(i.flow, FlowKind::Normal | FlowKind::Interrupt))
+        while let [.., before, last] = self.instructions.as_slice()
+            && matches!(last.mnemonic.as_str(), "nop" | "int3")
+            && matches!(last.flow, FlowKind::Normal | FlowKind::Interrupt)
+            && !(delay_slots && before.flow != FlowKind::Normal)
         {
             self.instructions.pop();
         }
@@ -660,15 +661,16 @@ impl Binary {
             {
                 end = end.min(hi);
             }
+            let delay_slots = self.mips_endian().is_some();
             let mut d = self.disassemble_range(sym.address, end, limit);
-            d.drop_padding();
+            d.drop_padding(delay_slots);
             // Then its pieces away from its entry.
             for (ps, pe) in self.symbols.parts_of(sym.address) {
                 if d.truncated {
                     break;
                 }
                 let mut p = self.disassemble_range(ps, pe, limit.saturating_sub(d.instructions.len()));
-                p.drop_padding();
+                p.drop_padding(delay_slots);
                 d.truncated |= p.truncated;
                 d.instructions.extend(p.instructions);
                 d.parts.push((ps, pe));

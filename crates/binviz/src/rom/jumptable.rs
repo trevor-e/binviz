@@ -306,7 +306,24 @@ fn thumb_table(pc: u64, cpu_pc: u64, code: &Code) -> Vec<(u64, Option<bool>)> {
         .collect()
 }
 
-/// MIPS: the `switch` idiom GCC and IDO write, read backwards from the `jr`:
+/// A MIPS `switch`'s jump table (our addresses).
+pub(crate) struct MipsTable {
+    pub address: u64,
+    /// Where its entries lead.
+    pub targets: Vec<u64>,
+    /// The `lui` that starts the table's address and the `lw` that adds its
+    /// low half as it reads an entry (`lui` / `addu` / `lw`: what GCC and
+    /// IDO write), when the `lw` does.
+    pub halves: Option<(u64, u64)>,
+}
+
+/// MIPS: where the `jr` at `pc` goes, when it reads a table.
+fn mips(pc: u64, code: &Code, big: bool) -> Vec<(u64, Option<bool>)> {
+    mips_table(pc, code, big).map_or_else(Vec::new, |t| t.targets.into_iter().map(|t| (t, None)).collect())
+}
+
+/// MIPS: the table the `jr` at `pc` reads where it goes from, in the
+/// `switch` idiom GCC and IDO write, read backwards from the `jr`:
 /// ```text
 /// sltiu $v0, $a0, N        (the guard, giving the table's length)
 /// beqz  $v0, default
@@ -319,7 +336,7 @@ fn thumb_table(pc: u64, cpu_pc: u64, code: &Code) -> Vec<(u64, Option<bool>)> {
 /// Each register is traced to the instruction that last wrote it; the table's
 /// address is the constant side of the `addu` (built by `lui`, `addiu` or
 /// `ori`) plus the load's offset, and the entries are 32-bit addresses.
-fn mips(pc: u64, code: &Code, big: bool) -> Vec<(u64, Option<bool>)> {
+pub(crate) fn mips_table(pc: u64, code: &Code, big: bool) -> Option<MipsTable> {
     let word = |k: u64| -> Option<MipsWord> {
         let b = code.bytes(pc.checked_sub(4 * k)?, 4)?;
         let bytes = [b[0], b[1], b[2], b[3]];
@@ -357,33 +374,36 @@ fn mips(pc: u64, code: &Code, big: bool) -> Vec<(u64, Option<bool>)> {
         }
     }
     // jr $rx (not $ra).
-    let Some(jr) = word(0) else { return Vec::new() };
+    let jr = word(0)?;
     if jr.0 & 0xFC1F_FFFF != 0x0000_0008 || jr.rs() == 31 {
-        return Vec::new();
+        return None;
     }
     // lw $rx, off($base)
-    let Some((k1, lw)) = writer(jr.rs(), 1) else { return Vec::new() };
+    let (k1, lw) = writer(jr.rs(), 1)?;
     if lw.op() != 35 {
-        return Vec::new();
+        return None;
     }
     // addu $base, $a, $b: one side the table's address, the other the index.
-    let Some((k2, add)) = writer(lw.rs(), k1 + 1) else { return Vec::new() };
+    let (k2, add) = writer(lw.rs(), k1 + 1)?;
     if add.op() != 0 || !matches!(add.funct(), 32 | 33) {
-        return Vec::new();
+        return None;
     }
-    let (table, index) = match (
+    let (table, index, base) = match (
         constant(&writer, add.rs(), k2 + 1, 4),
         constant(&writer, add.rt(), k2 + 1, 4),
     ) {
-        (Some(c), _) => (c, add.rt()),
-        (None, Some(c)) => (c, add.rs()),
-        _ => return Vec::new(),
+        (Some(c), _) => (c, add.rt(), add.rs()),
+        (None, Some(c)) => (c, add.rs(), add.rt()),
+        _ => return None,
     };
     let table = table.wrapping_add(lw.simm() as u32) as u64;
+    let halves = writer(base, k2 + 1)
+        .filter(|(_, w)| w.op() == 15)
+        .map(|(k, _)| (pc - 4 * k, pc - 4 * k1));
     // sll $index, $i, 2: the index scaled to the entries.
-    let Some((k3, sll)) = writer(index, k2 + 1) else { return Vec::new() };
+    let (k3, sll) = writer(index, k2 + 1)?;
     if sll.op() != 0 || sll.funct() != 0 || sll.sa() != 2 {
-        return Vec::new();
+        return None;
     }
     let i = sll.rt();
     // sltiu $t, $i, N (or sltu $t, $i, $n with $n a constant): the guard.
@@ -397,9 +417,7 @@ fn mips(pc: u64, code: &Code, big: bool) -> Vec<(u64, Option<bool>)> {
             None
         }
     });
-    let Some(table) = (code.resolve)(pc, table) else {
-        return Vec::new();
-    };
+    let table = (code.resolve)(pc, table)?;
     let entry = |at: u64| -> Option<u64> {
         let b = code.bytes(at, 4)?;
         let bytes = [b[0], b[1], b[2], b[3]];
@@ -409,14 +427,16 @@ fn mips(pc: u64, code: &Code, big: bool) -> Vec<(u64, Option<bool>)> {
             u32::from_le_bytes(bytes)
         }))
     };
-    read_table(table, 4, bound.unwrap_or(MAX).min(MAX), |n| {
+    let targets = read_table(table, 4, bound.unwrap_or(MAX).min(MAX), |n| {
         let t = entry(table + 4 * n as u64)?;
         (t & 3 == 0).then_some(())?;
         code.code(pc, t)
+    });
+    Some(MipsTable {
+        address: table,
+        targets,
+        halves,
     })
-    .into_iter()
-    .map(|t| (t, None))
-    .collect()
 }
 
 #[cfg(test)]

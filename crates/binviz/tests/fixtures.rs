@@ -3302,6 +3302,47 @@ fn nintendo_64_and_playstation_code() {
 }
 
 #[test]
+fn a_mips_function_is_written_out_as_splat_writes_it() {
+    let z64 = open("tiny.z64");
+    // A jump's delay slot is the function's, even a `nop` at its end.
+    let callee = z64.disassemble_function(0x8000_0424, 100);
+    let last = callee.instructions.last().map(|i| (i.address, i.mnemonic.as_str()));
+    assert_eq!(last, Some((0x8000_0438, "nop")));
+    // What m2c reads, and an assembler turns back into the same words.
+    let asm = z64.gnu_asm(0x8000_0400).expect("MIPS");
+    for line in [
+        "glabel entry\n",
+        // The stack's top is no symbol.
+        "/* 1000 80000400 3C1D8040 */  lui       $sp, 0x8040\n",
+        "/* 1008 80000408 3C08A440 */  lui       $t0, %hi(VI_STATUS)\n",
+        "/* 100C 8000040C AD000000 */  sw        $zero, %lo(VI_STATUS)($t0)\n",
+        "/* 1014 80000414 0C000109 */  jal       func_80000424\n",
+        "/* 1018 80000418 24840500 */  addiu     $a0, $a0, %lo(D_80000500)\n",
+        ".L8000041C:\n/* 101C 8000041C 08000107 */  j         .L8000041C\n/* 1020 80000420 00000000 */  nop\n",
+    ] {
+        assert!(asm.contains(line), "{line}in\n{asm}");
+    }
+    let psx = open("tiny-psx.exe");
+    let asm = psx.gnu_asm(0x8001_0000).expect("MIPS");
+    for line in [
+        // One `lui` starts two addresses.
+        "lui       $t0, %hi(I_MASK)\n",
+        "sw        $zero, %lo(I_MASK)($t0)\n",
+        "lw        $v0, %lo(GP1)($t0)\n",
+        // `li` as the assembler writes it back to the same word.
+        "addiu     $t2, $zero, 0xa0\n",
+    ] {
+        assert!(asm.contains(line), "{line}in\n{asm}");
+    }
+    let asm = psx.gnu_asm(0x8001_0020).expect("MIPS");
+    assert!(asm.contains("glabel func_80010020\n"), "{asm}");
+    assert!(asm.contains("lw        $v0, %gp_rel(entry)($gp)\n"), "{asm}");
+    let x64 = open("tiny-elf-x64");
+    let main = x64.symbols().functions().find(|f| f.name() == "main").expect("main").address;
+    assert_eq!(x64.gnu_asm(main), None);
+}
+
+#[test]
 fn game_boy_advance_arm_and_thumb() {
     let bin = open("tiny.gba");
     assert_eq!(

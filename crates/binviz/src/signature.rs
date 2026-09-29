@@ -133,7 +133,7 @@ fn access(w: MipsWord) -> Option<(u8, bool)> {
 
 impl Binary {
     /// The word size and endianness of MIPS code here, if this is MIPS.
-    fn mips_endian(&self) -> Option<Endian> {
+    pub(crate) fn mips_endian(&self) -> Option<Endian> {
         match self.rom.as_ref().map(|r| r.cpu) {
             Some(Cpu::MipsR3000) => Some(Endian::Little),
             Some(Cpu::MipsR4300) => Some(Endian::Big),

@@ -544,6 +544,16 @@ pub fn definitions() -> Vec<Value> {
             false,
         ),
         tool(
+            "export_asm",
+            "A function as assembler source",
+            "A MIPS function (PlayStation, Nintendo 64) as GNU assembler source, the way splat writes it: glabel, branches to .L labels, calls by name, %hi/%lo where one lui starts an address on every path to the instruction that finishes it, %gp_rel into the small data, the jump tables its switches read (jtbl_, in .rodata), each instruction with its offset, address and word in a comment. Pseudo-instructions with more than one encoding (move, li) are spelled out, so it assembles back to the same words. It is what m2c takes to write a first draft of the C (m2c -t mips-gcc-c for GCC-built code), and what a decompilation keeps under asm/nonmatchings for a function not matched yet.",
+            json!({
+                "at": address("A function or address inside it"),
+            }),
+            &["at"],
+            true,
+        ),
+        tool(
             "rank_builds",
             "Rank builds of a unit",
             "Several builds of one unit — its source compiled with different flags (-O1, -O2, -fno-inline…) or by different compilers, each an object file — matched against the original and ranked, best first: the flags the unit was built with are the first's. Compile them yourself, then pass the objects; label each with its flags.",
@@ -907,6 +917,7 @@ impl Server {
                     "export_progress" => export_progress(o, args)?,
                     "locate" => locate(o, args)?,
                     "rank_builds" => rank_builds(o, args)?,
+                    "export_asm" => export_asm(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -2727,6 +2738,14 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
         let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
     }
     Ok(out)
+}
+
+fn export_asm(o: &Open, args: &Value) -> Result<String, String> {
+    let at = string(args, "at").ok_or("at is required")?;
+    let start = function_at(&o.bin, at)?;
+    o.bin
+        .gnu_asm(start)
+        .ok_or_else(|| "not MIPS code (assembler source is for MIPS so far)".to_string())
 }
 
 fn rank_builds(o: &Open, args: &Value) -> Result<String, String> {

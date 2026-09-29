@@ -582,6 +582,19 @@ fn a_rom_with_an_emulators_log_and_labels() {
 }
 
 #[test]
+fn a_mips_function_for_m2c() {
+    let path = fixture_copy_for("tiny-psx.exe", "asm-");
+    let mut s = Session::start();
+    s.ok("open_binary", json!({ "path": path.to_str().unwrap() }));
+    let asm = s.ok("export_asm", json!({ "at": "entry" }));
+    assert!(
+        asm.contains("glabel entry\n") && asm.contains("%lo(I_MASK)($t0)"),
+        "{asm}"
+    );
+    let _ = std::fs::remove_dir_all(path.parent().unwrap());
+}
+
+#[test]
 fn what_a_patch_changes() {
     let path = fixture_copy_for("tiny.nes", "patch-");
     let dir = path.parent().unwrap().to_path_buf();

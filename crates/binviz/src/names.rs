@@ -345,6 +345,21 @@ impl NameProposals {
     }
 }
 
+/// The name `bin` gives what starts at `address`, if it is one of its own
+/// (its symbols, debug info or notes), not one binviz made up: as it has it
+/// (mangled, which reads demangled wherever it is shown).
+fn real_name(bin: &Binary, address: u64) -> Option<String> {
+    let s = bin.symbols().at(address)?;
+    (s.source != SymbolSource::Discovered && !is_made_up(s.name())).then(|| s.name().to_string())
+}
+
+/// A name binviz (or a disassembler) makes up: `sub_401000`, `func[12]`.
+pub(crate) fn is_made_up(name: &str) -> bool {
+    ["sub_", "func[", "FUN_", "loc_", "unk_", "dword_", "byte_", "word_", "flt_", "dbl_", "off_", "stru_"]
+        .iter()
+        .any(|p| name.starts_with(p))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -414,19 +429,4 @@ mod tests {
         assert_eq!(p.unmatched, ["Nowhere"]);
         assert_eq!(p.annotations(0.5).len(), 2);
     }
-}
-
-/// The name `bin` gives what starts at `address`, if it is one of its own
-/// (its symbols, debug info or notes), not one binviz made up: as it has it
-/// (mangled, which reads demangled wherever it is shown).
-fn real_name(bin: &Binary, address: u64) -> Option<String> {
-    let s = bin.symbols().at(address)?;
-    (s.source != SymbolSource::Discovered && !is_made_up(s.name())).then(|| s.name().to_string())
-}
-
-/// A name binviz (or a disassembler) makes up: `sub_401000`, `func[12]`.
-fn is_made_up(name: &str) -> bool {
-    ["sub_", "func[", "FUN_", "loc_", "unk_", "dword_", "byte_", "word_", "flt_", "dbl_", "off_", "stru_"]
-        .iter()
-        .any(|p| name.starts_with(p))
 }

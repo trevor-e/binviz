@@ -107,6 +107,9 @@ COMMANDS:
                                    function (relocations masked), each difference explained;
                                    with a name, that function only; with a folder of objects,
                                    the whole project, unit by unit, worst first
+    asm <file> <addr|symbol>       A MIPS function as GNU assembler source, as splat writes it
+                                   (labels, calls by name, %hi/%lo pairs, jump tables): m2c's input
+    m2c <file> <addr|symbol> [cmd] m2c's first draft of its C (cmd: how to run m2c)
     flags <file> <source> <command> <flags>...
                                    The source compiled with each set of flags (the command's
                                    {src}, {out} and {flags} filled in) and matched against the
@@ -1445,6 +1448,45 @@ fn run(
                             p.same * 100.0
                         );
                     }
+                }
+            }
+        }
+        "asm" | "m2c" => {
+            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
+            let text = bin
+                .gnu_asm(addr)
+                .ok_or("not in a function, or not MIPS code (GNU assembler source is for MIPS so far)")?;
+            if cmd == "asm" {
+                print!("{text}");
+            } else {
+                // m2c's first draft of the C: the command given (default m2c), run on the source written out.
+                let m2c = arg(3).unwrap_or("m2c");
+                let path = std::env::temp_dir().join(format!("binviz-{}-{addr:x}.s", std::process::id()));
+                std::fs::write(&path, &text).map_err(|e| format!("{}: {e}", path.display()))?;
+                let line = format!("{m2c} {}", shell_quote(&path.to_string_lossy()));
+                let ran = if cfg!(windows) {
+                    std::process::Command::new("cmd").args(["/C", &line]).output()
+                } else {
+                    std::process::Command::new("sh").args(["-c", &line]).output()
+                };
+                let _ = std::fs::remove_file(&path);
+                match ran {
+                    Ok(o) if o.status.success() => print!("{}", String::from_utf8_lossy(&o.stdout)),
+                    // It ran, and says (in a C comment) why it couldn't.
+                    Ok(o) if !o.stdout.is_empty() => {
+                        print!("{text}\n{}", String::from_utf8_lossy(&o.stdout));
+                        return Err(format!(
+                            "{m2c} couldn't decompile it: its reason is above, after the source"
+                        ));
+                    }
+                    Ok(o) => {
+                        print!("{text}");
+                        return Err(format!(
+                            "{m2c} failed (install m2c, or give its command: binviz m2c <file> <fn> \"python3 m2c.py\"):\n{}",
+                            String::from_utf8_lossy(&o.stderr).trim()
+                        ));
+                    }
+                    Err(e) => return Err(format!("{m2c}: {e}")),
                 }
             }
         }

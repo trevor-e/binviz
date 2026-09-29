@@ -52,6 +52,25 @@ impl crate::binary::Binary {
     pub(crate) fn code_bytes(&self, address: u64) -> Option<&[u8]> {
         code_bytes(&self.data, &self.sections, address)
     }
+
+    /// MIPS: the jump table the `jr` at `pc` reads where it goes from, if it reads one.
+    pub(crate) fn mips_jump_table(&self, pc: u64) -> Option<jumptable::MipsTable> {
+        let rom = self.rom.as_ref()?;
+        let big = match rom.cpu {
+            Cpu::MipsR3000 => false,
+            Cpu::MipsR4300 => true,
+            _ => return None,
+        };
+        let bytes_at = |a: u64| self.code_bytes(a);
+        let resolve = |from: u64, t: u64| rom.map.resolve(from, t);
+        let may_be_code = |_: u64| true;
+        let code = jumptable::Code {
+            bytes_at: &bytes_at,
+            resolve: &resolve,
+            may_be_code: &may_be_code,
+        };
+        jumptable::mips_table(pc, &code, big)
+    }
 }
 
 /// The file offset of one of our addresses.
