@@ -288,7 +288,20 @@ impl Binary {
                     }
                 }
             };
-            sig.accesses.push(Access { base: name, fields });
+            // The same argument through another register (`move $s0, $a0`): one structure.
+            match sig.accesses.iter_mut().find(|a| a.base == name) {
+                Some(a) => {
+                    for f in fields {
+                        match a.fields.iter_mut().find(|g| g.offset == f.offset && g.width == f.width) {
+                            Some(g) if g.access != f.access => g.access = "rw".into(),
+                            Some(_) => {}
+                            None => a.fields.push(f),
+                        }
+                    }
+                    a.fields.sort_by_key(|f| (f.offset, f.width));
+                }
+                None => sig.accesses.push(Access { base: name, fields }),
+            }
         }
         let mut args: Vec<String> = (0..sig.register_args).map(|i| format!("int a{i}")).collect();
         args.extend((0..sig.stack_args).map(|i| format!("int a{}", 4 + i)));

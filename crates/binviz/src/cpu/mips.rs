@@ -398,6 +398,31 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
                 _ => Insn::bad(4, word),
             }
         }
+        // SPECIAL2 (MIPS32; the R3000 lacks these, but compilers emit `mul` for it anyway).
+        28 => {
+            let m = match funct {
+                0 => "madd",
+                1 => "maddu",
+                2 => "mul",
+                4 => "msub",
+                5 => "msubu",
+                32 => "clz",
+                33 => "clo",
+                _ => "",
+            };
+            if m.is_empty() {
+                Insn::bad(4, word)
+            } else if funct == 2 || funct >= 32 {
+                writes = Some(rd);
+                if funct == 2 {
+                    insn(m, format!("{}, {}, {}", r(rd), r(rs), r(rt)))
+                } else {
+                    insn(m, format!("{}, {}", r(rd), r(rs)))
+                }
+            } else {
+                insn(m, format!("{}, {}", r(rs), r(rt)))
+            }
+        }
         26..=63 => {
             let (m, store, gpr) = match op {
                 26 => ("ldl", false, true),
@@ -454,10 +479,13 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
         }
         _ => Insn::bad(4, word),
     };
-    // An address in a register (lui + addiu, lui + ori) is a reference too.
+    // An address in a register (lui + addiu, lui + ori) is a reference too; a
+    // plain `li` (from $zero) of a small number is a number (0xa0 and up may
+    // be the PlayStation kernel's entry points).
     if let (Some(v), Some(reg)) = (value, writes)
         && out.data.is_none()
         && op != 15
+        && !(matches!(op, 9 | 13 | 25) && rs == 0 && v < 0x80)
         && reg != 0
     {
         out.data = Some((v as u64, RefKind::Address));
@@ -536,6 +564,7 @@ mod tests {
         );
         assert_eq!(text(&decode(&le(0xAFA2_0010), 0, &mut s, false)), "sw $v0, 0x10($sp)");
         assert_eq!(text(&decode(&le(0x4A18_0001), 0, &mut s, false)), "cop2 0x180001");
+        assert_eq!(text(&decode(&le(0x70E6_0802), 0, &mut s, false)), "mul $at, $a3, $a2");
         assert_eq!(
             decode(&le(0x1000_FFFF), 0x100, &mut s, false).flow,
             Flow::Jump(Some(0x100))

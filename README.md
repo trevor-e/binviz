@@ -91,7 +91,9 @@ its C. The compiler's object file is scored against the original function by
 function with the linker's fields masked and each difference explained
 (registers, stack slots, branch lengths, reordering, delay-slot nops). A
 splat config and symbol file start the project; objdiff's report places the
-project's progress on the binary. See [the plan](docs/decomp-plan.md).
+project's progress on the binary. [samples/psx](samples/psx/README.md) walks
+the whole loop on a small program built from source; the
+[plan](docs/decomp-plan.md) says what is next.
 
 **Built for agents.** The MCP server loads a binary once and answers every
 question after that from memory, in milliseconds even for a 1 GB app: search,

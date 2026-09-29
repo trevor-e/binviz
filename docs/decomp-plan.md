@@ -152,10 +152,14 @@ feeds splat and the agent, and reads objdiff's verdicts back.
 
 ### Prove the loop first
 
-Before FF9: take a small Psy-Q sample program (or any open-source PS1
-homebrew built with the same GCC), build it, strip it, and drive the agent to
-re-match it end to end with A3, A5 and A6. Then the boot executable of FF9,
-then one overlay.
+Done (2026-09-29): `samples/psx/` builds a small PlayStation program (a
+structure, a switch, strings, a global, a call chain, five arguments) as a
+PS-X EXE with the MIPS code generator that ships with Rust's llvm-tools, so
+no download is needed. Its README walks the loop: signature and context,
+the compiler's own object matched at 100%, a deliberately wrong rebuild
+explained (a missing stack argument, shifted slots, a variable that became
+a constant). Next: the boot executable of FF9, then one overlay. The
+compiler there is Psy-Q's GCC through maspsx, not LLVM.
 
 ## Track B: 32-bit x86 PC (later)
 

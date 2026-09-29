@@ -7,3 +7,6 @@ node_modules
 /web/public/samples
 # Notes an agent or the CLI saved next to a binary
 *.binviz-notes.json
+
+# The sample program, built
+samples/psx/build/

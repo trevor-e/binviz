@@ -383,6 +383,24 @@ fn explain(a: u32, b: u32, otherwise: &str) -> String {
         return if a == 0 { "nop in the original, an instruction in the rebuild".into() } else { "an instruction in the original, nop in the rebuild".into() };
     }
     if !same_op {
+        // The same operation with a register on one side and a constant on the other.
+        let immediate_form = |w: MipsWord| match (w.op(), w.funct()) {
+            (0, 32 | 33) => Some(8),
+            (0, 34 | 35) => Some(8),
+            (0, 36) => Some(12),
+            (0, 37) => Some(13),
+            (0, 38) => Some(14),
+            (0, 42) => Some(10),
+            (0, 43) => Some(11),
+            _ => None,
+        };
+        let pair = |r: MipsWord, i: MipsWord| immediate_form(r).is_some_and(|op| op == i.op() || (op == 8 && i.op() == 9));
+        if pair(wa, wb) {
+            return "uses a register in the original, a constant in the rebuild (a variable became a constant?)".into();
+        }
+        if pair(wb, wa) {
+            return "uses a constant in the original, a register in the rebuild (a constant became a variable?)".into();
+        }
         return otherwise.to_string();
     }
     let regs = |w: MipsWord| (w.rs(), w.rt(), w.rd());
