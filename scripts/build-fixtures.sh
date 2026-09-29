@@ -5,9 +5,10 @@
 # platform SDKs are needed. Required rustup targets:
 #   rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl aarch64-apple-darwin
 # Optional: a MinGW g++ on PATH (for the C++ PE fixture), clang (any build with
-# the x86 target, Apple's included: for the 32-bit PE with a PDB), the llvm-tools
-# component (for the split-debug ELF pair) and the x86_64-pc-windows-msvc
-# target (for the PE with a PDB). Python 3 writes the game ROMs.
+# the x86 target, Apple's included: for the 32-bit PEs with PDBs and the 32-bit
+# ELF of C types), the llvm-tools component (for the split-debug ELF pair) and
+# the x86_64-pc-windows-msvc target (for the PE with a PDB). Python 3 writes the
+# game ROMs.
 #
 # Pass --large to also build the std-linked "demo" binaries (~5 MB each) into
 # tests/fixtures/large (git-ignored), which are handy for manual testing.
@@ -128,6 +129,25 @@ if command -v clang >/dev/null 2>&1; then
     )
     cp "$tmp/x86demo.exe" "$tmp/x86demo.pdb" "$out"
     cp "$tmp/fixed/x86demo.exe" "$out/x86demo-fixed.exe"
+    rm -rf "$tmp"
+
+    echo "layouts: C types for header export, 32-bit x86 twice: ELF with DWARF (System V layout), PE with a PDB (Microsoft's)"
+    tmp="$(mktemp -d)"
+    cp "$src/layouts.c" "$tmp"
+    ln -s "$lld" "$tmp/lld-link"
+    (
+        # Relative paths only, as for x86demo (the PDB records the linker's).
+        cd "$tmp"
+        clang -target i386-pc-linux-gnu -O1 -g -ffreestanding -fno-pic -fno-stack-protector \
+            -ffile-compilation-dir=. -c layouts.c -o layouts.o
+        "$lld" -flavor gnu -m elf_i386 -e _start -o layouts-elf-x86 layouts.o
+        clang -target i686-pc-windows-msvc -O1 -g -gcodeview -ffreestanding \
+            -ffile-compilation-dir=. -c layouts.c -o layouts.obj
+        ./lld-link /nologo /brepro /nodefaultlib /entry:start /subsystem:console /debug \
+            /pdbsourcepath:c:/src /pdb:layouts-pe-x86.pdb /pdbaltpath:layouts-pe-x86.pdb \
+            /out:layouts-pe-x86.exe layouts.obj
+    )
+    cp "$tmp/layouts-elf-x86" "$tmp/layouts-pe-x86.exe" "$tmp/layouts-pe-x86.pdb" "$out"
     rm -rf "$tmp"
 fi
 

@@ -43,6 +43,8 @@ const ALL: &[&str] = &[
     "pdbdemo.exe",
     "x86demo.exe",
     "x86demo-fixed.exe",
+    "layouts-elf-x86",
+    "layouts-pe-x86.exe",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -495,6 +497,250 @@ fn pdb_types_are_read_into_dwarf() {
         callback.detail.as_deref(),
         Some("void (*)(void *, unsigned long, void *)")
     );
+}
+
+/// The header of a binary's types, which must name `needles` in this order.
+fn header_has(bin: &Binary, names: &[&str], needles: &[&str]) -> String {
+    let h = bin.debug_info().unwrap().c_header(names);
+    let mut at = 0;
+    for needle in needles {
+        match h.text[at..].find(needle) {
+            Some(i) => at += i + needle.len(),
+            None => panic!("{needle:?} missing (or out of order) in:\n{}", h.text),
+        }
+    }
+    h.text
+}
+
+#[test]
+fn headers_lay_out_c_types_for_either_abi() {
+    // The same C, laid out by System V's rules (an ELF with DWARF) and by
+    // Microsoft's (a PE with a PDB). Each header compiles back to its own
+    // layout on either compiler (checked with clang when the fixture was
+    // made); here, that it says what it must.
+    let elf = open("layouts-elf-x86");
+    let mut pe = open("layouts-pe-x86.exe");
+    pe.attach_debug_file("layouts-pe-x86.pdb", fixture("layouts-pe-x86.pdb"))
+        .unwrap();
+    for bin in [&elf, &pe] {
+        let text = header_has(
+            bin,
+            &[],
+            &[
+                "#define BINVIZ_OFFSETOF",
+                "#define BINVIZ_STDCALL __attribute__((stdcall))",
+                "struct opaque; /* never defined in the debug info */",
+                "enum color {",
+                "BLUE = -1,",
+                "_Static_assert(sizeof(enum color) == 4",
+                "union odd {",
+                "char c[5];",
+                "int i;",
+                // Larger than its members, for its alignment.
+                "char _pad_0[8];",
+                "_Static_assert(sizeof(union odd) == 0x8",
+            ],
+        );
+        // Packed where the source packed it, and nowhere else it needn't be.
+        assert!(text.contains("#pragma pack(push, 1)\nstruct packed {"), "{text}");
+        assert!(text.contains("#pragma pack(push, 2)\nstruct packed2 {"), "{text}");
+        for line in [
+            "int (*(*pick)(int))(int);",
+            "int (*rows)[4];",
+            "int (*printf_like)(const char *, ...);",
+            "float matrix[3][4];",
+            "} pos;",
+            "_Static_assert(BINVIZ_OFFSETOF(struct entity, pos.y) ==",
+            "_Static_assert(BINVIZ_OFFSETOF(struct packed, i) == 0x1,",
+            "unsigned int BINVIZ_FASTCALL flag_bits(struct flags *f, union odd *o);",
+            "int sum(int n, ...);",
+            "struct packed make_packed(char c, int i);",
+            "float vec_length2(const float *v);",
+            "typedef struct list list_t;",
+            "typedef enum mode_t mode_t;",
+        ] {
+            assert!(text.contains(line), "{line:?} missing in:\n{text}");
+        }
+    }
+    // DWARF keeps the typedefs a member or parameter names; a PDB doesn't.
+    header_has(&elf, &["list_length"], &["int BINVIZ_STDCALL list_length(list_t *l);"]);
+    header_has(
+        &pe,
+        &["list_length"],
+        &["int BINVIZ_STDCALL list_length(struct list *l);"],
+    );
+    // System V lets the int bit fields and the long long one share storage,
+    // Microsoft's rules start a unit where the type's size changes: each
+    // header says so with units every compiler places alike.
+    header_has(
+        &elf,
+        &["flags"],
+        &[
+            "/* 0x0 */ unsigned long long a : 1;",
+            "long long big : 40;",
+            "unsigned long long : 4;",
+            "/* 0x8 */ unsigned int after;",
+            "_Static_assert(sizeof(struct flags) == 0xc",
+        ],
+    );
+    header_has(
+        &pe,
+        &["flags"],
+        &[
+            "/* 0x00 */ unsigned int a : 1;",
+            "int c : 5;",
+            "unsigned int : 23;",
+            "/* 0x04 */ unsigned short d : 4;",
+            "/* 0x06 */ unsigned char e : 2;",
+            "/* 0x08 */ enum color col : 4;",
+            "/* 0x10 */ long long big : 40;",
+            "_Static_assert(sizeof(struct flags) == 0x20",
+        ],
+    );
+    // The DWARF keeps the anonymous members; the PDB flattened the union's,
+    // which overlap and come back as one.
+    header_has(
+        &elf,
+        &["entity"],
+        &[
+            "#pragma pack(push, 4)",
+            "/* 0x80 */ union {",
+            "int count;",
+            "float delay;",
+            "/* 0x84 */ struct {",
+            "double weight;",
+        ],
+    );
+    header_has(
+        &pe,
+        &["entity"],
+        &[
+            "/* 0x080 */ union {",
+            "/* 0x080 */ int count;",
+            "/* 0x080 */ float delay;",
+            "/* 0x090 */ double weight;",
+        ],
+    );
+    // Only what was asked for, with what it needs: a function brings the
+    // types it takes by value, a structure what it only points at declared.
+    let h = elf
+        .debug_info()
+        .unwrap()
+        .c_header(&["list_t", "area", "nothing_by_this_name"]);
+    assert_eq!(h.not_found, ["nothing_by_this_name"]);
+    assert_eq!((h.structs, h.typedefs, h.functions), (2, 2, 1), "{}", h.text);
+    assert!(
+        h.text.contains("struct node;") && !h.text.contains("struct node {"),
+        "{}",
+        h.text
+    );
+    assert!(h.text.contains("struct size2_t {") && h.text.contains("int area(size2_t s);"));
+}
+
+#[test]
+fn members_at_offsets() {
+    let elf = open("layouts-elf-x86");
+    let mut pe = open("layouts-pe-x86.exe");
+    pe.attach_debug_file("layouts-pe-x86.pdb", fixture("layouts-pe-x86.pdb"))
+        .unwrap();
+    let field = |bin: &Binary, ty: &str, offset: u64| {
+        let f = bin
+            .debug_info()
+            .unwrap()
+            .struct_field(ty, offset)
+            .unwrap_or_else(|| panic!("{ty}+{offset:#x}"));
+        (f.label(ty), f.type_name)
+    };
+    for bin in [&elf, &pe] {
+        let d = bin.debug_info().unwrap();
+        let entity = d.find_struct("entity").unwrap();
+        // A typedef, and a type spelled in full, find the structure too.
+        assert_eq!(d.find_struct("list_t").unwrap().name, "list");
+        assert_eq!(d.find_struct("const struct entity *").unwrap().die, entity.die);
+        assert!(d.find_struct("opaque").is_none(), "declared only");
+        assert_eq!(
+            field(bin, "entity", 0x54),
+            ("entity.enemy".into(), "struct entity *".into())
+        );
+        // Into arrays of arrays, a member's members, a union's first
+        // alternative, a bit field.
+        assert_eq!(field(bin, "entity", 0x24 + (4 + 2) * 4).0, "entity.matrix[1][2]");
+        assert_eq!(field(bin, "entity", 0xc + 12 + 8).0, "entity.angles[1][2]");
+        // Of a union's members, the first that starts right there.
+        assert_eq!(field(bin, "entity", 0x7c + 2).0, "entity.v.bytes[2]");
+        assert_eq!(field(bin, "entity", 0x7c + 3).0, "entity.v.bytes[3]");
+        assert_eq!(field(bin, "entity", 0x80).0, "entity.count");
+        assert_eq!(field(bin, "entity", 0x5a).0, "entity.chain[0]+0x2");
+        assert_eq!(field(bin, "flags", 0).0, "flags.a");
+        assert_eq!(field(bin, "packed", 0x8).0, "packed.inner.y");
+        assert_eq!(field(bin, "packed2", 1), ("packed2+0x1".into(), String::new()));
+        assert!(d.struct_field("entity", entity.size).is_none());
+    }
+    // Where the ABIs differ, each answers for its own layout.
+    assert_eq!(field(&elf, "entity", 0x94).0, "entity.pos.y");
+    assert_eq!(field(&pe, "entity", 0x9c).0, "entity.pos.y");
+    assert_eq!(field(&pe, "flags", 0x4), ("flags.d".into(), "unsigned short".into()));
+    let big = elf.debug_info().unwrap().struct_field("flags", 0x4).unwrap();
+    assert_eq!((big.path.as_str(), big.bits), ("big", Some((20, 40))));
+}
+
+#[test]
+fn headers_of_cpp_and_rust() {
+    // GCC's C++: namespaces flattened, bases embedded, the vtable pointer;
+    // what a type holds before it, in the source's order.
+    let shapes = open("shapes-pe.exe");
+    header_has(
+        &shapes,
+        &["geo::Rect"],
+        &[
+            "struct geo__Point { /* geo::Point, 0x10 bytes */",
+            "struct geo__Shape { /* geo::Shape, 0x8 bytes */",
+            "/* 0x0 */ void **__vftable; /* vtable pointer */",
+            "struct geo__Rect { /* geo::Rect, 0x28 bytes */",
+            "/* 0x00 */ struct geo__Shape base_Shape; /* base class geo::Shape */",
+            "/* 0x08 */ struct geo__Point min;",
+            "_Static_assert(BINVIZ_OFFSETOF(struct geo__Rect, max) == 0x18",
+        ],
+    );
+    let d = shapes.debug_info().unwrap();
+    // Without its namespace, and by its name in the header.
+    assert_eq!(d.find_struct("Rect").unwrap().c_name, "geo__Rect");
+    assert_eq!(d.find_struct("geo__Rect").unwrap().name, "geo::Rect");
+    let min_y = d.struct_field("geo::Rect", 0x10).unwrap();
+    assert_eq!((min_y.path.as_str(), min_y.type_name.as_str()), ("min.y", "double"));
+    assert_eq!(d.struct_field("geo::Rect", 0).unwrap().path, "base_Shape.__vftable");
+    // Everything it has, with libstdc++'s templates: their names made C.
+    let all = d.c_header(&[]);
+    assert!(all.structs > 20 && all.functions > 10, "{}", all.text);
+    let vector = "struct std__vector_geo__Shape_p_std__allocator_geo__Shape_p";
+    assert!(all.text.contains(&format!("{vector} {{")));
+    let total = format!("double total_area(const {vector} *shapes);");
+    assert!(all.text.contains(&total), "{}", all.text);
+
+    // Rust, from DWARF and from a PDB.
+    let tiny = open("tiny-elf-x64");
+    header_has(
+        &tiny,
+        &["tiny::Vec2"],
+        &["struct tiny__Vec2 { /* tiny::Vec2, 0x8 bytes */", "/* 0x4 */ int y;"],
+    );
+    let mut pdbdemo = open("pdbdemo.exe");
+    pdbdemo
+        .attach_debug_file("pdbdemo.pdb", fixture("pdbdemo.pdb"))
+        .unwrap();
+    let text = header_has(
+        &pdbdemo,
+        &["pdbdemo::Shape", "total_area"],
+        &[
+            "struct pdbdemo__Shape { /* pdbdemo::Shape, 0x8 bytes */",
+            "/* 0x4 */ unsigned int h;",
+            "unsigned int pdbdemo__total_area(struct pdbdemo__Shape (*shapes)[3]); /* pdbdemo::total_area */",
+        ],
+    );
+    // A zero-sized type has no definition C gives every compiler.
+    let all = pdbdemo.debug_info().unwrap().c_header(&[]).text;
+    assert!(all.contains("struct tuple; /* tuple$<>: of no size */"), "{all}");
+    assert!(!text.contains("PhantomData"));
 }
 
 #[test]

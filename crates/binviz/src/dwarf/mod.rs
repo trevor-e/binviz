@@ -3,10 +3,12 @@
 
 pub mod attribution;
 mod check;
+mod ctypes;
 pub mod debugmap;
 pub(crate) mod die;
 mod explore;
 mod expr;
+mod header;
 mod lines;
 pub(crate) mod pdb;
 
@@ -21,8 +23,10 @@ use crate::error::Result;
 use crate::model::{Frame, Section};
 use crate::util;
 pub use check::{DwarfCheck, DwarfProblem, Severity, UnitProblems};
+pub use ctypes::{FieldAt, StructType};
 pub use die::{AttrInfo, CodeLine, DieDetails, DieSummary, Link, MemberLayout};
 pub use explore::{DiePage, ScopeInfo, ScopeVar, TagCount};
+pub use header::CHeader;
 pub use lines::{FileLines, LineFileEntry, LineProgramInfo, LineRange, LineRow, SourceFile};
 use lines::{FileTable, RowIndex};
 
@@ -97,6 +101,8 @@ pub struct DebugInfo {
     load_problems: Vec<check::DwarfProblem>,
     /// The last flat DIE listing, so paging through it doesn't walk the unit again.
     listing: std::sync::Mutex<Option<explore::Listing>>,
+    /// The types as C, for headers and field lookups, built on demand.
+    c_types: OnceLock<ctypes::Types>,
 }
 
 impl DebugInfo {
@@ -270,6 +276,7 @@ impl DebugInfo {
             globals: OnceLock::new(),
             load_problems,
             listing: std::sync::Mutex::new(None),
+            c_types: OnceLock::new(),
         })
     }
 

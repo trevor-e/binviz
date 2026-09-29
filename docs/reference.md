@@ -44,6 +44,21 @@ Nintendo 64, PlayStation), with disassemblers for their CPUs.
   (references to no DIE, ranges that end before they start, files the line
   table doesn't define), each at its unit, DIE and section offset. Units that
   can't be read are reported rather than silently skipped.
+- **C headers from debug info**, DWARF or PDB: every structure, union, enum
+  and typedef (or those named, with what they need) in an order C accepts,
+  forward declarations for what is only pointed at, and prototypes of the
+  external functions with their calling conventions. The layout doesn't depend
+  on a compiler's rules: every gap is a padding member (`char _pad_1c[4];`),
+  bit fields sit in storage units Microsoft's and System V's rules place
+  alike, members a PDB flattened out of an anonymous union are a union again,
+  and `#pragma pack` appears only where natural alignment can't give the
+  layout. Each structure is followed by `_Static_assert`s on its size and
+  member offsets, so compiling the header (`clang -fsyntax-only -m32 -x c`)
+  proves it. C++ classes become structures with their bases embedded first and
+  a `void **__vftable`; qualified names are flattened (`geo::Rect` is
+  `geo__Rect`), the original in a comment. The same model names the member at
+  an offset of a structure (`[esi+0x21c]` in an `edict_t`: `enemy`,
+  `s.origin[1]`).
 - **Disassembly** for x86/x86-64 (iced-x86) and AArch64/ARM (yaxpeax-arm), with
   branch targets resolved to symbols, the strings and globals an instruction
   uses named inline (AArch64 `adrp` pairs included), and source lines
@@ -453,6 +468,16 @@ let graph = bin.call_graph(main, 1, 2, 8);
 let refs = bin.references_to(main, main + 1, 0, 100);
 ```
 
+```rust
+// Types as C, and the member at an offset (a PDB's too, once attached).
+let debug = bin.debug_info().unwrap();
+let header = debug.c_header(&["edict_t"]); // or &[] for everything
+println!("{}", header.text);
+if let Some(field) = debug.struct_field("edict_t", 0x21c) {
+    println!("{} ({})", field.label("edict_t"), field.type_name); // edict_t.enemy (struct edict_s *)
+}
+```
+
 All model types implement `serde::Serialize`. Universal binaries and archives
 are opened with `binviz::Container`.
 
@@ -539,6 +564,9 @@ crates/binviz        the library
   src/dwarf/check.rs         the DWARF checker
   src/dwarf/debugmap.rs      Mach-O debug maps: the objects' DWARF, linked to the binary
   src/dwarf/pdb.rs           PDBs: modules, procedures, line records and types, written as DWARF
+  src/dwarf/ctypes.rs        the types as C: merged across units, named, laid out explicitly;
+                             the member at an offset
+  src/dwarf/header.rs        C headers of them, in dependency order, with layout asserts
 crates/binviz-wasm   wasm-bindgen bindings (a Session object)
 crates/binviz-cli    the command-line tool
 crates/binviz-mcp    the MCP server for agents
@@ -569,6 +597,12 @@ cargo test
   moves to the PDB's global stream names symbols but has no DWARF variable;
   a class's methods and its vtable's shape aren't read (the vtable pointer
   is).
+- C headers: a virtual base is left as padding (only the most derived class
+  says where it is), Rust enums with data are their bytes, and a structure of
+  no size (a Rust zero-sized type) is declared but not defined. A PDB has no
+  typedefs in its type records, so members name the types themselves; for a C
+  program, every structure gets a typedef of its own name, since a PDB can't
+  tell `typedef struct {…} T` from `struct T`.
 - Split DWARF (`.dwo`/`.dwp`) is detected but not followed.
 - `.eh_frame`, dyld opcode streams and chained fixups are shown as regions but
   not decoded entry by entry (chained fixups are walked to find pointers).
