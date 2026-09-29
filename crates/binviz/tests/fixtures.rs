@@ -717,6 +717,44 @@ fn context_says_when_it_stops_short_of_the_end() {
     assert!(!all.truncated && !all.describe().contains("stopped at"));
 }
 
+#[test]
+fn x86_code_says_how_each_function_is_called() {
+    let mut bin = open("x86demo.exe");
+    bin.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    let sig = |name: &str| {
+        let f = bin.symbols().by_name(name).unwrap_or_else(|| panic!("{name}"));
+        bin.function_signature(f.address).unwrap()
+    };
+    // Each calling convention, from `ret N` and the registers read first.
+    assert_eq!(sig("sum3").prototype, "int __cdecl sum3(int arg1, int arg2, int arg3)");
+    assert_eq!(sig("mix").prototype, "int __stdcall mix(int arg1, int arg2)");
+    assert_eq!(sig("mix").pops, 8);
+    assert_eq!(sig("scale").prototype, "int __fastcall scale(int arg1, int arg2)");
+    let scaled = sig("Shape::scaled");
+    assert_eq!(scaled.prototype, "int __thiscall Shape::scaled(void *this, int arg1)");
+    let fields: Vec<i32> = scaled.accesses[0].fields.iter().map(|f| f.offset).collect();
+    assert_eq!((scaled.accesses[0].base.as_str(), fields), ("this", vec![0, 4]));
+    // Saved registers and a double left on the FPU stack.
+    assert_eq!(sig("apply").saved, ["ebx", "edi", "esi"]);
+    assert!(sig("ratio").prototype.starts_with("double __cdecl ratio("));
+    let start = sig("start");
+    assert_eq!((start.frame, start.aligned, start.frame_pointer), (0x78, Some(8), true));
+    assert!(!start.unbalanced);
+    // Past the three pushes, [esp+0x10] is the first argument; the context says so.
+    let apply = bin.symbols().by_name("apply").unwrap().address;
+    let c = bin.decomp_context(apply, 100).unwrap();
+    let text = c.describe();
+    assert!(text.contains("int __cdecl apply(int arg1, int arg2)"), "{text}");
+    assert!(text.contains("mov edi, [esp+0x10]  ; arg1"), "{text}");
+    assert!(text.contains("mov ebx, [esp+0x14]  ; arg2"), "{text}");
+    // Every function the PDB names balances its stack.
+    for f in bin.symbols().functions() {
+        if let Some(s) = bin.function_signature(f.address) {
+            assert!(!s.unbalanced, "{}: {}", f.name(), s.describe());
+        }
+    }
+}
+
 /// x86demo.exe with a Rich header like Visual C++ 6.0's linker writes, of
 /// `entries` (product, build, count): lld-link writes none, so the NT
 /// headers move up to make room for one, with its checksum as its key.

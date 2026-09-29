@@ -164,6 +164,11 @@ impl Binary {
 
         match isa {
             Isa::X86(bits) => {
+                // The function's stack frame names what `[esp+N]` and `[ebp-N]` hold.
+                let frame = self
+                    .symbols
+                    .function_containing(start)
+                    .and_then(|f| self.stack_frame(f.address));
                 let mut decoder = iced_x86::Decoder::with_ip(bits, bytes, start, iced_x86::DecoderOptions::NONE);
                 let mut formatter = iced_x86::IntelFormatter::new();
                 let o = formatter.options_mut();
@@ -242,6 +247,7 @@ impl Binary {
                         flow,
                         target_symbol: match (target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }), value) {
                             (Some(name), Some(value)) => Some(format!("{name} = {value}")),
+                            (None, None) => frame.as_ref().and_then(|f| f.slot_at(address)),
                             (name, value) => name.or(value),
                         },
                         target,

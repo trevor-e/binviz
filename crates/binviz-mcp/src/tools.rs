@@ -410,7 +410,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "decomp_context",
             "Everything needed to decompile a function",
-            "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, and the notes on it. MIPS (PlayStation, Nintendo 64) for the prototype; the rest for any binary.",
+            "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, and the notes on it. The prototype for MIPS, x86 and x86-64; the rest for any binary.",
             json!({
                 "at": address("A function or address inside it"),
                 "limit": { "type": "integer", "description": "Instructions, and entries per list (default 400, max 5000)." },
@@ -421,7 +421,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "function_signature",
             "A function's prototype, from its code",
-            "What a MIPS function's code says about how it is called: which of $a0-$a3 it reads before writing, arguments taken from the stack, whether $v0 carries a result, its frame size and saved registers, whether it calls anything, and the offsets it loads and stores off each base register (structure layout hints).",
+            "What a function's code says about how it is called. MIPS: which of $a0-$a3 it reads before writing, arguments taken from the stack, whether $v0 carries a result. x86: the calling convention (cdecl, stdcall from `ret N`, thiscall with `this` in ecx, fastcall with ecx and edx; Microsoft x64 or System V for x86-64), the arguments it reads with the stack pointer followed from the entry, whether eax or the FPU stack carries a result. Both: its frame size and saved registers, whether it calls anything, and the offsets it loads and stores off each base register, named after the argument it holds (structure layout hints). disassemble and decomp_context name each stack slot the same way (arg1, local_10, saved esi) however the pushes before calls move esp.",
             json!({ "at": address("A function or address inside it") }),
             &["at"],
             true,
@@ -2155,7 +2155,7 @@ fn function_signature(o: &Open, args: &Value) -> Result<String, String> {
     let s = o
         .bin
         .function_signature(start)
-        .ok_or("not in a function, or not MIPS code (signatures are for MIPS so far)")?;
+        .ok_or("not in a function, or not MIPS or x86 code (signatures are for those so far)")?;
     Ok(s.describe())
 }
 

@@ -54,6 +54,7 @@ pub mod signature;
 pub mod similar;
 pub mod size;
 pub mod splat;
+mod stack;
 mod strings;
 mod stubs;
 mod symbols;

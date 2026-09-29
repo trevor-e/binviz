@@ -81,10 +81,10 @@ COMMANDS:
     labels <rom> <file | format>   An emulator's label file (Mesen .mlb, FCEUX .nl, a .sym:
                                    RGBDS, WLA DX, no$gba) as notes, JSON for --notes; or with a
                                    format (mlb, nl, sym, nocash), the --notes as that label file
-  Decompilation (MIPS: PlayStation, Nintendo 64)
+  Decompilation (PlayStation, Nintendo 64; x86 where noted)
     signature <file> <addr|symbol> What a function's code says about its prototype: register
                                    and stack arguments, return, frame, saved registers, the
-                                   structures it walks
+                                   structures it walks; for x86 the calling convention too
     context <file> <addr|symbol> [n]
                                    Everything needed to write a function's C: its code with
                                    names, its signature, callers and callees with theirs,
@@ -1101,7 +1101,7 @@ fn run(
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
             let s = bin
                 .function_signature(addr)
-                .ok_or("not in a function, or not MIPS code")?;
+                .ok_or("not in a function, or not MIPS or x86 code")?;
             print!("{}", s.describe());
         }
         "context" => {

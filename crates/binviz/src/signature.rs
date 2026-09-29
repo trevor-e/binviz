@@ -4,9 +4,13 @@
 //! size and saved registers, whether it calls anything, and the structures
 //! it walks (the offsets it loads and stores off each base register).
 //!
-//! MIPS (o32) so far: `$a0`–`$a3` carry the first four arguments, the rest
-//! sit above the caller's frame at `0x10($sp)` on, `$v0` (and `$v1`) carry
-//! the result, and `$s0`–`$s7`, `$fp` and `$ra` are the callee's to save.
+//! MIPS (o32): `$a0`–`$a3` carry the first four arguments, the rest sit
+//! above the caller's frame at `0x10($sp)` on, `$v0` (and `$v1`) carry the
+//! result, and `$s0`–`$s7`, `$fp` and `$ra` are the callee's to save.
+//!
+//! x86 and x86-64: the stack pointer followed from the entry (see
+//! [`crate::stack`]) says which arguments are read, and `ret N`, `ecx` and
+//! `edx` say the calling convention.
 
 use serde::Serialize;
 
@@ -45,6 +49,25 @@ pub struct FunctionSignature {
     /// The first argument is only written through, and `$v0` is set:
     /// likely the hidden pointer a structure returned by value is built in.
     pub returns_struct: bool,
+    /// x86: the calling convention the code implies (`cdecl`, `stdcall`,
+    /// `fastcall`, `thiscall`; `win64`, `sysv` for x86-64).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub convention: Option<String>,
+    /// x86: bytes of arguments the function pops itself (`ret 8`).
+    pub pops: u32,
+    /// x86: the argument registers read before they are written, in argument order.
+    pub registers: Vec<String>,
+    /// x86: `ebp` is set up as a frame pointer.
+    pub frame_pointer: bool,
+    /// x86: the stack pointer is aligned to this many bytes (`and esp, -16`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aligned: Option<u32>,
+    /// x86: the result is left on the x87 stack (a `float` or `double`).
+    pub returns_float: bool,
+    /// x86: some return isn't reached with the stack pointer where it
+    /// started, so what a call pops was guessed wrong somewhere (a call
+    /// through a pointer to a function that pops its arguments, say).
+    pub unbalanced: bool,
 }
 
 /// The offsets a function loads and stores off one base register.
@@ -120,8 +143,11 @@ impl Binary {
     }
 
     /// What the code of the function at `address` says about its prototype
-    /// (MIPS only, so far).
+    /// (MIPS, x86 and x86-64).
     pub fn function_signature(&self, address: u64) -> Option<FunctionSignature> {
+        if matches!(self.arch, object::Architecture::I386 | object::Architecture::X86_64) && self.rom.is_none() {
+            return self.x86_signature(address);
+        }
         let endian = self.mips_endian()?;
         let f = self.symbols.function_containing(address)?;
         if f.size == 0 {
@@ -154,6 +180,13 @@ impl Binary {
             accesses: Vec::new(),
             prototype: String::new(),
             returns_struct: false,
+            convention: None,
+            pops: 0,
+            registers: Vec::new(),
+            frame_pointer: false,
+            aligned: None,
+            returns_float: false,
+            unbalanced: false,
         };
         // Registers written so far; a call clobbers the caller-saved ones after its delay slot.
         let mut written: u32 = 1;
@@ -330,9 +363,92 @@ impl Binary {
     }
 }
 
+impl Binary {
+    /// [`Self::function_signature`] for x86 code: from its stack frame.
+    fn x86_signature(&self, address: u64) -> Option<FunctionSignature> {
+        use crate::stack::Convention;
+        let f = self.symbols.function_containing(address)?;
+        let frame = self.stack_frame(f.address)?;
+        let name = f.display_name().into_owned();
+        let pointer = |arg: &str| frame.accesses.iter().any(|a| a.base == arg);
+        let mut args: Vec<String> = Vec::new();
+        match frame.convention {
+            Convention::Thiscall => args.push("void *this".into()),
+            _ => {
+                for i in 0..frame.registers.len() {
+                    let arg = format!("arg{}", i + 1);
+                    args.push(format!("{}{arg}", if pointer(&arg) { "void *" } else { "int " }));
+                }
+            }
+        }
+        // Win64 callers pass four arguments in registers before any on the stack.
+        let first = match frame.convention {
+            Convention::Win64 if frame.stack_args > 0 => {
+                while args.len() < 4 {
+                    args.push(format!("int arg{}", args.len() + 1));
+                }
+                5
+            }
+            Convention::SysV if frame.stack_args > 0 => {
+                while args.len() < 6 {
+                    args.push(format!("int arg{}", args.len() + 1));
+                }
+                7
+            }
+            Convention::Thiscall => 1,
+            _ => frame.registers.len() + 1,
+        };
+        for i in 0..frame.stack_args as usize {
+            let arg = format!("arg{}", first + i);
+            args.push(format!("{}{arg}", if pointer(&arg) { "void *" } else { "int " }));
+        }
+        let keyword = match frame.convention {
+            Convention::Win64 | Convention::SysV => String::new(),
+            c => format!("__{} ", c.as_str()),
+        };
+        let result = if frame.returns_float {
+            "double"
+        } else if frame.returns {
+            "int"
+        } else {
+            "void"
+        };
+        let prototype = format!(
+            "{result} {keyword}{name}({})",
+            if args.is_empty() { "void".to_string() } else { args.join(", ") }
+        );
+        Some(FunctionSignature {
+            address: f.address,
+            name,
+            register_args: frame.registers.len() as u32,
+            stack_args: frame.stack_args,
+            returns: frame.returns,
+            frame: frame.locals,
+            saved: frame.saved.iter().map(|s| s.0.to_string()).collect(),
+            leaf: frame.calls == 0,
+            calls: frame.calls,
+            uses_cop2: false,
+            uses_float: frame.uses_float,
+            accesses: frame.accesses.clone(),
+            prototype,
+            returns_struct: false,
+            convention: Some(frame.convention.as_str().into()),
+            pops: frame.pops,
+            registers: frame.registers.iter().map(|r| r.to_string()).collect(),
+            frame_pointer: frame.frame_pointer,
+            aligned: frame.aligned,
+            returns_float: frame.returns_float,
+            unbalanced: frame.unbalanced,
+        })
+    }
+}
+
 impl FunctionSignature {
     /// The signature as a few lines of text.
     pub fn describe(&self) -> String {
+        if let Some(convention) = &self.convention {
+            return self.describe_x86(convention);
+        }
         let mut out = format!("{}\n", self.prototype);
         out.push_str(&format!(
             "  frame {} bytes, saves [{}], {}{}{}\n",
@@ -350,15 +466,92 @@ impl FunctionSignature {
             out.push_str("  returns a structure by value: a0 is the hidden pointer it is built in, handed back in $v0
 ");
         }
+        self.describe_accesses(&mut out);
+        out
+    }
+
+    /// The offsets walked off each base register, a line each.
+    fn describe_accesses(&self, out: &mut String) {
         for a in &self.accesses {
             let fields: Vec<String> = a
                 .fields
                 .iter()
-                .map(|f| format!("{:#x}:{}{}", f.offset, ["?", "u8", "u16", "?", "u32", "?", "?", "?", "u64"][f.width as usize], f.access))
+                .map(|f| {
+                    let width = match f.width {
+                        1 => "u8".to_string(),
+                        2 => "u16".into(),
+                        4 => "u32".into(),
+                        8 => "u64".into(),
+                        n => format!("{n}b"),
+                    };
+                    format!("{:#x}:{width}{}", f.offset, f.access)
+                })
                 .collect();
             out.push_str(&format!("  {} -> {{{}}}\n", a.base, fields.join(", ")));
         }
+    }
+
+    /// [`Self::describe`] for x86: the convention, what the function pops,
+    /// its frame and what it saves.
+    fn describe_x86(&self, convention: &str) -> String {
+        let mut out = format!("{}\n", self.prototype);
+        let how = match convention {
+            "cdecl" => "cdecl: the caller pops the arguments".to_string(),
+            "stdcall" => format!("stdcall: pops {} bytes of arguments (ret {})", self.pops, self.pops),
+            "thiscall" => format!("thiscall: this in ecx{}", pops_text(self.pops)),
+            "fastcall" => format!(
+                "fastcall: {} then the stack{}",
+                if self.registers.is_empty() { "ecx, edx".to_string() } else { self.registers.join(", ") },
+                pops_text(self.pops)
+            ),
+            "win64" => format!("Microsoft x64: {}", self.arguments_text()),
+            "sysv" => format!("System V x86-64: {}", self.arguments_text()),
+            other => other.to_string(),
+        };
+        out.push_str(&format!(
+            "  {how}; frame {} bytes{}{}, saves [{}], {}{}{}\n",
+            self.frame,
+            if self.frame_pointer { " (ebp frame)" } else { "" },
+            self.aligned.map_or(String::new(), |a| format!(", aligned to {a}")),
+            self.saved.join(", "),
+            match self.calls {
+                0 => "leaf".to_string(),
+                1 => "1 call".to_string(),
+                n => format!("{n} calls"),
+            },
+            if self.returns_float {
+                ", returns on the FPU stack"
+            } else if self.uses_float {
+                ", uses floating point"
+            } else {
+                ""
+            },
+            if self.unbalanced {
+                "; the stack doesn't add up at every return (a call through a pointer that pops its own arguments?)"
+            } else {
+                ""
+            },
+        ));
+        self.describe_accesses(&mut out);
         out
+    }
+}
+
+fn pops_text(pops: u32) -> String {
+    if pops > 0 { format!("; pops {pops} bytes (ret {pops})") } else { String::new() }
+}
+
+impl FunctionSignature {
+    /// Where an x86-64 function's arguments come from, as far as it reads them.
+    fn arguments_text(&self) -> String {
+        match (self.registers.is_empty(), self.stack_args) {
+            (true, 0) => "reads no arguments".into(),
+            (false, 0) => format!("arguments in {}", self.registers.join(", ")),
+            (_, n) => format!(
+                "arguments in registers{}, and {n} on the stack",
+                if self.registers.is_empty() { String::new() } else { format!(" ({})", self.registers.join(", ")) }
+            ),
+        }
     }
 }
 
