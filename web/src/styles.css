@@ -35,6 +35,7 @@
   --f-padding: #c3c2b7;
   --f-unknown: #898781;
 
+  --s-matched: #1b7a3a;
   --s-reviewed: #0d366b;
   --s-annotated: #1c5cab;
   --s-named: #3987e5;
@@ -80,6 +81,7 @@
     --f-other: #e66767;
     --f-padding: #383835;
     --f-unknown: #898781;
+    --s-matched: #5fd08a;
     --s-reviewed: #b7d3f6;
     --s-annotated: #6da7ec;
     --s-named: #2a78d6;
@@ -121,6 +123,7 @@
   --f-other: #e66767;
   --f-padding: #383835;
   --f-unknown: #898781;
+  --s-matched: #5fd08a;
   --s-reviewed: #b7d3f6;
   --s-annotated: #6da7ec;
   --s-named: #2a78d6;
@@ -983,6 +986,7 @@ th.right {
   background: var(--fam);
 }
 
+.st-matched { --st: var(--s-matched); }
 .st-reviewed { --st: var(--s-reviewed); }
 .st-annotated { --st: var(--s-annotated); }
 .st-named { --st: var(--s-named); }

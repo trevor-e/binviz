@@ -520,7 +520,7 @@ export interface AttributedRange { start: bigint; end: bigint; section?: number;
 
 // --- Coverage ----------------------------------------------------------------
 
-export type MapStatus = 'unexplored' | 'padding' | 'recovered' | 'structure' | 'named' | 'annotated' | 'reviewed';
+export type MapStatus = 'unexplored' | 'padding' | 'recovered' | 'structure' | 'named' | 'annotated' | 'reviewed' | 'matched';
 export type StatusBytes = Record<MapStatus, bigint>;
 export interface SectionCoverage { section: number; name: string; kind: RegionKind; address: bigint; size: bigint; bytes: StatusBytes }
 export interface Gap { start: bigint; end: bigint; section: number; offset?: bigint; after?: string; hint: string; preview: string }

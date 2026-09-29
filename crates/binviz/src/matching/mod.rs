@@ -1076,9 +1076,9 @@ pub struct ObjdiffReport {
 pub struct Measures {
     #[serde(default)]
     pub fuzzy_match_percent: f32,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "number")]
     pub total_code: u64,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "number")]
     pub matched_code: u64,
     #[serde(default)]
     pub matched_code_percent: f32,
@@ -1100,7 +1100,7 @@ pub struct ReportUnit {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ReportItem {
     pub name: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "number")]
     pub size: u64,
     #[serde(default)]
     pub fuzzy_match_percent: f32,
@@ -1112,8 +1112,36 @@ pub struct ReportItem {
 pub struct ReportItemMetadata {
     #[serde(default)]
     pub demangled_name: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "some_number")]
     pub virtual_address: Option<u64>,
+}
+
+/// A number the JSON gives as a number or, as protobuf's JSON (objdiff's)
+/// writes 64-bit integers, as a string.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum Number {
+    Int(u64),
+    Text(String),
+    Float(f64),
+}
+
+impl Number {
+    fn value<E: serde::de::Error>(self) -> std::result::Result<u64, E> {
+        match self {
+            Number::Int(n) => Ok(n),
+            Number::Text(t) => t.trim().parse().map_err(E::custom),
+            Number::Float(f) => Ok(f as u64),
+        }
+    }
+}
+
+fn number<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::Result<u64, D::Error> {
+    Number::deserialize(d)?.value()
+}
+
+fn some_number<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::Result<Option<u64>, D::Error> {
+    Option::<Number>::deserialize(d)?.map(Number::value).transpose()
 }
 
 impl ObjdiffReport {
@@ -1191,6 +1219,140 @@ impl Binary {
             functions,
             unplaced,
         }
+    }
+
+    /// Where the decompilation stands, as objdiff's report: the JSON
+    /// decomp.dev reads (64-bit numbers written as strings, as protobuf's
+    /// JSON has them). A unit per source file the notes record for matched
+    /// and nonmatching functions; each function with its size and match
+    /// percent (100 when its C matches, else the best tried); the functions
+    /// not decompiled yet in a unit of their own; library code in its own
+    /// units and category, so the game's progress can be told apart.
+    pub fn progress_report(&self) -> serde_json::Value {
+        use crate::model::DecompState;
+        use serde_json::json;
+        struct F {
+            name: String,
+            demangled: Option<String>,
+            address: u64,
+            size: u64,
+            percent: f32,
+        }
+        let mut units: BTreeMap<(bool, String), Vec<F>> = BTreeMap::new();
+        for (address, size, _) in self.similar_index().functions() {
+            let d = self.decomp_at(address);
+            let state = d.map_or(DecompState::Todo, |d| d.state);
+            let percent = match (state, d.and_then(|d| d.percent)) {
+                (DecompState::Matched, _) => 100.0,
+                (_, Some(p)) => p.clamp(0.0, 99.99),
+                _ => 0.0,
+            };
+            let library = state == DecompState::Library;
+            let source = d.map(|d| d.source.as_str()).filter(|s| !s.is_empty());
+            let unit = match (library, source) {
+                (true, Some(s)) => format!("library/{s}"),
+                (true, None) => "library".to_string(),
+                (false, Some(s)) if matches!(state, DecompState::Matched | DecompState::Nonmatching) => s.to_string(),
+                _ => "(not decompiled)".to_string(),
+            };
+            let (name, demangled) = match self.symbols().at(address) {
+                Some(s) => (s.name().to_string(), s.demangled().map(|d| d.into_owned())),
+                None => (format!("sub_{address:x}"), None),
+            };
+            units.entry((library, unit)).or_default().push(F {
+                name,
+                demangled,
+                address,
+                size,
+                percent,
+            });
+        }
+        // Measures of a list of functions, objdiff's way; `units`: (all, complete).
+        let measures = |fs: &mut dyn Iterator<Item = &F>, units: (u32, u32), complete_code: u64| {
+            let (mut total, mut matched, mut fuzzy, mut n, mut m) = (0u64, 0u64, 0f64, 0u32, 0u32);
+            for f in fs {
+                total += f.size;
+                fuzzy += f.size as f64 * f.percent as f64;
+                n += 1;
+                if f.percent >= 100.0 {
+                    matched += f.size;
+                    m += 1;
+                }
+            }
+            let pct = |a: f64, b: f64| if b > 0.0 { a * 100.0 / b } else { 0.0 };
+            json!({
+                "fuzzy_match_percent": if total > 0 { fuzzy / total as f64 } else { 0.0 },
+                "total_code": total.to_string(),
+                "matched_code": matched.to_string(),
+                "matched_code_percent": pct(matched as f64, total as f64),
+                "total_functions": n,
+                "matched_functions": m,
+                "matched_functions_percent": pct(m as f64, n as f64),
+                "complete_code": complete_code.to_string(),
+                "complete_code_percent": pct(complete_code as f64, total as f64),
+                "total_units": units.0,
+                "complete_units": units.1,
+            })
+        };
+        let complete = |fs: &[F]| fs.iter().all(|f| f.percent >= 100.0);
+        let mut out_units = Vec::new();
+        for ((library, name), fs) in &units {
+            let done = complete(fs);
+            let code: u64 = if done { fs.iter().map(|f| f.size).sum() } else { 0 };
+            let functions: Vec<serde_json::Value> = fs
+                .iter()
+                .map(|f| {
+                    let mut metadata = json!({ "virtual_address": f.address.to_string() });
+                    if let Some(d) = &f.demangled {
+                        metadata["demangled_name"] = json!(d);
+                    }
+                    json!({
+                        "name": f.name,
+                        "size": f.size.to_string(),
+                        "fuzzy_match_percent": f.percent,
+                        "metadata": metadata,
+                    })
+                })
+                .collect();
+            let mut unit_meta = json!({
+                "complete": done,
+                "progress_categories": [if *library { "library" } else { "game" }],
+            });
+            if name != "(not decompiled)" && !name.starts_with("library") {
+                unit_meta["source_path"] = json!(name);
+            }
+            out_units.push(json!({
+                "name": name,
+                "measures": measures(&mut fs.iter(), (1, done as u32), code),
+                "functions": functions,
+                "metadata": unit_meta,
+            }));
+        }
+        let category = |library: bool| {
+            let us: Vec<&Vec<F>> = units.iter().filter(|((l, _), _)| *l == library).map(|(_, f)| f).collect();
+            let done: Vec<&&Vec<F>> = us.iter().filter(|f| complete(f)).collect();
+            let code = done.iter().flat_map(|f| f.iter()).map(|f| f.size).sum();
+            measures(
+                &mut us.iter().flat_map(|f| f.iter()),
+                (us.len() as u32, done.len() as u32),
+                code,
+            )
+        };
+        let all_done: Vec<&Vec<F>> = units.values().filter(|f| complete(f)).collect();
+        let total = measures(
+            &mut units.values().flat_map(|f| f.iter()),
+            (units.len() as u32, all_done.len() as u32),
+            all_done.iter().flat_map(|f| f.iter()).map(|f| f.size).sum(),
+        );
+        json!({
+            "measures": total,
+            "units": out_units,
+            "version": 1,
+            "categories": [
+                { "id": "game", "name": "Game", "measures": category(false) },
+                { "id": "library", "name": "Library", "measures": category(true) },
+            ],
+        })
     }
 }
 
@@ -1377,5 +1539,11 @@ mod tests {
         assert_eq!((p.total_code, p.matched_code, p.functions.len()), (40, 20, 1));
         assert_eq!((p.functions[0].address, p.functions[0].percent), (0x8001_0000, 100.0));
         assert_eq!(p.unplaced, ["src/main:nothing"]);
+        // As objdiff writes it: 64-bit numbers as strings.
+        let json = br#"{"measures":{"fuzzy_match_percent":50.0,"total_code":"40","matched_code":"20","total_functions":2},
+            "units":[{"name":"src/main","functions":[
+              {"name":"entry","size":"40","fuzzy_match_percent":100.0,"metadata":{"virtual_address":"2147549184"}}]}]}"#;
+        let p = bin.place_report(&ObjdiffReport::parse(json).unwrap());
+        assert_eq!((p.total_code, p.matched_code, p.functions[0].address), (40, 20, 0x8001_0000));
     }
 }

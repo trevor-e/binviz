@@ -96,6 +96,7 @@ export interface StatusInfo {
 
 /** Strongest first — the order legends and stacked bars use. */
 export const STATUSES: StatusInfo[] = [
+  { id: 'matched', label: 'Decompiled', description: 'A function whose decompiled C compiles to these bytes (a matching decompilation)' },
   { id: 'reviewed', label: 'Reviewed', description: 'Inside a range you marked as reviewed' },
   { id: 'annotated', label: 'Annotated', description: 'Inside a range you named or commented' },
   { id: 'named', label: 'Named', description: 'Covered by a symbol from the file or its debug info' },

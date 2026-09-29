@@ -108,6 +108,8 @@ COMMANDS:
                                    with a name, that function only; with a folder of objects,
                                    the whole project, unit by unit, worst first
     report <file> <report.json>    objdiff's report placed on the file's functions
+    progress <file> [json]         Where the decompilation stands (the notes' statuses), by unit;
+                                   json: as objdiff's report, which decomp.dev shows
     splat <file> <name> [dir] [split...]
                                    A splat config and symbol_addrs.txt (in dir, or printed)
                                    for a PS-X EXE, the code split into units at the splits
@@ -1002,7 +1004,8 @@ fn run(
             };
             let row = |name: &str, b: &binviz::coverage::StatusBytes, size: u64| {
                 println!(
-                    "{name:<20} {size:>9}  rev {:>5.1}%  ann {:>5.1}%  named {:>5.1}%  struct {:>5.1}%  recov {:>5.1}%  pad {:>5.1}%  unexpl {:>5.1}%",
+                    "{name:<20} {size:>9}  match {:>5.1}%  rev {:>5.1}%  ann {:>5.1}%  named {:>5.1}%  struct {:>5.1}%  recov {:>5.1}%  pad {:>5.1}%  unexpl {:>5.1}%",
+                    pct(b.matched, size),
                     pct(b.reviewed, size),
                     pct(b.annotated, size),
                     pct(b.named, size),
@@ -1423,6 +1426,14 @@ fn run(
                 None => println!("{path} is not in this image"),
             }
         }
+        "progress" => {
+            let report = bin.progress_report();
+            if arg(2) == Some("json") {
+                println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
+            } else {
+                print!("{}", progress_text(&report));
+            }
+        }
         "counterparts" => {
             let dir = arg(2).ok_or("which source? binviz counterparts <file> <source folder> [n]")?;
             let files = binviz::csource::read_source_tree(std::path::Path::new(dir)).map_err(|e| format!("{dir}: {e}"))?;
@@ -1454,6 +1465,30 @@ fn run(
         _ => return Err(format!("unknown command {cmd}\n\n{USAGE}")),
     }
     Ok(())
+}
+
+/// An objdiff report's totals and units, one line each.
+fn progress_text(report: &serde_json::Value) -> String {
+    let line = |name: &str, m: &serde_json::Value| {
+        let n = |k: &str| m[k].as_str().and_then(|s| s.parse::<u64>().ok()).or_else(|| m[k].as_u64()).unwrap_or(0);
+        format!(
+            "{name:<40} {:>5} of {:>5} functions, {:>8} of {:>8} bytes ({:>5.1}%), fuzzy {:>5.1}%\n",
+            n("matched_functions"),
+            n("total_functions"),
+            n("matched_code"),
+            n("total_code"),
+            m["matched_code_percent"].as_f64().unwrap_or(0.0),
+            m["fuzzy_match_percent"].as_f64().unwrap_or(0.0)
+        )
+    };
+    let mut out = line("TOTAL", &report["measures"]);
+    for c in report["categories"].as_array().into_iter().flatten() {
+        out.push_str(&line(&format!("  {}", c["name"].as_str().unwrap_or("")), &c["measures"]));
+    }
+    for u in report["units"].as_array().into_iter().flatten() {
+        out.push_str(&line(u["name"].as_str().unwrap_or(""), &u["measures"]));
+    }
+    out
 }
 
 /// Another build, with the debug file it names when that is beside it (a PE's PDB).

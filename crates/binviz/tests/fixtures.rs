@@ -1369,6 +1369,54 @@ fn a_binary_is_set_against_its_source() {
     assert!(c.to_text(10).contains("defined nowhere in the source (8)"), "{}", c.to_text(10));
 }
 
+#[test]
+fn progress_is_exported_as_objdiffs_report() {
+    use binviz::{Decomp, DecompState};
+    let mut bin = open("x86demo.exe");
+    bin.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    let at = |bin: &Binary, n: &str| bin.symbols().by_name(n).unwrap_or_else(|| panic!("{n}")).address;
+    let note = |address: u64, state: DecompState, percent: Option<f32>, source: &str| Annotation {
+        address,
+        size: 0,
+        name: String::new(),
+        comment: String::new(),
+        reviewed: false,
+        kind: None,
+        decomp: Some(Decomp {
+            state,
+            percent,
+            source: source.into(),
+            ..Default::default()
+        }),
+        ctype: None,
+    };
+    let notes = vec![
+        note(at(&bin, "sum3"), DecompState::Matched, None, "src/math.c"),
+        note(at(&bin, "scale"), DecompState::Nonmatching, Some(87.5), "src/math.c"),
+        note(at(&bin, "dispatch"), DecompState::Matched, None, "src/dispatch.c"),
+        note(at(&bin, "fatal"), DecompState::Library, None, "libcmt"),
+    ];
+    bin.set_annotations(notes);
+    let report = bin.progress_report();
+    // 64-bit numbers are strings, as protobuf's JSON writes them.
+    assert!(report["measures"]["total_code"].is_string());
+    let units: Vec<&str> = report["units"].as_array().unwrap().iter().map(|u| u["name"].as_str().unwrap()).collect();
+    assert_eq!(units, ["(not decompiled)", "src/dispatch.c", "src/math.c", "library/libcmt"]);
+    let dispatch = &report["units"][1];
+    assert_eq!((dispatch["metadata"]["complete"].as_bool(), dispatch["metadata"]["source_path"].as_str()), (Some(true), Some("src/dispatch.c")));
+    // It reads back as objdiff's, each verdict on its function.
+    let text = serde_json::to_vec(&report).unwrap();
+    let placed = bin.place_report(&binviz::matching::ObjdiffReport::parse(&text).unwrap());
+    assert!(placed.unplaced.is_empty(), "{:?}", placed.unplaced);
+    let percent = |n: &str| placed.functions.iter().find(|f| f.address == at(&bin, n)).unwrap().percent;
+    assert_eq!((percent("sum3"), percent("scale"), percent("apply")), (100.0, 87.5, 0.0));
+    assert_eq!(placed.matched_functions, 2);
+    // A matched function is its own colour on the coverage map.
+    let c = bin.coverage(0);
+    let sizes = bin.symbols().by_name("sum3").unwrap().size + bin.symbols().by_name("dispatch").unwrap().size;
+    assert_eq!(c.totals.matched, sizes);
+}
+
 /// What an instruction's operand names, in the disassembly of the function holding it.
 fn operand_name(bin: &Binary, address: u64) -> Option<String> {
     let f = bin.symbols().function_containing(address).unwrap().address;

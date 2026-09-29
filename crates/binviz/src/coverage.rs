@@ -32,9 +32,11 @@ pub enum MapStatus {
     Named,
     Annotated,
     Reviewed,
+    /// A function whose decompiled C compiles to these bytes.
+    Matched,
 }
 
-const STATUSES: usize = 7;
+const STATUSES: usize = 8;
 
 impl MapStatus {
     const ALL: [MapStatus; STATUSES] = [
@@ -45,6 +47,7 @@ impl MapStatus {
         MapStatus::Named,
         MapStatus::Annotated,
         MapStatus::Reviewed,
+        MapStatus::Matched,
     ];
 }
 
@@ -52,6 +55,7 @@ impl MapStatus {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusBytes {
+    pub matched: u64,
     pub reviewed: u64,
     pub annotated: u64,
     pub named: u64,
@@ -64,6 +68,7 @@ pub struct StatusBytes {
 impl StatusBytes {
     fn add(&mut self, status: MapStatus, n: u64) {
         let slot = match status {
+            MapStatus::Matched => &mut self.matched,
             MapStatus::Reviewed => &mut self.reviewed,
             MapStatus::Annotated => &mut self.annotated,
             MapStatus::Named => &mut self.named,
@@ -76,6 +81,7 @@ impl StatusBytes {
     }
 
     fn merge(&mut self, o: &StatusBytes) {
+        self.matched += o.matched;
         self.reviewed += o.reviewed;
         self.annotated += o.annotated;
         self.named += o.named;
@@ -365,12 +371,18 @@ impl Binary {
                 };
                 intervals.push((ps.max(lo), pe.min(hi), status));
             }
-            for a in self.annotations.iter().filter(|a| a.address < hi && a.is_note()) {
+            for a in self.annotations.iter().filter(|a| a.address < hi) {
+                let matched = a.decomp.as_ref().is_some_and(|d| d.state == crate::model::DecompState::Matched);
+                if !a.is_note() && !matched {
+                    continue;
+                }
                 let (s, e) = self.annotation_extent(a);
                 if e <= lo {
                     continue;
                 }
-                let status = if a.reviewed {
+                let status = if matched {
+                    MapStatus::Matched
+                } else if a.reviewed {
                     MapStatus::Reviewed
                 } else {
                     MapStatus::Annotated

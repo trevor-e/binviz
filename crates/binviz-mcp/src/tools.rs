@@ -544,6 +544,16 @@ pub fn definitions() -> Vec<Value> {
             false,
         ),
         tool(
+            "export_progress",
+            "Export decompilation progress",
+            "Writes where the decompilation stands (each function's status in the notes: matched, nonmatching with its best percent, library, not decompiled) as objdiff's report JSON, the format decomp.dev reads: a unit per source file the notes record, functions not decompiled yet in a unit of their own, library code in its own category. Returns the totals and each unit.",
+            json!({
+                "path": { "type": "string", "description": "Where to write the report JSON (report.json)." },
+            }),
+            &["path"],
+            false,
+        ),
+        tool(
             "source_counterparts",
             "Compare with a source tree",
             "The binary set against the C or C++ source it may be built from (a folder, headers too): the functions named here that the source defines nowhere and the strings the code uses that the source doesn't have (signs of another version, or code from elsewhere), and the source's functions nothing here is named after yet (inlined, unused, not named, or not in this version). Library code the notes mark is left out. For two builds, use diff_functions or propose_names.",
@@ -873,6 +883,7 @@ impl Server {
                     "identify_sdk" => identify_sdk(o, args)?,
                     "propose_names" => propose_names(o, args)?,
                     "source_counterparts" => source_counterparts(o, args)?,
+                    "export_progress" => export_progress(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
                 Ok(finish(text))
@@ -2007,7 +2018,7 @@ fn hexdump(o: &Open, args: &Value) -> Result<String, String> {
 fn coverage(o: &Open, args: &Value) -> String {
     let c = o.bin.coverage(int(args, "gaps", 20, 500) as u32);
     let t = &c.totals;
-    let total = t.reviewed + t.annotated + t.named + t.structure + t.recovered + t.padding + t.unexplored;
+    let total = t.matched + t.reviewed + t.annotated + t.named + t.structure + t.recovered + t.padding + t.unexplored;
     let denom = total - t.padding;
     let mapped = total - t.padding - t.unexplored;
     let mut out = String::new();
@@ -2020,7 +2031,8 @@ fn coverage(o: &Open, args: &Value) -> String {
     );
     let _ = writeln!(
         out,
-        "  reviewed {} · annotated {} · named {} · format structure {} · recovered {} · padding {} · unexplored {}",
+        "  decompiled (matching) {} · reviewed {} · annotated {} · named {} · format structure {} · recovered {} · padding {} · unexplored {}",
+        human(t.matched),
         human(t.reviewed),
         human(t.annotated),
         human(t.named),
@@ -2055,15 +2067,16 @@ fn coverage(o: &Open, args: &Value) -> String {
     }
     let _ = writeln!(
         out,
-        "\nPer section (size: reviewed/annotated/named/structure/recovered/padding/unexplored):"
+        "\nPer section (size: matched/reviewed/annotated/named/structure/recovered/padding/unexplored):"
     );
     for s in &c.sections {
         let b = &s.bytes;
         let _ = writeln!(
             out,
-            "  {:<20} {:>10}: {}/{}/{}/{}/{}/{}/{}",
+            "  {:<20} {:>10}: {}/{}/{}/{}/{}/{}/{}/{}",
             clip(&s.name, 20),
             human(s.size),
+            pct(b.matched, s.size),
             pct(b.reviewed, s.size),
             pct(b.annotated, s.size),
             pct(b.named, s.size),
@@ -2689,6 +2702,37 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
         let n = notes.len();
         let (added, updated) = merge_notes(o, notes);
         let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
+    }
+    Ok(out)
+}
+
+fn export_progress(o: &Open, args: &Value) -> Result<String, String> {
+    let path = string(args, "path").ok_or("path is required")?;
+    let report = o.bin.progress_report();
+    let text = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    std::fs::write(path, text).map_err(|e| format!("{path}: {e}"))?;
+    let m = &report["measures"];
+    let n = |k: &str| m[k].as_str().and_then(|s| s.parse::<u64>().ok()).or_else(|| m[k].as_u64()).unwrap_or(0);
+    let mut out = format!(
+        "Wrote {path}: {} of {} functions matched, {} of {} bytes of code ({:.1}%), fuzzy {:.1}%, in {} units.\n",
+        n("matched_functions"),
+        n("total_functions"),
+        n("matched_code"),
+        n("total_code"),
+        m["matched_code_percent"].as_f64().unwrap_or(0.0),
+        m["fuzzy_match_percent"].as_f64().unwrap_or(0.0),
+        n("total_units")
+    );
+    for u in report["units"].as_array().into_iter().flatten() {
+        let um = &u["measures"];
+        let _ = writeln!(
+            out,
+            "  {:<40} {}/{} functions, {:.1}% of its code",
+            clip(u["name"].as_str().unwrap_or(""), 40),
+            um["matched_functions"].as_u64().unwrap_or(0),
+            um["total_functions"].as_u64().unwrap_or(0),
+            um["matched_code_percent"].as_f64().unwrap_or(0.0)
+        );
     }
     Ok(out)
 }
