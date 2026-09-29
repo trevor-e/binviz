@@ -307,11 +307,12 @@ function renderLanding() {
           'ol',
           { class: 'loop-steps' },
           loopStep('Map', ['open_binary', 'identify_sdk', 'propose_names'], 'Find the functions and name what we can.'),
-          loopStep('Context', ['decomp_context'], 'Give the agent one function and what it touches.'),
+          loopStep('Pick', ['next_functions'], 'Claim the next function worth doing.'),
+          loopStep('Context', ['decomp_context', 'similar_functions'], 'The function, what it touches, and matched ones like it.'),
           loopStep('Compile', [], 'Build the agent’s C with the original compiler.'),
-          loopStep('Compare', ['match_function'], 'Check it against the original and show what’s off.'),
+          loopStep('Compare', ['match_function', 'mark'], 'Check it against the original and record how it went.'),
         ),
-        h('p', { class: 'secondary' }, 'The binary stays in memory, so lookups are fast. Matching currently supports MIPS (PS1, N64), with x86 coming next.'),
+        h('p', { class: 'secondary' }, 'Run as many agents as you like. Claims keep them off each other’s functions, and the binary stays in memory so lookups are fast. Matching currently supports MIPS (PS1, N64), with x86 coming next.'),
       ),
 
       h(
