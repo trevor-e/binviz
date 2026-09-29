@@ -5,7 +5,8 @@
 # platform SDKs are needed. Required rustup targets:
 #   rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl aarch64-apple-darwin
 # Optional: a MinGW g++ on PATH (for the C++ PE fixture), clang (any build with
-# the x86 target, Apple's included: for the 32-bit PE with a PDB), the llvm-tools
+# the x86 target, Apple's included: for the 32-bit PEs with PDBs, and the objects
+# and library matched against them and the x86-64 ELF), the llvm-tools
 # component (for the split-debug ELF pair) and the x86_64-pc-windows-msvc
 # target (for the PE with a PDB). Python 3 writes the game ROMs.
 #
@@ -128,6 +129,38 @@ if command -v clang >/dev/null 2>&1; then
     )
     cp "$tmp/x86demo.exe" "$tmp/x86demo.pdb" "$out"
     cp "$tmp/fixed/x86demo.exe" "$out/x86demo-fixed.exe"
+    rm -rf "$tmp"
+
+    echo "x86match: PE32 with a PDB, the objects a decompilation compiles for it (one edited), a static library"
+    tmp="$(mktemp -d)"
+    cp "$src/x86match.cpp" "$src/x86lib-a.c" "$src/x86lib-b.c" "$src/kernel32.def" "$src/x86match-x64.c" "$tmp"
+    ln -s "$lld" "$tmp/lld-link"
+    (
+        cd "$tmp"
+        flags=(-target i686-pc-windows-msvc -O2 -fno-exceptions -fno-rtti -ffile-compilation-dir=.)
+        # The program, with debug info for its PDB; then the same source compiled without (the
+        # same code), and edited, as a decompilation's objects.
+        clang "${flags[@]}" -g -gcodeview -c x86match.cpp -o x86match-g.obj
+        clang "${flags[@]}" -c x86match.cpp -o x86match.obj
+        clang "${flags[@]}" -DEDITED -c x86match.cpp -o x86match-edited.obj
+        # The static library it links, as MSVC's are: an object whose functions share a section,
+        # one with a section per function (/Gy), and kernel32's import stubs.
+        clang "${flags[@]}" -c x86lib-a.c -o x86lib-a.obj
+        clang "${flags[@]}" -ffunction-sections -c x86lib-b.c -o x86lib-b.obj
+        ./lld-link /lib /machine:x86 /def:kernel32.def /out:kernel32.lib
+        ./lld-link /lib /out:x86lib.lib x86lib-a.obj x86lib-b.obj kernel32.lib
+        ./lld-link /nologo /brepro /nodefaultlib /entry:start /subsystem:console /debug /opt:ref,noicf \
+            /pdbsourcepath:c:/src /pdb:x86match.pdb /pdbaltpath:x86match.pdb /out:x86match.exe x86match-g.obj x86lib.lib
+        echo "x86match-x64: ELF x86-64 (no C library), its object and an edited one"
+        flags=(-target x86_64-unknown-linux-gnu -O2 -fno-pic -fno-asynchronous-unwind-tables -ffreestanding)
+        clang "${flags[@]}" -c x86match-x64.c -o x86match-x64.o
+        clang "${flags[@]}" -DEDITED -c x86match-x64.c -o x86match-x64-edited.o
+        "$lld" -flavor gnu -static -no-pie -e start -o x86match-x64 x86match-x64.o
+    )
+    for f in x86match.exe x86match.pdb x86match.obj x86match-edited.obj x86lib.lib x86lib-a.obj x86lib-b.obj \
+        x86match-x64 x86match-x64.o x86match-x64-edited.o; do
+        cp "$tmp/$f" "$out"
+    done
     rm -rf "$tmp"
 fi
 
