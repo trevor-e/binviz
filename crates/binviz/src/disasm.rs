@@ -49,7 +49,7 @@ impl Disassembly {
             return;
         }
         while let [.., before, last] = self.instructions.as_slice()
-            && matches!(last.mnemonic.as_str(), "nop" | "int3")
+            && (matches!(last.mnemonic.as_str(), "nop" | "int3") || does_nothing(last))
             && matches!(last.flow, FlowKind::Normal | FlowKind::Interrupt)
             && !(delay_slots && before.flow != FlowKind::Normal)
         {
@@ -58,6 +58,20 @@ impl Disassembly {
         if let Some(last) = self.instructions.last() {
             self.end = self.end.min(last.address + last.len as u64);
         }
+    }
+}
+
+/// The multi-byte no-ops GCC pads with: `lea esi, [esi]`, `mov esi, esi`, `xchg ax, ax`.
+fn does_nothing(i: &Instruction) -> bool {
+    let Some((a, b)) = i.operands.split_once(", ") else {
+        return false;
+    };
+    match i.mnemonic.as_str() {
+        "lea" => ["[{a}]", "[{a}+0x0]", "[{a}+0]"]
+            .iter()
+            .any(|f| b == f.replace("{a}", a)),
+        "mov" | "xchg" => a == b && !a.contains('['),
+        _ => false,
     }
 }
 
@@ -555,7 +569,16 @@ impl Binary {
                             (ins.op_kind(i) as u32).hash(h);
                         }
                     }));
+                    // GCC's long filler: a short jump over the rest of it.
+                    let over = pos + 2..(ins.near_branch_target().saturating_sub(start) as usize).min(bytes.len());
+                    let jumps_filler = ins.mnemonic() == iced_x86::Mnemonic::Jmp
+                        && ins.len() == 2
+                        && over.end > over.start
+                        && crate::discover::x86::lead_padding(&bytes[over.clone()], start + over.start as u64, bits)
+                            == over.len();
                     let pad = matches!(ins.mnemonic(), iced_x86::Mnemonic::Nop | iced_x86::Mnemonic::Int3)
+                        || crate::discover::x86::does_nothing(&ins)
+                        || jumps_filler
                         || zeros(&bytes[pos..pos + ins.len()]);
                     if !pad {
                         real = (out.len(), (pos + ins.len()) as u64);

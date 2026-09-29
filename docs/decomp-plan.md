@@ -416,6 +416,18 @@ Tests still to run (none can run without the games and agents; not done):
 
 ## Progress log
 
+- 2026-09-29 (real binaries): Yamagi Quake II 5.34's Windows build (MinGW GCC; its DWARF as the
+  answer key, stripped copies as the target) and numpy's 32-bit core extension (Visual C++ 2019,
+  5 768 functions). Stripped `rogue/game.dll`: 1 545 of 1 546 DWARF functions found (the other is
+  GCC's `.part` split, read as a piece of its parent), no false starts, every size right up to the
+  alignment filler; every function through `decomp_context`, `function_signature`, `disassemble`,
+  `xrefs` and `similar_functions` over MCP with no errors (context: 0.5 ms median, 181 ms at worst
+  on numpy). Fixed on the way: GCC's long filler (`jmp short` over no-ops) read as functions, its
+  multi-byte no-ops kept at functions' ends (so a stripped build diffed as 89 changed functions
+  against its own original; now none), and an exported function's inferred size swallowing
+  another's piece. With the base game as a fully matched sibling, the expansion's first worked
+  example is its own counterpart for 659 functions; look-alikes as alike as each other (`Cmd_God_f`,
+  `Cmd_Notarget_f`) are told apart by the strings they use, where they use any.
 - 2026-09-29 (Track B and the shared items): everything above that can be built and checked
   without the games landed. Phase B1 and B1b's x86 items: the Rich header (6cd40c1), stack
   frames and calling conventions (dcdc8f6), globals typed by use and named (ee1041c), import

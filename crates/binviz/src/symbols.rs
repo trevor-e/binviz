@@ -795,6 +795,15 @@ impl SymbolTable {
     /// Sets the pieces of functions away from their entries: (start, end,
     /// the function's start). An address in one is in its function.
     pub(crate) fn set_parts(&mut self, parts: Vec<(u64, u64, u64)>) {
+        // A size inferred from the next symbol stops where another function's piece begins
+        // (GCC's `f.part.8`, placed after an exported function with no size of its own).
+        for r in self.recs.iter_mut().filter(|r| r.flags & SIZE_INFERRED != 0) {
+            let end = r.address + r.size;
+            let i = parts.partition_point(|p| p.0 <= r.address);
+            if let Some(p) = parts[i..].first().filter(|p| p.0 < end && p.2 != r.address) {
+                r.size = p.0 - r.address;
+            }
+        }
         self.parts = parts;
     }
 

@@ -18,7 +18,7 @@
 //!
 //! What is done, set aside, or claimed by someone (within `claim_ttl`) isn't listed.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::Serialize;
 
@@ -218,10 +218,32 @@ impl Binary {
         let theirs = sibling.similar_index();
         let written = |a: u64| matches!(sibling.decomp_state(a), DecompState::Matched | DecompState::Nonmatching);
         // Another project's `jmp` or `ret` alone says nothing about this one.
-        let mut like = self
-            .similar_index()
-            .like_across(theirs, &theirs.file(&written), address, count * 2, 0.5);
+        let mut like =
+            self.similar_index()
+                .like_across(theirs, &theirs.file(&written), address, (count * 2).max(16), 0.5);
         like.retain(|s| s.instructions >= 4);
+        // Look-alikes as alike as each other (a game's `Cmd_God_f` and `Cmd_Notarget_f`): the one
+        // using the same strings is this one's counterpart.
+        let strings = |bin: &Binary, a: u64| -> HashSet<String> {
+            if bin.xrefs_supported() {
+                bin.prepare_xrefs();
+            }
+            bin.function_summary(a, 64)
+                .map(|f| f.strings.into_iter().map(|s| s.text).collect())
+                .unwrap_or_default()
+        };
+        let ours = strings(self, address);
+        if !ours.is_empty() {
+            let mut keyed: Vec<(usize, Similar)> = like
+                .into_iter()
+                .map(|s| (strings(sibling, s.address).intersection(&ours).count(), s))
+                .collect();
+            keyed.sort_by(|a, b| {
+                let alike = |s: &Similar| (s.similarity * 100.0).round() as i32;
+                alike(&b.1).cmp(&alike(&a.1)).then(b.0.cmp(&a.0))
+            });
+            like = keyed.into_iter().map(|(_, s)| s).collect();
+        }
         like.truncate(count);
         like
     }

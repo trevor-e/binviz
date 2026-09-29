@@ -1604,7 +1604,7 @@ fn looks_like_prologue(bytes: &[u8]) -> bool {
 /// instructions that do nothing (`nop`, the long `nop word cs:[...]` forms,
 /// `lea esi, [esi+0]`, `mov esi, esi`). `mov edi, edi` isn't filler: it
 /// starts hot-patchable functions.
-fn lead_padding(bytes: &[u8], address: u64, bits: u32) -> usize {
+pub(crate) fn lead_padding(bytes: &[u8], address: u64, bits: u32) -> usize {
     let mut decoder = Decoder::with_ip(bits, bytes, address, DecoderOptions::NONE);
     let mut ins = Instruction::default();
     let mut at = 0;
@@ -1618,6 +1618,17 @@ fn lead_padding(bytes: &[u8], address: u64, bits: u32) -> usize {
         }
         decoder.set_ip(address + at as u64);
         decoder.decode_out(&mut ins);
+        // GCC fills a long gap with a short jump over the filler to the next function.
+        if ins.mnemonic() == Mnemonic::Jmp && ins.op0_kind() == OpKind::NearBranch32 && ins.len() == 2 {
+            let over = (at + 2)..(ins.near_branch_target().saturating_sub(address) as usize);
+            if over.end > over.start
+                && over.end <= bytes.len()
+                && lead_padding(&bytes[over.clone()], address + over.start as u64, bits) == over.len()
+            {
+                at = over.end;
+                continue;
+            }
+        }
         if ins.is_invalid() || !does_nothing(&ins) {
             break;
         }
@@ -1627,7 +1638,7 @@ fn lead_padding(bytes: &[u8], address: u64, bits: u32) -> usize {
 }
 
 /// `nop` in its forms, and moves of a register onto itself.
-fn does_nothing(ins: &Instruction) -> bool {
+pub(crate) fn does_nothing(ins: &Instruction) -> bool {
     match ins.mnemonic() {
         Mnemonic::Nop => true,
         Mnemonic::Xchg | Mnemonic::Mov => {
@@ -1755,6 +1766,15 @@ mod tests {
             0xC3, // ret
         ];
         assert_eq!(follow_code(&code, &[], &[0x401000]), [(0x401000, 13)]);
+    }
+
+    #[test]
+    fn gccs_long_filler_is_a_jump_over_no_ops() {
+        // jmp short over nop and lea esi, [esi+0], then push ebp: the next function.
+        let bytes = [0xEB, 0x04, 0x90, 0x8D, 0x76, 0x00, 0x55];
+        assert_eq!(lead_padding(&bytes, 0x401001, 32), 6);
+        // A jump over code is no filler.
+        assert_eq!(lead_padding(&[0xEB, 0x01, 0x55, 0x55], 0x401001, 32), 0);
     }
 
     #[test]
