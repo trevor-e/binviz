@@ -38,6 +38,9 @@ pub struct Example {
     pub state: DecompState,
     /// The source file its C is in.
     pub source: String,
+    /// For a sibling decompilation's function, which binary it is in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binary: Option<String>,
 }
 
 /// What a piece of data a function uses is, where the code's use of it
@@ -96,6 +99,9 @@ pub struct DecompContext {
     pub decomp: Option<Decomp>,
     /// Functions already decompiled that are shaped like it, most alike first.
     pub examples: Vec<Example>,
+    /// The same from sibling decompilations (other games built with the
+    /// same compiler), for before this one has its own.
+    pub sibling_examples: Vec<Example>,
 }
 
 impl Binary {
@@ -103,6 +109,18 @@ impl Binary {
     /// `limit` instructions, and the first callers, callees, strings and
     /// globals (up to [`CONTEXT_LIST`] of each, with how many there are).
     pub fn decomp_context(&self, address: u64, limit: usize) -> Option<DecompContext> {
+        self.decomp_context_with(address, limit, &[])
+    }
+
+    /// [`Binary::decomp_context`], with worked examples from `siblings` too:
+    /// other games' decompilations built with the same compiler, each with
+    /// its notes and a label to say where an example is from.
+    pub fn decomp_context_with(
+        &self,
+        address: u64,
+        limit: usize,
+        siblings: &[(&str, &Binary)],
+    ) -> Option<DecompContext> {
         let f = self.symbols().function_containing(address)?;
         let (lo, hi) = (f.address, f.address + f.size.max(1));
         // The references first: they name the data the code uses.
@@ -138,9 +156,31 @@ impl Binary {
                     similarity: s.similarity,
                     state: d.state,
                     source: d.source,
+                    binary: None,
                 }
             })
             .collect();
+        let mut sibling_examples: Vec<Example> = siblings
+            .iter()
+            .flat_map(|&(label, sibling)| {
+                self.sibling_examples(sibling, lo, 3).into_iter().map(move |s| {
+                    let d = sibling.decomp_at(s.address).cloned().unwrap_or_default();
+                    Example {
+                        address: s.address,
+                        name: sibling
+                            .symbols()
+                            .at(s.address)
+                            .map_or_else(|| format!("{:#x}", s.address), |f| f.display_name().into_owned()),
+                        similarity: s.similarity,
+                        state: d.state,
+                        source: d.source,
+                        binary: Some(label.to_string()),
+                    }
+                })
+            })
+            .collect();
+        sibling_examples.sort_by(|a, b| b.similarity.total_cmp(&a.similarity));
+        sibling_examples.truncate(3);
         let typed = summary
             .data
             .iter()
@@ -226,6 +266,7 @@ impl Binary {
             notes,
             decomp: self.decomp_at(lo).cloned(),
             examples,
+            sibling_examples,
         })
     }
 }
@@ -262,15 +303,24 @@ impl DecompContext {
         if let Some(s) = &self.signature {
             out.push_str(&s.describe());
         }
-        if !self.examples.is_empty() {
-            let _ = writeln!(
-                out,
-                "Worked examples (already decompiled, shaped like it: their C is the place to start):"
-            );
-            for e in &self.examples {
+        for (list, heading) in [
+            (
+                &self.examples,
+                "Worked examples (already decompiled, shaped like it: their C is the place to start):",
+            ),
+            (
+                &self.sibling_examples,
+                "Worked examples from sibling decompilations (other games, the same compiler: their C is a place to start):",
+            ),
+        ] {
+            if list.is_empty() {
+                continue;
+            }
+            let _ = writeln!(out, "{heading}");
+            for e in list {
                 let _ = writeln!(
                     out,
-                    "  {:>3.0}%  {:#x} {}  {}{}",
+                    "  {:>3.0}%  {:#x} {}  {}{}{}",
                     e.similarity * 100.0,
                     e.address,
                     e.name,
@@ -279,7 +329,8 @@ impl DecompContext {
                         String::new()
                     } else {
                         format!(" in {}", e.source)
-                    }
+                    },
+                    e.binary.as_ref().map_or(String::new(), |b| format!("  ({b})"))
                 );
             }
         }

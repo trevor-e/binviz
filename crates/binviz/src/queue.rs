@@ -205,6 +205,27 @@ impl Binary {
         index.like(&index.file(&written), address, count, 0.5)
     }
 
+    /// The functions of `sibling`, another game's decompilation built with
+    /// the same compiler, matched or nonmatching in its notes, whose
+    /// instructions are most like those of the function at `address` here
+    /// (half alike or more, and four instructions or more), most alike
+    /// first: worked examples before this project has its own. None for code
+    /// of another instruction set.
+    pub fn sibling_examples(&self, sibling: &Binary, address: u64, count: usize) -> Vec<Similar> {
+        if self.summary().arch != sibling.summary().arch {
+            return Vec::new();
+        }
+        let theirs = sibling.similar_index();
+        let written = |a: u64| matches!(sibling.decomp_state(a), DecompState::Matched | DecompState::Nonmatching);
+        // Another project's `jmp` or `ret` alone says nothing about this one.
+        let mut like = self
+            .similar_index()
+            .like_across(theirs, &theirs.file(&written), address, count * 2, 0.5);
+        like.retain(|s| s.instructions >= 4);
+        like.truncate(count);
+        like
+    }
+
     /// The functions calling the one at `address` that aren't done and now
     /// have everything they call done.
     pub fn callers_now_ready(&self, address: u64) -> Vec<u64> {

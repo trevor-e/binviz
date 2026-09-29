@@ -153,9 +153,14 @@ Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
                          files its debug map names
          --member <n>    pick a slice/member of a universal binary or archive, or
                          a binary of a folder (its name, path or number)
-         --notes <file>  load annotations (a JSON array) first; a note's type (a
-                         function's prototype, a global's type) names the fields its
-                         pointers reach: [esi+0x21c] reads as edict_t.enemy
+         --notes <file>  load annotations first (the MCP server's and the web UI's notes
+                         file, or a JSON array); a note's type (a function's prototype, a
+                         global's type) names the fields its pointers reach: [esi+0x21c]
+                         reads as edict_t.enemy
+         --examples-from <file> context: worked examples from a sibling decompilation
+                         (another game built with the same compiler): its functions its
+                         notes mark matched, shaped like this one. Its notes are
+                         <file>.binviz-notes.json, or --examples-notes <file>
          --types <file>  take the types those name from this file's debug info (an
                          object compiled from the program's headers with -g
                          -fno-eliminate-unused-debug-types, or a PDB)
@@ -206,6 +211,8 @@ fn main() -> ExitCode {
     let member = take_opt("--member");
     let notes = take_opt("--notes");
     let types = take_opt("--types");
+    let examples_from = take_opt("--examples-from");
+    let examples_notes = take_opt("--examples-notes");
     let log = take_opt("--log");
     let psx_exe = take_opt("--psx-exe");
     let overlay_at = take_opt("--overlay-at");
@@ -221,6 +228,8 @@ fn main() -> ExitCode {
         Notes {
             notes: notes.as_deref(),
             types: types.as_deref(),
+            examples_from: examples_from.as_deref(),
+            examples_notes: examples_notes.as_deref(),
         },
         log.as_deref(),
         Psx {
@@ -313,6 +322,14 @@ fn wasm_debug_beside(bin: &mut Binary, path: &str) {
 
 /// A PlayStation memory image or overlay, its functions named after the
 /// boot executable's.
+/// A notes file's annotations: the JSON the web UI and the MCP server keep, or a bare list.
+fn read_notes(path: &str) -> Result<Vec<binviz::Annotation>, String> {
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+    binviz::notes::parse(&text)
+        .map(|(list, _)| list)
+        .map_err(|e| format!("{path}: {e}"))
+}
+
 fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, String> {
     let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
     let exe = match psx.exe {
@@ -320,9 +337,7 @@ fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, Str
             let mut exe = open(e, None, None)?;
             // The notes are the executable's too: the same addresses.
             if let Some(n) = notes {
-                let text = std::fs::read_to_string(n).map_err(|e| format!("{n}: {e}"))?;
-                let list: Vec<binviz::Annotation> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-                exe.set_annotations(list);
+                exe.set_annotations(read_notes(n)?);
             }
             Some(exe)
         }
@@ -422,13 +437,21 @@ struct Psx<'a> {
 struct Notes<'a> {
     notes: Option<&'a str>,
     types: Option<&'a str>,
+    /// A sibling decompilation (another game, the same compiler) and its notes, for worked examples.
+    examples_from: Option<&'a str>,
+    examples_notes: Option<&'a str>,
 }
 
 fn run(
     args: &[String],
     debug: Option<&str>,
     member: Option<&str>,
-    Notes { notes, types }: Notes<'_>,
+    Notes {
+        notes,
+        types,
+        examples_from,
+        examples_notes,
+    }: Notes<'_>,
     log: Option<&str>,
     psx: Psx<'_>,
 ) -> Result<(), String> {
@@ -524,9 +547,7 @@ fn run(
         bin = logged;
     }
     if let Some(path) = notes {
-        let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
-        let list: Vec<binviz::Annotation> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-        bin.set_annotations(list);
+        bin.set_annotations(read_notes(path)?);
     }
     if let Some(path) = types {
         let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
@@ -1265,7 +1286,26 @@ fn run(
         "context" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
             let n = arg(3).map(num).transpose()?.unwrap_or(4000) as usize;
-            let c = bin.decomp_context(addr, n).ok_or("not in a function")?;
+            // A sibling decompilation's done functions as worked examples: its notes beside it, unless given.
+            let sibling = match examples_from {
+                Some(path) => {
+                    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+                    let mut other = open_with_its_debug_file(path, data)?;
+                    let beside = format!("{path}.binviz-notes.json");
+                    match examples_notes {
+                        Some(notes) => other.set_annotations(read_notes(notes)?),
+                        None if std::path::Path::new(&beside).exists() => other.set_annotations(read_notes(&beside)?),
+                        None => {}
+                    }
+                    let label = std::path::Path::new(path)
+                        .file_name()
+                        .map_or(path.into(), |f| f.to_string_lossy());
+                    Some((label.into_owned(), other))
+                }
+                None => None,
+            };
+            let siblings: Vec<(&str, &Binary)> = sibling.iter().map(|(l, b)| (l.as_str(), b)).collect();
+            let c = bin.decomp_context_with(addr, n, &siblings).ok_or("not in a function")?;
             print!("{}", c.describe());
         }
         "match" => {

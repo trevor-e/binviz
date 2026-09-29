@@ -582,6 +582,39 @@ fn a_rom_with_an_emulators_log_and_labels() {
 }
 
 #[test]
+fn worked_examples_from_a_sibling_decompilation() {
+    let sibling = fixture_copy_for("shapes-pe.exe", "siblings-");
+    let here = fixture_copy_for("shapes-pe.stripped.exe", "siblings-");
+    let mut s = Session::start();
+    s.ok("open_binary", json!({ "path": sibling.to_str().unwrap() }));
+    s.ok(
+        "mark",
+        json!({ "at": "total_area", "state": "matched", "source": "src/shapes.cpp" }),
+    );
+    s.ok("open_binary", json!({ "path": here.to_str().unwrap() }));
+    let at = s.ok(
+        "decomp_context",
+        json!({ "binary": "shapes-pe.exe", "at": "total_area" }),
+    );
+    let address = at
+        .split_whitespace()
+        .find(|w| w.starts_with("0x"))
+        .unwrap()
+        .trim_end_matches(',')
+        .to_string();
+    let c = s.ok(
+        "decomp_context",
+        json!({ "at": address, "examples_from": ["shapes-pe.exe"] }),
+    );
+    assert!(
+        c.contains("Worked examples from sibling decompilations")
+            && c.contains("matched in src/shapes.cpp  (shapes-pe.exe)"),
+        "{c}"
+    );
+    let _ = std::fs::remove_dir_all(sibling.parent().unwrap());
+}
+
+#[test]
 fn a_mips_function_for_m2c() {
     let path = fixture_copy_for("tiny-psx.exe", "asm-");
     let mut s = Session::start();

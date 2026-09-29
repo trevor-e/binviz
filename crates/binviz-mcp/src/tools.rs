@@ -434,10 +434,11 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "decomp_context",
             "Everything needed to decompile a function",
-            "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, and the notes on it. The prototype for MIPS, x86 and x86-64; the rest for any binary.",
+            "One call with what writing a function's C needs: its code with names resolved, what its code says about its prototype (arguments in registers and on the stack, whether it returns, frame, saved registers, the structures it walks), its callers and callees with their prototypes, the strings and globals it touches, the notes on it, and worked examples: the functions already decompiled (matched or nonmatching in the notes) shaped most like it, here and, with examples_from, in sibling decompilations. The prototype for MIPS, x86 and x86-64; the rest for any binary.",
             json!({
                 "at": address("A function or address inside it"),
                 "limit": { "type": "integer", "description": "Instructions (default 400, max 5000). Each list (callers, callees, strings, globals) shows its first 24 entries and how many more there are; function_info and xrefs list them all." },
+                "examples_from": { "type": "array", "items": { "type": "string" }, "description": "Other open binaries (ids) to take worked examples from: sibling decompilations, other games built with the same compiler, opened with their notes. Their functions matched or nonmatching and shaped like this one are listed with their source files, so the first functions here have examples too." },
             }),
             &["at"],
             true,
@@ -862,6 +863,7 @@ impl Server {
             "symbolicate" => self.symbolicate(args).map(finish),
             "size_diff" => self.size_diff(args).map(finish),
             "diff_functions" => self.diff_functions(args).map(finish),
+            "decomp_context" => self.decomp_context(args).map(finish),
             "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
                 let o = self.get(args)?;
@@ -903,7 +905,6 @@ impl Server {
                     "dwarf_check" => dwarf_check(o, args)?,
                     "c_header" => c_header(o, args)?,
                     "struct_field" => struct_field(o, args)?,
-                    "decomp_context" => decomp_context(o, args)?,
                     "function_signature" => function_signature(o, args)?,
                     "match_function" => match_function(o, args)?,
                     "match_object" => match_object(o, args)?,
@@ -926,19 +927,62 @@ impl Server {
     }
 
     fn get(&mut self, args: &Value) -> Result<&mut Open, String> {
+        let i = self.index(args)?;
+        Ok(&mut self.open[i])
+    }
+
+    /// Which open binary a call is about (its `binary`, else the current one), its debug file attached.
+    fn index(&mut self, args: &Value) -> Result<usize, String> {
         if self.open.is_empty() {
             return Err("no binary is open: call open_binary first".into());
         }
         let i = match string(args, "binary") {
-            Some(want) => self
-                .open
-                .iter()
-                .position(|o| o.id == want || o.path.to_string_lossy() == want || o.label == want)
-                .ok_or_else(|| format!("no open binary {want:?}; open: {}", self.ids()))?,
+            Some(want) => self.find(want)?,
             None => self.current.unwrap_or(self.open.len() - 1),
         };
         self.attach_pending(i);
-        Ok(&mut self.open[i])
+        Ok(i)
+    }
+
+    /// The open binary with this id, path or label.
+    fn find(&self, want: &str) -> Result<usize, String> {
+        self.open
+            .iter()
+            .position(|o| o.id == want || o.path.to_string_lossy() == want || o.label == want)
+            .ok_or_else(|| format!("no open binary {want:?}; open: {}", self.ids()))
+    }
+
+    /// `decomp_context`: with worked examples from the other open binaries `examples_from` names.
+    fn decomp_context(&mut self, args: &Value) -> Result<String, String> {
+        let mut siblings = Vec::new();
+        for want in args
+            .get("examples_from")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            let want = want.as_str().ok_or("examples_from lists open binaries' ids")?;
+            let s = self.find(want)?;
+            self.attach_pending(s);
+            siblings.push(s);
+        }
+        let i = self.index(args)?;
+        let o = &self.open[i];
+        let at = string(args, "at").ok_or("at is required")?;
+        let start = function_at(&o.bin, at)?;
+        let mut out = ensure_xrefs(o)?;
+        let limit = int(args, "limit", 400, 5000) as usize;
+        let siblings: Vec<(&str, &Binary)> = siblings
+            .into_iter()
+            .filter(|&s| s != i)
+            .map(|s| (self.open[s].id.as_str(), &self.open[s].bin))
+            .collect();
+        let c = o
+            .bin
+            .decomp_context_with(start, limit, &siblings)
+            .ok_or("not in a function")?;
+        out.push_str(&c.describe());
+        Ok(out)
     }
 
     fn ids(&self) -> String {
@@ -2354,16 +2398,6 @@ pub(crate) fn save_notes(o: &Open) -> String {
         },
         None => "kept in memory".into(),
     }
-}
-
-fn decomp_context(o: &Open, args: &Value) -> Result<String, String> {
-    let at = string(args, "at").ok_or("at is required")?;
-    let start = function_at(&o.bin, at)?;
-    let mut out = ensure_xrefs(o)?;
-    let limit = int(args, "limit", 400, 5000) as usize;
-    let c = o.bin.decomp_context(start, limit).ok_or("not in a function")?;
-    out.push_str(&c.describe());
-    Ok(out)
 }
 
 fn function_signature(o: &Open, args: &Value) -> Result<String, String> {

@@ -141,10 +141,11 @@ impl SimilarIndex {
         Filed { bands }
     }
 
-    /// How many of two functions' summary hashes agree: about the share of their runs in common.
-    fn agreeing(&self, i: usize, j: usize) -> usize {
+    /// How many of the summary hashes of this index's function `i` and
+    /// `other`'s function `j` agree: about the share of their runs in common.
+    fn agreeing(&self, other: &SimilarIndex, i: usize, j: usize) -> usize {
         let a = &self.summaries[i * HASHES..(i + 1) * HASHES];
-        let b = &self.summaries[j * HASHES..(j + 1) * HASHES];
+        let b = &other.summaries[j * HASHES..(j + 1) * HASHES];
         a.iter().zip(b).filter(|(x, y)| x == y).count()
     }
 
@@ -157,21 +158,30 @@ impl SimilarIndex {
         self.by_address.contains_key(&address)
     }
 
-    /// The functions filed in `bands` most like the one at `address`, most
-    /// alike first, at least `floor` alike: those sharing a band with it,
-    /// the closest by their summaries compared instruction by instruction.
-    fn like_in(&self, bands: &HashMap<(u8, u64), Vec<u32>>, address: u64, count: usize, floor: f32) -> Vec<Similar> {
+    /// The functions of `other` (this index, or another binary's) filed in
+    /// `bands` most like this one's at `address`, most alike first, at least
+    /// `floor` alike: those sharing a band with it, the closest by their
+    /// summaries compared instruction by instruction.
+    fn like_in(
+        &self,
+        other: &SimilarIndex,
+        bands: &HashMap<(u8, u64), Vec<u32>>,
+        address: u64,
+        count: usize,
+        floor: f32,
+    ) -> Vec<Similar> {
         let Some(&i) = self.by_address.get(&address) else {
             return Vec::new();
         };
         let i = i as usize;
+        let itself = |j: u32| std::ptr::eq(self, other) && j as usize == i;
         let mut seen = HashSet::new();
         let mut candidates: Vec<(usize, usize)> = Vec::new();
         for key in self.band_keys(i) {
             let Some(list) = bands.get(&key) else { continue };
-            for &j in list.iter().filter(|&&j| j as usize != i).take(PER_BAND) {
+            for &j in list.iter().filter(|&&j| !itself(j)).take(PER_BAND) {
                 if seen.insert(j) {
-                    candidates.push((self.agreeing(i, j as usize), j as usize));
+                    candidates.push((self.agreeing(other, i, j as usize), j as usize));
                 }
             }
         }
@@ -181,7 +191,7 @@ impl SimilarIndex {
         let mut out: Vec<Similar> = candidates
             .into_iter()
             .map(|(_, j)| {
-                let f = &self.functions[j];
+                let f = &other.functions[j];
                 Similar {
                     address: f.0,
                     similarity: similarity(tokens, &f.2),
@@ -197,7 +207,20 @@ impl SimilarIndex {
 
     /// The functions filed in `filed` most like the one at `address`.
     pub(crate) fn like(&self, filed: &Filed, address: u64, count: usize, floor: f32) -> Vec<Similar> {
-        self.like_in(&filed.bands, address, count, floor)
+        self.like_in(self, &filed.bands, address, count, floor)
+    }
+
+    /// The functions of another binary (`other`, of the same instruction
+    /// set), filed in `filed`, most like this one's at `address`.
+    pub(crate) fn like_across(
+        &self,
+        other: &SimilarIndex,
+        filed: &Filed,
+        address: u64,
+        count: usize,
+        floor: f32,
+    ) -> Vec<Similar> {
+        self.like_in(other, &filed.bands, address, count, floor)
     }
 }
 
@@ -211,6 +234,6 @@ impl Binary {
     /// a good part of their code are found.
     pub fn similar_functions(&self, address: u64, count: usize) -> Vec<Similar> {
         let index = self.similar_index();
-        index.like_in(&index.bands, address, count, 0.0)
+        index.like_in(index, &index.bands, address, count, 0.0)
     }
 }

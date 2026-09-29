@@ -3302,6 +3302,77 @@ fn nintendo_64_and_playstation_code() {
 }
 
 #[test]
+fn a_sibling_decompilation_gives_worked_examples() {
+    use binviz::{Decomp, DecompState};
+    // The sibling: the same code with its names, a function its notes mark matched.
+    let mut sibling = open("shapes-pe.exe");
+    let total = sibling.symbols().by_name("total_area").expect("total_area").address;
+    sibling.set_annotations(vec![Annotation {
+        address: total,
+        size: 0,
+        name: String::new(),
+        comment: String::new(),
+        reviewed: false,
+        kind: None,
+        decomp: Some(Decomp {
+            state: DecompState::Matched,
+            source: "src/shapes.cpp".into(),
+            ..Decomp::default()
+        }),
+        ctype: None,
+    }]);
+    // Here nothing is decompiled yet, and nothing is named.
+    let here = open("shapes-pe.stripped.exe");
+    let c = here
+        .decomp_context_with(total, 100, &[("shapes-pe.exe", &sibling)])
+        .expect("a function");
+    assert!(c.examples.is_empty());
+    let e = &c.sibling_examples[0];
+    assert!(e.name.starts_with("total_area("), "{}", e.name);
+    assert_eq!(
+        (e.similarity, e.source.as_str(), e.binary.as_deref()),
+        (1.0, "src/shapes.cpp", Some("shapes-pe.exe"))
+    );
+    let text = c.describe();
+    assert!(
+        text.contains("Worked examples from sibling decompilations")
+            && text.contains("in src/shapes.cpp  (shapes-pe.exe)"),
+        "{text}"
+    );
+    // Another instruction set's code gives none.
+    let arm = open("tiny-elf-a64");
+    assert!(here.sibling_examples(&arm, total, 3).is_empty());
+    // The same source built for another system (Windows's x64 calling convention, not System V's)
+    // is still shaped alike; a lone `jmp` is like any other, so it is no example.
+    let mut pe = open("tiny-pe-x64.exe");
+    let marks: Vec<Annotation> = pe
+        .symbols()
+        .functions()
+        .map(|f| Annotation {
+            address: f.address,
+            size: 0,
+            name: String::new(),
+            comment: String::new(),
+            reviewed: false,
+            kind: None,
+            decomp: Some(Decomp {
+                state: DecompState::Matched,
+                ..Decomp::default()
+            }),
+            ctype: None,
+        })
+        .collect();
+    pe.set_annotations(marks);
+    let elf = open("tiny-elf-x64");
+    let run = elf.symbols().by_name("tiny::run").expect("tiny::run").address;
+    let like = elf.sibling_examples(&pe, run, 3);
+    assert_eq!(pe.symbols().at(like[0].address).unwrap().display_name(), "tiny::run");
+    assert!(like[0].similarity > 0.8, "{like:?}");
+    let main = elf.symbols().by_name("main").expect("main").address;
+    assert!(elf.sibling_examples(&pe, main, 3).is_empty());
+}
+
+#[test]
 fn a_mips_function_is_written_out_as_splat_writes_it() {
     let z64 = open("tiny.z64");
     // A jump's delay slot is the function's, even a `nop` at its end.
