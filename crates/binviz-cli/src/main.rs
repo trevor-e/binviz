@@ -223,10 +223,19 @@ fn open(path: &str, debug: Option<&str>, member: Option<&str>) -> Result<Binary,
 
 /// A PlayStation memory image or overlay, its functions named after the
 /// boot executable's.
-fn open_psx(path: &str, psx: Psx<'_>) -> Result<Binary, String> {
+fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, String> {
     let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
     let exe = match psx.exe {
-        Some(e) => Some(open(e, None, None)?),
+        Some(e) => {
+            let mut exe = open(e, None, None)?;
+            // The notes are the executable's too: the same addresses.
+            if let Some(n) = notes {
+                let text = std::fs::read_to_string(n).map_err(|e| format!("{n}: {e}"))?;
+                let list: Vec<binviz::Annotation> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+                exe.set_annotations(list);
+            }
+            Some(exe)
+        }
         None => None,
     };
     let bin = match psx.overlay_at {
@@ -382,7 +391,7 @@ fn run(
         }
         folder_binary(&mut pkg, member, debug)?
     } else if psx.exe.is_some() || psx.overlay_at.is_some() {
-        open_psx(&args[1], psx)?
+        open_psx(&args[1], psx, notes)?
     } else {
         open(&args[1], debug, member)?
     };

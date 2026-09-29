@@ -564,12 +564,14 @@ impl crate::binary::Binary {
         };
         let known = |a: u64| self.symbols.static_function_containing(a).is_some();
         let placed: Vec<u64> = addresses.iter().copied().filter(|&a| in_image(a)).collect();
-        // The start of each run of traced addresses that isn't already in a function.
-        let mut runs = Vec::new();
+        // Every traced address not already in a function, in order: following one
+        // owns what it reaches, and the next one still unowned starts the next function.
+        let seeds: Vec<u64> = placed.iter().copied().filter(|&a| !known(a)).collect();
+        let mut runs = 0u64;
         let mut prev = None;
-        for &a in &placed {
-            if prev != Some(a - 4) && !known(a) {
-                runs.push(a);
+        for &a in &seeds {
+            if prev != Some(a - 4) {
+                runs += 1;
             }
             prev = Some(a);
         }
@@ -589,7 +591,7 @@ impl crate::binary::Binary {
             _ => detect(&data),
         }
         .ok_or_else(|| crate::error::Error::new("the image no longer reads"))?;
-        parts.late_entries = runs.clone();
+        parts.late_entries = seeds;
         let bin = crate::binary::Binary::from_rom(data, parts)?;
         Ok((
             bin,
@@ -597,7 +599,7 @@ impl crate::binary::Binary {
                 lines,
                 addresses: addresses.len() as u64,
                 placed: placed.len() as u64,
-                new_runs: runs.len() as u64,
+                new_runs: runs,
             },
         ))
     }

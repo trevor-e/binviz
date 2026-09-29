@@ -148,6 +148,9 @@ pub(crate) struct State {
     /// ARM7TDMI: the link register was just set to return here (`mov lr, pc`):
     /// the `bx` that follows is a call.
     pub link: bool,
+    /// MIPS: a call was decoded; its clobbering of the caller-saved registers
+    /// lands after its delay slot (2: the slot is next; 1: the clobber is next).
+    pub clobber_in: u8,
 }
 
 impl State {
@@ -159,6 +162,7 @@ impl State {
         known: 0,
         thumb: false,
         link: false,
+        clobber_in: 0,
     };
 
     /// MIPS: code starting with `$gp` (and nothing else) known.

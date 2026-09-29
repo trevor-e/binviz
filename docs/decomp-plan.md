@@ -233,6 +233,11 @@ below too.
 ## Progress log
 
 - 2026-09-28: plan written; no implementation yet.
+- 2026-09-30: `samples/psx-advanced/` (two objects, a jump table, pointer-reached handlers, an
+  overlay, a memory image, a trace, name candidates) runs every tool end to end and found four
+  bugs, fixed: MIPS32 `movn`/`movz` stopping the follower, call clobbers applied before the
+  delay slot (strings in slots lost), data notes followed as code into zeroed RAM, traces
+  seeding only run starts.
 - 2026-09-29 (last): A1 Psy-Q signatures from LIB/OBJ files and A7 name proposals by shared
   strings and calls; strings are now found in console code areas (PS-X EXE had none before).
   Track A's eight items are all in; what remains are the notes above: SDK version detection,

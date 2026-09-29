@@ -92,7 +92,9 @@ function with the linker's fields masked and each difference explained
 (registers, stack slots, branch lengths, reordering, delay-slot nops). A
 splat config and symbol file start the project; objdiff's report places the
 project's progress on the binary. [samples/psx](samples/psx/README.md) walks
-the whole loop on a small program built from source; the
+the whole loop on a small program built from source,
+[samples/psx-advanced](samples/psx-advanced/README.md) adds an overlay, a memory
+image, a trace and a jump table; the
 [plan](docs/decomp-plan.md) says what is next.
 
 **Built for agents.** The MCP server loads a binary once and answers every

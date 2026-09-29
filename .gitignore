@@ -10,3 +10,4 @@ node_modules
 
 # The sample program, built
 samples/psx/build/
+samples/psx-advanced/build/

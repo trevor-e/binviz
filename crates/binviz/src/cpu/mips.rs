@@ -105,6 +105,13 @@ impl State {
 /// Nintendo 64, little-endian for the PlayStation), updating the registers
 /// known to hold addresses.
 pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Insn {
+    // The call before last: its delay slot has run, the callee clobbers now.
+    if state.clobber_in > 0 {
+        state.clobber_in -= 1;
+        if state.clobber_in == 0 {
+            state.known &= !CALL_CLOBBERS;
+        }
+    }
     let Some(word) = bytes.get(..4) else {
         return Insn::bad(bytes.len() as u32, bytes);
     };
@@ -163,6 +170,10 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
                     ][funct as usize - 4];
                     insn(m, format!("{}, {}, {}", r(rd), r(rt), r(rs)))
                 }
+                10 | 11 => insn(
+                    if funct == 10 { "movz" } else { "movn" },
+                    format!("{}, {}, {}", r(rd), r(rs), r(rt)),
+                ),
                 8 => {
                     writes = None;
                     if rs == 31 {
@@ -494,7 +505,7 @@ pub(crate) fn decode(bytes: &[u8], pc: u64, state: &mut State, big: bool) -> Ins
         state.set(reg, value);
     }
     if matches!(out.flow, Flow::Call(_)) {
-        state.known &= !CALL_CLOBBERS;
+        state.clobber_in = 2;
     }
     out
 }
@@ -565,6 +576,15 @@ mod tests {
         assert_eq!(text(&decode(&le(0xAFA2_0010), 0, &mut s, false)), "sw $v0, 0x10($sp)");
         assert_eq!(text(&decode(&le(0x4A18_0001), 0, &mut s, false)), "cop2 0x180001");
         assert_eq!(text(&decode(&le(0x70E6_0802), 0, &mut s, false)), "mul $at, $a3, $a2");
+        assert_eq!(text(&decode(&le(0x0061_200B), 0, &mut s, false)), "movn $a0, $v1, $at");
+        // lui $at / jal / addiu $a0, $at, 0x9c8 (the delay slot still sees $at) / addiu $a0, $at, 0 (no longer).
+        let mut s = State::default();
+        decode(&le(0x3C01_8001), 0, &mut s, false);
+        decode(&le(0x0C00_40AB), 4, &mut s, false);
+        let slot = decode(&le(0x2424_09C8), 8, &mut s, false);
+        assert_eq!(slot.data, Some((0x8001_09C8, RefKind::Address)));
+        let after = decode(&le(0x2424_0000), 12, &mut s, false);
+        assert_eq!(after.data, None);
         assert_eq!(
             decode(&le(0x1000_FFFF), 0x100, &mut s, false).flow,
             Flow::Jump(Some(0x100))

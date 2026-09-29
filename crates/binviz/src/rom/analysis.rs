@@ -109,7 +109,13 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
     let logged = |a: u64| log.and_then(|l| offset_of(sections, a).map(|o| l.at(o))).unwrap_or(0);
     let mut starts: BTreeMap<u64, State> = BTreeMap::new();
     let mut queue: VecDeque<u64> = VecDeque::new();
-    let entries = rom.vectors.iter().map(|v| v.1).chain(rom.entries.iter().map(|e| e.1));
+    // Nothing starts with four zero bytes (a data symbol taken for a function, zeroed memory).
+    let zeroes = |a: u64| bytes_at(a).is_some_and(|b| b.len() >= 4 && b[..4].iter().all(|&x| x == 0));
+    let entries = rom
+        .vectors
+        .iter()
+        .map(|v| v.1)
+        .chain(rom.entries.iter().map(|e| e.1).filter(|&a| !zeroes(a)));
     for address in entries {
         if bytes_at(address).is_some()
             && starts
@@ -136,7 +142,7 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
         .map(|l| logged_code(l, sections, false))
         .unwrap_or_default()
         .into_iter()
-        .chain(rom.late_entries.iter().map(|&a| (a, 0)))
+        .chain(rom.late_entries.iter().filter(|&&a| !zeroes(a)).map(|&a| (a, 0)))
         .collect::<Vec<_>>()
         .into_iter();
     while let Some(function) = queue.pop_front().or_else(|| {
@@ -156,6 +162,10 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
             }
             state = logged_state(state, f, rom.cpu);
             let Some(bytes) = bytes_at(pc) else { continue };
+            // A run of zeroes is memory nothing was loaded into, not a sled of nops.
+            if bytes.len() >= 64 && bytes[..64].iter().all(|&b| b == 0) {
+                continue;
+            }
             let Some(insn) = cpu::decode(rom.cpu, bytes, rom.map.cpu(pc), &mut state) else {
                 continue;
             };
