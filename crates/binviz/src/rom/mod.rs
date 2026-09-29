@@ -215,6 +215,9 @@ pub(crate) struct RomParts {
     /// found by its prologue has no name (it gets a `sub_…` one); one another
     /// image of the same game names brings its name and size (0: as followed).
     pub entries: Vec<(String, u64, u64)>,
+    /// Places an emulator saw code run: followed after everything reached
+    /// from the entries, so as not to split functions they are in the middle of.
+    pub late_entries: Vec<u64>,
 }
 
 /// What a [`Binary`] keeps of a ROM: how to read its code, and what was found by following it.
@@ -225,6 +228,7 @@ pub(crate) struct Rom {
     pub vectors: Vec<(&'static str, u64)>,
     /// Entry points besides the vectors (see [`RomParts::entries`]).
     pub entries: Vec<(String, u64, u64)>,
+    pub late_entries: Vec<u64>,
     pub state: State,
     layout: fn(&mut Builder<'_>),
     pub analysis: analysis::Analysis,
@@ -409,6 +413,7 @@ impl Binary {
             map: parts.map,
             vectors: parts.vectors,
             entries: parts.entries,
+            late_entries: parts.late_entries,
             state: parts.state,
             layout: parts.layout,
             analysis: Default::default(),

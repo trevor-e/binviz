@@ -255,7 +255,7 @@ impl Binary {
             }
         }
         // A result: `$v0` set after the last call, and not used again by the function itself.
-        sig.returns = v0_write.is_some_and(|w| w > last_call.unwrap_or(0) && v0_read.is_none_or(|r| w > r));
+        sig.returns = v0_write.is_some_and(|w| w > last_call.unwrap_or(0) && v0_read.is_none_or(|r| w >= r));
         sig.register_args = (4..8).rev().find(|&a| arg_read & (1 << a) != 0).map_or(0, |a| a - 3);
         if sig.stack_args > 0 {
             sig.register_args = 4;

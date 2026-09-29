@@ -165,6 +165,7 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         layout,
         data: (order != ".z64 (big-endian)").then_some(rom),
         entries: Vec::new(),
+        late_entries: Vec::new(),
     })
 }
 

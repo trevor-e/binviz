@@ -2,6 +2,8 @@
 //! 2 KiB header (where to load the code, where to start, `$gp`, the stack)
 //! then the code and data, loaded into RAM as they are.
 
+use serde::Serialize;
+
 use super::{Area, Map, Platform, RomParts, header_text, prop};
 use crate::cpu::{Cpu, State};
 use crate::layout::Builder;
@@ -121,6 +123,7 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         layout,
         data: None,
         entries: Vec::new(),
+        late_entries: Vec::new(),
     })
 }
 
@@ -272,6 +275,7 @@ pub(crate) fn memory_parts(data: &[u8], extra: Vec<(String, u64, u64)>) -> Optio
         layout: memory_layout,
         data: None,
         entries,
+        late_entries: Vec::new(),
     })
 }
 
@@ -316,6 +320,7 @@ pub(crate) fn overlay_parts(data: &[u8], load: u64, extra: Vec<(String, u64, u64
         layout: overlay_layout,
         data: None,
         entries,
+        late_entries: Vec::new(),
     })
 }
 
@@ -496,5 +501,131 @@ mod tests {
         let jal = dis.instructions.iter().find(|i| i.mnemonic == "jal").unwrap();
         assert_eq!(jal.target_symbol.as_deref(), Some("sub_80010024"));
         assert!(Binary::parse_psx_overlay(blob, 0x1F00_0000, None).is_err());
+    }
+}
+
+// ---- Emulator traces ------------------------------------------------------
+
+/// What a trace of the code an emulator ran gave.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraceSummary {
+    /// Lines with an address on them.
+    pub lines: u64,
+    /// Distinct addresses seen run.
+    pub addresses: u64,
+    /// Addresses in this image.
+    pub placed: u64,
+    /// Runs of code the trace saw that following the code hadn't reached.
+    pub new_runs: u64,
+}
+
+/// The addresses a trace saw run: the first word of 8 hex digits on each
+/// line (PCSX-Redux's and DuckStation's CPU traces, a Lua script's list of
+/// PCs, `80010000: 27bdffe8 addiu sp, sp, -0x18`…), each folded onto the
+/// address we give that memory; sorted and unique.
+pub fn parse_trace(text: &str) -> (u64, Vec<u64>) {
+    let mut lines = 0;
+    let mut out = Vec::new();
+    for line in text.lines() {
+        let hex = line
+            .split(|c: char| !c.is_ascii_hexdigit() && c != 'x')
+            .map(|t| t.trim_start_matches("0x").trim_start_matches("0X"))
+            .find(|t| t.len() == 8 && t.chars().all(|c| c.is_ascii_hexdigit()));
+        if let Some(h) = hex
+            && let Ok(a) = u64::from_str_radix(h, 16)
+            && let Some(a) = resolve(a)
+        {
+            lines += 1;
+            out.push(a & !3);
+        }
+    }
+    out.sort_unstable();
+    out.dedup();
+    (lines, out)
+}
+
+impl crate::binary::Binary {
+    /// This PlayStation image read again with a trace of the code an
+    /// emulator saw run: code reached only through pointers and tables is
+    /// followed too (each run of traced code the following hadn't reached
+    /// becomes a function, after everything reachable has been followed).
+    pub fn with_psx_trace(&self, text: &str) -> crate::error::Result<(crate::binary::Binary, TraceSummary)> {
+        let rom = self
+            .rom
+            .as_ref()
+            .filter(|r| r.platform == Platform::PlayStation)
+            .ok_or_else(|| crate::error::Error::new("traces are for PlayStation images"))?;
+        let (lines, addresses) = parse_trace(text);
+        let in_image = |a: u64| {
+            self.sections
+                .iter()
+                .any(|s| s.loaded && s.file_offset.is_some() && a >= s.address && a < s.address + s.size)
+        };
+        let known = |a: u64| self.symbols.static_function_containing(a).is_some();
+        let placed: Vec<u64> = addresses.iter().copied().filter(|&a| in_image(a)).collect();
+        // The start of each run of traced addresses that isn't already in a function.
+        let mut runs = Vec::new();
+        let mut prev = None;
+        for &a in &placed {
+            if prev != Some(a - 4) && !known(a) {
+                runs.push(a);
+            }
+            prev = Some(a);
+        }
+        let data = self.data.clone();
+        let entries = rom.entries.clone();
+        let mut parts = match self.summary.format_name.as_str() {
+            "PlayStation memory image" => memory_parts(&data, entries),
+            "PlayStation overlay" => {
+                let load = self
+                    .sections
+                    .iter()
+                    .find(|s| s.name == "Overlay")
+                    .map(|s| s.address)
+                    .unwrap_or(0);
+                overlay_parts(&data, load, entries)
+            }
+            _ => detect(&data),
+        }
+        .ok_or_else(|| crate::error::Error::new("the image no longer reads"))?;
+        parts.late_entries = runs.clone();
+        let bin = crate::binary::Binary::from_rom(data, parts)?;
+        Ok((
+            bin,
+            TraceSummary {
+                lines,
+                addresses: addresses.len() as u64,
+                placed: placed.len() as u64,
+                new_runs: runs.len() as u64,
+            },
+        ))
+    }
+}
+
+#[cfg(test)]
+mod trace_tests {
+    use super::*;
+    use crate::binary::Binary;
+
+    #[test]
+    fn trace_finds_code_reached_through_pointers() {
+        // entry: jr $ra / nop; then, unreachable by following, a function at +0x10.
+        let mut data = vec![0u8; 0x800];
+        data[..8].copy_from_slice(b"PS-X EXE");
+        for (at, v) in [(0x10, 0x8001_0000u32), (0x14, 0x8001_8000), (0x18, 0x8001_0000), (0x1C, 0x20)] {
+            data[at..at + 4].copy_from_slice(&v.to_le_bytes());
+        }
+        let words = [0x03E0_0008u32, 0, 0, 0, 0x2402_0001, 0x03E0_0008, 0, 0];
+        data.extend(words.iter().flat_map(|w| w.to_le_bytes()));
+        let bin = Binary::parse(data).unwrap();
+        assert!(bin.symbols().function_containing(0x8001_0010).is_none());
+        let (traced, s) = bin
+            .with_psx_trace("80010000: 03e00008 jr ra\n80010004: 00000000 nop\n0x80010010\n80010014 jr $ra\nnot a line\n")
+            .unwrap();
+        assert_eq!((s.lines, s.addresses, s.placed, s.new_runs), (4, 4, 4, 1));
+        let f = traced.symbols().function_containing(0x8001_0010).unwrap();
+        assert_eq!((f.address, f.size), (0x8001_0010, 12));
+        assert_eq!(parse_trace("00010010\n").1, [0x8001_0010]);
     }
 }

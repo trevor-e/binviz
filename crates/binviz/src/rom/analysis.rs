@@ -135,6 +135,9 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
     let mut later = log
         .map(|l| logged_code(l, sections, false))
         .unwrap_or_default()
+        .into_iter()
+        .chain(rom.late_entries.iter().map(|&a| (a, 0)))
+        .collect::<Vec<_>>()
         .into_iter();
     while let Some(function) = queue.pop_front().or_else(|| {
         let (a, f) = later.find(|(a, _)| !owner.contains_key(a) && !starts.contains_key(a))?;

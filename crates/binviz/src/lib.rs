@@ -29,6 +29,7 @@ mod container;
 pub mod coverage;
 pub mod cpu;
 pub mod crash;
+pub mod decomp;
 pub mod diff;
 mod disasm;
 pub mod disc;
