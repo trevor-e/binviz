@@ -7,7 +7,10 @@ import { VList } from '../vlist';
 import { View } from './base';
 import { objcSelectorOf } from './objc';
 
-type Row = { kind: 'src'; loc: SourceLoc } | { kind: 'ins'; ins: Instruction; index: number };
+type Row =
+  | { kind: 'src'; loc: SourceLoc }
+  | { kind: 'mark'; text: string }
+  | { kind: 'ins'; ins: Instruction; index: number };
 type Func = [bigint, bigint, string];
 
 /** Functions are fetched from the worker a page at a time. */
@@ -169,7 +172,11 @@ export class CodeView extends View {
     this.current = d;
     this.rows = [];
     let last: SourceLoc | undefined;
+    // Where a piece of the function, a switch's case or a jump table starts.
+    const marks = new Map<bigint, string[]>();
+    for (const m of d.marks ?? []) marks.set(m.address, [...(marks.get(m.address) ?? []), m.text]);
     d.instructions.forEach((ins, index) => {
+      for (const text of marks.get(ins.address) ?? []) this.rows.push({ kind: 'mark', text });
       const s = ins.source;
       if (s && (!last || last.file !== s.file || last.line !== s.line)) this.rows.push({ kind: 'src', loc: s });
       if (s) last = s;
@@ -266,6 +273,7 @@ export class CodeView extends View {
   private asmRow(i: number): HTMLElement {
     const r = this.rows[i];
     if (!r) return h('div', { class: 'asm-row' });
+    if (r.kind === 'mark') return h('div', { class: 'src-row inline-note mark-row' }, h('span', { class: 'txt' }, `; ${r.text}`));
     if (r.kind === 'src') {
       const lines = this.sourceLines(r.loc.file);
       const text = r.loc.line === 0 ? '(no line: compiler-generated code)' : (lines?.[r.loc.line - 1] ?? '');

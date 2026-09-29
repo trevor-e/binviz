@@ -773,7 +773,7 @@ impl Match<'_> {
     /// A relocation of the rebuild's (at `at` in its instruction `j`):
     /// whether the original points where its symbol is in the binary.
     fn check_reloc(&self, i: usize, j: usize, at: usize, r: &Reloc) -> Option<String> {
-        if r.form == RelocForm::Other {
+        if r.form == RelocForm::Other && !r.image_offset {
             return None;
         }
         let (a, b) = (&self.a[i], &self.b[j]);
@@ -781,6 +781,8 @@ impl Match<'_> {
         let field = read_field(self.code, a.at + at, width);
         let original = match r.form {
             RelocForm::Relative => (self.start + a.end() as u64).wrapping_add(field),
+            // An offset from the image base (MSVC x64): where it leads.
+            _ if r.image_offset => self.bin.image_base.wrapping_add(field & 0xFFFF_FFFF),
             _ => field,
         };
         let offset = reference_offset(&self.func.code, r, b.at + at, b.end());
@@ -801,12 +803,17 @@ impl Match<'_> {
         };
         let same = match r.form {
             RelocForm::Relative => original == expected,
+            _ if r.image_offset => original == expected,
             _ => (original ^ expected) & mask == 0,
         };
         if same {
             return None;
         }
-        let original = original & if r.form == RelocForm::Relative { u64::MAX } else { mask };
+        let original = if r.form == RelocForm::Relative || r.image_offset {
+            original
+        } else {
+            original & mask
+        };
         Some(if a.row != 0 {
             format!(
                 "jump table differs: an entry leads to {} in the original, to what is lined up with {} in the rebuild",

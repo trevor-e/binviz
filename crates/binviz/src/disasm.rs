@@ -25,6 +25,17 @@ pub struct Disassembly {
     /// The function's pieces away from its entry, whose instructions follow
     /// the entry's: (start, end).
     pub parts: Vec<(u64, u64)>,
+    /// Lines to show before instructions, in address order: where a piece of
+    /// the function starts, a switch's cases, a jump table in the code.
+    pub marks: Vec<Mark>,
+}
+
+/// A line shown before the instruction at `address`: `its piece away from
+/// the entry`, `cases 1, 4:`, `default:`, `jump table of the switch at …`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Mark {
+    pub address: u64,
+    pub text: String,
 }
 
 impl Disassembly {
@@ -146,6 +157,13 @@ impl Binary {
 
     /// Disassembles `start..end` (at most `limit` instructions).
     pub fn disassemble(&self, start: u64, end: u64, limit: usize) -> Disassembly {
+        let mut d = self.disassemble_range(start, end, limit);
+        d.marks = self.switch_marks(&d.instructions);
+        d
+    }
+
+    /// Disassembles `start..end` (at most `limit` instructions), without marks.
+    fn disassemble_range(&self, start: u64, end: u64, limit: usize) -> Disassembly {
         let isa = self.isa();
         let mut out = Disassembly {
             start,
@@ -155,6 +173,7 @@ impl Binary {
             truncated: false,
             supported: isa != Isa::None,
             parts: Vec::new(),
+            marks: Vec::new(),
         };
         let Some(offset) = self.address_to_offset(start) else {
             return out;
@@ -303,7 +322,13 @@ impl Binary {
                         operands,
                         flow,
                         target_symbol: {
-                            let named = match (target.and_then(|t| if data { self.name_for(t) } else { self.symbol_name(t) }), value) {
+                            // MSVC's x64 code takes the image base to read its jump tables with.
+                            let base = |t: u64| {
+                                (t == self.image_base && self.summary.format == crate::model::Format::Pe && bits == 64)
+                                    .then(|| "__ImageBase".to_string())
+                            };
+                            let name = |t: u64| if data { self.name_for(t).or_else(|| base(t)) } else { self.symbol_name(t) };
+                            let named = match (target.and_then(name), value) {
                                 (Some(name), Some(value)) => Some(format!("{name} = {value}")),
                                 (name, value) => name.or(value),
                             };
@@ -612,19 +637,28 @@ impl Binary {
             {
                 end = end.min(hi);
             }
-            let mut d = self.disassemble(sym.address, end, limit);
+            let mut d = self.disassemble_range(sym.address, end, limit);
             d.drop_padding();
             // Then its pieces away from its entry.
             for (ps, pe) in self.symbols.parts_of(sym.address) {
                 if d.truncated {
                     break;
                 }
-                let mut p = self.disassemble(ps, pe, limit.saturating_sub(d.instructions.len()));
+                let mut p = self.disassemble_range(ps, pe, limit.saturating_sub(d.instructions.len()));
                 p.drop_padding();
                 d.truncated |= p.truncated;
                 d.instructions.extend(p.instructions);
                 d.parts.push((ps, pe));
+                d.marks.push(Mark {
+                    address: ps,
+                    text: format!("its piece away from the entry, {ps:#x}..{pe:#x}:"),
+                });
             }
+            d.marks.extend(self.switch_marks(&d.instructions));
+            // In the order the instructions come, a piece's marks after the entry's.
+            let order: std::collections::HashMap<u64, usize> =
+                d.instructions.iter().enumerate().map(|(i, x)| (x.address, i)).collect();
+            d.marks.sort_by_key(|m| order.get(&m.address).copied().unwrap_or(usize::MAX));
             return d;
         }
         let start = self.instruction_boundary_before(address);
@@ -684,19 +718,23 @@ impl Binary {
     /// address, or up to 8 of the bytes an index table picks entries with.
     fn table_row(&self, address: u64, bytes: &[u8]) -> Option<TableRow> {
         let t = self.code_table_at(address)?;
-        let into = (address - t.address) as usize % t.entry as usize;
-        if t.entry == 4 && into == 0 && bytes.len() >= 4 {
-            let v = u32::from_le_bytes(bytes[..4].try_into().expect("4 bytes")) as u64;
+        let size = t.entry as usize;
+        let into = (address - t.address) as usize % size;
+        if !t.is_index() && into == 0 && bytes.len() >= size {
+            let v = match size {
+                8 => u64::from_le_bytes(bytes[..8].try_into().expect("8 bytes")),
+                _ => u32::from_le_bytes(bytes[..4].try_into().expect("4 bytes")) as u64,
+            };
             return Some(TableRow {
-                len: 4,
-                mnemonic: "dd",
+                len: size,
+                mnemonic: if size == 8 { "dq" } else { "dd" },
                 operands: format!("{v:#x}"),
-                target: Some(v),
+                target: Some(t.target(v)),
             });
         }
         // Index bytes (or what is left of an entry a disassembly starts in).
         let n = ((t.end() - address) as usize)
-            .min(if t.entry == 4 { 4 - into } else { 8 })
+            .min(if t.is_index() { 8 } else { size - into })
             .min(bytes.len());
         (n > 0).then(|| TableRow {
             len: n,

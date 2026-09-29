@@ -528,8 +528,8 @@ fn run(
             }
             let mut last_line = None;
             for i in &d.instructions {
-                if let Some((s, e)) = d.parts.iter().find(|p| p.0 == i.address) {
-                    println!("  ; its piece away from the entry, {s:#x}..{e:#x}:");
+                for m in d.marks.iter().filter(|m| m.address == i.address) {
+                    println!("  ; {}", m.text);
                 }
                 if let Some(s) = &i.source
                     && last_line != Some((s.file, s.line))

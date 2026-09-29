@@ -50,6 +50,10 @@ const ALL: &[&str] = &[
     "x86match.obj",
     "x86match-x64",
     "x86match-x64.o",
+    "switch64.dll",
+    "switch64-msvc.obj",
+    "switch64-elf",
+    "switch64-static",
     "imports-elf-x64",
     "imports-elf-a64",
     "imports-macho-a64",
@@ -951,6 +955,91 @@ fn a_function_in_more_than_one_piece_reads_as_one() {
     assert!(c.describe().contains("folded into one by the linker"));
 }
 
+/// The marks before the instruction at `address` in the disassembly of the function holding it.
+fn marks_at(bin: &Binary, address: u64) -> Vec<String> {
+    let f = bin.symbols().function_containing(address).unwrap().address;
+    let d = bin.disassemble_function(f, 1000);
+    d.marks.iter().filter(|m| m.address == address).map(|m| m.text.clone()).collect()
+}
+
+#[test]
+fn a_switch_says_which_cases_lead_where() {
+    // clang's 32-bit table in .rdata, then MSVC's in the code with the bytes picking an entry.
+    let mut bin = open("x86demo.exe");
+    bin.attach_debug_file("x86demo.pdb", fixture("x86demo.pdb")).unwrap();
+    assert_eq!(
+        marks_at(&bin, 0x40119d),
+        ["switch: cases 0–7 through the table at 0x402000; the rest go to 0x4011fd"]
+    );
+    assert_eq!(marks_at(&bin, 0x4011a4), ["case 0:"]);
+    assert_eq!(marks_at(&bin, 0x4011df), ["case 1:"]);
+    assert_eq!(marks_at(&bin, 0x4011fd), ["default:"]);
+    let msvc = bin.symbols().by_name("_msvc_switch").unwrap().address;
+    let d = bin.disassemble_function(msvc, 100);
+    let texts: Vec<&str> = d.marks.iter().map(|m| m.text.as_str()).collect();
+    for t in ["cases 1, 7:", "cases 2, 3, 9:", "cases 4, 8:", "default:"] {
+        assert!(texts.contains(&t), "{t}: {texts:?}");
+    }
+    assert!(texts[0].starts_with("switch: cases 1–9 through the bytes at "), "{texts:?}");
+    assert!(texts.iter().any(|t| t.starts_with("jump table of the switch at ")), "{texts:?}");
+    // The context shows them too.
+    let c = bin.decomp_context(msvc, 100).unwrap();
+    assert!(c.describe().contains("  ; cases 2, 3, 9:\n"), "{}", c.describe());
+    // A callee's float result discarded isn't an argument on the x87 stack.
+    let start = bin.symbols().by_name("start").unwrap().address;
+    assert_eq!(bin.function_signature(start).unwrap().prototype, "void __cdecl start(void)");
+
+    // x86-64: clang's tables of offsets from the table, MSVC's from the image base, kept in .text.
+    let bin = open("switch64.dll");
+    let at = |bin: &Binary, name: &str| bin.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let d = bin.disassemble_function(at(&bin, "opcode"), 100);
+    let texts: Vec<&str> = d.marks.iter().map(|m| m.text.as_str()).collect();
+    assert!(texts[0].starts_with("switch: cases 10–17 through the table at "), "{texts:?}");
+    for t in ["case 10:", "case 11:", "case 12:", "case 14:", "case 15:", "case 17:", "default:"] {
+        assert!(texts.contains(&t), "{t}: {texts:?}");
+    }
+    assert!(!texts.iter().any(|t| t.contains("13") || t.contains("16")), "{texts:?}");
+    let msvc = at(&bin, "msvc_switch64");
+    let d = bin.disassemble_function(msvc, 100);
+    let texts: Vec<&str> = d.marks.iter().map(|m| m.text.as_str()).collect();
+    for t in ["cases 1, 7:", "cases 2, 3, 9:", "cases 4, 8:", "default:"] {
+        assert!(texts.contains(&t), "{t}: {texts:?}");
+    }
+    let rows: Vec<Option<u64>> = d.instructions.iter().filter(|i| i.mnemonic == "dd").map(|i| i.target).collect();
+    assert_eq!(rows, [Some(msvc + 0x27), Some(msvc + 0x2d), Some(msvc + 0x31), Some(msvc + 0x38)]);
+    let lea = d.instructions.iter().find(|i| i.mnemonic == "lea" && i.operands.starts_with("rdx")).unwrap();
+    assert_eq!(lea.target_symbol.as_deref(), Some("__ImageBase"));
+    // Each entry is a reference to its case, and the table's refer to the function's own code.
+    let refs = bin.references_to(msvc + 0x27, msvc + 0x28, 0, 10).refs;
+    assert!(refs.iter().any(|r| r.source == msvc + 0x3c), "{refs:?}");
+    let f = bin.function_summary(msvc, 100).unwrap();
+    assert_eq!(f.referenced_by.pointer, 0, "{:?}", f.referenced_by);
+    for name in ["dispatch", "opcode", "msvc_switch64"] {
+        assert!(!bin.function_signature(at(&bin, name)).unwrap().unbalanced, "{name}");
+    }
+
+    // An ELF lists its functions, so nothing follows its code: the switches are read from their jumps.
+    use binviz::globals::GlobalKind;
+    for (file, form) in [("switch64-elf", "(offsets from the table)"), ("switch64-static", "8 cases, for")] {
+        let bin = open(file);
+        bin.prepare_xrefs();
+        let d = bin.disassemble_function(at(&bin, "dispatch"), 100);
+        let texts: Vec<&str> = d.marks.iter().map(|m| m.text.as_str()).collect();
+        assert!(texts[0].starts_with("switch: cases 0–7 through the table at "), "{file}: {texts:?}");
+        assert_eq!(texts.iter().filter(|t| t.starts_with("case ")).count(), 8, "{file}: {texts:?}");
+        let tables: Vec<_> = bin
+            .globals("", 0, 100)
+            .globals
+            .into_iter()
+            .filter(|g| g.kind == GlobalKind::JumpTable)
+            .collect();
+        assert_eq!(tables.len(), 2, "{file}: {tables:?}");
+        assert!(tables.iter().all(|g| g.name.starts_with("jpt_") && g.description.contains(form)), "{tables:?}");
+        let f = bin.function_summary(at(&bin, "opcode"), 100).unwrap();
+        assert_eq!(f.referenced_by.pointer, 0, "{file}: {:?}", f.referenced_by);
+    }
+}
+
 /// x86demo.exe with a Rich header like Visual C++ 6.0's linker writes, of
 /// `entries` (product, build, count): lld-link writes none, so the NT
 /// headers move up to make room for one, with its checksum as its key.
@@ -1250,6 +1339,26 @@ fn x86_64_elf_objects_are_matched_too() {
         note.starts_with("global differs: g_frames in the rebuild; the original refers to")
             && note.ends_with("(g_player+0x4)"),
         "{note}"
+    );
+}
+
+#[test]
+fn msvc_x64_jump_tables_match_by_where_their_entries_lead() {
+    // Entries (and the code reading them) hold offsets from the image base.
+    let bin = open("switch64.dll");
+    let unit = bin.match_unit("switch64-msvc.obj", &fixture("switch64-msvc.obj")).unwrap();
+    assert_eq!(unit.functions.len(), 1);
+    assert_eq!(unit.functions[0].percent, 100.0);
+    let edited = bin
+        .match_unit("switch64-msvc-edited.obj", &fixture("switch64-msvc-edited.obj"))
+        .unwrap();
+    assert_eq!(differences(&edited, "msvc_switch64"), ["jump table differs"]);
+    let m = &edited.functions[0];
+    let notes: Vec<&str> = m.lines.iter().filter_map(|l| l.note.as_deref()).collect();
+    assert_eq!(
+        notes[0],
+        "jump table differs: an entry leads to msvc_switch64+0x2d in the original, \
+         to what is lined up with msvc_switch64+0x31 in the rebuild"
     );
 }
 

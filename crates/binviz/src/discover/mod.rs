@@ -27,6 +27,8 @@ pub(crate) struct Discovery {
     pub functions: Vec<(u64, u64)>,
     /// Jump tables (and the index tables that pick their entries), sorted.
     pub tables: Vec<x86::Table>,
+    /// The switches reading them, sorted by their jumps.
+    pub switches: Vec<x86::Switch>,
     /// Pieces of functions away from their entry: (start, end, the function's start), sorted.
     pub parts: Vec<(u64, u64, u64)>,
     /// How the functions were found, when that took following the code.
@@ -77,6 +79,7 @@ pub(crate) fn discover(
         return Discovery {
             functions,
             tables: found.tables,
+            switches: found.switches,
             parts: found.parts.into_iter().filter(|p| !within_ranges(&covered, p.0)).collect(),
             note: Some(note),
         };
@@ -103,6 +106,7 @@ pub(crate) fn discover(
         return Discovery {
             functions: found.functions,
             tables: found.tables,
+            switches: found.switches,
             parts: found.parts,
             note: Some(note),
         };
@@ -129,6 +133,7 @@ pub(crate) fn discover(
     Discovery {
         functions: out,
         tables: Vec::new(),
+        switches: Vec::new(),
         parts: Vec::new(),
         note: None,
     }
@@ -164,6 +169,7 @@ fn pe_image<'a>(b: &Bytes<'a>, sections: &[Section], image_base: u64, known: &Kn
             .iter()
             .filter_map(|i| Some((i.address?, never_returns(&i.name))))
             .collect(),
+        base: Some(image_base),
     }
 }
 

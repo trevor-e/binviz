@@ -556,15 +556,23 @@ impl Binary {
             }
         );
         // A jump table the code follower found.
-        if let Some(t) = self.code_tables.iter().find(|t| t.address == a) {
+        if let Some(t) = self.jump_table_at(a) {
             g.kind = GlobalKind::JumpTable;
             g.size = t.end() - t.address;
             g.count = t.count;
             g.name = format!("jpt_{a:x}");
-            g.description = if t.entry == 4 {
-                format!("jump table of {} cases, for the switch at {:#x}", t.count, t.jump)
-            } else {
-                format!("the {} bytes picking a case of the switch at {:#x}", t.count, t.jump)
+            use crate::discover::x86::Entries;
+            g.description = match t.entries {
+                _ if t.is_index() => format!("the {} bytes picking a case of the switch at {:#x}", t.count, t.jump),
+                Entries::Relative { base, .. } if base == self.image_base => format!(
+                    "jump table of {} cases (offsets from the image base), for the switch at {:#x}",
+                    t.count, t.jump
+                ),
+                Entries::Relative { .. } => format!(
+                    "jump table of {} cases (offsets from the table), for the switch at {:#x}",
+                    t.count, t.jump
+                ),
+                Entries::Absolute => format!("jump table of {} cases, for the switch at {:#x}", t.count, t.jump),
             };
             return g;
         }

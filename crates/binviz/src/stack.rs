@@ -467,6 +467,8 @@ impl Binary {
                         }
                         st.eax = None;
                         st.result = false;
+                        // A callee may leave its result on the x87 stack.
+                        st.fpu_loaded = true;
                         pc = next;
                         continue;
                     }
@@ -795,7 +797,7 @@ impl Binary {
     }
 
     /// The instruction at `pc`, decoded.
-    fn decode_x86(&self, bits: u32, pc: u64) -> Option<Instruction> {
+    pub(crate) fn decode_x86(&self, bits: u32, pc: u64) -> Option<Instruction> {
         let offset = self.address_to_offset(pc)? as usize;
         let bytes = self.data.get(offset..(offset + 15).min(self.data.len()))?;
         let mut decoder = Decoder::with_ip(bits, bytes, pc, DecoderOptions::NONE);
@@ -805,15 +807,7 @@ impl Binary {
 
     /// The cases of the jump table the indirect jump at `pc` reads.
     fn switch_targets(&self, pc: u64) -> Vec<u64> {
-        let Some(t) = self.code_tables.iter().find(|t| t.jump == pc && t.entry == 4) else {
-            return Vec::new();
-        };
-        (0..t.count as u64)
-            .filter_map(|i| {
-                let o = self.address_to_offset(t.address + 4 * i)? as usize;
-                Some(u32::from_le_bytes(self.data.get(o..o + 4)?.try_into().ok()?) as u64)
-            })
-            .collect()
+        self.switch_at(pc).map(|s| s.targets).unwrap_or_default()
     }
 
     /// Where an instruction that writes the stack pointer outright leaves it:

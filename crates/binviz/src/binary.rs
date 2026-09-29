@@ -35,6 +35,8 @@ pub struct Binary {
     pub(crate) discovered: Vec<(u64, u64)>,
     /// Jump tables found following the code, sorted by address: data, even inside code.
     pub(crate) code_tables: Vec<crate::discover::x86::Table>,
+    /// The switches reading them: each indirect jump through a table, sorted by the jump.
+    pub(crate) code_switches: Vec<crate::discover::x86::Switch>,
     /// Pieces of functions away from their entries, found following the code:
     /// (start, end, the function's start), sorted.
     pub(crate) code_parts: Vec<(u64, u64, u64)>,
@@ -533,6 +535,7 @@ impl Binary {
             debug: None,
             discovered: discovery.functions,
             code_tables: discovery.tables,
+            code_switches: discovery.switches,
             code_parts: discovery.parts,
             debug_symbols: Default::default(),
             annotations: Vec::new(),
@@ -614,6 +617,7 @@ impl Binary {
             debug: None,
             discovered: Vec::new(),
             code_tables: Vec::new(),
+            code_switches: Vec::new(),
             code_parts: Vec::new(),
             debug_symbols: Default::default(),
             annotations: Vec::new(),

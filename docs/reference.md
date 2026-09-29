@@ -161,7 +161,14 @@ Xbox executables (**XBE**).
   leaf functions, which need no unwind data: its code is followed from those
   to find them. MSVC's `__finally` blocks stay in their functions, jump tables
   show as data in the disassembly, and each case's address says which table
-  entry leads there. Code the optimizer moved away from its function's entry
+  entry leads there. `disasm` and `context` mark each switch: at its jump,
+  the cases and where the rest go; at each case's code, the values that lead
+  there (`cases 1, 4:`, `default:`), counted from what the code took off the
+  value before checking it; at a table kept in the code, what it is. 64-bit
+  code's tables are read too — MSVC's offsets from the image base
+  (`__ImageBase`), clang's and GCC's offsets from the table, addresses — and
+  in an ELF or Mach-O binary, whose code nothing follows, each switch is read
+  from the code before its jump. Code the optimizer moved away from its function's entry
   (a piece reached only by a jump from it, with no frame of its own) stays
   that function's: the disassembly and the context show it after the entry's
   code, and the stack is followed through it. A function whose last
@@ -484,8 +491,9 @@ sides, and its symbol, when the binary knows the name, is checked against
 where the original points (`call target differs: calls _diff in the rebuild;
 the original calls clamp`, `global differs: …`). A jump inside the function
 is compared by where it lands, so code of another length before it counts
-once; MSVC's jump tables in the code after a function are compared entry by
-entry, by the case each leads to. The kinds of difference, counted per
+once; MSVC's jump tables in the code after a function (x64's holding
+offsets from the image base) are compared entry by entry, by the case each
+leads to. The kinds of difference, counted per
 function: `registers differ`, `stack slot offset differs` (`[esp+0x4]` for
 `[esp+0x8]`), `stack frame size differs` (`sub esp, N`), `arguments popped
 differ` (`add esp, N` after a call, `ret N`), `immediate differs`, `offset
@@ -667,10 +675,10 @@ cargo test
 - Disassembly covers x86, x86-64, AArch64 and ARM (A32); cross-references and
   the call graph x86, x86-64 and AArch64.
 - Matching x86 objects: relocations other than absolute and relative ones
-  (through the GOT, image- or section-relative) are masked but not checked,
+  (through the GOT, section-relative) are masked but not checked (offsets
+  from the image base, MSVC x64's, are checked),
   and an instruction a linker rewrote (a `mov` from the GOT relaxed into a
-  `lea`) reads as a difference. MSVC x86-64's jump tables in the code (entries
-  relative to the image base) are read as tables in the rebuild only.
+  `lea`) reads as a difference.
 - Calls through registers are followed only when the register was just loaded
   from a pointer slot (`ldr x16, [got]; blr x16`, `call r14`); virtual calls are
   not resolved to their targets yet. Objective-C messages are followed by

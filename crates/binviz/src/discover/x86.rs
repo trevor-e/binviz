@@ -42,6 +42,8 @@ pub(crate) struct Image<'a> {
     pub relocations: Option<Vec<u64>>,
     /// Import address table slots, and whether what each one imports never returns.
     pub slots: HashMap<u64, bool>,
+    /// Where the image is loaded: MSVC's x64 jump tables hold offsets from it.
+    pub base: Option<u64>,
 }
 
 /// A table code reads its jump target from.
@@ -50,15 +52,59 @@ pub(crate) struct Table {
     /// The indirect jump that reads it.
     pub jump: u64,
     pub address: u64,
-    /// Bytes per entry: 4 for addresses, 1 for the indexes MSVC picks an address with.
+    /// Bytes per entry: 4 for addresses or offsets (8 for addresses in
+    /// 64-bit code), 1 for the indexes MSVC picks an entry with.
     pub entry: u8,
     pub count: u32,
+    pub entries: Entries,
+}
+
+/// How a jump table's entries give the address they lead to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Entries {
+    /// Addresses (or, in an index table, the entry each value picks).
+    Absolute,
+    /// 4-byte offsets from `base`: the image base (MSVC x64), or the table
+    /// itself (clang, GCC), sign-extended when `signed`.
+    Relative { base: u64, signed: bool },
 }
 
 impl Table {
     pub fn end(&self) -> u64 {
         self.address + self.entry as u64 * self.count as u64
     }
+
+    /// Where an entry holding `raw` leads.
+    pub fn target(&self, raw: u64) -> u64 {
+        match self.entries {
+            Entries::Absolute => raw,
+            Entries::Relative { base, signed: true } => base.wrapping_add(raw as u32 as i32 as i64 as u64),
+            Entries::Relative { base, signed: false } => base.wrapping_add(raw as u32 as u64),
+        }
+    }
+
+    /// Whether it holds the bytes picking an entry of a jump table, not the entries.
+    pub fn is_index(&self) -> bool {
+        self.entry == 1
+    }
+}
+
+/// A `switch`: an indirect jump through a table.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Switch {
+    pub table: Table,
+    /// The table of bytes picking the entry for each value (MSVC's sparse switches).
+    pub index: Option<Table>,
+    /// Where each entry of the table leads.
+    pub targets: Vec<u64>,
+    /// Where each value leads, from `first` on: as far as the code's bound
+    /// lets values through, else one per entry.
+    pub cases: Vec<u64>,
+    /// The value of the first case: what the code took off the value before
+    /// checking it (`dec eax`, `sub eax, 3`).
+    pub first: i64,
+    /// Where the values past the bound go.
+    pub default: Option<u64>,
 }
 
 /// What following the code found.
@@ -68,6 +114,8 @@ pub(crate) struct Found {
     pub functions: Vec<(u64, u64)>,
     /// Jump tables and their index tables, sorted by address.
     pub tables: Vec<Table>,
+    /// The switches the tables are read by, sorted by their jumps.
+    pub switches: Vec<Switch>,
     /// Pieces of functions away from their entry: (start, end, the function's start), sorted.
     pub parts: Vec<(u64, u64, u64)>,
 }
@@ -96,13 +144,6 @@ enum Flow {
 struct Bodies {
     extents: Vec<(u64, u64)>,
     exits: Vec<(u64, u64)>,
-}
-
-/// A jump table and what it holds.
-struct Switch {
-    table: Table,
-    index: Option<Table>,
-    targets: Vec<u64>,
 }
 
 /// The per-byte state of code: the length of the instruction decoded there
@@ -136,6 +177,7 @@ struct Code<'a> {
 
 struct Follower<'a> {
     bits: u32,
+    base: Option<u64>,
     regions: &'a [Region<'a>],
     code: Vec<Code<'a>>,
     flows: HashMap<u64, Flow>,
@@ -186,6 +228,9 @@ pub(crate) fn follow(image: &Image) -> Found {
     tables.dedup_by_key(|t| t.address);
     let known: HashSet<u64> = image.starts.iter().copied().collect();
     let parts = f.parts(&extents, &known);
+    let mut switches = std::mem::take(&mut f.switches);
+    switches.sort_by_key(|s| s.table.jump);
+    switches.dedup_by_key(|s| s.table.jump);
     Found {
         functions: extents
             .into_iter()
@@ -193,6 +238,7 @@ pub(crate) fn follow(image: &Image) -> Found {
             .map(|(s, e)| (s, e - s))
             .collect(),
         tables,
+        switches,
         parts,
     }
 }
@@ -212,6 +258,7 @@ impl<'a> Follower<'a> {
             .collect();
         Follower {
             bits: image.bits,
+            base: image.base,
             regions: &image.regions,
             code,
             flows: HashMap::new(),
@@ -1103,156 +1150,351 @@ impl<'a> Follower<'a> {
         (!ins.is_invalid()).then_some(ins)
     }
 
-    /// The jump table an indirect jump reads: `jmp [index*4 + table]`, or
-    /// `jmp reg` just after loading `reg` from one, with the number of
-    /// entries from the bound checked before (`cmp index, n` / `ja`) and,
-    /// the way MSVC writes a sparse switch, a table of bytes picking the entry.
+    /// The switch an indirect jump makes (see [`read_switch`]), its tables' bytes marked as data.
     fn switch(&mut self, ins: &Instruction) -> Option<u32> {
-        if self.bits != 32 {
-            return None;
-        }
-        let jump = ins.ip();
-        let (table, index) = match ins.op0_kind() {
-            OpKind::Memory => (absolute_table(ins)?, ins.memory_index()),
-            OpKind::Register => {
-                let reg = ins.op0_register().full_register32();
-                let load = self.previous(jump)?;
-                if load.mnemonic() != Mnemonic::Mov
-                    || load.op0_kind() != OpKind::Register
-                    || load.op0_register().full_register32() != reg
-                    || load.op1_kind() != OpKind::Memory
-                {
-                    return None;
-                }
-                (absolute_table(&load)?, load.memory_index())
-            }
-            _ => return None,
-        };
-        let (bound, index_table) = self.bound(jump, index.full_register32());
-        let mut index = None;
-        let count = match (index_table, bound) {
-            (Some(at), Some(n)) => {
-                let bytes = self.read(at, n as usize)?;
-                index = Some(Table {
-                    jump,
-                    address: at,
-                    entry: 1,
-                    count: n,
-                });
-                Some(*bytes.iter().max()? as usize + 1)
-            }
-            (_, n) => n.map(|n| n as usize),
-        };
-        let mut targets = Vec::new();
-        for i in 0..count.unwrap_or(MAX_TABLE).min(MAX_TABLE) {
-            let at = table + 4 * i as u64;
-            // Without a bound, the table ends where its entries stop being addresses of code.
-            if count.is_none()
-                && i > 0
-                && (self.relocations.is_some_and(|_| !self.relocated(at))
-                    || self.len_at(at).is_some()
-                    || index.is_some_and(|x| x.address == at))
-            {
-                break;
-            }
-            match self.read_u32(at).filter(|&t| self.is_code(t)) {
-                Some(t) => targets.push(t),
-                None => break,
-            }
-        }
-        if targets.is_empty() {
-            return None;
-        }
-        let table_end = table + 4 * targets.len() as u64;
-        for t in [Some((table, table_end)), index.map(|x| (x.address, x.end()))]
-            .into_iter()
-            .flatten()
-        {
-            for a in t.0..t.1 {
+        let bits = self.bits;
+        let s = read_switch(self, bits, ins)?;
+        for t in std::iter::once(s.table).chain(s.index) {
+            for a in t.address..t.end() {
                 if let Some((c, off)) = self.code_at(a) {
                     self.code[c].state[off] |= DATA;
                 }
             }
         }
-        self.switches.push(Switch {
-            table: Table {
-                jump,
-                address: table,
-                entry: 4,
-                count: targets.len() as u32,
-            },
-            index,
-            targets,
-        });
+        self.switches.push(s);
         Some(self.switches.len() as u32 - 1)
-    }
-
-    /// Walking back from a jump through a table indexed by `reg`: how many
-    /// entries the code checks the index against (`cmp reg, n` and `ja`, or
-    /// `and reg, n`), and the table of bytes the index was read from, if it was.
-    fn bound(&mut self, jump: u64, mut reg: Register) -> (Option<u32>, Option<u64>) {
-        let mut index_table = None;
-        let mut pc = jump;
-        // The instruction after the one looked at: the branch after a `cmp`.
-        let mut after = None;
-        for _ in 0..8 {
-            let Some(ins) = self.previous(pc) else { break };
-            if !matches!(ins.flow_control(), FlowControl::Next | FlowControl::ConditionalBranch) {
-                break;
-            }
-            let on_reg =
-                ins.op_count() > 0 && ins.op0_kind() == OpKind::Register && ins.op0_register().full_register32() == reg;
-            if on_reg {
-                let n = is_immediate(ins.op1_kind()).then(|| ins.immediate(1) as u32);
-                match (ins.mnemonic(), n) {
-                    (Mnemonic::Cmp, Some(n)) => {
-                        let bound = match after {
-                            Some(Mnemonic::Ja | Mnemonic::Jbe) => n.checked_add(1),
-                            Some(Mnemonic::Jae | Mnemonic::Jb) => Some(n),
-                            _ => None,
-                        };
-                        return (bound.filter(|&b| b > 0 && b as usize <= MAX_TABLE), index_table);
-                    }
-                    (Mnemonic::And, Some(n)) if (n as usize) < MAX_TABLE => return (Some(n + 1), index_table),
-                    // movzx reg, byte [other + indexes] (or xor reg, reg / mov reg8, byte [...]).
-                    (Mnemonic::Movzx | Mnemonic::Mov, _)
-                        if index_table.is_none()
-                            && ins.op1_kind() == OpKind::Memory
-                            && ins.memory_size() == MemorySize::UInt8 =>
-                    {
-                        let other = match (ins.memory_base(), ins.memory_index()) {
-                            (b, Register::None) if b != Register::None => b,
-                            (Register::None, i) if ins.memory_index_scale() == 1 => i,
-                            _ => break,
-                        };
-                        index_table = Some(ins.memory_displacement32() as u64);
-                        reg = other.full_register32();
-                    }
-                    (Mnemonic::Mov, _) if ins.op1_kind() == OpKind::Register => {
-                        reg = ins.op1_register().full_register32();
-                    }
-                    // Moving the range to start at 0 comes before the check; tests don't write.
-                    (Mnemonic::Add | Mnemonic::Sub | Mnemonic::Dec | Mnemonic::Inc | Mnemonic::Test, _) => {}
-                    _ => break,
-                }
-            }
-            after = Some(ins.mnemonic());
-            pc = ins.ip();
-        }
-        (None, index_table)
     }
 }
 
-/// The address of the table `[index*4 + table]` names (32-bit, no base register).
-fn absolute_table(ins: &Instruction) -> Option<u64> {
-    (ins.memory_base() == Register::None && ins.memory_index() != Register::None && ins.memory_index_scale() == 4)
-        .then(|| ins.memory_displacement32() as u64)
+/// What reading a switch needs of the code before its jump.
+pub(crate) trait SwitchCode {
+    /// The instruction that ends at `pc`, if one was decoded there.
+    fn instruction_before(&mut self, pc: u64) -> Option<Instruction>;
+    /// `n` bytes of the image at `a`.
+    fn bytes(&self, a: u64, n: usize) -> Option<&[u8]>;
+    fn in_code(&self, a: u64) -> bool;
+    /// Whether a table the code checks no bound for can't go on at `a`: code
+    /// was found there, or (for a table of `addresses`) the loader doesn't
+    /// relocate the word.
+    fn table_ends(&self, a: u64, addresses: bool) -> bool;
+    /// Where the image is loaded, which MSVC's x64 tables hold offsets from.
+    fn image_base(&self) -> Option<u64>;
+}
+
+impl SwitchCode for Follower<'_> {
+    fn instruction_before(&mut self, pc: u64) -> Option<Instruction> {
+        self.previous(pc)
+    }
+
+    fn bytes(&self, a: u64, n: usize) -> Option<&[u8]> {
+        self.read(a, n)
+    }
+
+    fn in_code(&self, a: u64) -> bool {
+        self.is_code(a)
+    }
+
+    fn table_ends(&self, a: u64, addresses: bool) -> bool {
+        (addresses && self.relocations.is_some() && !self.relocated(a)) || self.len_at(a).is_some()
+    }
+
+    fn image_base(&self) -> Option<u64> {
+        self.base
+    }
+}
+
+/// The switch an indirect jump makes, read from the code before it:
+/// `jmp [index*4 + table]` (`*8` in 64-bit code); `jmp reg` just after
+/// loading `reg` from such a table; or, in 64-bit code, `jmp reg` just after
+/// `add reg, base`, `reg` loaded from `[base + index*4 + offset]`: offsets
+/// from what `base` holds — the table itself, set by `lea base, [rip +
+/// table]` (clang, GCC), or the image base (MSVC). How many entries there
+/// are comes from the bound the code checks first (`cmp index, n` / `ja`,
+/// `and index, n`), and MSVC picks the entry of a sparse switch through a
+/// table of bytes.
+pub(crate) fn read_switch(code: &mut impl SwitchCode, bits: u32, ins: &Instruction) -> Option<Switch> {
+    let jump = ins.ip();
+    let word = (bits / 8) as u8;
+    // The table, the register indexing it, how its entries lead somewhere,
+    // their size, where the index is last used, and the register holding
+    // what the entries are offsets from, with its value.
+    let (address, index, entries, entry, from, based) = match ins.op0_kind() {
+        OpKind::Memory => (
+            absolute_table(ins, word)?,
+            ins.memory_index(),
+            Entries::Absolute,
+            word,
+            jump,
+            None,
+        ),
+        OpKind::Register => {
+            let reg = ins.op0_register().full_register32();
+            let load = code.instruction_before(jump)?;
+            if load.op0_kind() != OpKind::Register || load.op0_register().full_register32() != reg {
+                return None;
+            }
+            match (load.mnemonic(), load.op1_kind()) {
+                (Mnemonic::Mov, OpKind::Memory) => {
+                    let table = absolute_table(&load, word)?;
+                    (table, load.memory_index(), Entries::Absolute, word, load.ip(), None)
+                }
+                (Mnemonic::Add, OpKind::Register) if bits == 64 => {
+                    let base = load.op1_register().full_register32();
+                    let (read, x) = relative_entry(code, load.ip(), reg, base)?;
+                    let entries = Entries::Relative {
+                        base: x,
+                        signed: read.mnemonic() == Mnemonic::Movsxd,
+                    };
+                    let table = x.wrapping_add(read.memory_displacement64());
+                    (table, read.memory_index(), entries, 4, read.ip(), Some((base, x)))
+                }
+                _ => return None,
+            }
+        }
+        _ => return None,
+    };
+    let b = bound(code, from, index.full_register32(), based);
+    let mut index = None;
+    let count = match (b.index, b.count) {
+        (Some(at), Some(n)) => {
+            let bytes = code.bytes(at, n as usize)?;
+            index = Some(Table {
+                jump,
+                address: at,
+                entry: 1,
+                count: n,
+                entries: Entries::Absolute,
+            });
+            Some(*bytes.iter().max()? as usize + 1)
+        }
+        (_, n) => n.map(|n| n as usize),
+    };
+    let mut table = Table {
+        jump,
+        address,
+        entry,
+        count: 0,
+        entries,
+    };
+    let mut targets = Vec::new();
+    for i in 0..count.unwrap_or(MAX_TABLE).min(MAX_TABLE) {
+        let at = address + entry as u64 * i as u64;
+        // Without a bound, the table ends where its entries stop leading into code.
+        if count.is_none()
+            && i > 0
+            && (code.table_ends(at, entries == Entries::Absolute) || index.is_some_and(|x| x.address == at))
+        {
+            break;
+        }
+        let raw = code.bytes(at, entry as usize).map(|w| match *w {
+            [a, b, c, d] => u32::from_le_bytes([a, b, c, d]) as u64,
+            _ => u64::from_le_bytes(w.try_into().unwrap_or([0; 8])),
+        });
+        match raw.map(|raw| table.target(raw)).filter(|&t| code.in_code(t)) {
+            Some(t) => targets.push(t),
+            None => break,
+        }
+    }
+    if targets.is_empty() {
+        return None;
+    }
+    table.count = targets.len() as u32;
+    // Where each value goes: through its index byte, or its entry.
+    let cases = match index {
+        Some(x) => code
+            .bytes(x.address, x.count as usize)
+            .and_then(|bytes| bytes.iter().map(|&k| targets.get(k as usize).copied()).collect())
+            .unwrap_or_default(),
+        None => targets.clone(),
+    };
+    Some(Switch {
+        table,
+        index,
+        targets,
+        cases,
+        first: b.first,
+        default: b.default,
+    })
+}
+
+/// Walking back from `add reg, base` before a jump through `reg`: the load
+/// of `reg` from `[base + index*4 + offset]`, and what `base` holds — the
+/// address `lea base, [rip + x]` set it to, else (MSVC sets it once, further
+/// up) the image base.
+fn relative_entry(code: &mut impl SwitchCode, from: u64, reg: Register, base: Register) -> Option<(Instruction, u64)> {
+    let mut pc = from;
+    let mut read = None;
+    for _ in 0..16 {
+        let Some(p) = code.instruction_before(pc) else { break };
+        if !matches!(p.flow_control(), FlowControl::Next | FlowControl::ConditionalBranch) {
+            break;
+        }
+        let writes = |r: Register| {
+            p.op_count() > 0
+                && p.op0_kind() == OpKind::Register
+                && p.op0_register().full_register32() == r
+                && !matches!(p.mnemonic(), Mnemonic::Cmp | Mnemonic::Test)
+        };
+        match read {
+            None if writes(base) => return None,
+            None if writes(reg) => {
+                let entry = matches!(p.mnemonic(), Mnemonic::Mov | Mnemonic::Movsxd)
+                    && p.op1_kind() == OpKind::Memory
+                    && p.memory_base().full_register32() == base
+                    && p.memory_index() != Register::None
+                    && p.memory_index_scale() == 4
+                    && p.memory_size().size() == 4;
+                if !entry {
+                    return None;
+                }
+                read = Some(p);
+            }
+            Some(read) if writes(base) => {
+                return (p.mnemonic() == Mnemonic::Lea && p.is_ip_rel_memory_operand())
+                    .then(|| (read, p.ip_rel_memory_address()));
+            }
+            _ => {}
+        }
+        pc = p.ip();
+    }
+    Some((read?, code.image_base()?))
+}
+
+/// What the code checks before a jump through a table indexed by `reg`.
+#[derive(Default)]
+struct Bound {
+    /// How many values the check lets through: `cmp reg, n` and `ja`, or `and reg, n`.
+    count: Option<u32>,
+    /// The table of bytes the index was read from, if it was.
+    index: Option<u64>,
+    /// Where the values past the bound go.
+    default: Option<u64>,
+    /// What was taken off the value before the check.
+    first: i64,
+}
+
+/// Walking back from `from`, the use of a jump table indexed by `reg`: the
+/// bound checked, and the table of bytes the index was read from, if it was
+/// — in 64-bit code, at an offset from what `based`'s register holds.
+fn bound(code: &mut impl SwitchCode, from: u64, mut reg: Register, based: Option<(Register, u64)>) -> Bound {
+    let mut out = Bound::default();
+    let mut pc = from;
+    // The instruction after the one looked at: the branch after a `cmp`.
+    let mut after: Option<Instruction> = None;
+    for _ in 0..12 {
+        let Some(ins) = code.instruction_before(pc) else { break };
+        if !matches!(ins.flow_control(), FlowControl::Next | FlowControl::ConditionalBranch) {
+            break;
+        }
+        let on_reg =
+            ins.op_count() > 0 && ins.op0_kind() == OpKind::Register && ins.op0_register().full_register32() == reg;
+        if on_reg {
+            let n = (ins.op_count() > 1 && is_immediate(ins.op1_kind())).then(|| ins.immediate(1) as u32);
+            match (ins.mnemonic(), n) {
+                (Mnemonic::Cmp, Some(n)) => {
+                    let (count, default) = match after.map(|a| (a.mnemonic(), a)) {
+                        Some((Mnemonic::Ja, a)) => (n.checked_add(1), a.near_branch_target()),
+                        Some((Mnemonic::Jbe, a)) => (n.checked_add(1), a.next_ip()),
+                        Some((Mnemonic::Jae, a)) => (Some(n), a.near_branch_target()),
+                        Some((Mnemonic::Jb, a)) => (Some(n), a.next_ip()),
+                        _ => (None, 0),
+                    };
+                    out.count = count.filter(|&b| b > 0 && b as usize <= MAX_TABLE);
+                    if out.count.is_some() {
+                        out.default = Some(default);
+                        out.first = taken_off(code, ins.ip(), reg);
+                    }
+                    return out;
+                }
+                (Mnemonic::And, Some(n)) if (n as usize) < MAX_TABLE => {
+                    out.count = Some(n + 1);
+                    return out;
+                }
+                // movzx reg, byte [other + indexes] (or xor reg, reg / mov reg8, byte [...]);
+                // in 64-bit code, [base + other + offset].
+                (Mnemonic::Movzx | Mnemonic::Mov, _)
+                    if out.index.is_none()
+                        && ins.op1_kind() == OpKind::Memory
+                        && ins.memory_size() == MemorySize::UInt8 =>
+                {
+                    let relative = based.filter(|&(b, _)| ins.memory_base().full_register32() == b);
+                    let other = match (ins.memory_base(), ins.memory_index(), relative) {
+                        (_, i, Some(_)) if i != Register::None && ins.memory_index_scale() == 1 => i,
+                        (b, Register::None, None) if b != Register::None => b,
+                        (Register::None, i, None) if ins.memory_index_scale() == 1 => i,
+                        _ => break,
+                    };
+                    out.index = Some(match relative {
+                        Some((_, x)) => x.wrapping_add(ins.memory_displacement64()),
+                        None => ins.memory_displacement32() as u64,
+                    });
+                    reg = other.full_register32();
+                }
+                (Mnemonic::Mov | Mnemonic::Movsxd, _) if ins.op1_kind() == OpKind::Register => {
+                    reg = ins.op1_register().full_register32();
+                }
+                // Moving the range to start at 0 comes before the check; tests don't write.
+                (Mnemonic::Add | Mnemonic::Sub | Mnemonic::Dec | Mnemonic::Inc | Mnemonic::Test, _) => {}
+                _ => break,
+            }
+        }
+        after = Some(ins);
+        pc = ins.ip();
+    }
+    out
+}
+
+/// What the code took off the value in `reg` just before checking it at
+/// `pc` (`dec eax`, `sub eax, 3`, `lea eax, [ecx-1]`): the value of the first case.
+fn taken_off(code: &mut impl SwitchCode, pc: u64, reg: Register) -> i64 {
+    let mut pc = pc;
+    for _ in 0..3 {
+        let Some(ins) = code.instruction_before(pc) else { break };
+        if ins.flow_control() != FlowControl::Next {
+            break;
+        }
+        if ins.op_count() > 0 && ins.op0_kind() == OpKind::Register && ins.op0_register().full_register32() == reg {
+            let imm = (ins.op_count() > 1 && is_immediate(ins.op1_kind())).then(|| ins.immediate(1) as i32 as i64);
+            return match ins.mnemonic() {
+                Mnemonic::Sub => imm.unwrap_or(0),
+                Mnemonic::Add => imm.map_or(0, |k| -k),
+                Mnemonic::Dec => 1,
+                Mnemonic::Inc => -1,
+                Mnemonic::Lea if ins.memory_index() == Register::None && ins.memory_base() != Register::None => {
+                    -(ins.memory_displacement64() as i32 as i64)
+                }
+                _ => 0,
+            };
+        }
+        pc = ins.ip();
+    }
+    0
+}
+
+/// The address of the table `[index*4 + table]` names (`*8` in 64-bit code, no base register).
+fn absolute_table(ins: &Instruction, word: u8) -> Option<u64> {
+    (ins.memory_base() == Register::None
+        && ins.memory_index() != Register::None
+        && ins.memory_index_scale() == word as u32
+        && !ins.is_ip_rel_memory_operand())
+    .then(|| {
+        if word == 4 {
+            ins.memory_displacement32() as u64
+        } else {
+            ins.memory_displacement64()
+        }
+    })
 }
 
 fn is_immediate(k: OpKind) -> bool {
     matches!(
         k,
-        OpKind::Immediate8 | OpKind::Immediate8to32 | OpKind::Immediate16 | OpKind::Immediate32
+        OpKind::Immediate8
+            | OpKind::Immediate8to32
+            | OpKind::Immediate16
+            | OpKind::Immediate32
+            | OpKind::Immediate8to64
+            | OpKind::Immediate32to64
     )
 }
 
@@ -1429,6 +1671,7 @@ mod tests {
             starts: starts.to_vec(),
             relocations: None,
             slots: HashMap::from([(0x402000, true)]),
+            base: Some(0x400000),
         };
         follow(&image).functions
     }
@@ -1564,6 +1807,7 @@ mod tests {
             starts: vec![0x401000],
             relocations: None,
             slots: HashMap::new(),
+            base: Some(0x400000),
         };
         let found = follow(&image);
         assert_eq!(found.functions, [(0x401000, 0x2C)]);

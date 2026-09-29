@@ -78,6 +78,10 @@ pub(crate) struct XrefIndex {
     lists: [Vec<u64>; 6],
     /// Where the data the code and data refer to starts, built on first use.
     pub(crate) globals: std::sync::OnceLock<crate::globals::GlobalIndex>,
+    /// Switches in x86 code that following the code didn't find (nothing
+    /// follows an ELF's or a Mach-O's), read from each indirect jump's code;
+    /// sorted by their jumps.
+    pub(crate) switches: Vec<crate::discover::x86::Switch>,
 }
 
 impl XrefIndex {
@@ -312,6 +316,8 @@ struct Scan<'a> {
     absolute: bool,
     /// Jump tables in the code, sorted.
     tables: &'a [crate::discover::x86::Table],
+    /// Where the indirect jumps are (a switch's, perhaps), when these are collected.
+    jumps: Option<&'a std::cell::RefCell<Vec<u64>>>,
 }
 
 impl Scan<'_> {
@@ -472,16 +478,16 @@ fn scan_x86(bits: u32, bytes: &[u8], addr: u64, cx: &Scan, emit: &mut dyn FnMut(
             .checked_sub(1)
             .map(|i| cx.tables[i]);
         if let Some(t) = t.filter(|t| ip < t.end()) {
-            if t.entry == 4 {
-                let first = ip.next_multiple_of(4).max(t.address);
-                for at in (first..t.end()).step_by(4) {
-                    if let Some(w) = bytes.get((at - addr) as usize..(at - addr) as usize + 4) {
-                        emit(
-                            at,
-                            u32::from_le_bytes(w.try_into().expect("4 bytes")) as u64,
-                            RefKind::Pointer,
-                        );
-                    }
+            if !t.is_index() {
+                let size = t.entry as u64;
+                let first = t.address + (ip - t.address).div_ceil(size) * size;
+                for at in (first..t.end()).step_by(size as usize) {
+                    let raw = match bytes.get((at - addr) as usize..(at - addr + size) as usize) {
+                        Some(&[a, b, c, d]) => u32::from_le_bytes([a, b, c, d]) as u64,
+                        Some(w) => u64::from_le_bytes(w.try_into().unwrap_or([0; 8])),
+                        None => continue,
+                    };
+                    emit(at, t.target(raw), RefKind::Pointer);
                 }
             }
             if decoder.set_position((t.end().min(end) - addr) as usize).is_err() {
@@ -530,6 +536,13 @@ fn scan_x86(bits: u32, bytes: &[u8], addr: u64, cx: &Scan, emit: &mut dyn FnMut(
                 }
             }
             FlowControl::IndirectCall | FlowControl::IndirectBranch => {
+                if ins.flow_control() == FlowControl::IndirectBranch
+                    && inside
+                    && (ins.op0_kind() == OpKind::Register || ins.memory_index() != Register::None)
+                    && let Some(jumps) = cx.jumps
+                {
+                    jumps.borrow_mut().push(ip);
+                }
                 // call [rip+slot] / jmp [slot]: through an import slot or a table.
                 if let Some(slot) = memory_address(&ins, cx.absolute) {
                     let kind = if ins.flow_control() == FlowControl::IndirectCall {
@@ -691,11 +704,13 @@ impl Binary {
     fn build_xrefs(&self) -> XrefIndex {
         let map = AddressMap::new(self);
         let base = map.ranges.first().map_or(0, |r| r.0);
+        let jumps = std::cell::RefCell::new(Vec::new());
         let cx = Scan {
             map: &map,
             symbols: &self.symbols,
             absolute: base >= 0x10_0000 || self.summary.format == crate::model::Format::Xbe,
             tables: &self.code_tables,
+            jumps: Some(&jumps),
         };
         let top = base + u32::MAX as u64;
         let mut lists: [Vec<u64>; 6] = Default::default();
@@ -717,6 +732,24 @@ impl Binary {
             }
             self.scan_pointers(self.scheme(), &mut |at, t| emit(at, t, RefKind::Pointer));
         }
+        // The switches following the code didn't find, read from their jumps' code.
+        let mut switches: Vec<crate::discover::x86::Switch> = jumps
+            .into_inner()
+            .into_iter()
+            .filter(|&j| self.code_switches.binary_search_by_key(&j, |s| s.table.jump).is_err())
+            .filter_map(|j| self.switch_at(j))
+            .collect();
+        switches.sort_by_key(|s| s.table.jump);
+        switches.dedup_by_key(|s| s.table.jump);
+        // Jump tables of offsets in data (clang's and GCC's in 64-bit code): no pointers to scan for.
+        let tables = self.code_tables.iter().chain(switches.iter().map(|s| &s.table));
+        for t in tables.filter(|t| t.entries != crate::discover::x86::Entries::Absolute) {
+            if self.section_at(t.address).is_some_and(|s| s.kind != RegionKind::Code) {
+                for (at, target) in self.table_entries(t) {
+                    emit(at, target, RefKind::Pointer);
+                }
+            }
+        }
         for list in &mut lists {
             list.sort_unstable();
             list.dedup();
@@ -726,6 +759,7 @@ impl Binary {
             base,
             lists,
             globals: std::sync::OnceLock::new(),
+            switches,
         }
     }
 
@@ -793,11 +827,18 @@ impl Binary {
     fn reference_counts_from_outside(&self, lo: u64, hi: u64) -> RefCounts {
         let index = self.xref_index();
         let mut counts = RefCounts::default();
+        // Its pieces away from its entry, and its switches' tables, are its own.
+        let parts = self.symbols.parts_of(lo);
+        let own = |a: u64| {
+            (lo..hi).contains(&a)
+                || parts.iter().any(|p| (p.0..p.1).contains(&a))
+                || self.jump_table_holding(a).is_some_and(|t| (lo..hi).contains(&t.jump))
+        };
         for k in KINDS {
             let outside = index
                 .range(k, lo, hi)
                 .iter()
-                .filter(|&&v| !(lo..hi).contains(&index.source(v)))
+                .filter(|&&v| !own(index.source(v)))
                 .count();
             counts.add(k, outside as u32);
         }
@@ -825,6 +866,7 @@ impl Binary {
                 absolute: map.ranges.first().is_some_and(|r| r.0 >= 0x10_0000)
                     || self.summary.format == crate::model::Format::Xbe,
                 tables: &self.code_tables,
+                jumps: None,
             };
             self.scan_code(bytes, lo, &cx, &mut |s, t, k| {
                 if map.get(t).is_some() {
@@ -844,6 +886,18 @@ impl Binary {
                     out.push((at, t, RefKind::Pointer));
                 }
                 at += step;
+            }
+            // Jump tables of offsets.
+            for t in self.code_tables.iter().filter(|t| t.address < end && t.end() > lo) {
+                if t.entries != crate::discover::x86::Entries::Absolute {
+                    let entries = self.table_entries(t);
+                    out.extend(
+                        entries
+                            .into_iter()
+                            .filter(|e| e.0 >= lo && e.0 < end)
+                            .map(|(a, b)| (a, b, RefKind::Pointer)),
+                    );
+                }
             }
         }
         out

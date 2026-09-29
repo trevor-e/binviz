@@ -73,6 +73,8 @@ pub struct DecompContext {
     pub vtables: Vec<String>,
     /// Its pieces away from its entry, whose code follows the entry's in `instructions`: (start, end).
     pub parts: Vec<(u64, u64)>,
+    /// Lines to show before instructions: where a piece starts, a switch's cases.
+    pub marks: Vec<crate::disasm::Mark>,
     /// The function its code runs on into at its end, with no return or jump:
     /// it is another way into that one (an alternate entry).
     pub falls_into: Option<(u64, String)>,
@@ -203,6 +205,7 @@ impl Binary {
             typed,
             vtables,
             parts: dis.parts.clone(),
+            marks: dis.marks.clone(),
             falls_into,
             entered_from,
             aliases: self.symbols().aliases(lo),
@@ -357,8 +360,8 @@ impl DecompContext {
         }
         let _ = writeln!(out, "Code:");
         for i in &self.instructions {
-            if let Some((s, _)) = self.parts.iter().find(|p| p.0 == i.address) {
-                let _ = writeln!(out, "  ; its piece at {s:#x}, away from the entry:");
+            for m in self.marks.iter().filter(|m| m.address == i.address) {
+                let _ = writeln!(out, "  ; {}", m.text);
             }
             let _ = writeln!(
                 out,

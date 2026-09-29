@@ -572,6 +572,7 @@ impl Binary {
             debug: None,
             discovered: Vec::new(),
             code_tables: Vec::new(),
+            code_switches: Vec::new(),
             code_parts: Vec::new(),
             debug_symbols: Default::default(),
             annotations: Vec::new(),

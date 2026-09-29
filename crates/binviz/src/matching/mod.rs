@@ -95,6 +95,9 @@ pub struct Reloc {
     /// The symbol stands for a section of this object (a static's data, a
     /// jump table in `.rdata`), a name the binary can't know.
     pub(crate) section_symbol: bool,
+    /// The field holds the symbol's offset from the image base (COFF's
+    /// `ADDR32NB`: MSVC's x64 jump tables and the code reading them).
+    pub(crate) image_offset: bool,
 }
 
 /// One instruction of the original lined up with one of the rebuild.
@@ -306,6 +309,7 @@ fn section_relocs(file: &object::File, section: &object::Section) -> BTreeMap<u6
                 implicit: rel.has_implicit_addend(),
                 defined,
                 section_symbol,
+                image_offset: rel.kind() == object::RelocationKind::ImageOffset,
             },
         );
     }

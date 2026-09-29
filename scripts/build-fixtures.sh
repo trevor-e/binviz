@@ -204,6 +204,32 @@ if command -v clang >/dev/null 2>&1; then
     rm -rf "$tmp"
 fi
 
+if command -v clang >/dev/null 2>&1; then
+    echo "switch64: jump tables in 64-bit code (clang: a PE32+ DLL, an ELF PIE and a static ELF; MSVC's form by hand)"
+    tmp="$(mktemp -d)"
+    cp "$src/switch64.c" "$src/switch64-msvc.s" "$tmp"
+    ln -s "$lld" "$tmp/lld-link"
+    (
+        cd "$tmp"
+        flags=(-O2 -ffreestanding -fno-builtin)
+        clang -target x86_64-pc-windows-msvc "${flags[@]}" -c switch64.c -o switch64.obj
+        clang -target x86_64-pc-windows-msvc -c switch64-msvc.s -o switch64-msvc.obj
+        # For matching: a copy with two of the table's entries swapped.
+        sed -e 's/[.]Ldouble@IMGREL/.Lswap@IMGREL/; s/[.]Ladd@IMGREL/.Ldouble@IMGREL/; s/[.]Lswap@IMGREL/.Ladd@IMGREL/' \
+            switch64-msvc.s >switch64-msvc-edited.s
+        clang -target x86_64-pc-windows-msvc -c switch64-msvc-edited.s -o switch64-msvc-edited.obj
+        ./lld-link /nologo /brepro /dll /noentry /nodefaultlib /machine:x64 switch64.obj switch64-msvc.obj \
+            /out:switch64.dll
+        clang -target x86_64-linux-gnu "${flags[@]}" -fPIC -c switch64.c -o switch64-pic.o
+        "$lld" -flavor gnu -pie -e start -o switch64-elf switch64-pic.o
+        clang -target x86_64-linux-gnu "${flags[@]}" -fno-pic -c switch64.c -o switch64-static.o
+        "$lld" -flavor gnu -static -no-pie -e start -o switch64-static switch64-static.o
+    )
+    cp "$tmp/switch64.dll" "$tmp/switch64-msvc.obj" "$tmp/switch64-msvc-edited.obj" "$tmp/switch64-elf" \
+        "$tmp/switch64-static" "$out"
+    rm -rf "$tmp"
+fi
+
 echo "ROMs: NES, Game Boy, Game Boy Advance, Mega Drive, SNES, Nintendo 64, PlayStation (hand-assembled)"
 python3 "$src/roms.py" "$out" 2>/dev/null || python "$src/roms.py" "$out"
 

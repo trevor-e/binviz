@@ -195,6 +195,8 @@ export interface Decomp {
   source: string;
 }
 
+/** A line shown before an instruction: where a piece of the function, a switch's case or a jump table starts. */
+export interface Mark { address: bigint; text: string }
 export interface Disassembly {
   start: bigint;
   end: bigint;
@@ -202,6 +204,7 @@ export interface Disassembly {
   instructions: Instruction[];
   truncated: boolean;
   supported: boolean;
+  marks?: Mark[];
 }
 
 /** `contiguous`: its bytes are `offset..offset + size` of the file (not on a raw CD image). */

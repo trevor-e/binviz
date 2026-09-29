@@ -1741,8 +1741,8 @@ fn disassemble(o: &Open, args: &Value) -> Result<String, String> {
     }
     let mut last_src: Option<(String, u32)> = None;
     for ins in &d.instructions {
-        if let Some((s, e)) = d.parts.iter().find(|p| p.0 == ins.address) {
-            let _ = writeln!(out, "; its piece away from the entry, {s:#x}..{e:#x}:");
+        for m in d.marks.iter().filter(|m| m.address == ins.address) {
+            let _ = writeln!(out, "; {}", m.text);
         }
         if let Some(src) = &ins.source {
             let key = (src.path.clone(), src.line);

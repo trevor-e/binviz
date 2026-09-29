@@ -754,6 +754,7 @@ impl Binary {
             starts,
             relocations: None,
             slots: thunks.iter().map(|&(slot, o)| (slot, never_returns(o))).collect(),
+            base: Some(h.base),
         };
         let found = x86::follow(&image);
 
@@ -798,6 +799,7 @@ impl Binary {
             debug: None,
             discovered: found.functions,
             code_tables: found.tables,
+            code_switches: found.switches,
             code_parts: found.parts,
             debug_symbols: Default::default(),
             annotations: Vec::new(),
