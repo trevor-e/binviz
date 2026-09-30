@@ -48,6 +48,11 @@ COMMANDS:
                                    in place of up and down lists just those
     calls <file> <from> to <to>    A shortest chain of calls between two functions
     coverage <file>                How much of the code and data is mapped out
+    blocks <file> [--window N] [--done 10,25,50] [--top N] [--loose]
+                                   Runs of N instructions (default 12, registers renamed, numbers
+                                   and names left out) found in several functions, and how much of
+                                   the bigger functions the smallest ones' runs would reach
+                                   (--loose: whichever registers the runs use)
     globals <file> [filter]        The data the code uses, typed by its use and named where
                                    nothing names it: floats, integers, pointers to structures
                                    (the offsets reached through them), tables of functions,
@@ -1153,6 +1158,60 @@ fn run(
                     "{:#018x} {:>7}  {:>4} callers  {:>3} callees ({} unnamed)  {}",
                     item.address, item.size, item.callers, item.callees, item.unnamed_callees, item.name
                 );
+            }
+        }
+        "blocks" => {
+            let flag = |name: &str| args.iter().position(|a| a == name).and_then(|i| args.get(i + 1));
+            let mut options = binviz::blocks::BlockOptions {
+                loose: args.iter().any(|a| a == "--loose"),
+                ..Default::default()
+            };
+            if let Some(v) = flag("--window") {
+                options.window = num(v)? as usize;
+            }
+            if let Some(v) = flag("--top") {
+                options.top = num(v)? as usize;
+            }
+            if let Some(v) = flag("--done") {
+                options.done_shares = v
+                    .split(',')
+                    .map(|p| p.trim().trim_end_matches('%').parse::<f64>().map(|x| x / 100.0))
+                    .collect::<Result<_, _>>()
+                    .map_err(|_| "--done takes percentages: 10,25,50".to_string())?;
+            }
+            let r = bin.repeated_blocks(&options);
+            println!(
+                "{} functions, {} instructions ({} of them frame setup and teardown, left out); runs of {} instructions: {} ({} more left out as a few instructions repeated)",
+                r.functions, r.instructions, r.frame_instructions, r.window, r.windows, r.windows_skipped
+            );
+            println!("{} distinct runs, {} of them in more than one function", r.distinct, r.repeating);
+            println!("\nIf the smallest functions were done, how much of the rest their runs reach:");
+            println!("  done   functions  pending insns  in a run of a done fn  in a run of 3+ done fns  fns half covered");
+            let pct = |n: usize, d: usize| if d == 0 { 0.0 } else { n as f64 * 100.0 / d as f64 };
+            for t in &r.trials {
+                println!(
+                    "  {:>3.0}%  {:>9}  {:>13}  {:>20.1}%  {:>22.1}%  {:>9} of {}",
+                    t.done_share * 100.0,
+                    t.done_functions,
+                    t.pending_instructions,
+                    pct(t.covered_once, t.pending_instructions),
+                    pct(t.covered_thrice, t.pending_instructions),
+                    t.half_covered_functions,
+                    t.pending_functions,
+                );
+            }
+            println!("\nRuns in the most functions:");
+            for (n, b) in r.top.iter().enumerate() {
+                println!(
+                    "\n#{} in {} functions ({} times), for instance at {}:",
+                    n + 1,
+                    b.functions,
+                    b.occurrences,
+                    fmt_addr(b.example)
+                );
+                for t in &b.text {
+                    println!("    {t}");
+                }
             }
         }
         "coverage" => {

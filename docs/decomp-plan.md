@@ -436,6 +436,13 @@ Reuse across projects, cheapest first:
       function's C and build in `~/.local/share/binviz/store`, outside every project.
       Exact matches only; a hit is a candidate and `match_function` decides. Known
       gap: two functions reading different globals share a key.
+- [ ] **Runs of instructions shared between functions** (`blocks.rs`, CLI `blocks`; the
+      measurement is written, the use is not). Hints for `decomp_context`: "these 8
+      instructions look like a matched function's, whose C was …". Trial on
+      unrelated x86-64 -O2 binaries (2 570–5 400 functions), smallest half done,
+      frame setup left out, window 6/8: 12–25 % / 3–14 % of the rest is in a run a
+      done function has (strict), 16–30 % / 5–17 % ignoring registers. Not yet
+      measured on FF9 or on GCC 2.7 MIPS; that number decides whether to wire it in.
 - [ ] **Identical functions inside one binary**: 13 groups of identical code among
       FF9's 1 182 keyed boot-exe functions (and more across overlays, which share
       library code). The queue should treat a group as one work item and offer a

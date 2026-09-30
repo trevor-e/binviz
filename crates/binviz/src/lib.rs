@@ -27,6 +27,7 @@
 mod asm;
 mod binary;
 pub mod blobs;
+pub mod blocks;
 mod container;
 pub mod coverage;
 pub mod cpu;

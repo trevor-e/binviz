@@ -437,6 +437,7 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `refs <file> <addr\|symbol> [from]` | References to an address (`from`: the references a function or data makes) |
 | `calls <file> <addr\|symbol> [up] [down]` · `calls <file> <from> to <to>` | The call graph around a function (`callers` or `callees` for just those); a shortest chain of calls |
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
+| `blocks <file> [--window N] [--done 10,25,50] [--top N] [--loose]` | Runs of N instructions (numbers and names left out, registers renamed by first use; `--loose`: registers ignored) found in several functions, frame setup and teardown excluded; and a trial: with the smallest functions taken as done, how much of the others their runs reach |
 | `worklist <file> [n] [k/n]` | The unnamed functions to name next (`k/n`: one of n shares, for agents working at once) |
 | `score <file> <names>` | The notes' names (`--notes`, or `<file>.binviz-notes.json`) against the real ones, from its debug file (`.dbg`, `.pdb`, `.debug`...) or an unstripped build |
 | `globals <file> [filter]` | The data the code uses, typed by its use and named where nothing names it (see below) |
