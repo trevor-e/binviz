@@ -477,6 +477,19 @@ Publishing (a repository someone else builds with their own disc):
 
 ## Progress log
 
+- 2026-09-29 (FF9, the compiler): the loop ran for the first time on the real game. GNU GCC
+  2.7.2.3's `cc1` (little-endian MIPS, `mipsel-elf`) is built in Docker from ftp.gnu.org's
+  sources, with maspsx and GNU as after it; two source patches let a modern host compiler build
+  it (`obstack.h`'s cast increment, an `inline` in `c-gperf.h`), and `mipsel-linux` is not a
+  target 2.7.2 knows. `ff9_open_img` (the disc detection and archive opening at `0x8001dcb8`),
+  written from the disassembly, compiles with `-O2 -G0 -mips1 -mcpu=r3000 -msoft-float` and
+  `binviz match` scores it 56.9% (58 of 102 instructions): the frame layout, the disc loop and
+  the busy-waits line up, a struct copy gives the same unrolled 4-word copy; what differs is the
+  signed `i % 4`, the address of `g_state` held as a high half in a register, and one register
+  saved fewer. `-msplit-addresses` is not a 2.7.2 option. Not tried: GCC 2.8.1, other `-O`
+  levels, other `--aspsx-version` values; whether this GCC reaches Psy-Q's exact output is still
+  open until a function reaches 100%. The project, its Docker recipe and a resume note live in
+  `~/dev/ff9-decomp` (its own repository, not pushed anywhere).
 - 2026-09-29 (sharing): matches keep their build (`compiler`, `flags`, `sdk` on the
   note; the web UI carries them through), and a store of the user's own matches
   (`store.rs`) lets a later project start from them: `store_record`, `store_lookup`,
