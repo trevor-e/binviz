@@ -602,6 +602,22 @@ CLI and the MCP server:
 | `names <file> <json\|build> [min%]` | `propose_names` | Names from another build of the game (a port with its source, a symbolized build): its functions with the strings they use and the functions they call, matched to functions here by shared strings, then through the calls; or the build itself (its symbols, debug info, or the PDB it names beside it), whose functions pair with these by their code first (the same bytes, the same instructions, their place in the call graph; copies of one code by address), whose data names go where the same instructions use data; each with a confidence and the evidence, and the other build's functions with no counterpart here listed |
 | `counterparts <file> <dir> [n]` | `source_counterparts` | The binary set against the C or C++ source it may be built from: functions named here the source defines nowhere and strings the code uses the source doesn't have (another version: a `CheckNeedPass`, a `needpass` cvar), and the source's functions nothing here is named after |
 
+**Hand-written assembly** (an SDK's routines, a hand-scheduled loop) doesn't
+follow the compiler's layout, so the extents the analysis gives such a
+function can be wrong, and scoring it against a rebuild then compares the
+wrong bytes. Pin the extent by hand: a note with the size and no name
+(`annotate` with `at` and `size`; in a notes file, `{ "address": "0x800a7c00",
+"size": "0x1a0" }`) sizes the function at that address under the name it has,
+covering whatever pieces the analysis made of it and cutting anything it
+joined on; `match --range start end` (MCP `range`) scores one rebuild
+against any stretch without a note. A piece something calls is never joined
+to another called piece, so a called routine keeps its own entry.
+
+Names given to an address inside a function that was later joined (the
+prologue where a split function used to start, say) stay as labels there:
+`inspect` at the address says which function now holds it, and
+`function_containing` in the library does the same.
+
 Strings in a console's code area (a PlayStation executable's one section, a
 ROM's banks) are found like those in data sections, so the strings a
 function uses show for PlayStation games too.

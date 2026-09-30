@@ -183,6 +183,11 @@ impl Walk<'_> {
             if self.owner.contains_key(&pc) || self.owner.len() >= LIMIT {
                 continue;
             }
+            // Running into the start of a function something calls: that function's
+            // code, not this one's (joined later if only one of the two is called).
+            if pc != function && self.starts.contains_key(&pc) {
+                continue;
+            }
             let f = self.logged(pc);
             // Only ever read as data: not code, whatever leads here.
             if f & (flag::CODE | flag::DATA) == flag::DATA {
@@ -384,10 +389,11 @@ fn gap_seeds(w: &Walk<'_>, runs: &[(u64, u64, u64)]) -> Vec<(u64, u64)> {
             }
             prev = Some(*r);
         }
-        if let Some(p) = prev
-            && p.1 < hi
-        {
-            gaps.push((p.1, hi, Some(p.2), None));
+        match prev {
+            Some(p) if p.1 < hi => gaps.push((p.1, hi, Some(p.2), None)),
+            // Nothing followed in the section at all: read it as a trailing gap.
+            None if hi > lo => gaps.push((lo, hi, None, None)),
+            _ => {}
         }
     }
     for (gap_start, gap_end, before, after) in gaps {
@@ -524,8 +530,9 @@ fn gap_seeds(w: &Walk<'_>, runs: &[(u64, u64, u64)]) -> Vec<(u64, u64)> {
 /// The functions as the runs make them. For MIPS, runs are joined up the way
 /// the compiler laid the functions out: a run that falls through into another
 /// function's code is part of it (a head hoisted above the frame setup, a
-/// piece a trace seeded in the middle of a function), and one function's runs
-/// either side of a gap of code nothing reached (a switch's cases) span it.
+/// piece a trace seeded in the middle of a function), unless both are called
+/// (each is then an entry point of its own), and one function's runs either
+/// side of a gap of code nothing reached (a switch's cases) span it.
 /// Returns the functions (start, size) and, for each run, the start of the
 /// function it is in.
 fn join_runs(w: &mut Walk<'_>, runs: &[(u64, u64, u64)], mips: bool) -> (Vec<(u64, u64)>, HashMap<u64, u64>) {
@@ -541,6 +548,9 @@ fn join_runs(w: &mut Walk<'_>, runs: &[(u64, u64, u64)], mips: bool) -> (Vec<(u6
         parent.insert(x, root);
         root
     }
+    // A piece something calls is an entry point of its own: two of them are
+    // never joined, whatever falls through from one into the other.
+    let called: HashSet<u64> = w.refs.iter().filter(|r| r.2 == RefKind::Call).map(|r| r.1).collect();
     if mips {
         for &(_, end, function) in runs {
             if w.ends.contains(&end) {
@@ -548,6 +558,7 @@ fn join_runs(w: &mut Walk<'_>, runs: &[(u64, u64, u64)], mips: bool) -> (Vec<(u6
             }
             if let Some(&(into, _)) = w.owner.get(&end)
                 && into != function
+                && !(called.contains(&function) && called.contains(&into))
             {
                 let (a, b) = (find(&mut parent, function), find(&mut parent, into));
                 if a != b {

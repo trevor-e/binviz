@@ -718,6 +718,30 @@ mod tests {
     }
 
     #[test]
+    fn two_called_pieces_stay_apart_when_one_falls_into_the_other() {
+        // A calls a function that never returns, so its code runs into B's; but B is
+        // called too, so each is an entry point of its own.
+        let words = [
+            0x0C04_0005, // 0x80100000 (A): jal 0x80100014 (B)
+            0x0000_0000,
+            0x0C04_0009, // jal 0x80100024 (never returns)
+            0x0000_0000,
+            0x2402_0001, // li $v0, 1: falls into B
+            0x2402_0002, // 0x80100014 (B): li $v0, 2
+            0x03E0_0008, // jr $ra
+            0x0000_0000,
+            0x0000_0000,
+            0x0C04_0000, // 0x80100024: jal 0x80100000 (A)
+            0x0000_0000,
+            0x1000_FFFF, // b . (never returns)
+            0x0000_0000,
+        ];
+        let bin = overlay_of(&words);
+        assert_eq!(extent(&bin, 0x8010_0010), (0x8010_0000, 20));
+        assert_eq!(extent(&bin, 0x8010_0014), (0x8010_0014, 12));
+    }
+
+    #[test]
     fn a_switch_whose_table_is_outside_the_image_keeps_its_cases() {
         // The table is at 0x80200000, past the overlay: the `jr` can't be followed,
         // so the cases are reached by nothing; they are still the function's.
