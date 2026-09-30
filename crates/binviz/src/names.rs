@@ -210,6 +210,11 @@ impl Binary {
                 MatchKind::Name => continue,
                 MatchKind::Bytes => (1.0, "the same bytes".to_string()),
                 MatchKind::Instructions => (0.95, "the same instructions, at other addresses".to_string()),
+                MatchKind::Strings => (0.9, "the same strings, which nothing else uses".to_string()),
+                MatchKind::Constants => (
+                    0.6 + 0.3 * p.similarity,
+                    format!("the same distinctive numbers in their code, {alike:.0}% alike"),
+                ),
                 MatchKind::Calls => (
                     0.5 + 0.4 * p.similarity,
                     format!("where the calls put it, {alike:.0}% alike"),

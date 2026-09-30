@@ -982,7 +982,7 @@ impl Binary {
 
     /// References made by the function at `start` (`size` bytes) and by its
     /// pieces away from its entry.
-    fn scan_function(&self, start: u64, size: u64) -> Vec<(u64, u64, RefKind)> {
+    pub(crate) fn scan_function(&self, start: u64, size: u64) -> Vec<(u64, u64, RefKind)> {
         let mut out = self.scan_range(start, start + size.max(1));
         for (ps, pe) in self.symbols.parts_of(start) {
             out.extend(self.scan_range(ps, pe));

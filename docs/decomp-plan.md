@@ -455,6 +455,17 @@ Reuse across projects, cheapest first:
       callee ignores (`make_token`'s fifth, on the stack); a local's address passed to a
       call gives its extent and fields. Not done: x86 (its stack walk would feed the same
       unification), and walking a loop's pointer increments as array strides.
+- [x] **Matches propagated between builds, measured** (`fndiff.rs`; `diff … functions`,
+      `names <file> <build>`, MCP `diff_functions`, `propose_names`). Ghidra's Version
+      Tracking correlators, BinDiff's call sequence. The call-graph pass had paired
+      unmatched neighbours greedily, and 33–47 % of its pairs were wrong. Now: candidates
+      from where calls stand among calls already paired, a lone unmatched neighbour, and
+      look-alikes; each needs its other matched neighbours to agree and to beat the
+      runner-up by a margin on both sides; strings and distinctive constants (unique among
+      all functions on each side) anchor more, and the passes repeat. zstd (≈600
+      functions) by gcc -O2 against a stripped -Os / -O1 / clang -O2 build: right/wrong
+      pairs 236/126 → 324/14, 299/149 → 354/9, 135/75 → 238/20. `examples/diff_accuracy.rs`
+      measures it for any pair of builds with a named twin of the stripped one.
 - [ ] **Identical functions inside one binary**: 13 groups of identical code among
       FF9's 1 182 keyed boot-exe functions (and more across overlays, which share
       library code). The queue should treat a group as one work item and offer a

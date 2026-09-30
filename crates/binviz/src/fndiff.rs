@@ -7,9 +7,17 @@
 //!    the user's notes; not the `sub_…` names binviz makes up);
 //! 2. by identical bytes;
 //! 3. by the same instructions (code that moved: only addresses differ);
-//! 4. through the call graph: the callees and callers of matched functions,
-//!    paired when there is one of each, else by the closest instructions;
-//! 5. for game ROMs, at the same address with a similar size.
+//! 4. by the strings they use, and the distinctive numbers in their code,
+//!    when no other function on either side has the same;
+//! 5. through the call graph: the callees and callers of matched functions,
+//!    candidates from where their calls stand among calls already paired
+//!    (the call sequence), a lone unmatched neighbour on each side, and
+//!    look-alikes among the neighbours; each scored by how alike the two
+//!    are and whether their other matched neighbours agree, and paired best
+//!    first only when clearly better than the runner-up on both sides (so
+//!    variants of one template aren't guessed between). 4 and 5 repeat,
+//!    each giving the other more to go on;
+//! 6. for game ROMs, at the same address with a similar size.
 //!
 //! A matched pair is identical (same bytes), relocated (the same
 //! instructions, addresses aside) or changed, with how similar their
@@ -45,6 +53,10 @@ pub enum MatchKind {
     Name,
     Bytes,
     Instructions,
+    /// The same strings, used by no other function on either side.
+    Strings,
+    /// The same distinctive numbers in their code, in no other function.
+    Constants,
     Calls,
     Address,
 }
@@ -195,6 +207,90 @@ impl<'a> Side<'a> {
         list
     }
 
+    /// The strings a function refers to, sorted, as a key; `None` for none.
+    fn strings_key(&self, i: usize) -> Option<u64> {
+        let f = &self.funcs[i];
+        let mut texts: Vec<String> = self
+            .bin
+            .scan_function(f.address, f.size)
+            .into_iter()
+            .filter(|(_, _, kind)| !kind.is_call())
+            .filter_map(|(_, target, _)| self.bin.string_at_address(target))
+            .filter(|t| t.len() >= 3)
+            .collect();
+        texts.sort_unstable();
+        texts.dedup();
+        (!texts.is_empty()).then(|| hash_of(&texts))
+    }
+
+    /// The distinctive numbers in a function's instructions (hash
+    /// multipliers, magic numbers, sizes: not small ones, masks, powers of
+    /// two, or addresses), sorted, as a key; `None` for none.
+    fn constants_key(&self, i: usize) -> Option<u64> {
+        let f = &self.funcs[i];
+        let d = self.bin.disassemble_function(f.address, MAX_INSNS);
+        let mut values: Vec<u64> = Vec::new();
+        for ins in &d.instructions {
+            if ins.target.is_some() {
+                continue;
+            }
+            // Numbers outside memory operands' brackets.
+            let mut depth = 0;
+            let text = &ins.operands;
+            let bytes = text.as_bytes();
+            let mut k = 0;
+            while k < bytes.len() {
+                match bytes[k] {
+                    b'[' | b'(' => depth += 1,
+                    b']' | b')' => depth -= 1,
+                    b'0' if depth == 0 && bytes.get(k + 1) == Some(&b'x') => {
+                        let end = text[k + 2..].find(|c: char| !c.is_ascii_hexdigit()).map_or(text.len(), |e| k + 2 + e);
+                        if let Ok(v) = u64::from_str_radix(&text[k + 2..end], 16) {
+                            values.push(v);
+                        }
+                        k = end;
+                        continue;
+                    }
+                    _ => {}
+                }
+                k += 1;
+            }
+        }
+        let distinctive = |v: u64| {
+            let v32 = v as u32 as u64;
+            v >= 0x400
+                && !v.is_power_of_two()
+                && !v.wrapping_add(1).is_power_of_two()
+                && v != u64::MAX
+                && !(v32 + 1).is_power_of_two()
+                && !(v32.wrapping_neg() & 0xFFFF_FFFF).is_power_of_two()
+                && self.bin.section_at(v).is_none()
+                && self.bin.section_at(v << 16).is_none()
+        };
+        values.retain(|&v| distinctive(v));
+        values.sort_unstable();
+        values.dedup();
+        (!values.is_empty()).then(|| hash_of(&values))
+    }
+
+    /// The functions a function calls, a call site at a time in address
+    /// order (a callee called twice is in it twice).
+    fn call_sequence(&self, i: usize) -> Vec<usize> {
+        let f = &self.funcs[i];
+        let mut calls: Vec<(u64, usize)> = self
+            .bin
+            .scan_function(f.address, f.size)
+            .into_iter()
+            .filter(|(_, _, kind)| kind.is_call())
+            .filter_map(|(site, target, _)| {
+                let callee = self.bin.symbols().function_containing(target).map_or(target, |g| g.address);
+                Some((site, *self.at.get(&callee)?))
+            })
+            .collect();
+        calls.sort_unstable();
+        calls.into_iter().map(|c| c.1).take(512).collect()
+    }
+
     fn callers_of(&mut self, i: usize) -> Vec<usize> {
         if let Some(c) = self.callers.get(&i) {
             return c.clone();
@@ -219,6 +315,55 @@ impl Matcher<'_> {
             self.a.matched[i] = Some(j);
             self.b.matched[j] = Some(i);
             self.pairs.push((i, j, how));
+        }
+    }
+
+    /// Every function's key on each side (`None` for no key).
+    fn all_keys(&mut self, key: &dyn Fn(&mut Side, usize) -> Option<u64>) -> (Vec<Option<u64>>, Vec<Option<u64>>) {
+        let a = (0..self.a.funcs.len()).map(|i| key(&mut self.a, i)).collect();
+        let b = (0..self.b.funcs.len()).map(|j| key(&mut self.b, j)).collect();
+        (a, b)
+    }
+
+    /// Pairs the unmatched functions whose key no other function on either
+    /// side has, matched or not (a key left unique only because its other
+    /// holders were paired says little), when their sizes are within
+    /// `min_size_ratio` and they share that much of their instructions.
+    fn by_key_unique_overall(
+        &mut self,
+        how: MatchKind,
+        keys: &(Vec<Option<u64>>, Vec<Option<u64>>),
+        min_alike: f32,
+    ) {
+        let count = |ks: &[Option<u64>]| {
+            let mut c: HashMap<u64, (u32, usize)> = HashMap::new();
+            for (i, k) in ks.iter().enumerate() {
+                if let Some(k) = k {
+                    let e = c.entry(*k).or_insert((0, i));
+                    e.0 += 1;
+                }
+            }
+            c
+        };
+        let (ca, cb) = (count(&keys.0), count(&keys.1));
+        let mut found: Vec<(usize, usize)> = ca
+            .iter()
+            .filter(|(_, v)| v.0 == 1)
+            .filter_map(|(k, &(_, i))| cb.get(k).filter(|v| v.0 == 1).map(|&(_, j)| (i, j)))
+            .collect();
+        found.sort_unstable();
+        for (i, j) in found {
+            if self.a.matched[i].is_some() || self.b.matched[j].is_some() {
+                continue;
+            }
+            if min_alike > 0.0 {
+                let (ta, tb) = (&self.a.funcs[i].tokens, &self.b.funcs[j].tokens);
+                let (la, lb) = (ta.len() as f32, tb.len() as f32);
+                if la.min(lb) / la.max(lb).max(1.0) < min_alike || overlap(ta, tb) < min_alike {
+                    continue;
+                }
+            }
+            self.pair(i, j, how);
         }
     }
 
@@ -269,13 +414,101 @@ impl Matcher<'_> {
         }
     }
 
-    /// Pairs the unmatched neighbours (callees, then callers) of matched functions.
+    /// How far `x`'s and `y`'s matched callers and callees correspond: of
+    /// the matched neighbours of either, the share whose partner is a
+    /// neighbour of the other in the same way. `None` when neither has any.
+    fn agreement(&mut self, x: usize, y: usize) -> Option<f32> {
+        let (mut total, mut agree) = (0u32, 0u32);
+        for callers in [false, true] {
+            let (na, nb) = if callers {
+                (self.a.callers_of(x), self.b.callers_of(y))
+            } else {
+                (self.a.callees_of(x), self.b.callees_of(y))
+            };
+            let (sa, sb): (HashSet<usize>, HashSet<usize>) = (na.iter().copied().collect(), nb.iter().copied().collect());
+            for &p in &sa {
+                if let Some(q) = self.a.matched[p] {
+                    total += 1;
+                    agree += sb.contains(&q) as u32;
+                }
+            }
+            for &q in &sb {
+                if let Some(p) = self.b.matched[q] {
+                    total += 1;
+                    agree += sa.contains(&p) as u32;
+                }
+            }
+        }
+        (total > 0).then(|| agree as f32 / total as f32)
+    }
+
+    /// Candidates from where calls stand in two matched functions: their
+    /// calls to functions already paired line up (a longest common
+    /// subsequence), and between two such, a single unmatched callee on each
+    /// side is likely the same function (BinDiff's call sequence).
+    fn call_order_candidates(&self, i: usize, j: usize, out: &mut Vec<(usize, usize, Evidence)>) {
+        let sa = self.a.call_sequence(i);
+        let sb = self.b.call_sequence(j);
+        if sa.is_empty() || sb.is_empty() {
+            return;
+        }
+        // Positions of calls to matched functions, as the partner on b's side.
+        let ma: Vec<(usize, usize)> =
+            sa.iter().enumerate().filter_map(|(p, &f)| Some((p, self.a.matched[f]?))).collect();
+        let mb: Vec<(usize, usize)> =
+            sb.iter().enumerate().filter(|(_, f)| self.b.matched[**f].is_some()).map(|(p, &f)| (p, f)).collect();
+        let (n, m) = (ma.len(), mb.len());
+        let mut t = vec![0u16; (n + 1) * (m + 1)];
+        for x in (0..n).rev() {
+            for y in (0..m).rev() {
+                t[x * (m + 1) + y] = if ma[x].1 == mb[y].1 {
+                    t[(x + 1) * (m + 1) + y + 1] + 1
+                } else {
+                    t[(x + 1) * (m + 1) + y].max(t[x * (m + 1) + y + 1])
+                };
+            }
+        }
+        let mut bounds: Vec<(Option<usize>, Option<usize>)> = vec![(None, None)];
+        let (mut x, mut y) = (0, 0);
+        while x < n && y < m {
+            if ma[x].1 == mb[y].1 {
+                bounds.push((Some(ma[x].0), Some(mb[y].0)));
+                x += 1;
+                y += 1;
+            } else if t[(x + 1) * (m + 1) + y] >= t[x * (m + 1) + y + 1] {
+                x += 1;
+            } else {
+                y += 1;
+            }
+        }
+        bounds.push((None, None));
+        for w in bounds.windows(2) {
+            let (a_lo, b_lo) = (w[0].0.map_or(0, |p| p + 1), w[0].1.map_or(0, |q| q + 1));
+            let (a_hi, b_hi) = (w[1].0.unwrap_or(sa.len()), w[1].1.unwrap_or(sb.len()));
+            if a_lo >= a_hi || b_lo >= b_hi {
+                continue;
+            }
+            let ua = dedup(sa[a_lo..a_hi].iter().copied().filter(|&f| self.a.matched[f].is_none()));
+            let ub = dedup(sb[b_lo..b_hi].iter().copied().filter(|&f| self.b.matched[f].is_none()));
+            if let ([x], [y]) = (ua.as_slice(), ub.as_slice()) {
+                out.push((*x, *y, Evidence::Order));
+            }
+        }
+    }
+
+    /// Pairs the unmatched neighbours of matched functions: candidates from
+    /// the order of calls, a lone unmatched caller or callee on each side,
+    /// and look-alikes among them; each scored by how alike the two are, how
+    /// strong the evidence, and whether their other matched neighbours
+    /// agree; then taken best first, each only as the other's best.
     fn through_calls(&mut self) {
-        for _round in 0..8 {
-            let before = self.pairs.len();
-            let mut k = 0;
-            while k < self.pairs.len() {
+        // How alike two functions are, kept between rounds.
+        let mut alike_cache: HashMap<(usize, usize), f32> = HashMap::new();
+        for _round in 0..16 {
+            let mut found: Vec<(usize, usize, Evidence)> = Vec::new();
+            for k in 0..self.pairs.len() {
                 let (i, j, _) = self.pairs[k];
+                self.call_order_candidates(i, j, &mut found);
                 for callers in [false, true] {
                     let (na, nb) = if callers {
                         (self.a.callers_of(i), self.b.callers_of(j))
@@ -285,42 +518,94 @@ impl Matcher<'_> {
                     let na: Vec<usize> = dedup(na.into_iter().filter(|&x| self.a.matched[x].is_none()));
                     let nb: Vec<usize> = dedup(nb.into_iter().filter(|&y| self.b.matched[y].is_none()));
                     if let ([x], [y]) = (na.as_slice(), nb.as_slice()) {
-                        let (x, y) = (*x, *y);
-                        let (sx, sy) = (self.a.funcs[x].size as f64, self.b.funcs[y].size as f64);
-                        if sx.min(sy) / sx.max(sy) >= 0.5 {
-                            self.pair(x, y, MatchKind::Calls);
-                        }
+                        found.push((*x, *y, Evidence::Lone));
                         continue;
                     }
-                    for x in na {
-                        let tx = self.a.tokens(x).to_vec();
-                        let mut best: Option<(f32, usize)> = None;
+                    if na.len() * nb.len() > 4096 {
+                        continue;
+                    }
+                    for &x in &na {
                         for &y in &nb {
-                            if self.b.matched[y].is_some() {
-                                continue;
-                            }
-                            let ty = self.b.tokens(y);
-                            let (lx, ly) = (tx.len() as f32, ty.len() as f32);
-                            if lx == 0.0 || lx.min(ly) / lx.max(ly) < 0.7 {
-                                continue;
-                            }
-                            let s = overlap(&tx, ty);
-                            if s >= 0.6 && best.is_none_or(|(b, _)| s > b) {
-                                best = Some((s, y));
-                            }
-                        }
-                        if let Some((_, y)) = best {
-                            self.pair(x, y, MatchKind::Calls);
+                            found.push((x, y, Evidence::Near));
                         }
                     }
                 }
-                k += 1;
+            }
+            // Each candidate once, with its strongest evidence.
+            found.sort_by_key(|&(x, y, e)| (x, y, e));
+            found.dedup_by_key(|c| (c.0, c.1));
+            let mut scored: Vec<(f32, usize, usize)> = Vec::new();
+            for (x, y, e) in found {
+                let (lx, ly) = (self.a.funcs[x].tokens.len() as f32, self.b.funcs[y].tokens.len() as f32);
+                let ratio = if lx.max(ly) == 0.0 { 1.0 } else { lx.min(ly) / lx.max(ly) };
+                // Look-alikes need to look alike; a lone neighbour or a call in
+                // the same place, only to be about the same size.
+                let (min_ratio, bonus, floor) = match e {
+                    Evidence::Order => (0.25, 0.3, 0.0),
+                    Evidence::Lone => (0.4, 0.15, 0.0),
+                    Evidence::Near => (0.6, 0.0, 0.5),
+                };
+                if ratio < min_ratio {
+                    continue;
+                }
+                // What the two share, whatever the order: another compiler or
+                // other flags reorder more than they change.
+                let alike = *alike_cache
+                    .entry((x, y))
+                    .or_insert_with(|| overlap(&self.a.funcs[x].tokens, &self.b.funcs[y].tokens));
+                if alike < floor {
+                    continue;
+                }
+                let agree = self.agreement(x, y);
+                if agree.is_some_and(|a| a < 0.5) {
+                    continue;
+                }
+                scored.push((alike + bonus + 0.3 * agree.unwrap_or(0.5), x, y));
+
+            }
+            // Best first, each only as the other's best candidate, and clearly
+            // better than the next: variants of one template called from the
+            // same place look alike, and guessing among them spreads mistakes.
+            let mut top_a: HashMap<usize, (f32, f32)> = HashMap::new();
+            let mut top_b: HashMap<usize, (f32, f32)> = HashMap::new();
+            for &(sc, x, y) in &scored {
+                for (top, k) in [(&mut top_a, x), (&mut top_b, y)] {
+                    let t = top.entry(k).or_insert((f32::MIN, f32::MIN));
+                    if sc > t.0 {
+                        *t = (sc, t.0);
+                    } else if sc > t.1 {
+                        t.1 = sc;
+                    }
+                }
+            }
+            scored.sort_by(|p, q| q.0.total_cmp(&p.0).then((p.1, p.2).cmp(&(q.1, q.2))));
+            let before = self.pairs.len();
+            for (sc, x, y) in scored {
+                let (ta, tb) = (top_a[&x], top_b[&y]);
+                let clear = |t: (f32, f32)| sc >= t.0 && sc - t.1 >= MARGIN;
+                if clear(ta) && clear(tb) && self.a.matched[x].is_none() && self.b.matched[y].is_none() {
+                    self.pair(x, y, MatchKind::Calls);
+                }
             }
             if self.pairs.len() == before {
                 break;
             }
         }
     }
+}
+
+/// How much better than the runner-up a candidate through the call graph must score.
+const MARGIN: f32 = 0.05;
+
+/// Why two functions are candidates through the call graph, strongest first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Evidence {
+    /// Called from the same place in a matched pair.
+    Order,
+    /// The only unmatched caller or callee of a matched pair, on each side.
+    Lone,
+    /// Among a matched pair's unmatched neighbours, and alike.
+    Near,
 }
 
 fn dedup(it: impl Iterator<Item = usize>) -> Vec<usize> {
@@ -486,11 +771,26 @@ impl Binary {
             let t = s.tokens(i);
             (t.len() >= 4).then(|| hash_of(t))
         });
-        // 4. The call graph around what is matched.
-        if self.xrefs_supported() && newer.xrefs_supported() {
-            m.through_calls();
+        // 4. The call graph around what is matched, the strings each function
+        // uses and the distinctive numbers in its code, over again: each
+        // pairs some, which gives the others more to go on.
+        let xrefs = self.xrefs_supported() && newer.xrefs_supported();
+        let strings = |s: &mut Side, i: usize| s.strings_key(i);
+        let constants = |s: &mut Side, i: usize| (s.funcs[i].tokens.len() >= 8).then(|| s.constants_key(i)).flatten();
+        let keys_strings = if xrefs { m.all_keys(&strings) } else { Default::default() };
+        let keys_constants = m.all_keys(&constants);
+        for _ in 0..4 {
+            let before = m.pairs.len();
+            m.by_key_unique_overall(MatchKind::Strings, &keys_strings, 0.0);
+            m.by_key_unique_overall(MatchKind::Constants, &keys_constants, 0.5);
+            if xrefs {
+                m.through_calls();
+            }
+            if m.pairs.len() == before {
+                break;
+            }
         }
-        // 5. A ROM's code mostly stays put.
+        // 6. A ROM's code mostly stays put.
         if rom {
             for i in 0..m.a.funcs.len() {
                 if m.a.matched[i].is_some() {
@@ -730,6 +1030,8 @@ fn how(k: MatchKind) -> &'static str {
         MatchKind::Name => "name",
         MatchKind::Bytes => "bytes",
         MatchKind::Instructions => "instructions",
+        MatchKind::Strings => "the strings they use",
+        MatchKind::Constants => "the numbers in their code",
         MatchKind::Calls => "the call graph",
         MatchKind::Address => "address",
     }

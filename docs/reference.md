@@ -186,8 +186,16 @@ CPUs, and original Xbox executables (**XBE**).
   your notes become label files for the emulator's debugger.
 - **Function by function.** Two builds, two revisions of a game or a ROM and
   its patched copy are compared the way BinDiff does: functions matched by
-  name, by identical bytes, by the same instructions (code that moved), through
-  the call graph and, for ROMs, by address, even with no symbols at all; each
+  name, by identical bytes, by the same instructions (code that moved), by the
+  strings they use or the distinctive numbers in their code when no other
+  function has the same, through the call graph (where calls stand among calls
+  already paired, a lone unmatched neighbour, look-alikes among neighbours:
+  each paired only when its other matched neighbours agree and it is clearly
+  the best candidate on both sides, so variants of one template aren't
+  guessed between) and, for ROMs, by address, even with no symbols at all.
+  Measured on zstd built by gcc at -O2 against -Os, -O1 and clang -O2, one
+  side stripped: 96% of the pairs right (it was 60–67%) and a third to three
+  quarters more functions paired right. Each
   pair identical, relocated (only addresses differ) or changed and how much,
   with its instructions lined up side by side; and the functions added and
   removed.
