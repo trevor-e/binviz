@@ -26,6 +26,7 @@
 
 mod asm;
 mod binary;
+pub mod blobs;
 mod container;
 pub mod coverage;
 pub mod cpu;
@@ -39,6 +40,7 @@ mod discover;
 pub mod dwarf;
 mod error;
 mod fields;
+pub mod fieldrefs;
 pub mod fndiff;
 pub mod globals;
 mod inspect;
@@ -53,6 +55,7 @@ pub mod patch;
 pub mod plist;
 mod pointers;
 pub mod queue;
+pub mod rcs;
 pub mod rom;
 pub mod rtti;
 pub mod search;

@@ -193,7 +193,8 @@ Run it with no arguments for the full command list: `info`, `layout`,
 `calls`, `coverage`, `globals`, `classes`, `objc`, `dwarf`, `header`,
 `attribution`, `crash`, `diff`, `patch`, `relsearch`, `text` and `labels`, and
 for a decompilation `signature`, `context`, `match`, `asm`, `m2c`, `flags`,
-`report`, `progress`, `splat`, `sdk`, `locate`, `counterparts` and `names`.
+`report`, `progress`, `splat`, `sdk`, `locate`, `counterparts`, `names`, `files`,
+`extract`, `blobs`, `libraries` and `fieldrefs`.
 `--debug` attaches a separate debug file, `--member` picks a slice of a
 universal binary or a file in a folder, `--notes` loads annotations (and
 `--types` the structures they name), and `--log` follows a ROM with an

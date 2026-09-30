@@ -417,6 +417,44 @@ Tests still to run (none can run without the games and agents; not done):
 
 ## Progress log
 
+- 2026-09-29 (FF9 disc 1, US v1.1, SLUS-01251): first contact with the real game. Findings:
+  the boot executable `SLUS_012.51` is 1.96 MB but only ~350 KB of it is code
+  (`0x80010000`–`0x80068000`; the rest is data and zeroed BSS), linked from Psy-Q libraries
+  whose `$Id:` strings date them 1997–98 (`sys.c 1.140` 1998/01/12, `bios.c 1.86`, libcd).
+  Following calls from the entry found 250 functions; seeding the PS-X EXE with the same
+  prologue scan memory images use finds 1 304 (essentially all the code; tested). Everything
+  else is in the 332 MB `FF9.IMG`: header `"FF9 "`, 6, 15, then 16-byte entries
+  `(kind, count, id, sector)`, read by `sub_8001dcb8` (boot exe) after `CdSearchFile("\FF9.IMG;1")`.
+  Code sits in the first ~700 sectors (21 blobs of 6–100 KB, the first group); where each loads is
+  worked out by `blobs` (below); a blob opened at `0x800a7800` with the boot exe's names finds 158
+  functions and resolves its calls into the executable.
+  Disc files are extracted to `~/.local/share/binviz-validation/ff9/` (never commit them).
+  Not done: the archive's nested index, per-overlay load addresses, Psy-Q libraries and the
+  compiler (the user must supply them).
+  What made the session slower than it should have been, and what was done about it
+  (all landed the same day, tested; CLI and MCP):
+  - listing a disc's files (`ls_iso.py`) and extracting one (`extract.py`): `files` and
+    `extract` (MCP `list_disc_files`, `extract_disc_file`); also a stretch of any file.
+  - finding code inside an archive and where it loads (`codescan.py`, `bases.py`): `blobs`
+    (MCP `find_code_blobs`, `blobs.rs`). FF9.IMG in 0.2 s (the scripts took a minute): 37 blobs,
+    20 with a confident base. Of the 21 in the first 1.4 MB of the archive, 19 are: the big
+    overlays around `0x800a7800`-`0x800df000` (several share that window) and small ones near the
+    top of RAM (`0x801edf00`-`0x801f7700`). The other 16 are 3-13 functions each, scattered
+    through the rest of the archive, and all but one are unsure (probably not overlays); the two
+    unsure among the 21 have a split vote (two overlays in one run).
+  - code density by window (`density.py`): `coverage` now cuts an unexplored gap where what it
+    holds changes and says what the unexplored bytes are (FF9: 1.5 MB zeros, 656 KB outside the
+    file, 42 KB data, 31 KB code), with a MIPS check that code returns.
+  - Psy-Q version from the `$Id:` strings alone: `libraries` (MCP `library_sources`, `rcs.rs`),
+    also what `sdk` prints with no libraries. FF9: sys.c 1.140, intr.c 1.75, bios.c 1.86, dated
+    1997-02 to 1998-01. It does not name the SDK release; that needs the libraries.
+  - field cross-references: `fieldrefs <global> [offset]` (MCP `field_refs`, `fieldrefs.rs`),
+    and `globals` types a MIPS pointer to a structure with its fields.
+  - the splat export ignored names someone had given a function (it wrote `func_8001dcb8` for
+    `ff9_open_img`, because the `sub_` symbol sorted first at the same address); named symbols
+    now win. Found by exporting the FF9 project's notes.
+  - `match_project` and `match` printed `src\game.obj` on Windows where the test expects
+    `src/game.obj`: fixed in three places.
 - 2026-09-29 (the loop, for real): Yamagi Quake II 5.34's game code, its constants changed at
   random (1 536 of them, blind, so recalling id's code doesn't match), built by clang as an
   x86-64 `game.so`. Ten functions picked at random (44 to 526 bytes) were decompiled from

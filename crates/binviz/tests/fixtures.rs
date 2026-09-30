@@ -3846,6 +3846,18 @@ fn playstation_discs_open_their_executable() {
     let bin = c.open(0).unwrap();
     assert_eq!(bin.platform(), Some(binviz::rom::Platform::PlayStation));
     assert_eq!(bin.data(), &exe[..]);
+
+    // A member is found by number or by name, in any case, with or without the version.
+    assert_eq!(c.find("0"), Some(0));
+    assert_eq!(c.find("slus_999.99"), Some(0));
+    assert_eq!(c.find("\\SLUS_999.99;1"), Some(0));
+    assert_eq!(c.find("system.cnf"), Some(1));
+    assert_eq!(c.find("nothing.bin"), None);
+    let listing = c.listing();
+    assert!(
+        listing.contains("2 members") && listing.contains("sector      24") && listing.contains("(boots first)"),
+        "{listing}"
+    );
 }
 
 #[test]

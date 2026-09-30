@@ -14,7 +14,7 @@ use serde::Serialize;
 
 use crate::binary::Binary;
 use crate::error::{Error, Result};
-use crate::model::{Annotation, SymbolKind};
+use crate::model::{Annotation, SymbolKind, SymbolSource};
 use crate::rom::Platform;
 
 /// A splat project's starting files.
@@ -128,7 +128,11 @@ impl Binary {
         let mut n_functions = 0;
         let mut n_data = 0;
         let mut seen = std::collections::HashSet::new();
-        for s in self.symbols().iter() {
+        // Where two symbols share an address, the name someone chose beats the `sub_` one
+        // found by following the code.
+        let mut all: Vec<_> = self.symbols().iter().collect();
+        all.sort_by_key(|s| (s.address, matches!(s.source, SymbolSource::Discovered)));
+        for s in all {
             if !s.defined || !seen.insert(s.address) {
                 continue;
             }
@@ -249,6 +253,24 @@ mod tests {
         assert!(e.symbol_addrs.contains("entry = 0x80010000; // type:func size:0x10 rom:0x800"), "{}", e.symbol_addrs);
         assert!(e.symbol_addrs.contains("func_80010010 = 0x80010010; // type:func size:0x8 rom:0x810"));
         assert!(e.symbol_addrs.contains("GP0 = 0x1f801810; // type:data size:0x4"));
+        assert_eq!(e.functions, 2);
+
+        // A name someone gave a function beats the `sub_` one, and gets its own line.
+        let mut named = Binary::parse(bin.data().to_vec()).unwrap();
+        named.set_annotations(vec![Annotation {
+            address: 0x8001_0010,
+            size: 0,
+            name: "OpenArchive".into(),
+            comment: String::new(),
+            reviewed: false,
+            kind: None,
+            decomp: None,
+            ctype: None,
+            author: String::new(),
+        }]);
+        let e = named.splat_export("tiny", &[0x8001_0010]).unwrap();
+        assert!(e.symbol_addrs.contains("OpenArchive = 0x80010010; // type:func"), "{}", e.symbol_addrs);
+        assert!(!e.symbol_addrs.contains("func_80010010"), "{}", e.symbol_addrs);
         assert_eq!(e.functions, 2);
 
         let notes = parse_symbol_addrs(

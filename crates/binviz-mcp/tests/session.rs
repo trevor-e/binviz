@@ -877,3 +877,74 @@ fn agents_share_notes_and_follow_a_worklist() {
     );
     assert!(s.request("prompts/get", json!({ "name": "nope" }))["error"].is_object());
 }
+
+/// 170 functions of different lengths, each calling the one before it, as the bytes of MIPS
+/// code loaded at `base`. (Identical functions would fit any base a whole function away.)
+fn mips_functions(base: u32) -> Vec<u8> {
+    let mut words: Vec<u32> = Vec::new();
+    let mut previous = base;
+    for i in 0..170u32 {
+        let this = base + 4 * words.len() as u32;
+        let target = if i == 0 { this } else { previous };
+        let call = 0x0C00_0000 | (target >> 2) & 0x03FF_FFFF;
+        words.extend([0x27BD_FFE8, 0xAFBF_0014, call, 0, call, 0]);
+        words.extend(std::iter::repeat_n(0x2402_0001, (i.wrapping_mul(2_654_435_761) >> 13) as usize % 13));
+        words.extend([0x8FBF_0014, 0, 0x03E0_0008, 0x27BD_0018]);
+        previous = this;
+    }
+    words.iter().flat_map(|w| w.to_le_bytes()).collect()
+}
+
+#[test]
+fn an_archive_of_overlays_is_searched_for_code() {
+    let exe = fixture_copy_for("tiny-psx.exe", "blobs");
+    let dir = exe.parent().unwrap().to_path_buf();
+    // Noise, then the code padded to a sector boundary, then more noise.
+    let mut archive = vec![0x55u8; 0x800 * 3];
+    let at = archive.len();
+    let code = mips_functions(0x8012_3000);
+    archive.extend(&code);
+    archive.resize(at + code.len().div_ceil(0x800) * 0x800, 0);
+    let len = archive.len() - at;
+    archive.extend(vec![0xAAu8; 0x800 * 2]);
+    let path = dir.join("overlays.img");
+    std::fs::write(&path, &archive).unwrap();
+
+    let mut s = Session::start();
+    let found = s.ok(
+        "find_code_blobs",
+        json!({ "path": path.to_str().unwrap(), "psx_exe": exe.to_str().unwrap() }),
+    );
+    assert!(
+        found.contains("1 blobs of code")
+            && found.contains(&format!("@{at:#x}"))
+            && found.contains("loads at 0x80123000")
+            && !found.contains("unsure"),
+        "{found}"
+    );
+
+    // Written out and opened where it loads.
+    let blob = dir.join("blob.bin");
+    let out = s.ok(
+        "extract_disc_file",
+        json!({ "path": path.to_str().unwrap(), "out": blob.to_str().unwrap(), "offset": at, "length": len }),
+    );
+    assert!(out.contains(&format!("{len} bytes")), "{out}");
+    assert_eq!(std::fs::read(&blob).unwrap(), archive[at..at + len]);
+    s.ok(
+        "open_binary",
+        json!({ "path": blob.to_str().unwrap(), "overlay_at": "0x80123000", "psx_exe": exe.to_str().unwrap() }),
+    );
+    let libs = s.ok("library_sources", json!({}));
+    assert!(libs.contains("No RCS"), "{libs}");
+
+    // Not a container; a stretch past the end.
+    let (text, error) = s.call("list_disc_files", json!({ "path": path.to_str().unwrap() }));
+    assert!(error && text.contains("holds no files"), "{text}");
+    let (text, error) = s.call(
+        "extract_disc_file",
+        json!({ "path": path.to_str().unwrap(), "out": blob.to_str().unwrap(), "offset": archive.len(), "length": 4 }),
+    );
+    assert!(error && text.contains("past the end"), "{text}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

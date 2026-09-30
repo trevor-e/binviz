@@ -13,6 +13,7 @@
 
 mod crash;
 mod diff;
+mod files;
 mod folders;
 mod notes;
 mod queue;

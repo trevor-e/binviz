@@ -420,7 +420,7 @@ impl Binary {
     fn fields_through(&self, a: u64) -> Vec<GlobalField> {
         let mut fields: Vec<GlobalField> = Vec::new();
         if !self.is_x86() {
-            return fields;
+            return self.mips_fields_through(a);
         }
         let index = self.xref_index();
         let mut info = iced_x86::InstructionInfoFactory::new();

@@ -550,7 +550,7 @@ pub fn read_source_tree(dir: &std::path::Path) -> std::io::Result<Vec<(String, S
                 continue;
             }
             let bytes = std::fs::read(&p)?;
-            let name = p.strip_prefix(dir).unwrap_or(&p).to_string_lossy().into_owned();
+            let name = p.strip_prefix(dir).unwrap_or(&p).to_string_lossy().replace('\\', "/");
             out.push((name, String::from_utf8_lossy(&bytes).into_owned()));
         }
     }

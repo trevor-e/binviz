@@ -177,6 +177,45 @@ impl Container {
         Ok(Arc::from(&self.data[start..end]))
     }
 
+    /// The member a user means: its number, or its name (a disc file's path, in any case,
+    /// with or without the folders in front).
+    pub fn find(&self, text: &str) -> Option<u32> {
+        let text = text.trim().trim_start_matches(['/', '\\']);
+        if let Ok(i) = text.parse::<u32>()
+            && (i as usize) < self.info.members.len()
+        {
+            return Some(i);
+        }
+        let text = text.replace('\\', "/");
+        let text = text.split(';').next().unwrap_or(&text).to_string();
+        let same = |name: &str| {
+            let name = name.split(';').next().unwrap_or(name);
+            name.eq_ignore_ascii_case(&text)
+        };
+        let tail = |name: &str| {
+            name.rsplit('/')
+                .next()
+                .is_some_and(|last| last.split(';').next().unwrap_or(last).eq_ignore_ascii_case(&text))
+        };
+        let full = self.info.members.iter().position(|m| same(&m.name));
+        full.or_else(|| self.info.members.iter().position(|m| tail(&m.name)))
+            .map(|i| i as u32)
+    }
+
+    /// Every member on a line: number, where it starts (a disc's sector, else its offset), size, name.
+    pub fn listing(&self) -> String {
+        let mut out = format!("{} with {} members:\n", self.info.kind, self.info.members.len());
+        for m in &self.info.members {
+            let at = match &self.disc {
+                Some((_, files)) => format!("sector {:>7}", files[m.index as usize].lba),
+                None => format!("@{:#010x}", m.offset),
+            };
+            let note = m.arch.as_deref().map_or(String::new(), |a| format!("  ({a})"));
+            out.push_str(&format!("  [{}] {at} {:>11} bytes  {}{note}\n", m.index, m.size, m.name));
+        }
+        out
+    }
+
     /// Parses one member as a binary. Offsets in the result are relative to the member.
     pub fn open(&self, index: u32) -> Result<Binary> {
         Binary::parse(self.member_data(index)?)

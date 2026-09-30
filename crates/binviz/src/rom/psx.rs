@@ -123,7 +123,10 @@ pub(super) fn detect(data: &[u8]) -> Option<RomParts> {
         layout,
         data: None,
         entries: Vec::new(),
-        late_entries: Vec::new(),
+        // A game reaches most of its code through tables of function pointers and
+        // callbacks, so following calls from the entry finds a fraction of it; the
+        // prologues fill in the rest once the calls have been followed.
+        late_entries: prologues(&data[0x800..0x800 + size as usize], text),
     })
 }
 
@@ -217,7 +220,7 @@ pub(crate) fn prologues(data: &[u8], base: u64) -> Vec<u64> {
             && w & 0xFFFF_0000 == 0x27BD_0000
             && ((w & 0xFFFF) as u16 as i16) < 0
             && w & 3 == 0
-            && (1..=8).any(|k| word(at + 4 * k).is_some_and(|s| s & 0xFFFF_0000 == 0xAFBF_0000))
+            && (1..=24).any(|k| word(at + 4 * k).is_some_and(|s| s & 0xFFFF_0000 == 0xAFBF_0000))
         {
             out.push(base + at as u64);
         }
@@ -599,6 +602,72 @@ mod tests {
         data[0x1C..0x20].copy_from_slice(&(code.len() as u32).to_le_bytes());
         data.extend(code);
         Binary::parse(data).unwrap()
+    }
+
+    #[test]
+    fn an_executable_finds_functions_nothing_calls() {
+        // The entry returns at once; a function with a frame follows that nothing calls
+        // (a game's callbacks are reached through tables of pointers).
+        let mut words = vec![0x03E0_0008, 0x0000_0000, 0x0000_0000, 0x0000_0000];
+        words.extend(caller(0x8001_0000));
+        let exe = exe_with(&words);
+        let f = exe.symbols().function_containing(0x8001_0010).expect("the uncalled function is found");
+        assert_eq!(f.name(), "sub_80010010");
+    }
+
+    #[test]
+    fn fields_are_followed_through_a_global_pointer() {
+        let words = [
+            0x3C01_8002, // lui $at, 0x8002
+            0x8C23_0010, // lw $v1, 0x10($at)     the pointer, from the global at 0x80020010
+            0x8C64_0014, // lw $a0, 0x14($v1)
+            0xAC60_0030, // sw $zero, 0x30($v1)
+            0x0060_8025, // move $s0, $v1
+            0x0C00_400B, // jal 0x8001002c
+            0x2464_0040, // addiu $a0, $v1, 0x40  (delay slot: &p->0x40)
+            0x8E05_0008, // lw $a1, 8($s0)        $s0 survives the call
+            0x8C66_0014, // lw $a2, 0x14($v1)     $v1 doesn't
+            0x03E0_0008, // jr $ra
+            0,
+            0x03E0_0008, // the callee
+            0,
+        ];
+        let exe = exe_with(&words);
+        exe.prepare_xrefs();
+        let found: Vec<(i64, u8, bool, u64)> = exe
+            .field_accesses(0x8002_0010)
+            .iter()
+            .map(|a| (a.offset, a.width, a.store, a.site))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (0x8, 4, false, 0x8001_001C),
+                (0x14, 4, false, 0x8001_0008),
+                (0x30, 4, true, 0x8001_000C),
+                (0x40, 0, false, 0x8001_0018),
+            ]
+        );
+        let text = exe.field_refs_text(0x8002_0010, Some(0x14));
+        assert!(text.contains("1 uses of offset 0x14") && text.contains("at 0x80010008"), "{text}");
+    }
+
+    #[test]
+    fn an_unexplored_stretch_is_named_for_each_thing_in_it() {
+        // An entry that returns; then 4 KiB that returns a lot but nothing reaches, 8 KiB of
+        // zeroes, and 4 KiB of words that are neither code nor pointers. One gap, three kinds.
+        let mut words = vec![0x03E0_0008, 0];
+        words.extend((0..512).flat_map(|_| [0x03E0_0008, 0, 0, 0]).take(1024));
+        words.extend(vec![0u32; 2048]);
+        words.extend(vec![0x1234_5678u32; 1024]);
+        let exe = exe_with(&words);
+        let c = exe.coverage(10);
+        let bytes = |kind: &str| c.unexplored_by_kind.iter().find(|(k, _)| k == kind).map(|k| k.1);
+        assert_eq!(bytes("code"), Some(4096), "{:?}", c.unexplored_by_kind);
+        assert_eq!(bytes("mostly zeros"), Some(8192), "{:?}", c.unexplored_by_kind);
+        assert_eq!(bytes("data"), Some(4096), "{:?}", c.unexplored_by_kind);
+        let hints: Vec<&str> = c.gaps.iter().map(|g| g.hint.as_str()).collect();
+        assert!(hints.contains(&"code") && hints.contains(&"mostly zeros"), "{hints:?}");
     }
 
     #[test]

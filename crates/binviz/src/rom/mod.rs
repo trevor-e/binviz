@@ -21,6 +21,7 @@ mod n64;
 mod nes;
 pub(crate) mod pointers;
 mod psx;
+pub(crate) use psx::prologues;
 pub mod psyq;
 mod snes;
 

@@ -16,6 +16,8 @@
 //! | `padding`    | alignment filler (zeros, int3, nops) between the above         |
 //! | `unexplored` | anything else                                                  |
 
+use std::collections::HashMap;
+
 use object::Architecture;
 use serde::Serialize;
 
@@ -142,6 +144,8 @@ pub struct Coverage {
     /// Largest unexplored gaps first.
     pub gaps: Vec<Gap>,
     pub gap_count: u32,
+    /// What the unexplored bytes are, by [`Gap::hint`], most first.
+    pub unexplored_by_kind: Vec<(String, u64)>,
     pub functions: FunctionCounts,
     pub annotations: u32,
     pub reviewed: u32,
@@ -493,10 +497,25 @@ impl Binary {
                 bytes,
             });
         }
+        // A gap is named for what it holds, so one that holds several things is several gaps.
+        let mut budget = 64u64 << 20;
+        let mut gaps: Vec<(u32, Run, &'static str)> = gaps
+            .into_iter()
+            .flat_map(|(idx, r)| self.split_gap(idx, r, &mut budget))
+            .collect();
         let gap_count = gaps.len() as u32;
-        gaps.sort_by_key(|(_, r)| (std::cmp::Reverse(r.end - r.start), r.start));
+        let mut kinds: HashMap<&str, u64> = HashMap::new();
+        for (_, r, hint) in &gaps {
+            *kinds.entry(hint).or_default() += r.end - r.start;
+        }
+        let mut unexplored_by_kind: Vec<(String, u64)> = kinds.into_iter().map(|(k, n)| (k.to_string(), n)).collect();
+        unexplored_by_kind.sort_by_key(|(k, n)| (std::cmp::Reverse(*n), k.clone()));
+        gaps.sort_by_key(|(_, r, _)| (std::cmp::Reverse(r.end - r.start), r.start));
         gaps.truncate(max_gaps as usize);
-        let gaps = gaps.into_iter().map(|(idx, r)| self.describe_gap(idx, r)).collect();
+        let gaps = gaps
+            .into_iter()
+            .map(|(idx, r, hint)| self.describe_gap(idx, r, hint))
+            .collect();
 
         let mut functions = FunctionCounts::default();
         let by_agents: std::collections::HashSet<u64> = self
@@ -518,6 +537,7 @@ impl Binary {
             totals,
             gaps,
             gap_count,
+            unexplored_by_kind,
             functions,
             annotations: self.annotations.iter().filter(|a| a.is_note()).count() as u32,
             reviewed: self.annotations.iter().filter(|a| a.reviewed).count() as u32,
@@ -525,7 +545,43 @@ impl Binary {
         }
     }
 
-    fn describe_gap(&self, section: u32, r: Run) -> Gap {
+    /// The file bytes of an unexplored run (fewer than its length if it runs off the file's end).
+    fn gap_bytes(&self, section: u32, start: u64, end: u64) -> &[u8] {
+        let sec = &self.sections[section as usize];
+        let Some(off) = sec.file_offset.filter(|_| !sec.compressed) else {
+            return &[];
+        };
+        let from = start - sec.address;
+        let n = (end - start).min(sec.file_size.saturating_sub(from));
+        self.data.get((off + from) as usize..(off + from + n) as usize).unwrap_or(&[])
+    }
+
+    /// An unexplored run, cut where what its bytes are changes (zeros, then a table, then code).
+    /// `budget` bounds the bytes looked at, so a huge binary stays quick.
+    fn split_gap(&self, section: u32, r: Run, budget: &mut u64) -> Vec<(u32, Run, &'static str)> {
+        const WINDOW: u64 = 4096;
+        let kind = self.sections[section as usize].kind;
+        let len = r.end - r.start;
+        if len < 2 * WINDOW || len > *budget {
+            let hint = self.gap_hint(kind, self.gap_bytes(section, r.start, r.end.min(r.start + WINDOW)));
+            return vec![(section, r, hint)];
+        }
+        *budget -= len;
+        let mut out: Vec<(u32, Run, &'static str)> = Vec::new();
+        let mut at = r.start;
+        while at < r.end {
+            let to = (at + WINDOW).min(r.end);
+            let hint = self.gap_hint(kind, self.gap_bytes(section, at, to));
+            match out.last_mut() {
+                Some(last) if last.2 == hint => last.1.end = to,
+                _ => out.push((section, Run { start: at, end: to, status: r.status }, hint)),
+            }
+            at = to;
+        }
+        out
+    }
+
+    fn describe_gap(&self, section: u32, r: Run, hint: &'static str) -> Gap {
         let sec = &self.sections[section as usize];
         let offset = sec
             .file_offset
@@ -562,7 +618,7 @@ impl Binary {
             section,
             offset,
             after,
-            hint: self.gap_hint(sec.kind, bytes).to_string(),
+            hint: hint.to_string(),
             preview,
         }
     }
@@ -604,6 +660,27 @@ impl Binary {
             }
         }
         if kind == RegionKind::Code {
+            // Machine code returns often; a MIPS run with fewer than one `jr $ra` in 2 KiB is data.
+            if let Some(rom) = &self.rom
+                && matches!(rom.cpu, crate::cpu::Cpu::MipsR3000 | crate::cpu::Cpu::MipsR4300)
+                && n >= 512
+            {
+                let returns = bytes
+                    .chunks_exact(4)
+                    .filter(|w| {
+                        let w = [w[0], w[1], w[2], w[3]];
+                        let v = if self.endian == crate::util::Endian::Little {
+                            u32::from_le_bytes(w)
+                        } else {
+                            u32::from_be_bytes(w)
+                        };
+                        v == 0x03E0_0008
+                    })
+                    .count();
+                if returns * 2048 < n {
+                    return "data";
+                }
+            }
             return "code";
         }
         if n >= 256 && crate::binary::entropy(bytes) > 7.2 {

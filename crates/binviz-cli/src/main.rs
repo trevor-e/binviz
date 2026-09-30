@@ -25,6 +25,13 @@ COMMANDS:
     inspect <file> <address|@offset>
                                    Everything known about an address, or the byte at a file offset
     check <file>                   Verify that the layout covers every byte
+    files <file>                   The files on a disc image, or the members of a universal
+                                   binary or archive: number, sector or offset, size, name
+    extract <file> <member> [out]  One of them (its number or name) written out; or for any
+                                   file, a stretch of it: @0x9800+0xe800 (offset+length)
+    blobs <file> [--psx-exe <exe>] Code inside a file binviz can't read (a game's archive of
+                                   overlays): each run of MIPS code with where it loads,
+                                   worked out from its own calls and pointers
   Names and code
     symbols <file> [filter]        Symbols, optionally filtered by name
     strings <file> [filter]        Printable strings in the data sections
@@ -128,6 +135,13 @@ COMMANDS:
                                    for a PS-X EXE, the code split into units at the splits
     splat <file> import <symbol_addrs.txt>
                                    A splat symbol file as notes, JSON for --notes
+    fieldrefs <file> <global> [offset]
+                                   What the code does through a pointer kept in a global (MIPS):
+                                   each offset it loads, stores or takes the address of; with an
+                                   offset, the functions that use that field and how
+    libraries <file>               The source files the code was built from that say so (RCS
+                                   $Id: strings: Psy-Q's libraries carry them), with their
+                                   revisions and dates; sdk with no libraries prints the same
     sdk <file> <lib|folder...> [notes]
                                    The library functions in the file (Psy-Q's SDK, MSVC's C
                                    runtime…), found by the signatures of the libraries' objects:
@@ -492,6 +506,12 @@ fn run(
             .get(2)
             .ok_or("which table? binviz text <file> <table.tbl> [offset [length] | text]")?;
         return table_text(&args[1], table, &args[3..]);
+    }
+    if cmd == "files" || cmd == "extract" {
+        return files_or_extract(&args[1..], cmd == "files");
+    }
+    if cmd == "blobs" {
+        return blobs(&args[1], psx.exe);
     }
     let path = std::path::Path::new(&args[1]);
     let mut bin = if binviz::package::is_package_path(path) {
@@ -1164,6 +1184,14 @@ fn run(
                 c.reviewed,
                 c.agent_notes
             );
+            if !c.unexplored_by_kind.is_empty() {
+                let kinds: Vec<String> = c
+                    .unexplored_by_kind
+                    .iter()
+                    .map(|(k, n)| format!("{k} {n} bytes"))
+                    .collect();
+                println!("unexplored, by what it looks like: {}", kinds.join(", "));
+            }
             println!("{} unexplored gaps; largest:", c.gap_count);
             for g in &c.gaps {
                 println!(
@@ -1431,7 +1459,7 @@ fn run(
                         .strip_prefix(folder)
                         .unwrap_or(&path)
                         .to_string_lossy()
-                        .into_owned();
+                        .replace('\\', "/");
                     objects.push((unit, bytes));
                 }
                 if objects.is_empty() {
@@ -1555,7 +1583,10 @@ fn run(
                 }
             }
             if paths.is_empty() {
-                return Err("which libraries? binviz sdk <file> <lib|folder...> [notes]".into());
+                // Without the libraries, what the code itself says about them.
+                print!("{}", binviz::rcs::sources_text(&bin.library_sources()));
+                println!("To name the library functions, give the libraries: binviz sdk <file> <lib|folder...> [notes]");
+                return Ok(());
             }
             for path in &paths {
                 let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -1574,6 +1605,22 @@ fn run(
                 print!("{}", r.to_text());
             }
         }
+        "fieldrefs" => {
+            let global = resolve_address(&bin, arg(2).ok_or("which global pointer? binviz fieldrefs <file> <global> [offset]")?)?;
+            let offset = match arg(3) {
+                Some(o) => {
+                    let (neg, digits) = match o.strip_prefix('-') {
+                        Some(d) => (true, d),
+                        None => (false, o.strip_prefix('+').unwrap_or(o)),
+                    };
+                    let v = num(digits)? as i64;
+                    Some(if neg { -v } else { v })
+                }
+                None => None,
+            };
+            print!("{}", bin.field_refs_text(global, offset));
+        }
+        "libraries" => print!("{}", binviz::rcs::sources_text(&bin.library_sources())),
         "locate" => {
             let path = arg(2).ok_or("which file? binviz locate <ram.bin> <file>")?;
             let blob = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
@@ -1859,6 +1906,61 @@ fn patch(file: &str, second: &str, out: Option<&str>) -> Result<(), String> {
         std::fs::write(out, &applied.output).map_err(|e| format!("{out}: {e}"))?;
         eprintln!("wrote the patched file to {out}");
     }
+    Ok(())
+}
+
+/// `files` and `extract`: what a disc, universal binary or archive holds, and one of its members
+/// (or, for any file, `@offset+length` of its bytes) written out.
+fn files_or_extract(args: &[String], list: bool) -> Result<(), String> {
+    let path = &args[0];
+    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let spec = args.get(1).map(String::as_str);
+    if let Some(range) = spec.and_then(|s| s.strip_prefix('@')) {
+        let (from, len) = range
+            .split_once('+')
+            .ok_or("a stretch is @offset+length, like @0x9800+0xe800")?;
+        let (from, len) = (num(from)? as usize, num(len)? as usize);
+        let bytes = data
+            .get(from..from.checked_add(len).ok_or("that runs past the end")?)
+            .ok_or_else(|| format!("{path} has {} bytes: {from:#x}+{len:#x} runs past the end", data.len()))?;
+        let out = args.get(2).cloned().unwrap_or_else(|| format!("{from:#x}.bin"));
+        std::fs::write(&out, bytes).map_err(|e| format!("{out}: {e}"))?;
+        eprintln!("wrote {out} ({len} bytes)");
+        return Ok(());
+    }
+    if !binviz::Container::is_container(&data) {
+        return Err(format!("{path} holds no files: it is not a disc image, universal binary or archive"));
+    }
+    let c = binviz::Container::parse(data).map_err(|e| e.to_string())?;
+    if list {
+        print!("{}", c.listing());
+        return Ok(());
+    }
+    let spec = spec.ok_or("which member? binviz extract <file> <number|name> [out]  (binviz files lists them)")?;
+    let index = c.find(spec).ok_or_else(|| format!("no member {spec:?}; binviz files {path} lists them"))?;
+    let bytes = c.member_data(index).map_err(|e| e.to_string())?;
+    let name = &c.members()[index as usize].name;
+    let out = args.get(2).cloned().unwrap_or_else(|| {
+        let last = name.rsplit('/').next().unwrap_or(name);
+        last.split(';').next().unwrap_or(last).to_string()
+    });
+    std::fs::write(&out, &*bytes).map_err(|e| format!("{out}: {e}"))?;
+    eprintln!("wrote {out} ({} bytes)", bytes.len());
+    Ok(())
+}
+
+/// `blobs`: the code in a file binviz has no reader for, and where each run loads.
+fn blobs(path: &str, exe: Option<&str>) -> Result<(), String> {
+    let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    // The boot executable's calls say nothing about where an overlay loads.
+    let skip = match exe {
+        Some(e) => {
+            let head = std::fs::read(e).map_err(|e2| format!("{e}: {e2}"))?;
+            Some(binviz::blobs::exe_range(&head).ok_or_else(|| format!("{e} is not a PS-X EXE"))?)
+        }
+        None => None,
+    };
+    print!("{}", binviz::blobs::blobs_text(&binviz::blobs::find_code_blobs(&data, skip)));
     Ok(())
 }
 

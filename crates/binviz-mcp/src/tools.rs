@@ -62,7 +62,14 @@ fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&s
     let mut props = props;
     if !matches!(
         name,
-        "open_binary" | "list_binaries" | "symbolicate" | "size_diff" | "diff_functions"
+        "open_binary"
+            | "list_binaries"
+            | "symbolicate"
+            | "size_diff"
+            | "diff_functions"
+            | "list_disc_files"
+            | "extract_disc_file"
+            | "find_code_blobs"
     ) {
         props["binary"] = binary_param();
     }
@@ -570,6 +577,61 @@ pub fn definitions() -> Vec<Value> {
             true,
         ),
         tool(
+            "list_disc_files",
+            "List a disc's files",
+            "The files on a CD image (.bin/.iso, a PlayStation game's disc: each with its sector and size, the executable it boots marked), or the members of a universal binary or archive. Nothing is opened. extract_disc_file writes one out.",
+            json!({
+                "path": { "type": "string", "description": "The disc image, universal binary or archive." },
+            }),
+            &["path"],
+            true,
+        ),
+        tool(
+            "extract_disc_file",
+            "Write a disc file out",
+            "Writes one member of a disc image, universal binary or archive to a file (member: its number or name from list_disc_files, any case, folders optional), or, for any file, a stretch of its bytes (offset and length: an overlay found by find_code_blobs). Returns the size written.",
+            json!({
+                "path": { "type": "string", "description": "The disc image, archive, or any file." },
+                "out": { "type": "string", "description": "Where to write the bytes." },
+                "member": { "type": "string", "description": "A member's number, or name (SLUS_012.51, FF9.IMG, SEQ01/FMV001.STR)." },
+                "offset": { "type": "integer", "description": "Instead of a member: the first byte of a stretch of the file." },
+                "length": { "type": "integer", "description": "With offset: how many bytes." },
+            }),
+            &["path", "out"],
+            false,
+        ),
+        tool(
+            "find_code_blobs",
+            "Find code in an archive",
+            "For a file binviz can't read, such as a PlayStation game's archive of overlays: each run of MIPS code (sectors that save $ra, return and call), with its offset, size, function count and where it loads, worked out from its own calls and pointers (each votes for the base that lands it on a function start; calls into the boot executable are left out when psx_exe is given). A guess marked unsure has a split vote, often two overlays in one run. Needs no emulator. Extract a blob with extract_disc_file and open it with open_binary's overlay_at.",
+            json!({
+                "path": { "type": "string", "description": "The archive or file (extract it from the disc first)." },
+                "psx_exe": { "type": "string", "description": "The game's boot executable, whose calls say nothing about where an overlay loads." },
+                "limit": { "type": "integer", "description": "Blobs to list (default 200)." },
+            }),
+            &["path"],
+            true,
+        ),
+        tool(
+            "field_refs",
+            "Fields reached through a global pointer",
+            "For a global that holds a pointer to a structure (a game's state, its file manager: `lw $v1, global` then `lw/sw N($v1)`), MIPS: each offset the code loads, stores or takes the address of through it (following the pointer through moves and addiu), with the widths and how many functions; with an offset, the functions that use that field, each access and where. The pointer is followed within one straight run of code after it is loaded. It is what refs on the global cannot say, which lists every read of the pointer itself.",
+            json!({
+                "global": address("The global holding the pointer"),
+                "offset": { "type": "integer", "description": "One field's offset (a negative one for a field before the pointed-to address): list the functions that use it." },
+            }),
+            &["global"],
+            true,
+        ),
+        tool(
+            "library_sources",
+            "Libraries linked in, by version string",
+            "The source files the code was built from that carry an RCS version string (`$Id: sys.c,v 1.140 1998/01/12 ...$`, which Psy-Q's libraries keep): file, revision, date, address. The newest date is the earliest the libraries could have been built; it narrows the SDK release before any library files are supplied to identify_sdk.",
+            json!({}),
+            &[],
+            true,
+        ),
+        tool(
             "locate",
             "Find a disc file in memory",
             "For a PlayStation memory image (2 MiB of RAM an emulator dumped): where a file from the disc (an overlay) is loaded; for an archive of files in a format binviz doesn't read (stored uncompressed), each stretch of it loaded there, with its offset in the archive, its address and how much of it is still the same. Open a stretch as an overlay at its address (open_binary's overlay_at) to work on it.",
@@ -898,6 +960,9 @@ impl Server {
             "symbolicate" => self.symbolicate(args).map(finish),
             "size_diff" => self.size_diff(args).map(finish),
             "diff_functions" => self.diff_functions(args).map(finish),
+            "list_disc_files" => self.list_disc_files(args).map(finish),
+            "extract_disc_file" => self.extract_disc_file(args).map(finish),
+            "find_code_blobs" => self.find_code_blobs(args).map(finish),
             "decomp_context" => self.decomp_context(args).map(finish),
             "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
@@ -953,6 +1018,15 @@ impl Server {
                     "propose_names" => propose_names(o, args)?,
                     "source_counterparts" => source_counterparts(o, args)?,
                     "export_progress" => export_progress(o, args)?,
+                    "field_refs" => {
+                        let global = address_of(&o.bin, string(args, "global").ok_or("global is required")?)?;
+                        ensure_xrefs(o)?;
+                        format!(
+                            "{}",
+                            o.bin.field_refs_text(global, args.get("offset").and_then(Value::as_i64))
+                        )
+                    }
+                    "library_sources" => binviz::rcs::sources_text(&o.bin.library_sources()),
                     "locate" => locate(o, args)?,
                     "rank_builds" => rank_builds(o, args)?,
                     "export_asm" => export_asm(o, args)?,
@@ -2231,7 +2305,13 @@ fn coverage(o: &Open, args: &Value) -> String {
     if c.gaps.is_empty() {
         let _ = writeln!(out, "\nNo unexplored bytes.");
     } else {
-        let _ = writeln!(out, "\nLargest unexplored gaps ({} in total):", count(c.gap_count));
+        let kinds: Vec<String> = c
+            .unexplored_by_kind
+            .iter()
+            .map(|(k, n)| format!("{k} {}", human(*n)))
+            .collect();
+        let _ = writeln!(out, "\nUnexplored, by what it looks like: {}", kinds.join(", "));
+        let _ = writeln!(out, "Largest unexplored gaps ({} in total):", count(c.gap_count));
         for g in &c.gaps {
             let sec = o
                 .bin
@@ -2597,7 +2677,7 @@ fn match_project(o: &mut Open, args: &Value) -> Result<String, String> {
                 .and_then(|b| f.strip_prefix(b).ok())
                 .unwrap_or(&f)
                 .to_string_lossy()
-                .into_owned();
+                .replace('\\', "/");
             objects.push((unit, bytes));
         }
     }
