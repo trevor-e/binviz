@@ -467,12 +467,43 @@ impl Binary {
         self.rebuild_user_symbols();
     }
 
-    /// Puts the user's named annotations into the symbol table.
+    /// Puts the user's named annotations into the symbol table. One with a
+    /// size and no name sizes the function at its address (a function the
+    /// analysis split into pieces, made whole by a note) under the name it has.
     pub(crate) fn rebuild_user_symbols(&mut self) {
+        // A sized, unnamed note takes the name of a named note at its address,
+        // else the name the function has; the named note then adds nothing.
+        let sized: Vec<String> = self
+            .annotations
+            .iter()
+            .filter(|a| a.name.is_empty() && a.size > 0)
+            .map(|a| {
+                self.annotations
+                    .iter()
+                    .find(|n| n.address == a.address && !n.name.is_empty())
+                    .map(|n| n.name.clone())
+                    .or_else(|| {
+                        self.symbols
+                            .at(a.address)
+                            .filter(|s| s.address == a.address)
+                            .map(|s| s.name().to_string())
+                    })
+                    .unwrap_or_else(|| format!("sub_{:x}", a.address))
+            })
+            .collect();
+        let mut sized = sized.iter();
+        let shadowed = |a: &Annotation| {
+            !a.name.is_empty()
+                && a.size == 0
+                && self
+                    .annotations
+                    .iter()
+                    .any(|n| n.address == a.address && n.name.is_empty() && n.size > 0)
+        };
         let user: Vec<(&str, u64, u64, Option<u32>, bool)> = self
             .annotations
             .iter()
-            .filter(|a| !a.name.is_empty())
+            .filter(|a| (!a.name.is_empty() || a.size > 0) && !shadowed(a))
             .map(|a| {
                 let section = self.section_at(a.address);
                 let code = match a.kind.as_deref() {
@@ -487,7 +518,12 @@ impl Binary {
                     }
                     _ => section.is_some_and(|s| s.kind == RegionKind::Code),
                 };
-                (a.name.as_str(), a.address, a.size, section.map(|s| s.index), code)
+                let name = if a.name.is_empty() {
+                    sized.next().map_or("", String::as_str)
+                } else {
+                    a.name.as_str()
+                };
+                (name, a.address, a.size, section.map(|s| s.index), code)
             })
             .collect();
         let syms = user.iter().map(|&(name, address, size, section, code)| NewSym {

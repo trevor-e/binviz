@@ -42,7 +42,11 @@ pub(crate) struct Open {
     /// The table file `table_text` last read a game's text with: `inspect` reads with it too.
     pub table: Option<binviz::tables::Table>,
     /// When the notes file last changed, as this session saw it (see [`sync_notes`]).
-    pub notes_stamp: Option<(std::time::SystemTime, u64)>,
+    pub notes_stamp: Option<(std::time::SystemTime, u64, u64)>,
+    /// The notes as last read from or written to the file: what a save journals its changes against.
+    pub saved: Vec<Annotation>,
+    /// How many lines of the notes' journal the session's notes hold.
+    pub journal_folded: usize,
 }
 
 #[derive(Default)]
@@ -95,7 +99,7 @@ pub fn definitions() -> Vec<Value> {
                 "debug_file": { "type": "string", "description": "Separate debug info to attach: a .dSYM's DWARF file (…/Contents/Resources/DWARF/<name>), an ELF .debug file, a PE's PDB (read as DWARF), a WebAssembly module's source map or the module with its DWARF (found by themselves beside the module when it names them), or an unstripped copy. For a Mach-O binary linked without dsymutil, the folder holding the object files its debug map names (found by themselves when they are where they were built, or next to the binary)." },
                 "notes_file": { "type": "string", "description": "Where to keep notes; defaults to <path>.binviz-notes.json." },
                 "types_file": { "type": "string", "description": "A file whose debug info describes the program's types, for a binary without them: an object compiled from its headers (clang -g -fno-eliminate-unused-debug-types -c -x c game.h, for the binary's target), or a PDB. With notes typing functions and globals (annotate's type), the fields code reaches through pointers are named: [esi+0x21c] reads as edict_t.enemy." },
-                "psx_exe": { "type": "string", "description": "PlayStation: the game's boot executable (PS-X EXE), whose functions are named in the file being opened when it is a memory image (2 MiB of RAM dumped by an emulator) or an overlay." },
+                "psx_exe": { "type": "string", "description": "PlayStation: the game's boot executable (PS-X EXE), whose functions are named in the file being opened when it is a memory image (2 MiB of RAM dumped by an emulator) or an overlay; the names in its own notes file (<exe>.binviz-notes.json) count." },
                 "overlay_at": { "type": "string", "description": "PlayStation: open the file as a code overlay loaded at this address (0x80100000)." },
                 "trace": { "type": "string", "description": "PlayStation: a trace of the code an emulator ran (any text with an address per line: a CPU trace, a list of PCs); code it saw run that following the code didn't reach is followed too." },
             }),
@@ -477,11 +481,12 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "match_function",
             "Score a rebuilt function against the original",
-            "Compares a function in the compiler's object file (MIPS ELF; x86 or x86-64 COFF from MSVC or clang-cl, or ELF) with the original's: instructions lined up by their shape, the fields the linker fills in masked (call targets, globals' addresses, address halves), each relocation checked against where the original points, jumps inside the function compared by where they land, and every difference explained (registers allocated differently, a stack frame or slot of another size, another constant, a constant for a variable, a signed type for an unsigned one, a condition inverted, a short jump for a near one, reordered instructions, a call to another function, a nop missing from a delay slot). Returns the percent matched and the lined-up code.",
+            "Compares a function in the compiler's object file (MIPS ELF; x86 or x86-64 COFF from MSVC or clang-cl, or ELF) with the original's: instructions lined up by their shape, the fields the linker fills in masked (call targets, globals' addresses, address halves), each relocation checked against where the original points, jumps inside the function compared by where they land, and every difference explained (registers allocated differently, a stack frame or slot of another size, another constant, a constant for a variable, a signed type for an unsigned one, a condition inverted, a short jump for a near one, reordered instructions, a call to another function, a nop missing from a delay slot). Returns the percent matched and the lined-up code, and for MIPS what the epilogues say about the compiler that built each side (GCC 2.7.2 pops the frame before the return, later GCCs in its delay slot).",
             json!({
                 "object": { "type": "string", "description": "Path to the compiled object file (.o, .obj)." },
                 "symbol": { "type": "string", "description": "The function's name in the object file, as the object has it (_foo, ?foo@@YAXH@Z) or as the source writes it (foo, Shape::scaled)." },
                 "at": address("The original's function; defaults to the one named like the symbol (undecorated or demangled too)"),
+                "range": { "type": "string", "description": "MIPS: compare against the original's code in this range instead of the function's extent: start..end or start+length (0x80010000..0x80010200), whatever the notes say the function covers." },
             }),
             &["object", "symbol"],
             true,
@@ -621,7 +626,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "find_code_blobs",
             "Find code in an archive",
-            "For a file binviz can't read, such as a PlayStation game's archive of overlays: each run of MIPS code (sectors that save $ra, return and call), with its offset, size, function count and where it loads, worked out from its own calls and pointers (each votes for the base that lands it on a function start; calls into the boot executable are left out when psx_exe is given). A guess marked unsure has a split vote, often two overlays in one run. Needs no emulator. Extract a blob with extract_disc_file and open it with open_binary's overlay_at.",
+            "For a file binviz can't read, such as a PlayStation game's archive of overlays: each run of MIPS code (sectors that save $ra, return and call), with its offset, size, function count and where it loads, worked out from its own calls and pointers (each votes for the base that lands it on a function start; calls into the boot executable are left out when psx_exe is given). A run whose first sectors' calls fit one base and later sectors' another is several overlays stored together, listed one by one. A blob with a sure base takes the data after its code that belongs with it (the sectors its code reaches, its jump tables and other pointers into it, code calling into it), so opening it as an overlay has its switches' tables. A guess marked unsure has a split vote. Needs no emulator. Extract a blob with extract_disc_file and open it with open_binary's overlay_at.",
             json!({
                 "path": { "type": "string", "description": "The archive or file (extract it from the disc first)." },
                 "psx_exe": { "type": "string", "description": "The game's boot executable, whose calls say nothing about where an overlay loads." },
@@ -752,7 +757,7 @@ pub fn definitions() -> Vec<Value> {
             "Names a function or range, comments an address, and/or marks it reviewed. Updates the note already at that address if there is one (only the fields you pass change). Names become symbols everywhere. notes: [...] adds or updates several at once. Saved to the notes file, on top of what other sessions or the web UI wrote to it; the notes are marked as the agent's (author) until someone confirms them.",
             json!({
                 "at": address("Where the note starts"),
-                "size": { "type": "integer", "description": "Bytes covered; 0 or omitted means the symbol or instruction there." },
+                "size": { "type": "integer", "description": "Bytes covered; 0 or omitted means the symbol or instruction there. With no name, sets the extent of the function at that address (merging pieces the analysis split, or cutting one it merged) under the name it has." },
                 "name": { "type": "string" },
                 "comment": { "type": "string" },
                 "reviewed": { "type": "boolean", "description": "Mark as understood." },
@@ -1166,7 +1171,26 @@ impl Server {
         let psx_exe = match string(args, "psx_exe") {
             Some(p) => {
                 let bytes = binviz::read_file(Path::new(p)).map_err(|e| format!("{p}: {e}"))?;
-                Some(Binary::parse(bytes).map_err(|e| format!("{p}: {e}"))?)
+                let mut exe = Binary::parse(bytes).map_err(|e| format!("{p}: {e}"))?;
+                // The executable's own notes name its functions in this image too.
+                let beside = sidecar(Path::new(p), None);
+                if beside.exists() {
+                    match notes::load(&beside) {
+                        Ok((list, _, _)) => {
+                            let _ = writeln!(
+                                note,
+                                "{} notes from {} name the executable's functions here.",
+                                list.len(),
+                                beside.display()
+                            );
+                            exe.set_annotations(list);
+                        }
+                        Err(e) => {
+                            let _ = writeln!(note, "{e} (the executable's notes were not read)");
+                        }
+                    }
+                }
+                Some(exe)
             }
             None => None,
         };
@@ -1257,6 +1281,8 @@ impl Server {
             debug_map_tried: true,
             table: None,
             notes_stamp: None,
+            saved: Vec::new(),
+            journal_folded: 0,
         };
         let mut folders = Vec::new();
         if let Some(debug) = string(args, "debug_file") {
@@ -1393,9 +1419,11 @@ pub(crate) fn load_notes(open: &mut Open, notes_path: &Path) -> Option<String> {
         return None;
     }
     Some(match notes::load(notes_path) {
-        Ok((list, fingerprint)) => {
+        Ok((list, fingerprint, folded)) => {
             let n = list.len();
             open.bin.set_annotations(list);
+            open.saved = open.bin.annotations().to_vec();
+            open.journal_folded = folded;
             open.notes_stamp = notes::stamp(notes_path);
             let mut note = format!("Loaded {n} notes from {}", notes_path.display());
             if fingerprint.is_some_and(|f| f != open.bin.summary().fingerprint) {
@@ -2586,15 +2614,31 @@ fn labels(o: &mut Open, args: &Value) -> Result<String, String> {
 }
 
 pub(crate) fn save_notes(o: &mut Open) -> String {
-    match &o.notes {
-        Some(path) => match notes::save(path, &o.label, &o.bin.summary().fingerprint, o.bin.annotations()) {
-            Ok(()) => {
-                o.notes_stamp = notes::stamp(path);
-                format!("saved to {}", path.display())
-            }
-            Err(e) => format!("NOT saved ({e}); kept in memory for this session"),
-        },
-        None => "kept in memory".into(),
+    let Some(path) = o.notes.clone() else {
+        return "kept in memory".into();
+    };
+    // What changed since the notes were last read or written goes to the journal
+    // first: another session's rewrite of the file can't lose it.
+    let journaled = match notes::journal(&path, &o.saved, o.bin.annotations()) {
+        Ok(n) => {
+            o.journal_folded += n;
+            String::new()
+        }
+        Err(e) => format!(" (journal not written: {e})"),
+    };
+    match notes::save(
+        &path,
+        &o.label,
+        &o.bin.summary().fingerprint,
+        o.bin.annotations(),
+        o.journal_folded,
+    ) {
+        Ok(()) => {
+            o.saved = o.bin.annotations().to_vec();
+            o.notes_stamp = notes::stamp(&path);
+            format!("saved to {}{journaled}", path.display())
+        }
+        Err(e) => format!("NOT saved ({e}){journaled}; kept in memory for this session"),
     }
 }
 
@@ -2606,8 +2650,10 @@ pub(crate) fn sync_notes(o: &mut Open) {
     if now.is_none() || now == o.notes_stamp {
         return;
     }
-    if let Ok((list, _)) = notes::load(path) {
+    if let Ok((list, _, folded)) = notes::load(path) {
         o.bin.set_annotations(list);
+        o.saved = o.bin.annotations().to_vec();
+        o.journal_folded = folded;
         o.notes_stamp = now;
     }
 }
@@ -2680,6 +2726,12 @@ fn match_function(o: &Open, args: &Value) -> Result<String, String> {
         )
     })?;
     o.bin.check_isa(f.isa).map_err(|e| e.to_string())?;
+    if let Some(range) = string(args, "range") {
+        let (start, end) = binviz::matching::parse_range(range, None)
+            .ok_or_else(|| format!("range: not start..end or start+length: {range}"))?;
+        let m = o.bin.match_range(start, end, f).map_err(|e| e.to_string())?;
+        return Ok(m.to_text());
+    }
     let start = match string(args, "at") {
         Some(at) => function_at(&o.bin, at)?,
         None => match o.bin.object_symbol_address(&f.name) {
@@ -3106,7 +3158,7 @@ fn export_progress(o: &Open, args: &Value) -> Result<String, String> {
     let m = &report["measures"];
     let n = |k: &str| m[k].as_str().and_then(|s| s.parse::<u64>().ok()).or_else(|| m[k].as_u64()).unwrap_or(0);
     let mut out = format!(
-        "Wrote {path}: {} of {} functions matched, {} of {} bytes of code ({:.1}%), fuzzy {:.1}%, in {} units.\n",
+        "Wrote {path}: {} of {} functions matched, {} of {} bytes of code ({:.1}%), fuzzy {:.1}% (partial credit: each function's best percent weighted by its size; a range a note merges counts once), in {} units.\n",
         n("matched_functions"),
         n("total_functions"),
         n("matched_code"),
@@ -3159,9 +3211,19 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
         let at = string(item, "at").ok_or("at is required (for each note)")?;
         places.push(address_of(&o.bin, at)?);
     }
+    // What each place is called now, for a note that sizes a function without naming it.
+    let called: Vec<String> = places
+        .iter()
+        .map(|&a| {
+            o.bin
+                .symbols()
+                .at(a)
+                .map_or_else(|| format!("sub_{a:x}"), |s| s.display_name().into_owned())
+        })
+        .collect();
     let (lines, saved) = update_notes(o, |list| {
         let mut lines = Vec::new();
-        for (item, &address) in items.iter().zip(&places) {
+        for ((item, &address), called) in items.iter().zip(&places).zip(&called) {
             let size = item.get("size").and_then(Value::as_u64);
             let existing = list
                 .iter()
@@ -3180,6 +3242,8 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
             if let Some(n) = renamed {
                 a.name = n.trim().to_string();
             }
+            // A size with no name sets the extent of the function there, whatever it is called.
+            let sized_only = a.name.is_empty() && a.size > 0;
             if let Some(c) = item.get("comment").and_then(Value::as_str) {
                 a.comment = c.trim().to_string();
             }
@@ -3197,7 +3261,12 @@ fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
             let line = format!(
                 "{} note at {address:#x}{}{}{}",
                 if existing.is_some() { "Updated" } else { "Added" },
-                if a.name.is_empty() {
+                if sized_only {
+                    format!(
+                        " sizing the function there to {:#x} bytes (it keeps its name, {called})",
+                        a.size
+                    )
+                } else if a.name.is_empty() {
                     String::new()
                 } else {
                     format!(" named {}", a.name)

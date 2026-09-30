@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 use crate::binary::Binary;
 use crate::cpu::mips::MipsWord;
 use crate::error::{Error, Result};
-use crate::fndiff::{Edit, LineKind, edit_script};
+use crate::fndiff::{Edit, LineKind, line_up};
 
 /// A function in a compiled object file.
 #[derive(Debug, Clone)]
@@ -218,6 +218,34 @@ pub struct MatchResult {
     pub lines: Vec<MatchLine>,
     /// Kinds of difference, with how many of each.
     pub differences: Vec<(String, u32)>,
+    /// What the original's code says about the compiler that built it (MIPS: the
+    /// shape of its epilogue), and what the rebuild's says.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub original_compiler: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rebuilt_compiler: Option<&'static str>,
+}
+
+/// What a MIPS function's epilogue says about the compiler that built it.
+/// GCC 2.7.2 (the PlayStation's, `lw $ra; addiu $sp; jr $ra; nop`) pops the
+/// frame before the return and leaves the delay slot empty; GCC 2.8 and
+/// later (and maspsx) pop it in the delay slot (`jr $ra; addiu $sp`). None
+/// for a function with no frame to pop, or no `jr $ra`.
+pub fn compiler_tell(words: &[u32]) -> Option<&'static str> {
+    let pops_sp = |w: u32| w & 0xFFFF_0000 == 0x27BD_0000 && ((w & 0xFFFF) as u16 as i16) > 0;
+    let mut tell = None;
+    for (i, &w) in words.iter().enumerate() {
+        if w != 0x03E0_0008 {
+            continue;
+        }
+        let slot = words.get(i + 1).copied().unwrap_or(0);
+        if pops_sp(slot) {
+            tell = Some("GCC 2.8 or later (the frame is popped in the return's delay slot)");
+        } else if slot == 0 && words[i.saturating_sub(3)..i].iter().any(|&w| pops_sp(w)) {
+            return Some("GCC 2.7.2 (the frame is popped before the return, a nop in its delay slot)");
+        }
+    }
+    tell
 }
 
 /// MIPS ELF relocation types.
@@ -560,16 +588,50 @@ impl Binary {
 
     fn match_mips(&self, address: u64, func: &Words) -> Option<MatchResult> {
         let (name, start, orig, big) = self.function_words(address)?;
+        Some(self.match_mips_words(name, start, &orig, big, func))
+    }
+
+    /// The rebuilt `func` against the original's code in `start..end`,
+    /// whatever the notes say the function's extent is: for a function the
+    /// analysis split or merged wrongly, or a piece of a huge one (MIPS).
+    pub fn match_range(&self, start: u64, end: u64, func: &ObjectFunction) -> Result<MatchResult> {
+        let ObjectIsa::Mips { big_endian } = func.isa else {
+            return Err(Error::new("a range is compared for MIPS objects only"));
+        };
+        if end <= start || !start.is_multiple_of(4) {
+            return Err(Error::new(format!("not a range of MIPS code: {start:#x}..{end:#x}")));
+        }
+        let big = self.endian == crate::util::Endian::Big;
+        let bytes = self
+            .code_bytes(start)
+            .filter(|b| b.len() as u64 >= end - start)
+            .ok_or_else(|| Error::new(format!("{start:#x}..{end:#x} is not all in the file's code")))?;
+        let orig: Vec<u32> = bytes[..(end - start) as usize]
+            .chunks_exact(4)
+            .map(|c| {
+                let b = [c[0], c[1], c[2], c[3]];
+                if big {
+                    u32::from_be_bytes(b)
+                } else {
+                    u32::from_le_bytes(b)
+                }
+            })
+            .collect();
+        let name = match self.symbols().function_containing(start) {
+            Some(f) if f.address == start => format!("{} ({start:#x}..{end:#x})", f.display_name()),
+            Some(f) => format!("{}+{:#x} ({start:#x}..{end:#x})", f.display_name(), start - f.address),
+            None => format!("{start:#x}..{end:#x}"),
+        };
+        Ok(self.match_mips_words(name, start, &orig, big, &Words::of(func, big_endian)))
+    }
+
+    fn match_mips_words(&self, name: String, start: u64, orig: &[u32], big: bool, func: &Words) -> MatchResult {
         let cand = &func.words;
         // Lined up by their shapes: everything the layout decides masked off.
         let shape = |w: u32| w & !layout_mask(MipsWord(w));
         let ta: Vec<u32> = orig.iter().map(|&w| shape(w)).collect();
         let tb: Vec<u32> = cand.iter().map(|&w| shape(w)).collect();
-        let script = edit_script(&ta, &tb, 4000).unwrap_or_else(|| {
-            let mut s = vec![Edit::Delete; orig.len()];
-            s.extend(std::iter::repeat_n(Edit::Insert, cand.len()));
-            s
-        });
+        let script = line_up(&ta, &tb, 4000);
         let mut lines = Vec::new();
         let mut counts: BTreeMap<String, u32> = BTreeMap::new();
         let mut matched = 0u32;
@@ -650,7 +712,7 @@ impl Binary {
             }
         }
         let total = orig.len().max(cand.len()) as u32;
-        Some(MatchResult {
+        MatchResult {
             name,
             address: start,
             original_instructions: orig.len() as u32,
@@ -661,7 +723,9 @@ impl Binary {
             percent: if total == 0 { 100.0 } else { matched as f32 * 100.0 / total as f32 },
             lines,
             differences: counts.into_iter().collect(),
-        })
+            original_compiler: compiler_tell(orig),
+            rebuilt_compiler: compiler_tell(cand),
+        }
     }
 
     /// Why the original's word `a` and the rebuild's `b`, lined up, differ (None: they match).
@@ -1018,6 +1082,36 @@ impl ProjectMatch {
     }
 }
 
+/// A range of addresses as written on a command line: `start..end`,
+/// `start-end` or `start+length`, each number decimal or `0x` hex; or two
+/// numbers given separately (`end` then holds the second).
+pub fn parse_range(text: &str, end: Option<&str>) -> Option<(u64, u64)> {
+    let number = |t: &str| {
+        let t = t.trim();
+        match t.strip_prefix("0x").or_else(|| t.strip_prefix("0X")) {
+            Some(h) => u64::from_str_radix(h, 16).ok(),
+            None => t.parse().ok(),
+        }
+    };
+    if let Some(e) = end {
+        return Some((number(text)?, number(e)?));
+    }
+    if let Some((a, b)) = text.split_once("..") {
+        return Some((number(a)?, number(b)?));
+    }
+    if let Some((a, n)) = text.split_once('+') {
+        let a = number(a)?;
+        return Some((a, a.checked_add(number(n)?)?));
+    }
+    // `a-b`, when neither side is a bare negative number.
+    if let Some((a, b)) = text.rsplit_once('-')
+        && !a.is_empty()
+    {
+        return Some((number(a)?, number(b)?));
+    }
+    None
+}
+
 /// The object files (`.o`, `.obj`) in a folder and its subfolders, sorted:
 /// a project's build output.
 pub fn object_files(dir: &std::path::Path) -> std::io::Result<Vec<std::path::PathBuf>> {
@@ -1249,6 +1343,15 @@ impl MatchResult {
         for (what, n) in &self.differences {
             out.push_str(&format!("  {n} × {what}\n"));
         }
+        match (self.original_compiler, self.rebuilt_compiler) {
+            (Some(a), Some(b)) if a != b => {
+                out.push_str(&format!("Compiler: the original looks built by {a}; the rebuild by {b}. Another compiler won't match: build with the original's.\n"));
+            }
+            (Some(a), _) if self.percent < 100.0 => {
+                out.push_str(&format!("Compiler: the original looks built by {a}.\n"))
+            }
+            _ => {}
+        }
         if self.percent >= 100.0 {
             return out;
         }
@@ -1439,6 +1542,32 @@ impl Binary {
         }
     }
 
+    /// The functions with the extents the notes give them: the analysis's
+    /// functions, except that a note with a size (a function made whole from
+    /// the pieces the analysis split it into, say) stands for everything it
+    /// covers, so a merged range counts once, at its size. (start, size).
+    pub fn functions_as_noted(&self) -> Vec<(u64, u64)> {
+        let mut list: Vec<(u64, u64)> = self.similar_index().functions().map(|(a, n, _)| (a, n)).collect();
+        let sized: Vec<(u64, u64)> = self
+            .symbols()
+            .functions()
+            .filter(|s| s.source == crate::model::SymbolSource::User && s.size > 0)
+            .filter(|s| {
+                self.section_at(s.address)
+                    .is_some_and(|sec| sec.kind == crate::model::RegionKind::Code)
+            })
+            .map(|s| (s.address, s.size))
+            .collect();
+        for (start, size) in sized {
+            list.retain(|&(a, _)| a <= start || a >= start + size);
+            match list.binary_search_by_key(&start, |f| f.0) {
+                Ok(i) => list[i].1 = size,
+                Err(i) => list.insert(i, (start, size)),
+            }
+        }
+        list
+    }
+
     /// Where the decompilation stands, as objdiff's report: the JSON
     /// decomp.dev reads (64-bit numbers written as strings, as protobuf's
     /// JSON has them). A unit per source file the notes record for matched
@@ -1457,7 +1586,7 @@ impl Binary {
             percent: f32,
         }
         let mut units: BTreeMap<(bool, String), Vec<F>> = BTreeMap::new();
-        for (address, size, _) in self.similar_index().functions() {
+        for (address, size) in self.functions_as_noted() {
             let d = self.decomp_at(address);
             let state = d.map_or(DecompState::Todo, |d| d.state);
             let percent = match (state, d.and_then(|d| d.percent)) {
@@ -1743,6 +1872,82 @@ mod tests {
         assert_eq!(m.matched_instructions, 5);
         assert!((m.percent - 50.0).abs() < 0.01, "{}", m.percent);
         assert!(m.to_text().contains("stack frame size differs"));
+    }
+
+    #[test]
+    fn a_range_is_scored_and_the_epilogue_names_the_compiler() {
+        let mut words = ORIGINAL.to_vec();
+        words.extend([0x03E0_0008, 0x2402_0001]);
+        let bin = exe(&words);
+        let rebuilt = [
+            0x27BD_FFE8,
+            0xAFBF_0014,
+            0x0C00_0000,
+            0x0000_0000,
+            0x3C02_0000,
+            0x8C42_0010,
+            0x8FBF_0014,
+            0x0000_0000,
+            0x03E0_0008,
+            0x27BD_0018,
+        ];
+        let relocs = [
+            (2, r::MIPS_26, "sub_80010030"),
+            (4, r::MIPS_HI16, "gState"),
+            (5, r::MIPS_LO16, "gState"),
+        ];
+        let obj = object(&rebuilt, &relocs);
+        let funcs = object_functions(&obj).unwrap();
+        // The function's own extent, and a range cut short.
+        let m = bin.match_range(0x8001_0000, 0x8001_0028, &funcs[0]).unwrap();
+        assert_eq!(
+            (m.percent, m.matched_instructions, m.name.as_str()),
+            (100.0, 10, "entry (0x80010000..0x80010028)")
+        );
+        let m = bin.match_range(0x8001_0008, 0x8001_0020, &funcs[0]).unwrap();
+        assert_eq!((m.original_instructions, m.rebuilt_instructions), (6, 10));
+        assert!(m.name.starts_with("entry+0x8"), "{}", m.name);
+        assert!(bin.match_range(0x8001_0000, 0x8010_0000, &funcs[0]).is_err());
+        assert_eq!(
+            parse_range("0x80010000..0x80010028", None),
+            Some((0x8001_0000, 0x8001_0028))
+        );
+        assert_eq!(parse_range("0x80010000+0x28", None), Some((0x8001_0000, 0x8001_0028)));
+        assert_eq!(parse_range("0x80010000", Some("40")), Some((0x8001_0000, 40)));
+        assert_eq!(parse_range("nonsense", None), None);
+
+        // Both pop the frame in the delay slot: GCC 2.8's way, nothing to say.
+        assert_eq!(
+            compiler_tell(&ORIGINAL),
+            Some("GCC 2.8 or later (the frame is popped in the return's delay slot)")
+        );
+        assert!(!m.to_text().contains("Compiler:") || m.percent < 100.0);
+        // GCC 2.7.2 pops it before the return and leaves the slot empty: told apart.
+        let older = [
+            0x27BD_FFE8,
+            0xAFBF_0014,
+            0x0C00_400C,
+            0x0000_0000,
+            0x3C02_8012,
+            0x8C42_0010,
+            0x8FBF_0014,
+            0x27BD_0018,
+            0x03E0_0008,
+            0x0000_0000,
+        ];
+        assert_eq!(
+            compiler_tell(&older),
+            Some("GCC 2.7.2 (the frame is popped before the return, a nop in its delay slot)")
+        );
+        assert_eq!(compiler_tell(&[0x03E0_0008, 0x2402_0001]), None);
+        let bin = exe(&older);
+        let m = bin.match_function(0x8001_0000, &funcs[0]).unwrap();
+        assert!(m.percent < 100.0);
+        let text = m.to_text();
+        assert!(
+            text.contains("the original looks built by GCC 2.7.2") && text.contains("the rebuild by GCC 2.8"),
+            "{text}"
+        );
     }
 
     #[test]

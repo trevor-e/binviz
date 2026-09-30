@@ -94,10 +94,13 @@ their files.
 
 **Matching decompilation.** For a PlayStation or Nintendo 64 game being
 decompiled: a PlayStation memory image (RAM as an emulator dumped it) or an
-overlay opens with the boot executable's names, functions found by their
-prologues, switch tables followed, and an emulator's trace of the code that
-ran adds what pointers reach; the Psy-Q SDK's functions are named, with the
-release that built them. For an x86 PC game: the compiler and linker from the
+overlay opens with the boot executable's names (its notes' too), functions
+found by their prologues and laid out the way GCC does (a head hoisted above
+the frame setup, a switch's cases past a table that isn't in the image, a
+frameless leaf nothing calls, all joined to their function), switch tables
+followed, and an emulator's trace of the code that ran adds what pointers
+reach; the Psy-Q SDK's functions are named, with the release that built
+them. For an x86 PC game: the compiler and linker from the
 Rich header, calling conventions and stack frames with named slots, the C
 runtime named from its `.lib`. Each function's code implies a prototype
 (register and stack arguments, return value, frame, saved registers, the
@@ -106,9 +109,12 @@ its C, with worked examples: functions already matched that are shaped like
 it, in this game or a sibling one built with the same compiler. m2c gets its
 input for a first draft (`binviz asm`). The compiler's object file (MIPS ELF,
 or COFF from MSVC or clang-cl) is scored against the original function by
-function with the linker's fields masked, each difference explained
-(registers, stack slots, branch lengths, reordering, delay-slot nops) with
-what to try in the C, and builds with different flags ranked. A splat config
+function (or against any range of code you name) with the linker's fields
+masked, each difference explained (registers, stack slots, branch lengths,
+reordering, delay-slot nops) with what to try in the C, the compiler the
+original's epilogue gives away, and builds with different flags ranked.
+Huge functions (a script interpreter's) are lined up on anchors, so they
+score by what they share rather than giving up. A splat config
 and symbol file start the project; objdiff's report places its progress on the
 binary, and the notes export it again in that format for decomp.dev.
 [samples/psx](samples/psx/README.md) walks the whole loop on a small program
@@ -124,7 +130,9 @@ inspect, disassemble, xrefs, call graphs, DWARF, diffs, crash symbolication,
 and notes that the web UI can import. For a matching decompilation it keeps
 the work queue too: which function to write C for next (callees first,
 near-copies of matched functions before anything), claims so parallel agents
-don't collide, and each function's outcome.
+don't collide, and each function's outcome, every change appended to a
+journal beside the notes before the notes file is rewritten, so agents
+writing at once lose nothing.
 
 **Agents that map binaries with you.** An agent (through the MCP server)
 works through a worklist of the functions to name next (those whose callees

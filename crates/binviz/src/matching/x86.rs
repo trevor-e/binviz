@@ -31,7 +31,7 @@ use iced_x86::{
 
 use super::{Lookups, MatchLine, MatchResult, ObjectFunction, Reloc, RelocForm, category};
 use crate::binary::Binary;
-use crate::fndiff::{Edit, LineKind, edit_script};
+use crate::fndiff::{Edit, LineKind, line_up};
 
 /// Where a function's code ends: after its last instruction that isn't
 /// alignment padding (`nop`, `int3`, zeros).
@@ -468,11 +468,7 @@ impl Match<'_> {
     fn run(&mut self) -> MatchResult {
         let ta: Vec<u32> = self.a.iter().map(|i| i.shape).collect();
         let tb: Vec<u32> = self.b.iter().map(|i| i.shape).collect();
-        let script = edit_script(&ta, &tb, 4000).unwrap_or_else(|| {
-            let mut s = vec![Edit::Delete; ta.len()];
-            s.extend(std::iter::repeat_n(Edit::Insert, tb.len()));
-            s
-        });
+        let script = line_up(&ta, &tb, 4000);
         let steps = self.line_up(&script);
         let mut text_a = Text::new();
         let mut text_b = Text::new();
@@ -522,6 +518,8 @@ impl Match<'_> {
             },
             lines,
             differences: counts.into_iter().collect(),
+            original_compiler: None,
+            rebuilt_compiler: None,
         }
     }
 

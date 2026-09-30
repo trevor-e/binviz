@@ -507,6 +507,27 @@ Publishing (a repository someone else builds with their own disc):
 
 ## Progress log
 
+- 2026-09-30 (from the FF9 workers' list): what cost the agents the most time on the real game,
+  moved into binviz. Function boundaries (`rom/analysis.rs`): prologues are followed after the
+  calls, so a `jal` to a function's true start wins over the prologue found where GCC's
+  scheduler put the frame setup, below a hoisted `lui`/`lw`; a run that falls through into
+  another function's code joins it; a function's runs either side of unreached code (a switch's
+  cases past a `jr` whose table isn't in the image) span it; and the gaps between functions are
+  read: a head falling into the next prologue, a tail branching back (or after an unresolved
+  `jr`), and frameless leaves nothing calls. Whole-function scoring: `line_up` anchors on the
+  instructions each side has once and diffs the stretches between, so a 56 KB function scores
+  instead of falling to a positional compare; functions read up to 20 000 instructions.
+  `match … --range start end` (MCP `range`) scores against any stretch of code. `blobs` splits a
+  run whose sectors' calls fit different bases (overlays stored together) and extends a sure
+  blob through the data after its code (jump tables, strings, pointer tables, code the sector
+  test missed), so opened overlays have their switches' tables. Overlays and memory images take
+  the boot executable's own notes' names. A note with a size and no name sizes the function
+  under its name. `m2c` runs without `cmd` on Windows and gets a `--context` of prototypes for
+  the callees. `match` says which GCC the epilogue's shape gives away (2.7.2 pops the frame
+  before `jr $ra`). Notes: every change is appended to `<notes>.journal` before the file is
+  rewritten, and reads fold the lines the file hasn't, so agents writing at once lose nothing.
+  `progress` prints the counts by state and partial credit, merged ranges counted once.
+
 - 2026-09-29 (FF9, the compiler): the loop ran for the first time on the real game. GNU GCC
   2.7.2.3's `cc1` (little-endian MIPS, `mipsel-elf`) is built in Docker from ftp.gnu.org's
   sources, with maspsx and GNU as after it; two source patches let a modern host compiler build

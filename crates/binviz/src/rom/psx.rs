@@ -241,12 +241,13 @@ pub(crate) fn memory_parts(data: &[u8], extra: Vec<(String, u64, u64)>) -> Optio
         Area::rom("RAM (memory image)", 0x8001_0000, size - 0x1_0000, 0x1_0000),
     ];
     areas.extend(hardware_areas());
-    let mut entries: Vec<(String, u64, u64)> = prologues(&data[0x1_0000..], 0x8001_0000)
-        .into_iter()
-        .map(|a| (String::new(), a, 0))
-        .collect();
-    let scanned = entries.len();
-    entries.extend(extra);
+    // Named functions (another image's) are followed first; the prologues
+    // after the calls, so that a call to a function's true start (the
+    // instructions the compiler hoisted above its frame setup) wins over the
+    // prologue found inside it.
+    let late_entries = prologues(&data[0x1_0000..], 0x8001_0000);
+    let scanned = late_entries.len();
+    let entries = extra;
     let properties = vec![
         prop(
             "Image",
@@ -278,7 +279,7 @@ pub(crate) fn memory_parts(data: &[u8], extra: Vec<(String, u64, u64)>) -> Optio
         layout: memory_layout,
         data: None,
         entries,
-        late_entries: Vec::new(),
+        late_entries,
     })
 }
 
@@ -300,9 +301,9 @@ pub(crate) fn overlay_parts(data: &[u8], load: u64, extra: Vec<(String, u64, u64
         areas.push(Area::ram("RAM (above the overlay)", load + size, ram_end - (load + size)));
     }
     areas.extend(hardware_areas());
-    let mut entries: Vec<(String, u64, u64)> = prologues(data, load).into_iter().map(|a| (String::new(), a, 0)).collect();
-    let scanned = entries.len();
-    entries.extend(extra);
+    let late_entries = prologues(data, load);
+    let scanned = late_entries.len();
+    let entries = extra;
     let properties = vec![
         prop("Loaded at", format!("{load:#010x} ({size} bytes)")),
         prop("Function prologues", format!("{scanned} found by scanning")),
@@ -323,7 +324,7 @@ pub(crate) fn overlay_parts(data: &[u8], load: u64, extra: Vec<(String, u64, u64
         layout: overlay_layout,
         data: None,
         entries,
-        late_entries: Vec::new(),
+        late_entries,
     })
 }
 
@@ -670,6 +671,139 @@ mod tests {
         assert!(hints.contains(&"code") && hints.contains(&"mostly zeros"), "{hints:?}");
     }
 
+    /// An overlay at 0x80100000 of `words`, on its own.
+    fn overlay_of(words: &[u32]) -> Binary {
+        Binary::parse_psx_overlay(le(words), 0x8010_0000, None).unwrap()
+    }
+
+    fn extent(bin: &Binary, inside: u64) -> (u64, u64) {
+        let f = bin.symbols().function_containing(inside).expect("in a function");
+        (f.address, f.size)
+    }
+
+    #[test]
+    fn a_head_hoisted_above_the_frame_setup_is_the_functions_start() {
+        // GCC schedules the first `lui`/`lw` above `addiu $sp`: the prologue is found
+        // 8 bytes into the function. Called (jal to its true start), or not.
+        let head = [0x3C02_8012, 0x8C42_0010]; // lui $v0, 0x8012 / lw $v0, 0x10($v0)
+        let body = [
+            0x27BD_FFE8, // addiu $sp, $sp, -0x18
+            0xAFBF_0014, // sw $ra, 0x14($sp)
+            0x0C04_000C, // jal 0x80100030 (a leaf)
+            0x0000_0000,
+            0x8FBF_0014, // lw $ra, 0x14($sp)
+            0x0000_0000,
+            0x03E0_0008, // jr $ra
+            0x27BD_0018, // addiu $sp, $sp, 0x18
+        ];
+        // The leaf at 0x80100030 calls back to the head's true start, 0x80100000.
+        let leaf = [0x2402_0001, 0x03E0_0008, 0x0000_0000];
+        let mut words: Vec<u32> = head.iter().chain(&body).copied().collect();
+        words.extend([0x0000_0000, 0x0000_0000]); // padding
+        words.extend(leaf);
+        let called = overlay_of(&words);
+        assert_eq!(extent(&called, 0x8010_0008), (0x8010_0000, 40));
+        assert_eq!(extent(&called, 0x8010_0030), (0x8010_0030, 12));
+
+        // Nothing calls the function: its head is a gap before the prologue, and
+        // falls through into it.
+        let mut words: Vec<u32> = vec![0x03E0_0008, 0x0000_0000]; // a function that returns
+        words.extend(head);
+        let mut body = body;
+        body[2] = 0x0C04_0000; // jal 0x80100000
+        words.extend(body);
+        let uncalled = overlay_of(&words);
+        assert_eq!(extent(&uncalled, 0x8010_0010), (0x8010_0008, 40));
+        assert_eq!(extent(&uncalled, 0x8010_0000), (0x8010_0000, 8));
+    }
+
+    #[test]
+    fn a_switch_whose_table_is_outside_the_image_keeps_its_cases() {
+        // The table is at 0x80200000, past the overlay: the `jr` can't be followed,
+        // so the cases are reached by nothing; they are still the function's.
+        let words = [
+            0x27BD_FFE8, // addiu $sp, $sp, -0x18
+            0xAFBF_0014, // sw $ra, 0x14($sp)
+            0x2C82_0003, // sltiu $v0, $a0, 3
+            0x1040_000B, // beqz $v0, end (0x80100038)
+            0x0000_0000,
+            0x0004_1080, // sll $v0, $a0, 2
+            0x3C01_8020, // lui $at, 0x8020
+            0x0022_0821, // addu $at, $at, $v0
+            0x8C22_0000, // lw $v0, 0($at)
+            0x0000_0000,
+            0x0040_0008, // jr $v0
+            0x0000_0000,
+            0x2402_0001, // case 0 (0x80100030): li $v0, 1
+            0x1000_0001, // b end
+            0x0000_0000,
+            0x8FBF_0014, // end (0x8010003c): lw $ra, 0x14($sp)
+            0x0000_0000,
+            0x03E0_0008, // jr $ra
+            0x27BD_0018, // addiu $sp, $sp, 0x18
+            0x27BD_FFE8, // the next function (0x8010004c)
+            0xAFBF_0014,
+            0x8FBF_0014,
+            0x03E0_0008,
+            0x27BD_0018,
+        ];
+        let bin = overlay_of(&words);
+        assert_eq!(extent(&bin, 0x8010_0034), (0x8010_0000, 0x4C));
+        assert_eq!(extent(&bin, 0x8010_004C), (0x8010_004C, 20));
+        // With no default path, the epilogue is reached by nothing either: the
+        // whole tail after the `jr` is the function's, as it branches back into it.
+        let mut words = words.to_vec();
+        words[3] = 0x0000_0000;
+        let bin = overlay_of(&words);
+        assert_eq!(extent(&bin, 0x8010_0040), (0x8010_0000, 0x4C));
+    }
+
+    #[test]
+    fn a_note_with_a_size_and_no_name_sizes_the_function() {
+        let mut words = caller(0x8010_0000);
+        words.extend(caller(0x8010_0000));
+        let mut bin = overlay_of(&words);
+        assert_eq!(extent(&bin, 0x8010_0000), (0x8010_0000, 32));
+        bin.set_annotations(vec![crate::model::Annotation {
+            address: 0x8010_0000,
+            size: 0x48,
+            ..Default::default()
+        }]);
+        let f = bin.symbols().at(0x8010_0000).unwrap();
+        assert_eq!((f.name(), f.size), ("sub_80100000", 0x48));
+        // A named one keeps its name.
+        bin.set_annotations(vec![
+            crate::model::Annotation {
+                address: 0x8010_0000,
+                name: "step".into(),
+                ..Default::default()
+            },
+            crate::model::Annotation {
+                address: 0x8010_0000,
+                size: 0x40,
+                ..Default::default()
+            },
+        ]);
+        let f = bin.symbols().at(0x8010_0000).unwrap();
+        assert_eq!((f.name(), f.size), ("step", 0x40));
+    }
+
+    #[test]
+    fn a_frameless_function_nothing_calls_is_found_between_functions() {
+        let mut words = caller(0x8010_0000); // a function calling itself; 9 words
+        words.extend([0x2402_0005, 0x03E0_0008, 0x0000_0000]); // li $v0, 5 / jr $ra / nop
+        words.extend(caller(0x8010_0000));
+        let bin = overlay_of(&words);
+        assert_eq!(extent(&bin, 0x8010_0024), (0x8010_0024, 12));
+        assert_eq!(extent(&bin, 0x8010_0030), (0x8010_0030, 32));
+        // A lone return between functions is padding, not a function.
+        let mut words = caller(0x8010_0000);
+        words.extend([0x03E0_0008, 0x0000_0000]);
+        words.extend(caller(0x8010_0000));
+        let bin = overlay_of(&words);
+        assert!(bin.symbols().function_containing(0x8010_0024).is_none());
+    }
+
     #[test]
     fn memory_image_and_overlay() {
         // The exe: entry at 0x80010000 calls a leaf at 0x80010024.
@@ -803,7 +937,8 @@ impl crate::binary::Binary {
             _ => detect(&data),
         }
         .ok_or_else(|| crate::error::Error::new("the image no longer reads"))?;
-        parts.late_entries = seeds;
+        // After the prologues: a trace's seeds fill in what those didn't reach.
+        parts.late_entries.extend(seeds);
         let bin = crate::binary::Binary::from_rom(data, parts)?;
         Ok((
             bin,
@@ -833,11 +968,14 @@ mod trace_tests {
         let words = [0x03E0_0008u32, 0, 0, 0, 0x2402_0001, 0x03E0_0008, 0, 0];
         data.extend(words.iter().flat_map(|w| w.to_le_bytes()));
         let bin = Binary::parse(data).unwrap();
-        assert!(bin.symbols().function_containing(0x8001_0010).is_none());
+        // Following alone doesn't reach it; the code between the functions is read
+        // as one of its own (it does something, then returns).
+        let f = bin.symbols().function_containing(0x8001_0010).unwrap();
+        assert_eq!((f.address, f.size), (0x8001_0010, 12));
         let (traced, s) = bin
             .with_psx_trace("80010000: 03e00008 jr ra\n80010004: 00000000 nop\n0x80010010\n80010014 jr $ra\nnot a line\n")
             .unwrap();
-        assert_eq!((s.lines, s.addresses, s.placed, s.new_runs), (4, 4, 4, 1));
+        assert_eq!((s.lines, s.addresses, s.placed, s.new_runs), (4, 4, 4, 0));
         let f = traced.symbols().function_containing(0x8001_0010).unwrap();
         assert_eq!((f.address, f.size), (0x8001_0010, 12));
         assert_eq!(parse_trace("00010010\n").1, [0x8001_0010]);

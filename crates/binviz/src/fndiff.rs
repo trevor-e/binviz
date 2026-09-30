@@ -33,7 +33,8 @@ use crate::binary::Binary;
 use crate::model::{Format, Instruction, SymbolSource};
 
 /// At most this many instructions of a function are compared.
-const MAX_INSNS: usize = 4000;
+/// Instructions read per function: enough for a 64 KB script interpreter.
+const MAX_INSNS: usize = 20_000;
 
 /// A function on one side.
 #[derive(Debug, Clone, Serialize)]
@@ -676,11 +677,113 @@ fn distance(a: &[u32], b: &[u32], max: usize) -> Option<usize> {
     None
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Edit {
     Keep,
     Delete,
     Insert,
+}
+
+/// `a` and `b` lined up: the shortest edit script (Myers) when it takes at
+/// most `max` edits; past that, the two are anchored on the tokens each
+/// has exactly once, in the order both have them (patience diff), and the
+/// stretches between anchors are lined up the same way in turn. Only a
+/// stretch too different to line up at all is given as all of one side then
+/// all of the other, so a huge function (a script interpreter's dispatcher)
+/// still scores by what it shares with its rebuild.
+pub(crate) fn line_up(a: &[u32], b: &[u32], max: usize) -> Vec<Edit> {
+    if a.len() + b.len() <= SMALL
+        && let Some(s) = edit_script(a, b, max)
+    {
+        return s;
+    }
+    anchored(a, b, max, 0)
+}
+
+/// Sequences up to this long are diffed whole first.
+const SMALL: usize = 3000;
+/// Myers is given at most this many edits per stretch between anchors.
+const STRETCH_EDITS: usize = 1500;
+
+fn positional(a: &[u32], b: &[u32]) -> Vec<Edit> {
+    let mut s = vec![Edit::Delete; a.len()];
+    s.extend(std::iter::repeat_n(Edit::Insert, b.len()));
+    s
+}
+
+fn anchored(a: &[u32], b: &[u32], max: usize, depth: u32) -> Vec<Edit> {
+    if a.is_empty() || b.is_empty() {
+        return positional(a, b);
+    }
+    if (depth > 0 || a.len() + b.len() <= SMALL)
+        && let Some(s) = edit_script(a, b, max.min(STRETCH_EDITS))
+    {
+        return s;
+    }
+    let anchors = unique_anchors(a, b);
+    if anchors.is_empty() {
+        return if depth > 0 {
+            positional(a, b)
+        } else {
+            edit_script(a, b, max.min(STRETCH_EDITS)).unwrap_or_else(|| positional(a, b))
+        };
+    }
+    let mut out = Vec::with_capacity(a.len().max(b.len()));
+    let (mut i, mut j) = (0, 0);
+    for (ai, bj) in anchors {
+        out.extend(anchored(&a[i..ai], &b[j..bj], max, depth + 1));
+        out.push(Edit::Keep);
+        i = ai + 1;
+        j = bj + 1;
+    }
+    out.extend(anchored(&a[i..], &b[j..], max, depth + 1));
+    out
+}
+
+/// The tokens `a` and `b` each hold exactly once, paired, in the longest
+/// run that keeps the same order on both sides: (index in a, index in b).
+fn unique_anchors(a: &[u32], b: &[u32]) -> Vec<(usize, usize)> {
+    fn once(seq: &[u32]) -> HashMap<u32, usize> {
+        let mut count: HashMap<u32, (usize, usize)> = HashMap::new();
+        for (i, &t) in seq.iter().enumerate() {
+            let e = count.entry(t).or_insert((0, i));
+            e.0 += 1;
+        }
+        count
+            .into_iter()
+            .filter(|(_, (n, _))| *n == 1)
+            .map(|(t, (_, i))| (t, i))
+            .collect()
+    }
+    let in_b = once(b);
+    let pairs: Vec<(usize, usize)> = once(a)
+        .into_iter()
+        .filter_map(|(t, i)| in_b.get(&t).map(|&j| (i, j)))
+        .collect::<std::collections::BTreeMap<usize, usize>>()
+        .into_iter()
+        .collect();
+    // The longest increasing subsequence of the b indices.
+    let mut tails: Vec<usize> = Vec::new(); // index into pairs of the best tail per length
+    let mut prev: Vec<Option<usize>> = vec![None; pairs.len()];
+    for (k, &(_, j)) in pairs.iter().enumerate() {
+        let pos = tails.partition_point(|&t| pairs[t].1 < j);
+        if pos > 0 {
+            prev[k] = Some(tails[pos - 1]);
+        }
+        if pos == tails.len() {
+            tails.push(k);
+        } else {
+            tails[pos] = k;
+        }
+    }
+    let mut out = Vec::new();
+    let mut at = tails.last().copied();
+    while let Some(k) = at {
+        out.push(pairs[k]);
+        at = prev[k];
+    }
+    out.reverse();
+    out
 }
 
 /// The shortest edit script turning `a` into `b` (Myers), or None past `max` edits.
@@ -913,12 +1016,7 @@ impl Binary {
         let b = newer.disassemble_function(newer_address, MAX_INSNS).instructions;
         let ta: Vec<u32> = a.iter().map(line_token).collect();
         let tb: Vec<u32> = b.iter().map(line_token).collect();
-        let script = edit_script(&ta, &tb, 4000).unwrap_or_else(|| {
-            // Too different to line up: all of one, then all of the other.
-            let mut s = vec![Edit::Delete; a.len()];
-            s.extend(std::iter::repeat_n(Edit::Insert, b.len()));
-            s
-        });
+        let script = line_up(&ta, &tb, 4000);
         let mut out = Vec::new();
         let (mut i, mut j) = (0, 0);
         let mut k = 0;
@@ -1105,5 +1203,34 @@ mod tests {
             }
         }
         assert_eq!(got, b);
+    }
+
+    #[test]
+    fn huge_sequences_line_up_on_anchors() {
+        // 12,000 tokens of a repeating body with a unique token every 50, and a copy
+        // with a token changed in each block: far past what Myers is allowed, but
+        // the anchors line every block up and only the changed tokens differ.
+        let a: Vec<u32> = (0..12_000u32)
+            .map(|i| if i % 50 == 0 { 100_000 + i } else { i % 7 })
+            .collect();
+        let mut b = a.clone();
+        for k in (25..b.len()).step_by(50) {
+            b[k] = 99;
+        }
+        let s = line_up(&a, &b, 4000);
+        let keeps = s.iter().filter(|e| **e == Edit::Keep).count();
+        assert!(keeps >= 12_000 - 240, "{keeps} kept");
+        assert_eq!(
+            s.iter().filter(|e| **e == Edit::Delete).count(),
+            s.iter().filter(|e| **e == Edit::Insert).count()
+        );
+        // Whole blocks moved: what is shared still counts.
+        let mut c = a[6000..].to_vec();
+        c.extend(&a[..6000]);
+        let s = line_up(&a, &c, 4000);
+        let keeps = s.iter().filter(|e| **e == Edit::Keep).count();
+        assert!(keeps >= 5900, "{keeps} kept");
+        // Small ones are Myers's shortest script.
+        assert_eq!(line_up(&[1, 2, 3], &[1, 3], 10), [Edit::Keep, Edit::Delete, Edit::Keep]);
     }
 }

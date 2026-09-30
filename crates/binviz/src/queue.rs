@@ -114,6 +114,37 @@ pub struct DecompProgress {
     pub library_bytes: u64,
     pub in_progress: u32,
     pub skipped: u32,
+    /// Tried without matching (a percent recorded, not matched or nonmatching).
+    pub attempted: u32,
+    /// Partial credit: the bytes of code the recorded percents add up to
+    /// (each function's size times its best percent), the matched ones at
+    /// 100; what decomp.dev's fuzzy percent is of.
+    pub credited_bytes: f64,
+}
+
+impl DecompProgress {
+    /// One line: how much is done, with partial credit.
+    pub fn summary(&self) -> String {
+        let pct = |n: f64| {
+            if self.bytes > 0 {
+                n * 100.0 / self.bytes as f64
+            } else {
+                0.0
+            }
+        };
+        format!(
+            "{} of {} functions matched ({:.1}% of the code), {} nonmatching, {} library, {} attempted, {} in progress, {} skipped; with partial credit {:.1}% of the code",
+            self.matched,
+            self.functions,
+            pct(self.matched_bytes as f64),
+            self.nonmatching,
+            self.library,
+            self.attempted,
+            self.in_progress,
+            self.skipped,
+            pct(self.credited_bytes)
+        )
+    }
 }
 
 /// Functions to decompile, best first.
@@ -148,13 +179,17 @@ impl Binary {
     /// How far the decompilation has come.
     pub fn decomp_progress(&self) -> DecompProgress {
         let mut p = DecompProgress::default();
-        for (address, bytes, _) in self.similar_index().functions() {
+        // The functions as the notes size them: a range merged by a note counts once.
+        for (address, bytes) in self.functions_as_noted() {
             p.functions += 1;
             p.bytes += bytes;
-            match self.decomp_state(address) {
+            let d = self.decomp_at(address);
+            let state = d.map_or(DecompState::Todo, |d| d.state);
+            match state {
                 DecompState::Matched => {
                     p.matched += 1;
                     p.matched_bytes += bytes;
+                    p.credited_bytes += bytes as f64;
                 }
                 DecompState::Nonmatching => {
                     p.nonmatching += 1;
@@ -167,6 +202,14 @@ impl Binary {
                 DecompState::InProgress => p.in_progress += 1,
                 DecompState::Skipped => p.skipped += 1,
                 DecompState::Todo => {}
+            }
+            if state != DecompState::Matched
+                && let Some(percent) = d.and_then(|d| d.percent)
+            {
+                if d.is_some_and(|d| d.attempts > 0) && matches!(state, DecompState::Todo | DecompState::InProgress) {
+                    p.attempted += 1;
+                }
+                p.credited_bytes += bytes as f64 * f64::from(percent.clamp(0.0, 99.99)) / 100.0;
             }
         }
         p

@@ -7,34 +7,46 @@
 //! ```
 //!
 //! Several writers may share one: agents in other sessions, the web UI
-//! following it. Each change is made on top of what the file holds then,
-//! under a lock ([`Lock`]), and a session picks up what others wrote when
-//! the file's modification time or size ([`stamp`]) changes.
+//! following it. Every change goes to the file's append-only journal first
+//! (`<notes>.journal`, see [`binviz::notes`]), then the file is rewritten as
+//! a fold of it, under a lock ([`Lock`]) when one can be made; a session
+//! picks up what others wrote when either file's modification time or size
+//! ([`stamp`]) changes. A change is never lost: a rewrite that loses the
+//! race is behind a journal line the next read applies.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime};
 
 use binviz::Annotation;
 
-/// Reads a notes file. Returns the annotations and the fingerprint recorded in it.
-pub fn load(path: &Path) -> Result<(Vec<Annotation>, Option<String>), String> {
-    let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    binviz::notes::parse(&text).map_err(|e| format!("{}: {e}", path.display()))
+/// Reads a notes file with its journal. Returns the annotations, the
+/// fingerprint recorded in the file, and how many journal lines they hold.
+pub fn load(path: &Path) -> Result<(Vec<Annotation>, Option<String>, usize), String> {
+    binviz::notes::read(path)
 }
 
-pub fn save(path: &Path, file: &str, fingerprint: &str, notes: &[Annotation]) -> Result<(), String> {
-    let text = binviz::notes::document(file, fingerprint, notes);
+/// Writes the notes as the file, folding the journal's first `folded` lines.
+pub fn save(path: &Path, file: &str, fingerprint: &str, notes: &[Annotation], folded: usize) -> Result<(), String> {
+    let text = binviz::notes::document_folding(file, fingerprint, notes, folded);
     // Write then rename, so a crash never leaves a half-written file.
     let tmp = path.with_extension("json.tmp");
     std::fs::write(&tmp, text).map_err(|e| format!("{}: {e}", tmp.display()))?;
     std::fs::rename(&tmp, path).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-/// When a notes file last changed, as far as telling goes: its modification
-/// time and size.
-pub fn stamp(path: &Path) -> Option<(SystemTime, u64)> {
+/// Appends what changed to the notes file's journal: the number of lines written.
+pub fn journal(path: &Path, before: &[Annotation], after: &[Annotation]) -> Result<usize, String> {
+    let changes = binviz::notes::changes_between(before, after);
+    binviz::notes::append_journal(path, &changes)
+        .map_err(|e| format!("{}: {e}", binviz::notes::journal_path(path).display()))
+}
+
+/// When a notes file (or its journal) last changed, as far as telling goes:
+/// the modification time and size of each.
+pub fn stamp(path: &Path) -> Option<(SystemTime, u64, u64)> {
     let m = std::fs::metadata(path).ok()?;
-    Some((m.modified().ok()?, m.len()))
+    let journal = std::fs::metadata(binviz::notes::journal_path(path)).map_or(0, |j| j.len());
+    Some((m.modified().ok()?, m.len(), journal))
 }
 
 /// Held while notes are read, changed and written back, so that two writers

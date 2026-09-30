@@ -246,12 +246,13 @@ pub(crate) fn next_functions(o: &mut Open, args: &Value) -> Result<String, Strin
     }
     let _ = writeln!(
         out,
-        "Decompilation: {} of {} functions matched ({} of {} of code, {}), {} nonmatching, {} library, {} in progress, {} set aside.",
+        "Decompilation: {} of {} functions matched ({} of {} of code, {}; {} with partial credit for the best percents), {} nonmatching, {} library, {} in progress, {} set aside.",
         count(p.matched),
         count(p.functions),
         human(p.matched_bytes),
         human(p.bytes),
         pct(p.matched_bytes, p.bytes.saturating_sub(p.library_bytes)),
+        pct(p.credited_bytes as u64, p.bytes.saturating_sub(p.library_bytes)),
         count(p.nonmatching),
         count(p.library),
         count(p.in_progress),

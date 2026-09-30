@@ -58,3 +58,24 @@ fn m2c_runs_on_the_source_and_says_why_it_could_not() {
     assert!(!out.status.success());
     assert!(String::from_utf8_lossy(&out.stderr).contains("install m2c"));
 }
+
+#[cfg(unix)]
+#[test]
+fn m2c_is_given_the_prototypes_of_the_callees() {
+    // A stand-in for m2c that prints its --context file instead of decompiling.
+    let out = binviz(&[
+        "m2c",
+        &fixture("tiny.z64"),
+        "entry",
+        "m2c_stub() { cat \"$2\"; }; m2c_stub",
+    ]);
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let text = String::from_utf8(out.stdout).unwrap();
+    assert!(
+        text.starts_with("/* prototypes from binviz") && text.contains(" entry("),
+        "{text}"
+    );
+    // A command that isn't m2c gets no context file: just the source.
+    let out = binviz(&["m2c", &fixture("tiny.z64"), "entry", "cat"]);
+    assert!(String::from_utf8_lossy(&out.stdout).starts_with(".set noat"));
+}

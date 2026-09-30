@@ -1416,6 +1416,28 @@ fn progress_is_exported_as_objdiffs_report() {
     let c = bin.coverage(0);
     let sizes = bin.symbols().by_name("sum3").unwrap().size + bin.symbols().by_name("dispatch").unwrap().size;
     assert_eq!(c.totals.matched, sizes);
+    // Partial credit: scale's 87.5% of its size counts towards the code credited.
+    let p = bin.decomp_progress();
+    let scale = bin.symbols().by_name("scale").unwrap().size as f64;
+    assert!(
+        (p.credited_bytes - (sizes as f64 + scale * 0.875)).abs() < 0.01,
+        "{p:?}"
+    );
+    assert!(p.summary().contains("with partial credit"), "{}", p.summary());
+    // A note sizing a function over the ones after it merges them: one function, counted once.
+    let before = bin.functions_as_noted();
+    let (first, second) = (before[0], before[1]);
+    let mut notes = bin.annotations().to_vec();
+    notes.push(binviz::Annotation {
+        address: first.0,
+        size: second.0 + second.1 - first.0,
+        ..Default::default()
+    });
+    bin.set_annotations(notes);
+    let after = bin.functions_as_noted();
+    assert_eq!(after.len(), before.len() - 1, "{after:?}");
+    assert_eq!(after[0], (first.0, second.0 + second.1 - first.0));
+    assert_eq!(bin.decomp_progress().functions as usize, after.len());
 }
 
 /// What an instruction's operand names, in the disassembly of the function holding it.

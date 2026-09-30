@@ -342,6 +342,59 @@ fn hi_lo(hi: MipsWord, lo: MipsWord) -> u32 {
     (hi.imm() << 16).wrapping_add(lo.simm() as u32)
 }
 
+impl Binary {
+    /// A context file for m2c (`--context`): C prototypes for the function
+    /// at `address` and everything it calls, so that its draft passes each
+    /// call the arguments the callee takes rather than guessing them. Each
+    /// prototype is the one a note gives the function (`type`), else what
+    /// its code says ([`Binary::function_signature`]), under the name the
+    /// assembler source uses. `None` for code that isn't MIPS.
+    pub fn m2c_context(&self, address: u64) -> Option<String> {
+        self.mips_endian()?;
+        let f = self.symbols().function_containing(address)?;
+        let mut targets: Vec<(u64, String)> = vec![(f.address, f.name().to_string())];
+        for c in self.callees(f.address) {
+            if c.kind == crate::xrefs::NodeKind::Function && c.address != f.address {
+                targets.push((c.address, c.name.clone()));
+            }
+        }
+        let mut out =
+            String::from("/* prototypes from binviz: the notes' types, else what each function's code says */\n");
+        for (at, name) in targets {
+            let asm = asm_name(&name, at, true);
+            let noted = self
+                .annotation_at(at)
+                .filter(|a| a.address == at)
+                .and_then(|a| a.ctype.clone());
+            let proto = match noted {
+                Some(t) if t.contains('(') => {
+                    // The note's type, named if it isn't: `int (int a0)` -> `int name(int a0)`.
+                    let (head, args) = t.split_once('(').unwrap_or((&t, ""));
+                    let head = head.trim_end();
+                    if head.ends_with(&asm)
+                        || head.split(|c: char| !c.is_ascii_alphanumeric() && c != '_').next_back()
+                            == Some(name.as_str())
+                    {
+                        let named = head.rsplit_once([' ', '*']).map_or(head, |(h, _)| h);
+                        format!("{} {asm}({args}", named.trim_end())
+                    } else {
+                        format!("{head} {asm}({args}")
+                    }
+                }
+                _ => {
+                    let sig = self.function_signature(at)?;
+                    let (ret, rest) = sig.prototype.split_once(' ').unwrap_or(("int", &sig.prototype));
+                    let args = rest.split_once('(').map_or("void)", |(_, a)| a);
+                    format!("{ret} {asm}({args}")
+                }
+            };
+            out.push_str(&proto);
+            out.push_str(";\n");
+        }
+        Some(out)
+    }
+}
+
 /// A name as an assembler symbol: its own if the assembler takes it (a
 /// mangled C++ name does), splat's for one made up here (`func_80010000`
 /// for code, `D_80020000` for data).
@@ -550,6 +603,52 @@ mod tests {
             exe[0x800 + 4 * k..0x800 + 4 * k + 4].copy_from_slice(&w.to_le_bytes());
         }
         Binary::parse(exe).expect("a PS-X EXE")
+    }
+
+    #[test]
+    fn m2c_gets_the_prototypes_of_what_a_function_calls() {
+        // entry calls a leaf that reads $a0 and $a1 and sets $v0.
+        let words = [
+            0x27BD_FFE8, // addiu $sp, $sp, -0x18
+            0xAFBF_0014, // sw $ra, 0x14($sp)
+            0x0C00_400A, // jal 0x80010028
+            0x2404_0003, // li $a0, 3
+            0x8FBF_0014, // lw $ra, 0x14($sp)
+            0x0000_0000,
+            0x03E0_0008, // jr $ra
+            0x27BD_0018, // addiu $sp, $sp, 0x18
+            0x0000_0000,
+            0x0000_0000,
+            0x0085_1021, // 0x80010028: addu $v0, $a0, $a1
+            0x03E0_0008, // jr $ra
+            0x0000_0000,
+        ];
+        let mut bin = psx(&words);
+        let ctx = bin.m2c_context(0x8001_0000).unwrap();
+        assert!(
+            ctx.contains("entry(") && ctx.contains(" func_80010028(int a0, int a1);"),
+            "{ctx}"
+        );
+        // A note's type is taken as it is, named after the assembler's symbol.
+        bin.set_annotations(vec![crate::model::Annotation {
+            address: 0x8001_0028,
+            name: "vec_sum".into(),
+            ctype: Some("s32 (Vec *v, int n)".into()),
+            ..Default::default()
+        }]);
+        let ctx = bin.m2c_context(0x8001_0000).unwrap();
+        assert!(ctx.contains("s32 vec_sum(Vec *v, int n);"), "{ctx}");
+        bin.set_annotations(vec![crate::model::Annotation {
+            address: 0x8001_0028,
+            name: "vec_sum".into(),
+            ctype: Some("s32 vec_sum(Vec *v, int n)".into()),
+            ..Default::default()
+        }]);
+        assert!(
+            bin.m2c_context(0x8001_0000)
+                .unwrap()
+                .contains("s32 vec_sum(Vec *v, int n);")
+        );
     }
 
     #[test]

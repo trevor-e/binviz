@@ -97,6 +97,8 @@ impl Server {
                 debug_map_tried: false,
                 table: None,
                 notes_stamp: None,
+                saved: Vec::new(),
+                journal_folded: 0,
             };
             let notes_path = string(args, "notes_file")
                 .filter(|_| i == 0)

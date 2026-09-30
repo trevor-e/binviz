@@ -135,17 +135,27 @@ COMMANDS:
                                    or clang-cl) scored against the original, function by
                                    function (relocations masked), each difference explained;
                                    with a name, that function only; with a folder of objects,
-                                   the whole project, unit by unit, worst first
+                                   the whole project, unit by unit, worst first; the shape of
+                                   the epilogue says which GCC built the original
+    match <file> <object> <name> --range <start> <end>
+                                   That function against the original's code in a range you
+                                   give (start..end or start+length work too), whatever extent
+                                   the notes give the function (MIPS)
     asm <file> <addr|symbol>       A MIPS function as GNU assembler source, as splat writes it
                                    (labels, calls by name, %hi/%lo pairs, jump tables): m2c's input
-    m2c <file> <addr|symbol> [cmd] m2c's first draft of its C (cmd: how to run m2c)
+    m2c <file> <addr|symbol> [cmd] m2c's first draft of its C (cmd: how to run m2c, \"python3
+                                   m2c.py\" say; through sh on Unix, split into words on Windows),
+                                   with the prototypes of the function and its callees from the
+                                   notes' types or their code, so it doesn't invent arguments
     flags <file> <source> <command> <flags>...
                                    The source compiled with each set of flags (the command's
                                    {src}, {out} and {flags} filled in) and matched against the
                                    file, best first: the flags a unit is built with
     report <file> <report.json>    objdiff's report placed on the file's functions
-    progress <file> [json]         Where the decompilation stands (the notes' statuses), by unit;
-                                   json: as objdiff's report, which decomp.dev shows
+    progress <file> [json]         Where the decompilation stands (the notes' statuses): the
+                                   counts by state, partial credit (each function's best percent
+                                   weighted by its size), then by unit, a range a note merges
+                                   counted once; json: as objdiff's report, which decomp.dev shows
     splat <file> <name> [dir] [split...]
                                    A splat config and symbol_addrs.txt (in dir, or printed)
                                    for a PS-X EXE, the code split into units at the splits
@@ -203,7 +213,8 @@ Options: --debug <file>  load debug info from a separate file (dSYM, .debug,
          --log <file>    a game ROM: follow its code with an emulator's code/data log
                          (FCEUX's or Mesen's .cdl): the code the game ran, the data it read
          --psx-exe <file> a PlayStation memory image (2 MiB of RAM dumped by an emulator)
-                         or overlay: name the functions of this boot executable in it
+                         or overlay: name the functions of this boot executable in it,
+                         as its own notes (<file>.binviz-notes.json) and --notes name them
          --overlay-at <addr> open the file as a PlayStation overlay loaded at this address
          --trace <file>  a PlayStation image: follow the code an emulator's trace saw run
                          (any text with an address per line: a CPU trace, a list of PCs)
@@ -360,10 +371,11 @@ fn wasm_debug_beside(bin: &mut Binary, path: &str) {
 /// boot executable's.
 /// A notes file's annotations: the JSON the web UI and the MCP server keep, or a bare list.
 fn read_notes(path: &str) -> Result<Vec<binviz::Annotation>, String> {
-    let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
-    binviz::notes::parse(&text)
-        .map(|(list, _)| list)
-        .map_err(|e| format!("{path}: {e}"))
+    // With its journal: what agents wrote that no rewrite of the file has folded yet.
+    if !std::path::Path::new(path).exists() {
+        return Err(format!("{path}: no such file"));
+    }
+    binviz::notes::read(std::path::Path::new(path)).map(|(list, _, _)| list)
 }
 
 fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, String> {
@@ -371,9 +383,20 @@ fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, Str
     let exe = match psx.exe {
         Some(e) => {
             let mut exe = open(e, None, None)?;
-            // The notes are the executable's too: the same addresses.
-            if let Some(n) = notes {
-                exe.set_annotations(read_notes(n)?);
+            // The notes are the executable's too (the same addresses), and so are
+            // its own, kept beside it: the names given there reach every image.
+            let mut list = match notes {
+                Some(n) => read_notes(n)?,
+                None => Vec::new(),
+            };
+            let beside = format!("{e}.binviz-notes.json");
+            if std::path::Path::new(&beside).exists() {
+                let own = read_notes(&beside)?;
+                eprintln!("{e}: {} notes from {beside}", own.len());
+                list.extend(own);
+            }
+            if !list.is_empty() {
+                exe.set_annotations(list);
             }
             Some(exe)
         }
@@ -1632,18 +1655,43 @@ fn run(
                 return Ok(());
             }
             let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
-            match arg(3) {
+            // --range start end (or start..end, start+length): the original's code to
+            // compare, whatever extent the notes give the function.
+            let mut rest: Vec<&str> = args[3..].iter().map(String::as_str).collect();
+            let range = match rest.iter().position(|a| *a == "--range") {
+                Some(i) => {
+                    let first = rest
+                        .get(i + 1)
+                        .copied()
+                        .ok_or("--range takes <start> <end>, start..end or start+length")?;
+                    let second = rest.get(i + 2).copied().filter(|s| !s.starts_with("--"));
+                    let range = binviz::matching::parse_range(first, second)
+                        .ok_or_else(|| format!("not a range: {first} {}", second.unwrap_or("")))?;
+                    rest.drain(i..i + 2 + second.is_some() as usize);
+                    Some(range)
+                }
+                None => None,
+            };
+            match rest.first() {
                 Some(name) => {
                     let funcs = binviz::matching::object_functions(&bytes).map_err(|e| e.to_string())?;
                     let f = binviz::matching::find_function(&funcs, name)
                         .ok_or_else(|| format!("no function {name} in {object}"))?;
                     bin.check_isa(f.isa).map_err(|e| e.to_string())?;
-                    let addr = match bin.object_symbol_address(&f.name) {
-                        Some(a) => a,
-                        None => resolve_address(&bin, name)?,
+                    let m = match range {
+                        Some((start, end)) => bin.match_range(start, end, f).map_err(|e| e.to_string())?,
+                        None => {
+                            let addr = match bin.object_symbol_address(&f.name) {
+                                Some(a) => a,
+                                None => resolve_address(&bin, name)?,
+                            };
+                            bin.match_function(addr, f).ok_or("not in a function")?
+                        }
                     };
-                    let m = bin.match_function(addr, f).ok_or("not in a function")?;
                     print!("{}", m.to_text());
+                }
+                None if range.is_some() => {
+                    return Err("--range needs the function's name in the object: binviz match <file> <object> <name> --range <start> <end>".into());
                 }
                 None => {
                     let unit = bin.match_unit(object, &bytes).map_err(|e| e.to_string())?;
@@ -1820,17 +1868,26 @@ fn run(
             if cmd == "asm" {
                 print!("{text}");
             } else {
-                // m2c's first draft of the C: the command given (default m2c), run on the source written out.
+                // m2c's first draft of the C: the command given (default m2c), run on the source
+                // written out, with a context file of prototypes (the function's and its
+                // callees', from the notes' types or the code) so it doesn't invent arguments.
                 let m2c = arg(3).unwrap_or("m2c");
-                let path = std::env::temp_dir().join(format!("binviz-{}-{addr:x}.s", std::process::id()));
+                let stem = std::env::temp_dir().join(format!("binviz-{}-{addr:x}", std::process::id()));
+                let path = stem.with_extension("s");
                 std::fs::write(&path, &text).map_err(|e| format!("{}: {e}", path.display()))?;
-                let line = format!("{m2c} {}", shell_quote(&path.to_string_lossy()));
-                let ran = if cfg!(windows) {
-                    std::process::Command::new("cmd").args(["/C", &line]).output()
-                } else {
-                    std::process::Command::new("sh").args(["-c", &line]).output()
-                };
+                let mut extra: Vec<String> = Vec::new();
+                let context = stem.with_extension("ctx.c");
+                if m2c.contains("m2c")
+                    && let Some(ctx) = bin.m2c_context(addr)
+                    && std::fs::write(&context, ctx).is_ok()
+                {
+                    extra.push("--context".into());
+                    extra.push(context.to_string_lossy().into_owned());
+                }
+                extra.push(path.to_string_lossy().into_owned());
+                let ran = run_line(m2c, &extra);
                 let _ = std::fs::remove_file(&path);
+                let _ = std::fs::remove_file(&context);
                 match ran {
                     Ok(o) if o.status.success() => print!("{}", String::from_utf8_lossy(&o.stdout)),
                     // It ran, and says (in a C comment) why it couldn't.
@@ -1869,11 +1926,7 @@ fn run(
                     .replace("{src}", &shell_quote(src))
                     .replace("{out}", &shell_quote(&out.to_string_lossy()))
                     .replace("{flags}", flags);
-                let ran = if cfg!(windows) {
-                    std::process::Command::new("cmd").args(["/C", &line]).output()
-                } else {
-                    std::process::Command::new("sh").args(["-c", &line]).output()
-                };
+                let ran = run_line(&line, &[]);
                 let object = match ran {
                     Ok(o) if o.status.success() => std::fs::read(&out).map_err(|e| binviz::Error::new(e.to_string())),
                     Ok(o) => {
@@ -1893,6 +1946,7 @@ fn run(
             if arg(2) == Some("json") {
                 println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
             } else {
+                println!("{}", bin.decomp_progress().summary());
                 print!("{}", progress_text(&report));
             }
         }
@@ -1936,6 +1990,58 @@ fn shell_quote(s: &str) -> String {
     } else {
         format!("'{}'", s.replace('\'', "'\\''"))
     }
+}
+
+/// Runs a command line the user gave (`m2c`, `python3 m2c.py`, a compiler
+/// with its flags) with `args` after it. Through `sh` on Unix, so pipes and
+/// quoting work as in a shell; on Windows without `cmd`, which strips the
+/// quotes off a line that starts with one (`"C:\\Program Files\\..."`),
+/// so the line is split into its words here, quotes respected.
+fn run_line(line: &str, args: &[String]) -> std::io::Result<std::process::Output> {
+    if cfg!(windows) {
+        let words = split_words(line);
+        let Some((program, rest)) = words.split_first() else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "no command"));
+        };
+        std::process::Command::new(program).args(rest).args(args).output()
+    } else {
+        let mut full = line.to_string();
+        for a in args {
+            full.push(' ');
+            full.push_str(&shell_quote(a));
+        }
+        std::process::Command::new("sh").args(["-c", &full]).output()
+    }
+}
+
+/// A command line's words: split on spaces, with double or single quotes
+/// holding a word together (and dropped).
+fn split_words(line: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut word = String::new();
+    let mut quote: Option<char> = None;
+    let mut any = false;
+    for c in line.chars() {
+        match quote {
+            Some(q) if c == q => quote = None,
+            Some(_) => word.push(c),
+            None if c == '"' || c == '\'' => {
+                quote = Some(c);
+                any = true;
+            }
+            None if c.is_whitespace() => {
+                if any || !word.is_empty() {
+                    out.push(std::mem::take(&mut word));
+                    any = false;
+                }
+            }
+            None => word.push(c),
+        }
+    }
+    if any || !word.is_empty() {
+        out.push(word);
+    }
+    out
 }
 
 /// An objdiff report's totals and units, one line each.

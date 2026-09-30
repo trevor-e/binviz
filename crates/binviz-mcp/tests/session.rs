@@ -910,6 +910,10 @@ fn an_archive_of_overlays_is_searched_for_code() {
     let path = dir.join("overlays.img");
     std::fs::write(&path, &archive).unwrap();
 
+    // The executable's own notes name its functions wherever it is used.
+    let exe_notes = format!("{}.binviz-notes.json", exe.to_str().unwrap());
+    std::fs::write(&exe_notes, r#"[{ "address": "0x80010000", "name": "boot_main" }]"#).unwrap();
+
     let mut s = Session::start();
     let found = s.ok(
         "find_code_blobs",
@@ -931,10 +935,16 @@ fn an_archive_of_overlays_is_searched_for_code() {
     );
     assert!(out.contains(&format!("{len} bytes")), "{out}");
     assert_eq!(std::fs::read(&blob).unwrap(), archive[at..at + len]);
-    s.ok(
+    let opened = s.ok(
         "open_binary",
         json!({ "path": blob.to_str().unwrap(), "overlay_at": "0x80123000", "psx_exe": exe.to_str().unwrap() }),
     );
+    assert!(
+        opened.contains("1 notes from") && opened.contains("name the executable's functions here"),
+        "{opened}"
+    );
+    let named = s.ok("list_symbols", json!({ "filter": "boot_main" }));
+    assert!(named.contains("boot_main") && named.contains("80010000"), "{named}");
     let libs = s.ok("library_sources", json!({}));
     assert!(libs.contains("No RCS"), "{libs}");
 
@@ -947,6 +957,50 @@ fn an_archive_of_overlays_is_searched_for_code() {
     );
     assert!(error && text.contains("past the end"), "{text}");
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn every_change_goes_to_the_journal_first() {
+    let path = fixture_copy_for("tiny-psx.exe", "journal");
+    let notes = path.with_file_name("tiny-psx.exe.binviz-notes.json");
+    let journal = path.with_file_name("tiny-psx.exe.binviz-notes.json.journal");
+    let mut s = Session::start();
+    s.ok("open_binary", json!({ "path": path }));
+    s.ok(
+        "annotate",
+        json!({ "at": "0x80010000", "name": "boot_main", "author": "agent-1" }),
+    );
+    // The change is a line of the journal, and the file says it folded it.
+    let lines = std::fs::read_to_string(&journal).unwrap();
+    assert!(
+        lines.lines().count() == 1
+            && lines.contains("\"set\"")
+            && lines.contains("boot_main")
+            && lines.contains("agent-1"),
+        "{lines}"
+    );
+    let file = std::fs::read_to_string(&notes).unwrap();
+    assert!(file.contains("\"journal\": 1"), "{file}");
+    // Another writer appends to the journal (its rewrite of the file lost, say): seen on the next call.
+    use std::io::Write as _;
+    let mut j = std::fs::OpenOptions::new().append(true).open(&journal).unwrap();
+    writeln!(
+        j,
+        r#"{{"t":1,"by":"agent-2","set":{{"address":"0x80010040","name":"from_the_journal","author":"agent-2"}}}}"#
+    )
+    .unwrap();
+    drop(j);
+    let listed = s.ok("list_annotations", json!({}));
+    assert!(listed.contains("from_the_journal"), "{listed}");
+    // Saving again folds it: the file holds both, and says so.
+    s.ok("annotate", json!({ "at": "0x80010000", "comment": "the entry" }));
+    let file = std::fs::read_to_string(&notes).unwrap();
+    assert!(
+        file.contains("from_the_journal") && file.contains("\"journal\": 3"),
+        "{file}"
+    );
+    assert_eq!(std::fs::read_to_string(&journal).unwrap().lines().count(), 3);
+    let _ = std::fs::remove_dir_all(path.parent().unwrap());
 }
 
 #[test]
