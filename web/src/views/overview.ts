@@ -159,6 +159,34 @@ export class OverviewView extends View {
       h('p', { class: 'secondary' }, 'Play the game with FCEUX’s or Mesen’s code/data logger on, then load its log (or drop the .cdl here): code only reached through jump tables is followed too, data the game read isn’t taken for code, and an NES game’s switched banks go where they ran.'),
       h('p', { class: 'sub' }, logLine(store.codeLog)),
       h('div', { class: 'btn-row' }, loadLog, importBtn, exports, logInput, labelInput),
+      this.romSource(),
+    );
+  }
+
+  /** A 6502 or 65816 game built with the cc65 tools: its debug file brings the source. */
+  private romSource(): HTMLElement | null {
+    const f = store.file!;
+    if (f.summary.arch !== '6502' && f.summary.arch !== '65816') return null;
+    const d = f.dwarf;
+    if (d) {
+      const browse = h('button', { class: 'btn small', type: 'button' }, 'Browse sources');
+      browse.addEventListener('click', () => store.setView('sources'));
+      return h(
+        'div',
+        null,
+        h('h3', { class: 'card-sub' }, 'From the source'),
+        h('p', { class: 'sub' }, `${d.source}: ${formatCount(d.unitCount)} unit${d.unitCount === 1 ? '' : 's'}, ${formatCount(f.sourceFiles.length)} source file${f.sourceFiles.length === 1 ? '' : 's'}`),
+        h('div', { class: 'btn-row' }, browse),
+      );
+    }
+    const load = h('button', { class: 'btn small', type: 'button', title: 'The .dbg file ld65 writes with --dbgfile' }, 'Load debug file…');
+    load.addEventListener('click', () => window.dispatchEvent(new CustomEvent('binviz:attach-debug')));
+    return h(
+      'div',
+      null,
+      h('h3', { class: 'card-sub' }, 'From the source'),
+      h('p', { class: 'secondary' }, 'Built with the cc65 tools (ca65, cc65)? The debug file ld65 writes (ld65 --dbgfile game.dbg) brings its source lines, procs and labels: load it, or drop the .dbg here.'),
+      h('div', { class: 'btn-row' }, load),
     );
   }
 

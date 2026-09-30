@@ -407,6 +407,7 @@ impl SdkReport {
                     ..Default::default()
                 }),
                 ctype: None,
+                author: String::new(),
             })
             .collect()
     }

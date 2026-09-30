@@ -167,6 +167,18 @@ export interface Inspection {
   instruction?: Instruction;
   unit?: number;
   annotation?: Annotation;
+  /** The string this byte is part of, if it is text. */
+  string?: StringHere;
+}
+
+/** A string a location is part of. */
+export interface StringHere {
+  offset: bigint;
+  address?: bigint;
+  /** Bytes it occupies (a table's end marker included). */
+  size: number;
+  text: string;
+  encoding: 'ascii' | 'utf-16' | 'table';
 }
 
 /** A note the user attached to an address range. `size` 0 means "the symbol or instruction there". */
@@ -178,6 +190,8 @@ export interface Annotation {
   reviewed: boolean;
   /** Where decompiling the function here stands (set by agents through the MCP server). */
   decomp?: Decomp;
+  /** Who wrote it, when not you: an agent mapping the binary. Its names are guesses until confirmed. */
+  author?: string;
 }
 
 export type DecompState = 'todo' | 'in-progress' | 'matched' | 'nonmatching' | 'skipped' | 'library';
@@ -529,9 +543,30 @@ export interface Coverage {
   totals: StatusBytes;
   gaps: Gap[];
   gapCount: number;
-  functions: { named: number; recovered: number; user: number };
+  /** Functions named by the file, recovered unnamed, named by you, and named by agents (unconfirmed). */
+  functions: { named: number; recovered: number; user: number; agents: number };
   annotations: number;
   reviewed: number;
+  /** Notes an agent wrote. */
+  agentNotes: number;
+}
+
+/** A function still to name, and what to know about it. */
+export interface WorkItem {
+  address: bigint;
+  name: string;
+  size: bigint;
+  callers: number;
+  callees: number;
+  unnamedCallees: number;
+}
+
+/** What to name next: leaves first, then the most called. */
+export interface Worklist {
+  functions: number;
+  named: number;
+  remaining: number;
+  items: WorkItem[];
 }
 
 // --- Cross-references and the call graph ------------------------------------

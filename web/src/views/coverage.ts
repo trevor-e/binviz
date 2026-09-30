@@ -4,7 +4,7 @@
 import { STATUSES, STATUS_LABELS, statusColors } from '../colors';
 import { setup } from '../canvas';
 import { store } from '../store';
-import type { Coverage, Gap, MapStatus, Section, StatusBytes } from '../types';
+import type { Annotation, Coverage, Gap, MapStatus, Section, StatusBytes, Worklist } from '../types';
 import { downloadText, emptyState, famClass, smallButton, tile, toast, tooltip } from '../ui';
 import { basename, debounce, formatCount, formatSize, h, hex, num, percent } from '../util';
 import type { Panel } from './base';
@@ -25,13 +25,21 @@ export class CoveragePanel implements Panel {
     );
     store.on('annotations', () => {
       this.coverage = null;
+      this.worklist = null;
       this.stale = true;
       if (this.el.isConnected) this.show();
     });
+    // How long ago the followed notes file was read.
+    store.on('notesfile', () => this.followStatus());
+    window.setInterval(() => this.el.isConnected && store.notesFile && this.followStatus(), 5000);
   }
+
+  private worklist: Worklist | null = null;
+  private followLine: HTMLElement | null = null;
 
   reset() {
     this.coverage = null;
+    this.worklist = null;
     this.stale = true;
     this.generation++;
   }
@@ -53,9 +61,10 @@ export class CoveragePanel implements Panel {
     if (!f) return;
     if (!this.coverage) {
       this.el.replaceChildren(h('div', { class: 'empty-state' }, 'Measuring coverage…'));
-      const cov = await store.api.coverage(100);
+      const [cov, work] = await Promise.all([store.api.coverage(100), store.api.worklist(12).catch(() => null)]);
       if (gen !== this.generation) return;
       this.coverage = cov;
+      this.worklist = work;
     }
     const cov = this.coverage;
     if (cov.sections.length === 0) {
@@ -80,6 +89,20 @@ export class CoveragePanel implements Panel {
     const importBtn = smallButton('Import…', 'Import annotations: a binviz export, a symbol list (CSV with an address column, nm output, "address name" lines), or for a ROM an emulator\'s label file (.mlb, .nl, .sym)', () => fileInput.click());
     const exportBtn = smallButton('Export', 'Download your annotations as JSON', () => downloadText(`${basename(f.name)}.binviz-notes.json`, store.exportAnnotations(), 'application/json'));
     exportBtn.toggleAttribute('disabled', store.annotations.length === 0);
+    // An agent's notes file, followed as it writes: Chrome and Edge can keep a file open.
+    const picker = (window as unknown as { showOpenFilePicker?: (o: object) => Promise<FileSystemFileHandle[]> }).showOpenFilePicker;
+    const followBtn = picker
+      ? smallButton('Follow file…', `Follow a notes file (${basename(f.name)}.binviz-notes.json) while an agent writes it: its notes come in as they are saved, and yours go out to it`, async () => {
+          try {
+            const [handle] = await picker({ types: [{ description: 'binviz notes', accept: { 'application/json': ['.json'] } }] });
+            if (handle) await store.followNotes(handle);
+          } catch {
+            /* cancelled */
+          }
+        })
+      : null;
+    this.followLine = h('div', { class: 'follow-status' });
+    this.followStatus();
 
     const bar = h('div', { class: 'stack-bar tall', role: 'img', 'aria-label': 'Share of code and data bytes by coverage status' });
     for (const s of STATUSES) {
@@ -100,15 +123,17 @@ export class CoveragePanel implements Panel {
         h('div', { style: 'flex:1' }, h('h2', null, 'How much of this binary is mapped out'), h('p', { class: 'sub' }, 'Every byte of the loaded code and data sections, by the strongest thing that explains it. Name functions and mark them reviewed from the inspector; the Overview’s file map shows the whole file this way too.')),
         importBtn,
         exportBtn,
+        followBtn,
         fileInput,
       ),
+      this.followLine,
       h(
         'div',
         { class: 'tiles' },
         tile('Mapped out', percent(mapped, denom), `${formatSize(mapped)} of ${formatSize(denom)} (padding excluded)`),
         tile('Named', percent(named, denom), 'symbols, your names and known structures'),
-        tile('Functions', formatCount(fn.named + fn.recovered + fn.user), `${formatCount(fn.named)} named · ${formatCount(fn.recovered)} recovered · ${formatCount(fn.user)} yours`),
-        tile('Your notes', formatCount(cov.annotations), `${formatCount(cov.reviewed)} marked reviewed`),
+        tile('Functions', formatCount(fn.named + fn.recovered + fn.user + fn.agents), `${formatCount(fn.named)} named · ${formatCount(fn.recovered)} recovered · ${formatCount(fn.user)} yours${fn.agents ? ` · ${formatCount(fn.agents)} agents’` : ''}`),
+        tile('Notes', formatCount(cov.annotations), `${formatCount(cov.reviewed)} marked reviewed${cov.agentNotes ? ` · ${formatCount(cov.agentNotes)} by agents` : ''}`),
         tile('Unexplored', formatSize(t.unexplored), `in ${formatCount(cov.gapCount)} gap${cov.gapCount === 1 ? '' : 's'}`, 'warn'),
       ),
       bar,
@@ -175,7 +200,73 @@ export class CoveragePanel implements Panel {
           ),
       cov.gapCount > cov.gaps.length ? h('p', { class: 'muted' }, `Showing the ${cov.gaps.length} largest of ${formatCount(cov.gapCount)} gaps.`) : null,
     );
-    this.el.replaceChildren(h('div', { class: 'page' }, summary, sectionsCard, gapsCard));
+    this.el.replaceChildren(h('div', { class: 'page' }, summary, this.nextCard(), this.agentsCard(), sectionsCard, gapsCard));
+  }
+
+  /** Where the followed notes file stands. */
+  private followStatus() {
+    const line = this.followLine;
+    if (!line) return;
+    const nf = store.notesFile;
+    if (!nf) {
+      line.replaceChildren();
+      line.hidden = true;
+      return;
+    }
+    line.hidden = false;
+    const ago = Math.max(0, Math.round((Date.now() - nf.lastRead) / 1000));
+    const stop = smallButton('Stop', 'Stop following the file', () => store.stopFollowingNotes());
+    line.replaceChildren(
+      h('span', { class: 'chip ok' }, 'Following'),
+      h('span', { class: 'mono' }, nf.name),
+      h('span', { class: 'muted' }, `${nf.writable ? 'shared both ways' : 'read only'} · read ${ago < 5 ? 'just now' : `${ago} s ago`}`),
+      stop,
+    );
+  }
+
+  /** The unnamed functions to look at next: leaves first, then the most called. */
+  private nextCard(): HTMLElement | null {
+    const w = this.worklist;
+    if (!w || w.functions === 0) return null;
+    const rows = w.items.map((item) => {
+      const row = h(
+        'div',
+        { class: 'row clickable', title: 'Show its code' },
+        h('span', { class: 'mono' }, item.name),
+        h('span', { class: 'muted' }, item.callees === 0 ? 'calls nothing' : item.unnamedCallees === 0 ? `calls ${formatCount(item.callees)}, all named` : `calls ${formatCount(item.callees)}, ${formatCount(item.unnamedCallees)} unnamed`),
+        h('span', { class: 'muted right' }, item.callers === 0 ? 'no callers' : `${formatCount(item.callers)} caller${item.callers === 1 ? '' : 's'}`),
+        h('span', { class: 'muted right' }, formatSize(item.size)),
+      );
+      row.addEventListener('click', () => void store.select({ address: item.address }, { view: 'code' }));
+      return row;
+    });
+    return h(
+      'div',
+      { class: 'card' },
+      h('h2', null, 'Next up'),
+      h('p', { class: 'sub' }, `${formatCount(w.named)} of ${formatCount(w.functions)} functions have names. Unnamed ones whose callees all have names come first (what they call says what they do), then the most called. An agent works through the same list (the MCP server’s worklist).`),
+      rows.length ? h('div', { class: 'work-list' }, rows) : h('div', { class: 'muted' }, 'Every function has a name.'),
+    );
+  }
+
+  /** Names agents gave, to confirm or correct. */
+  private agentsCard(): HTMLElement | null {
+    const theirs = store.annotations.filter((a) => a.author);
+    if (theirs.length === 0) return null;
+    const confirm = (list: Annotation[]) => void store.setAnnotations(store.annotations.map((a) => (list.includes(a) ? { ...a, author: undefined } : a)));
+    const rows = theirs.slice(0, 200).map((a) => {
+      const ok = smallButton('Confirm', 'Make it yours', () => confirm([a]));
+      const name = h('span', { class: 'mono clickable', title: 'Show it' }, a.name || fmtNote(a));
+      name.addEventListener('click', () => void store.select({ address: a.address }, { view: 'code' }));
+      return h('div', { class: 'row' }, name, h('span', { class: 'muted', title: a.comment }, a.comment ? truncate(a.comment, 90) : '—'), h('span', { class: 'chip agent' }, a.author!), ok);
+    });
+    return h(
+      'div',
+      { class: 'card' },
+      h('div', { class: 'card-head' }, h('div', { style: 'flex:1' }, h('h2', null, 'Agents’ names to check'), h('p', { class: 'sub' }, `${formatCount(theirs.length)} notes an agent wrote. Their names are guesses until you confirm them; editing a name makes it yours.`)), smallButton('Confirm all', 'Make every agent’s note yours', () => confirm(theirs))),
+      h('div', { class: 'work-list' }, rows),
+      theirs.length > rows.length ? h('p', { class: 'muted' }, `Showing ${rows.length} of ${formatCount(theirs.length)}.`) : null,
+    );
   }
 
   /** A section strip coloured by coverage status. */
@@ -243,4 +334,12 @@ export function statusLegend(): HTMLElement {
     { class: 'legend' },
     STATUSES.map((s) => h('span', { title: s.description }, h('span', { class: `swatch st-${s.id}` }), s.label)),
   );
+}
+
+function fmtNote(a: Annotation): string {
+  return `note at ${hex(a.address)}`;
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }

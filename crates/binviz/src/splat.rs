@@ -209,6 +209,7 @@ pub fn parse_symbol_addrs(text: &str) -> Vec<Annotation> {
             kind,
             decomp: None,
             ctype: None,
+            author: String::new(),
         });
     }
     out

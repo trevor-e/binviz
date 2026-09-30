@@ -19,6 +19,7 @@ interface Stored {
   comment?: string;
   reviewed?: boolean;
   decomp?: StoredDecomp;
+  author?: string;
 }
 
 const STATES: DecompState[] = ['todo', 'in-progress', 'matched', 'nonmatching', 'skipped', 'library'];
@@ -57,6 +58,7 @@ export function serializeAnnotations(list: Annotation[], file: string, fingerpri
     ...(a.comment ? { comment: a.comment } : {}),
     ...(a.reviewed ? { reviewed: true } : {}),
     ...(a.decomp ? { decomp: storeDecomp(a.decomp) } : {}),
+    ...(a.author ? { author: a.author } : {}),
   }));
   return JSON.stringify({ format: 'binviz-annotations', version: 1, file, fingerprint, annotations }, null, 2);
 }
@@ -100,6 +102,7 @@ function fromJson(value: unknown): Annotation[] | undefined {
       comment: typeof o.comment === 'string' ? o.comment : '',
       reviewed: o.reviewed === true,
       ...(decomp ? { decomp } : {}),
+      ...(typeof o.author === 'string' && o.author ? { author: o.author } : {}),
     });
   }
   return out;

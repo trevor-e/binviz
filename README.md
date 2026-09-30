@@ -126,6 +126,34 @@ the work queue too: which function to write C for next (callees first,
 near-copies of matched functions before anything), claims so parallel agents
 don't collide, and each function's outcome.
 
+**Agents that map binaries with you.** An agent (through the MCP server)
+works through a worklist of the functions to name next (those whose callees
+all have names first, then the most called); its notes land in the same notes
+file the web UI follows as it changes, marked as the agent's until you confirm
+them, and the names you give go back to it. Several agents can split one
+binary between them.
+
+**Homebrew with its source.** A game built with the cc65 tools (ca65, cc65)
+comes with the debug file ld65 writes (`ld65 --dbgfile game.dbg`): load it (or
+drop it on the ROM) and the game gets its source lines, its `.proc`s (C
+functions by their C names), labels named within their scopes
+(`player::update`) and RAM variables, read into DWARF like any debug info.
+Each place is found by its offset in the file, so banked games work too. It is
+also an answer key: `score` (CLI) and `compare_names` (MCP) set the names in
+notes, yours or an agent's from mapping the ROM blind, against the real ones
+(the same, close, different, missed); an unstripped build of a binary serves
+the same way.
+
+**From a line of text to the code that prints it.** Click anywhere in a string
+(ASCII, or a game's text read through its table file) and the whole string
+lights up, with everything that refers to it. For 6502 and 65816 games that
+includes how their code builds pointers: an address loaded as two bytes
+(`lda #<text` … `lda #>text`), a table of words read into a pointer, or the low
+and high bytes kept in two tables. Tables of pointers the code reads are named
+(`ptrs_c120`, `ptrs_lo_c120`), and they lead to the code that reads them. A
+ROM's other words holding the string's address count too, as the code in their
+bank would read them.
+
 ## Running the web UI
 
 Prerequisites: Rust (stable) with the `wasm32-unknown-unknown` target,

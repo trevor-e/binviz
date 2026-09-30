@@ -945,12 +945,24 @@ impl Session {
 
     #[wasm_bindgen(js_name = inspectOffset)]
     pub fn inspect_offset(&self, offset: u64) -> Result<JsValue, JsError> {
-        to_js(&self.bin()?.inspect(Target::Offset(offset)))
+        self.inspection(Target::Offset(offset))
     }
 
     #[wasm_bindgen(js_name = inspectAddress)]
     pub fn inspect_address(&self, address: u64) -> Result<JsValue, JsError> {
-        to_js(&self.bin()?.inspect(Target::Address(address)))
+        self.inspection(Target::Address(address))
+    }
+
+    /// What is at a place; a game's text read with the table file, when there is one.
+    fn inspection(&self, target: Target) -> Result<JsValue, JsError> {
+        let bin = self.bin()?;
+        let mut i = bin.inspect(target);
+        if let (Some(t), Some(offset)) = (&self.table, i.offset)
+            && let Some(s) = bin.string_at(offset, Some(t))
+        {
+            i.string = Some(s);
+        }
+        to_js(&i)
     }
 
     #[wasm_bindgen(js_name = addressToOffset)]
@@ -1129,6 +1141,11 @@ impl Session {
     /// Reverse-engineering coverage of the code and data sections.
     pub fn coverage(&self, max_gaps: u32) -> Result<JsValue, JsError> {
         to_js(&self.bin()?.coverage(max_gaps))
+    }
+
+    /// The unnamed functions to look at next (see `Binary::worklist`).
+    pub fn worklist(&self, limit: u32) -> Result<JsValue, JsError> {
+        to_js(&self.bin()?.worklist(limit as usize, None, &[]))
     }
 
     #[wasm_bindgen(js_name = coverageStrip)]

@@ -11,11 +11,12 @@
 //! saw read as data are never decoded; and each instruction runs in the
 //! state it ran in then (the 65816's register widths, ARM or Thumb).
 
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 
 use super::Rom;
 use super::cdl::{CodeDataLog, flag};
 use super::jumptable;
+use super::pointers;
 use crate::cpu::{self, Cpu, Flow, State};
 use crate::model::Section;
 use crate::xrefs::RefKind;
@@ -31,6 +32,10 @@ pub(crate) struct Analysis {
     pub states: HashMap<u64, State>,
     /// Instructions decoded.
     pub instructions: usize,
+    /// Tables of pointers the code reads (see [`pointers`]).
+    pub tables: Vec<pointers::Table>,
+    /// Addresses code builds in a window whose bank can't be told: (instruction, CPU address).
+    pub unplaced: Vec<(u64, u64)>,
 }
 
 /// At most this many instructions are followed (a 4 MiB ROM holds far fewer).
@@ -314,6 +319,31 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
             refs.push((pc, t, RefKind::Jump));
         }
     }
+    // Pointers to data the code builds, and the tables it builds them from.
+    let mut found = pointers::Found::default();
+    if matches!(rom.cpu, Cpu::Mos6502 | Cpu::W65816) {
+        let runs: Vec<(u64, u64, State)> = functions
+            .iter()
+            .map(|&(start, size)| (start, size, starts.get(&start).copied().unwrap_or(rom.state)))
+            .collect();
+        let is_code = |a: u64| {
+            let i = functions.partition_point(|f| f.0 <= a);
+            i > 0 && a < functions[i - 1].0 + functions[i - 1].1
+        };
+        let read: HashSet<u64> = refs.iter().filter(|r| r.2 == RefKind::Read).map(|r| r.1).collect();
+        let resolve = |from: u64, t: u64| rom.map.resolve(from, t);
+        let cpu_of = |a: u64| rom.map.cpu(a);
+        found = pointers::find(&pointers::Code {
+            cpu: rom.cpu,
+            runs: &runs,
+            bytes_at: &bytes_at,
+            resolve: &resolve,
+            cpu_of: &cpu_of,
+            is_code: &is_code,
+            read: &read,
+        });
+        refs.append(&mut found.refs);
+    }
     refs.sort_unstable();
     refs.dedup();
     Analysis {
@@ -321,5 +351,7 @@ pub(crate) fn analyze(data: &[u8], sections: &[Section], rom: &Rom) -> Analysis 
         refs,
         states: starts.into_iter().collect(),
         instructions,
+        tables: found.tables,
+        unplaced: found.unplaced,
     }
 }

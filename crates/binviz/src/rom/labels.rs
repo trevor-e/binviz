@@ -247,6 +247,7 @@ fn hex(s: &str) -> Option<u64> {
 
 fn note(address: u64, size: u64, name: &str, comment: &str) -> Annotation {
     Annotation {
+        author: String::new(),
         address,
         size: if size > 1 { size } else { 0 },
         name: name.trim().to_string(),

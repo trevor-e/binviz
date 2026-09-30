@@ -73,6 +73,33 @@ fn printable(b: u8) -> bool {
     (0x20..0x7f).contains(&b) || b == b'\t'
 }
 
+/// Sections strings are looked for in: data, not code (mostly noise) or tables
+/// and debug info (browsed elsewhere).
+fn string_section(s: &crate::model::Section) -> bool {
+    (matches!(
+        s.kind,
+        RegionKind::Rodata | RegionKind::Data | RegionKind::Tls | RegionKind::Resources | RegionKind::Metadata
+    ) || (s.kind == RegionKind::Notes && s.loaded))
+        && !s.compressed
+        && s.file_size > 0
+}
+
+/// The run of text bytes around `at`: its start and end, if it is a string
+/// (`MIN_CHARS` or more, looked for at most `MAX_TEXT` back).
+fn ascii_around(bytes: &[u8], at: usize, text_byte: impl Fn(u8) -> bool) -> Option<(usize, usize)> {
+    if !text_byte(*bytes.get(at)?) {
+        return None;
+    }
+    let start = (at.saturating_sub(MAX_TEXT)..at)
+        .rev()
+        .take_while(|&i| text_byte(bytes[i]))
+        .last()
+        .unwrap_or(at);
+    let limit = bytes.len().min(start + 16 * MAX_TEXT);
+    let end = (at..limit).find(|&i| !text_byte(bytes[i])).unwrap_or(limit);
+    (end - start >= MIN_CHARS).then_some((start, end))
+}
+
 impl Binary {
     /// The string index (built once).
     pub(crate) fn string_index(&self) -> &StringIndex {
@@ -130,6 +157,65 @@ impl Binary {
             return None;
         }
         Some(text)
+    }
+
+    /// The string the byte at file offset `offset` is part of: in the data
+    /// sections, one the string index has (or, before it is built, the ASCII
+    /// around it); in a game ROM's bytes that aren't code, text read with
+    /// `table` (a table file) when there is one, else ASCII.
+    pub fn string_at(&self, offset: u64, table: Option<&crate::tables::Table>) -> Option<crate::model::StringHere> {
+        let here = |offset: u64, size: u32, text: String, encoding| crate::model::StringHere {
+            offset,
+            address: self.offset_to_address(offset),
+            size,
+            text,
+            encoding,
+        };
+        if self.rom.is_none() {
+            if let Some(index) = self.strings.get() {
+                let i = index.recs.partition_point(|r| r.offset <= offset).checked_sub(1)?;
+                let r = &index.recs[i];
+                return (offset < r.end()).then(|| {
+                    here(
+                        r.offset,
+                        r.len(),
+                        self.string_text(r),
+                        if r.wide() { "utf-16" } else { "ascii" },
+                    )
+                });
+            }
+            let sec = self.section_at_offset(offset).filter(|s| string_section(s))?;
+            let lo = sec.file_offset? as usize;
+            let bytes = self.data.get(lo..(lo as u64 + sec.file_size) as usize)?;
+            let (start, end) = ascii_around(bytes, offset as usize - lo, printable)?;
+            let text = String::from_utf8_lossy(&bytes[start..end.min(start + MAX_TEXT)]).into_owned();
+            return Some(here((lo + start) as u64, (end - start) as u32, text, "ascii"));
+        }
+        // A ROM: its bytes are code and data alike, so only what isn't code.
+        let address = self.offset_to_address(offset)?;
+        if self.in_rom_code(address) {
+            return None;
+        }
+        let sec = self.section_at(address)?;
+        let lo = sec.file_offset? as usize;
+        let bytes = self.data.get(lo..(lo as u64 + sec.file_size) as usize)?;
+        let at = offset as usize - lo;
+        if let Some(t) = table {
+            let s = t.string_around(bytes, at, 2)?;
+            let text: String = s.text.chars().take(MAX_TEXT).collect();
+            return Some(here(lo as u64 + s.offset, s.len, text, "table"));
+        }
+        let (start, end) = ascii_around(bytes, at, |b| printable(b) || b == b'\n' || b == b'\r')?;
+        let text = String::from_utf8_lossy(&bytes[start..end.min(start + MAX_TEXT)]).into_owned();
+        Some(here((lo + start) as u64, (end - start) as u32, text, "ascii"))
+    }
+
+    /// Whether one of a ROM's addresses is inside the code following it found.
+    pub(crate) fn in_rom_code(&self, address: u64) -> bool {
+        let Some(rom) = &self.rom else { return false };
+        let f = &rom.analysis.functions;
+        let i = f.partition_point(|&(s, _)| s <= address);
+        i > 0 && address < f[i - 1].0 + f[i - 1].1
     }
 
     pub(crate) fn string_address(&self, r: &StrRec) -> Option<u64> {
@@ -241,15 +327,10 @@ impl Binary {
         let mut recs = Vec::new();
         let mut ranges = Vec::new();
         for s in &self.sections {
-            // Code sections produce mostly noise; tables and debug info are browsed elsewhere.
-            let wanted = matches!(
-                s.kind,
-                RegionKind::Rodata | RegionKind::Data | RegionKind::Tls | RegionKind::Resources | RegionKind::Metadata
-            ) || (s.kind == RegionKind::Notes && s.loaded)
-                // A console's code and data share one area (a PlayStation executable, a ROM's banks).
-                || (self.rom.is_some() && s.kind == RegionKind::Code && s.loaded);
             let Some(off) = s.file_offset else { continue };
-            if !wanted || s.compressed || s.file_size == 0 {
+            // A game ROM's banks hold code and data alike: its text outside the code.
+            let rom = self.rom.is_some() && s.loaded && s.kind == RegionKind::Code;
+            if !string_section(s) && !rom {
                 continue;
             }
             let end = (off + s.file_size).min(self.data.len() as u64);
@@ -265,14 +346,22 @@ impl Binary {
                 }
             };
             // ASCII runs.
+            let text = |i: usize| {
+                if rom {
+                    (printable(bytes[i]) || bytes[i] == b'\n' || bytes[i] == b'\r')
+                        && !self.in_rom_code(s.address + i as u64)
+                } else {
+                    printable(bytes[i])
+                }
+            };
             let mut i = 0;
             while i < bytes.len() {
-                if !printable(bytes[i]) {
+                if !text(i) {
                     i += 1;
                     continue;
                 }
                 let start = i;
-                while i < bytes.len() && printable(bytes[i]) {
+                while i < bytes.len() && text(i) {
                     i += 1;
                 }
                 if i - start >= MIN_CHARS {

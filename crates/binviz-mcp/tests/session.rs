@@ -191,7 +191,11 @@ fn an_agent_session() {
     let renamed = s.ok("search", json!({ "query": "sum_of_areas", "kind": "symbol" }));
     assert!(renamed.contains("your name"), "{renamed}");
     let cov = s.ok("coverage", json!({}));
-    assert!(cov.contains("notes: 1 (1 reviewed)"), "{cov}");
+    // An agent's name, until someone confirms it.
+    assert!(
+        cov.contains("1 by agents (unconfirmed) · notes: 1 (1 reviewed, 1 by agents)"),
+        "{cov}"
+    );
 
     let (text, error) = s.call("inspect", json!({ "at": "no_such_symbol" }));
     assert!(error && text.contains("not an address"), "{text}");
@@ -768,4 +772,108 @@ fn a_webassembly_build_and_its_stack_trace() {
     let crash = s.ok("symbolicate", json!({ "report_file": trace.to_str().unwrap() }));
     assert!(crash.contains("check  wasmdemo.c:84:9"), "{crash}");
     let _ = std::fs::remove_dir_all(module.parent().unwrap());
+}
+
+/// The addresses a worklist lists: its numbered lines, `3. sub_4010a0 at 0x4010a0: ...`.
+fn worklist_items(text: &str) -> Vec<String> {
+    text.lines()
+        .filter(|l| l.split('.').next().is_some_and(|n| n.parse::<u32>().is_ok()))
+        .filter_map(|l| Some(l.split(" at ").nth(1)?.split(':').next()?.to_string()))
+        .collect()
+}
+
+#[test]
+fn agents_share_notes_and_follow_a_worklist() {
+    let path = fixture_copy_for("shapes-pe.stripped.exe", "agents");
+    let notes = path.with_file_name("shapes-pe.stripped.exe.binviz-notes.json");
+    let mut s = Session::start();
+    s.ok("open_binary", json!({ "path": path }));
+    // What to name next.
+    let work = s.ok("worklist", json!({ "limit": 3 }));
+    assert!(work.starts_with("Named: "), "{work}");
+    let at = worklist_items(&work);
+    assert_eq!(at.len(), 3, "{work}");
+    // Two at once: the agent's.
+    let out = s.ok(
+        "annotate",
+        json!({ "notes": [ { "at": at[0], "name": "first_fn", "comment": "does the first thing" }, { "at": at[1], "name": "second_fn" } ] }),
+    );
+    assert!(
+        out.contains("named first_fn") && out.contains("named second_fn"),
+        "{out}"
+    );
+    let read = || -> Value { serde_json::from_str(&std::fs::read_to_string(&notes).unwrap()).unwrap() };
+    let saved = read();
+    assert!(
+        saved["annotations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|a| a["author"] == "agent"),
+        "{saved}"
+    );
+    // Named, they leave the worklist.
+    let next = s.ok("worklist", json!({ "limit": 50 }));
+    assert!(!next.contains(&format!(" at {}:", at[0])), "{next}");
+    // Someone else (the web UI, another session) adds a note to the file...
+    let mut doc = saved.clone();
+    doc["annotations"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "address": at[2], "name": "from_elsewhere" }));
+    std::fs::write(&notes, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
+    // ...which this session sees, and keeps when it saves its own.
+    let list = s.ok("list_annotations", json!({}));
+    assert!(
+        list.contains("from_elsewhere") && list.contains("[by agent] first_fn"),
+        "{list}"
+    );
+    s.ok(
+        "annotate",
+        json!({ "at": at[0], "comment": "a better comment", "author": "claude-2" }),
+    );
+    let saved = read();
+    let notes_now = saved["annotations"].as_array().unwrap();
+    let names: Vec<&str> = notes_now.iter().filter_map(|a| a["name"].as_str()).collect();
+    assert!(
+        names.contains(&"from_elsewhere") && names.contains(&"first_fn"),
+        "{names:?}"
+    );
+    // A new comment doesn't make the name someone else's.
+    assert!(
+        notes_now
+            .iter()
+            .any(|a| a["name"] == "first_fn" && a["author"] == "agent"),
+        "{saved}"
+    );
+    let yours = s.ok("list_annotations", json!({ "author": "you" }));
+    assert!(
+        yours.contains("from_elsewhere") && !yours.contains("first_fn"),
+        "{yours}"
+    );
+    // Agents' names count apart.
+    let cov = s.ok("coverage", json!({ "gaps": 0 }));
+    assert!(cov.contains("1 named by you, 2 by agents"), "{cov}");
+    // Two agents' shares don't overlap.
+    let shard = |s: &mut Session, k: u32| -> Vec<String> {
+        worklist_items(&s.ok("worklist", json!({ "limit": 50, "shard": format!("{k}/2") })))
+    };
+    let (a, b) = (shard(&mut s, 1), shard(&mut s, 2));
+    assert!(!a.is_empty() && !b.is_empty() && a.iter().all(|x| !b.contains(x)));
+    assert!(s.call("worklist", json!({ "shard": "3/2" })).1);
+    // The prompt that runs this loop.
+    let prompts = s.request("prompts/list", json!({}));
+    assert_eq!(prompts["result"]["prompts"][0]["name"], "map_binary", "{prompts}");
+    let p = s.request(
+        "prompts/get",
+        json!({ "name": "map_binary", "arguments": { "path": "game.nes", "shard": "1/2" } }),
+    );
+    let text = p["result"]["messages"][0]["content"]["text"]
+        .as_str()
+        .unwrap_or_default();
+    assert!(
+        text.contains("open_binary game.nes") && text.contains("shard: \"1/2\""),
+        "{p}"
+    );
+    assert!(s.request("prompts/get", json!({ "name": "nope" }))["error"].is_object());
 }

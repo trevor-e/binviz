@@ -53,6 +53,7 @@ impl Binary {
         let instruction = address.and_then(|a| self.instruction_at(a));
         let annotation = address.and_then(|a| self.annotation_at(a)).cloned();
         let global = address.filter(|_| self.xrefs_ready()).and_then(|a| self.global_at(a));
+        let string = offset.and_then(|o| self.string_at(o, None));
         Inspection {
             offset,
             address,
@@ -67,6 +68,7 @@ impl Binary {
             unit,
             annotation,
             global,
+            string,
         }
     }
 
@@ -90,7 +92,7 @@ impl Binary {
     /// `.debug` file (from `objcopy --only-keep-debug`), or an unstripped copy.
     pub fn attach_debug_file(&mut self, name: &str, data: impl Into<Arc<[u8]>>) -> Result<()> {
         let mut data: Arc<[u8]> = data.into();
-        // A PDB: read into DWARF.
+        // A PDB, or the debug file ld65 wrote for a game: read into DWARF.
         if dwarf::pdb::is_pdb(&data) {
             return self.attach_pdb(name, &data);
         }
@@ -100,6 +102,9 @@ impl Binary {
         }
         if crate::wasm::sourcemap::looks_like(&data) {
             bail!("{name} is a source map, the debug info of a WebAssembly module; this binary isn't one");
+        }
+        if dwarf::ca65::is_ca65(&data) {
+            return self.attach_ca65(name, &data);
         }
         // dSYMs of universal binaries are universal too: pick our architecture.
         if let Ok(object::FileKind::MachOFat32 | object::FileKind::MachOFat64) = object::FileKind::parse(&*data) {
@@ -214,6 +219,55 @@ impl Binary {
         Ok(())
     }
 
+    /// Attaches the debug file ld65 wrote for a game (`--dbgfile`): its
+    /// modules and source lines read into DWARF, its `.proc`s and labels
+    /// naming the ROM's functions and places.
+    fn attach_ca65(&mut self, name: &str, data: &[u8]) -> Result<()> {
+        let Some(rom) = &self.rom else {
+            bail!(
+                "{name} is a debug file of the cc65 tools, for 6502 and 65816 programs: open the ROM it was built with"
+            );
+        };
+        let text = std::str::from_utf8(data).map_err(|_| crate::error::Error::new(format!("{name} isn't text")))?;
+        let entry = self.summary.entry.unwrap_or(0);
+        let place = |offset: u64| self.offset_to_address(offset);
+        let resolve = |cpu: u64| rom.map.resolve(entry, cpu);
+        let converted = dwarf::ca65::convert(text, &place, &resolve)?;
+        // Built for another file, little of it lands anywhere.
+        if converted.placed * 2 < converted.spans {
+            bail!(
+                "{name} doesn't match this ROM: {} of the {} places it describes are in it",
+                converted.placed,
+                converted.spans
+            );
+        }
+        let debug = if converted.modules > 0 {
+            Some(DebugInfo::from_sections(
+                converted.sections,
+                gimli::RunTimeEndian::Little,
+                name,
+                &self.sections,
+                self.arch,
+            )?)
+        } else {
+            None
+        };
+        let mut syms = DebugSymbols::default();
+        for (n, address, size, kind) in &converted.symbols {
+            syms.push(n, *address, *size, *kind);
+        }
+        if debug.is_none() && syms.recs.is_empty() {
+            bail!("{name} names nothing in this ROM");
+        }
+        self.debug_symbols = syms;
+        if let Some(debug) = debug {
+            self.summary.has_dwarf = true;
+            self.debug = Some(debug);
+        }
+        self.rebuild_static_symbols();
+        Ok(())
+    }
+
     /// Rebuilds the symbols that don't come from the file's own tables: an
     /// attached debug file's symbols, DWARF subprograms (when the file has no
     /// function symbols), names from Objective-C metadata and recovered
@@ -311,6 +365,25 @@ impl Binary {
             .filter(|&&(address, _)| named.binary_search(&address).is_err())
             .map(|&(address, size)| (address, size, section_of(address)))
             .collect();
+        // Tables of pointers a ROM's code reads: `ptrs_<address>` (of two
+        // tables of bytes, `ptrs_lo_` and `ptrs_hi_`).
+        let tables: Vec<(String, u64, u64, Option<u32>)> = self
+            .rom
+            .iter()
+            .flat_map(|r| &r.analysis.tables)
+            .flat_map(|t| {
+                let size = u64::from(t.entries) * t.stride();
+                match t.high {
+                    None => vec![(format!("ptrs_{:x}", t.address), t.address, size)],
+                    Some(h) => vec![
+                        (format!("ptrs_lo_{:x}", t.address), t.address, size),
+                        (format!("ptrs_hi_{:x}", t.address), h, size),
+                    ],
+                }
+            })
+            .filter(|t| named.binary_search(&t.1).is_err())
+            .map(|(name, address, size)| (name, address, size, section_of(address)))
+            .collect();
         let debug_file = from_debug_file.iter().map(|&(i, section)| {
             let r = &ds.recs[i];
             NewSym {
@@ -367,6 +440,17 @@ impl Binary {
                 kind: SymbolKind::Function,
                 binding: Binding::Local,
                 section,
+                source: SymbolSource::Discovered,
+                defined: true,
+                plain: true,
+            }))
+            .chain(tables.iter().map(|(name, address, size, section)| NewSym {
+                name,
+                address: *address,
+                size: *size,
+                kind: SymbolKind::Data,
+                binding: Binding::Local,
+                section: *section,
                 source: SymbolSource::Discovered,
                 defined: true,
                 plain: true,

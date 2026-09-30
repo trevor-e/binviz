@@ -1389,7 +1389,7 @@ fn progress_is_exported_as_objdiffs_report() {
             source: source.into(),
             ..Default::default()
         }),
-        ctype: None,
+        ctype: None, author: String::new(),
     };
     let notes = vec![
         note(at(&bin, "sum3"), DecompState::Matched, None, "src/math.c"),
@@ -1452,7 +1452,7 @@ fn fields_are_named_through_typed_pointers() {
         reviewed: false,
         kind: None,
         decomp: None,
-        ctype: Some(ctype.into()),
+        ctype: Some(ctype.into()), author: String::new(),
     };
     bin.set_annotations(vec![
         note(soldier, "SP_monster_soldier", "void SP_monster_soldier(edict_t *self)"),
@@ -1635,7 +1635,7 @@ fn decompilation_goes_from_what_is_ready() {
             reviewed: false,
             kind: None,
             decomp: Some(decomp),
-            ctype: None,
+            ctype: None, author: String::new(),
         });
         bin.set_annotations(notes);
     };
@@ -2032,7 +2032,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: "main".into(),
             comment: "builds shapes and prints the total area".into(),
             reviewed: true,
-            kind: None, decomp: None, ctype: None,
+            kind: None, decomp: None, ctype: None, author: String::new(),
         },
         Annotation {
             address: main.address + 0x10,
@@ -2040,7 +2040,7 @@ fn annotations_name_functions_and_mark_progress() {
             name: String::new(),
             comment: "calls __main".into(),
             reviewed: false,
-            kind: None, decomp: None, ctype: None,
+            kind: None, decomp: None, ctype: None, author: String::new(),
         },
     ]);
     // The name becomes a symbol with the recovered function's exact size.
@@ -3354,7 +3354,7 @@ fn a_sibling_decompilation_gives_worked_examples() {
             source: "src/shapes.cpp".into(),
             ..Decomp::default()
         }),
-        ctype: None,
+        ctype: None, author: String::new(),
     }]);
     // Here nothing is decompiled yet, and nothing is named.
     let here = open("shapes-pe.stripped.exe");
@@ -3394,7 +3394,7 @@ fn a_sibling_decompilation_gives_worked_examples() {
                 state: DecompState::Matched,
                 ..Decomp::default()
             }),
-            ctype: None,
+            ctype: None, author: String::new(),
         })
         .collect();
     pe.set_annotations(marks);
@@ -3582,6 +3582,222 @@ fn jump_tables_are_followed() {
     assert!(found.contains(&0x8030) && found.contains(&0x8040), "{found:x?}");
     // The table itself isn't code.
     assert!(!found.iter().any(|&a| (0x8010..0x8030).contains(&a)), "{found:x?}");
+}
+
+/// An NROM image: 32 KiB of PRG ROM at $8000, reset at $8000.
+fn nrom(prg_at: &[(usize, &[u8])]) -> Binary {
+    let mut prg = vec![0u8; 0x8000];
+    for (at, bytes) in prg_at {
+        prg[*at..*at + bytes.len()].copy_from_slice(bytes);
+    }
+    prg[0x7FFA..].copy_from_slice(&[0x00, 0x80, 0x00, 0x80, 0x00, 0x80]);
+    let mut rom = b"NES\x1a".to_vec();
+    rom.extend_from_slice(&[2, 0, 0, 0]);
+    rom.extend_from_slice(&[0; 8]);
+    rom.extend_from_slice(&prg);
+    Binary::parse(rom).unwrap()
+}
+
+#[test]
+fn text_is_traced_to_the_code_that_uses_it() {
+    let code: &[u8] = &[
+        0xA9, 0x80, 0x85, 0x00, 0xA9, 0x80, 0x85, 0x01, // lda #<msg1 / sta $00 / lda #>msg1 / sta $01
+        0x20, 0x40, 0x80, // jsr print
+        0xA2, 0x02, 0xBD, 0x60, 0x80, 0x85, 0x00, // ldx #2 / lda words,x / sta $00
+        0xBD, 0x61, 0x80, 0x85, 0x01, // lda words+1,x / sta $01
+        0x20, 0x40, 0x80, // jsr print
+        0xA0, 0x01, 0xB9, 0x70, 0x80, 0x85, 0x02, // ldy #1 / lda lo,y / sta $02
+        0xB9, 0x72, 0x80, 0x85, 0x03, // lda hi,y / sta $03
+        0xA0, 0x00, 0xB1, 0x02, // ldy #0 / lda ($02),y
+        0x4C, 0x00, 0x80, // jmp $8000
+    ];
+    let bin = nrom(&[
+        (0, code),
+        (0x40, &[0xA0, 0x00, 0xB1, 0x00, 0x60]), // print: ldy #0 / lda ($00),y / rts
+        (0x60, &[0x80, 0x80, 0x86, 0x80, 0x8C, 0x80]), // words: msg1, msg2, msg3
+        (0x70, &[0x80, 0x86, 0x80, 0x80]),       // lo: <msg1, <msg2; hi: >msg1, >msg2
+        (0x80, b"HELLO\0WORLD\0AGAIN\0"),
+        (0xA0, &[0x8C, 0x80]), // a word no code reads: msg3
+    ]);
+    // The text is a string where it is, not code.
+    let hello = bin.inspect(binviz::Target::Address(0x8082)).string.unwrap();
+    assert_eq!(
+        (hello.address, hello.size, hello.text.as_str()),
+        (Some(0x8080), 5, "HELLO")
+    );
+    assert_eq!(hello.encoding, "ascii");
+    assert!(bin.inspect(binviz::Target::Address(0x8001)).string.is_none());
+    bin.prepare_xrefs();
+    let refs = |lo: u64, hi: u64| -> Vec<(u64, &'static str)> {
+        bin.references_to(lo, hi, 0, 50)
+            .refs
+            .iter()
+            .map(|r| (r.source, r.kind.as_str()))
+            .collect()
+    };
+    // Its address built from two immediates, a word table's entry, and a split table's.
+    assert_eq!(
+        refs(0x8080, 0x8086),
+        [(0x8000, "address"), (0x8060, "pointer"), (0x8070, "pointer")]
+    );
+    // The last: the table's, and a word nothing reads.
+    assert_eq!(refs(0x808C, 0x8092), [(0x8064, "pointer"), (0x80A0, "pointer")]);
+    // The tables are named, and lead to the code that reads them.
+    let words = bin.symbols().by_name("ptrs_8060").unwrap();
+    assert_eq!((words.address, words.size), (0x8060, 6));
+    assert_eq!(refs(0x8060, 0x8066), [(0x800D, "read"), (0x8012, "read")]);
+    let lo = bin.symbols().by_name("ptrs_lo_8070").unwrap();
+    let hi = bin.symbols().by_name("ptrs_hi_8070").unwrap();
+    assert_eq!((lo.address, lo.size, hi.address, hi.size), (0x8070, 2, 0x8072, 2));
+}
+
+#[test]
+fn the_worklist_starts_with_functions_whose_callees_have_names() {
+    use binviz::Annotation;
+    // reset calls A and B; A calls C.
+    let mut bin = nrom(&[
+        (0, &[0x20, 0x10, 0x80, 0x20, 0x20, 0x80, 0x4C, 0x00, 0x80]),
+        (0x10, &[0x20, 0x30, 0x80, 0x60]), // A: jsr C / rts
+        (0x20, &[0xA9, 0x01, 0x60]),       // B: lda #1 / rts
+        (0x30, &[0xA9, 0x02, 0x60]),       // C: lda #2 / rts
+    ]);
+    let order = |bin: &Binary| -> Vec<u64> { bin.worklist(10, None, &[]).items.iter().map(|w| w.address).collect() };
+    let w = bin.worklist(10, None, &[]);
+    assert_eq!((w.functions, w.named, w.remaining), (4, 1, 3));
+    // Those calling nothing unnamed first; A, which calls unnamed C, last.
+    assert_eq!(order(&bin), [0x8020, 0x8030, 0x8010]);
+    assert_eq!(
+        (w.items[2].callers, w.items[2].callees, w.items[2].unnamed_callees),
+        (1, 1, 1)
+    );
+    // An agent names C: it is done, and A's callees all have names.
+    bin.set_annotations(vec![Annotation {
+        address: 0x8030,
+        name: "load_two".into(),
+        author: "agent".into(),
+        ..Default::default()
+    }]);
+    assert_eq!(order(&bin), [0x8020, 0x8010]);
+    // Given up on, or another agent's share.
+    assert_eq!(bin.worklist(10, None, &[0x8020]).items.len(), 1);
+    let shares: Vec<usize> = (0..2)
+        .map(|k| bin.worklist(10, Some((k, 2)), &[]).items.len())
+        .collect();
+    assert_eq!(shares.iter().sum::<usize>(), 2);
+    // The agent's name counts apart until someone confirms it.
+    let c = bin.coverage(0);
+    assert_eq!((c.functions.agents, c.functions.user, c.agent_notes), (1, 0, 1));
+}
+
+/// The debug file ld65 would write for `ca65_rom`: main.s (`reset`, which
+/// calls `print` from print.inc and loops) and a pointer in zero page.
+const CA65_DBG: &str = "version\tmajor=2,minor=0
+info\tcsym=0,file=2,lib=0,line=7,mod=1,scope=3,seg=3,span=6,sym=6,type=0
+file\tid=0,name=\"main.s\",size=200,mtime=0x5F000000,mod=0
+file\tid=1,name=\"print.inc\",size=50,mtime=0x5F000000,mod=0
+line\tid=0,file=0,line=4,span=0
+line\tid=1,file=0,line=5,span=1
+line\tid=2,file=1,line=2,span=2
+line\tid=3,file=1,line=3,span=3
+line\tid=4,file=1,line=4,span=4
+line\tid=5,file=0,line=15,span=5
+line\tid=6,file=0,line=20,type=2,count=1,span=0
+mod\tid=0,name=\"main.o\",file=0
+seg\tid=0,name=\"HEADER\",start=0x000000,size=0x0010,addrsize=absolute,type=ro,oname=\"game.nes\",ooffs=0
+seg\tid=1,name=\"CODE\",start=0x008000,size=0x000B,addrsize=absolute,type=ro,oname=\"game.nes\",ooffs=16
+seg\tid=2,name=\"ZEROPAGE\",start=0x000000,size=0x0002,addrsize=zeropage,type=rw
+span\tid=0,seg=1,start=0,size=3
+span\tid=1,seg=1,start=3,size=3
+span\tid=2,seg=1,start=6,size=2
+span\tid=3,seg=1,start=8,size=2
+span\tid=4,seg=1,start=10,size=1
+span\tid=5,seg=2,start=0,size=2
+scope\tid=0,name=\"\",mod=0,size=11,span=0+1+2+3+4
+scope\tid=1,name=\"reset\",mod=0,type=scope,size=6,parent=0,sym=0,span=0+1
+scope\tid=2,name=\"print\",mod=0,type=scope,size=5,parent=0,sym=1,span=2+3+4
+sym\tid=0,name=\"reset\",addrsize=absolute,size=6,scope=0,def=0,val=0x8000,seg=1,type=lab
+sym\tid=1,name=\"print\",addrsize=absolute,size=5,scope=0,def=2,val=0x8006,seg=1,type=lab
+sym\tid=2,name=\"loop\",addrsize=absolute,scope=2,def=3,val=0x8008,seg=1,type=lab
+sym\tid=3,name=\"ptr\",addrsize=zeropage,scope=0,def=5,val=0x0,seg=2,type=lab
+sym\tid=4,name=\"@skip\",addrsize=absolute,parent=2,def=4,val=0x800A,seg=1,type=lab
+sym\tid=5,name=\"PPUCTRL\",addrsize=absolute,scope=0,val=0x2000,type=equ
+";
+
+#[test]
+fn ca65_debug_files_bring_source_lines_and_names() {
+    use binviz::SymbolKind;
+    // reset: jsr print / jmp reset; print: ldy #0 / lda (ptr),y / rts.
+    let mut bin = nrom(&[(0, &[0x20, 0x06, 0x80, 0x4C, 0x00, 0x80, 0xA0, 0x00, 0xB1, 0x00, 0x60])]);
+    assert!(bin.debug_info().is_none());
+    bin.attach_debug_file("game.dbg", CA65_DBG.as_bytes()).unwrap();
+    assert!(bin.summary().has_dwarf);
+    let debug = bin.debug_info().unwrap();
+    // Each instruction's source line (the assembler's over a macro's), in its own file.
+    let at = |a: u64| {
+        let l = debug.location(a).unwrap();
+        (l.path.rsplit(['/', '\\']).next().unwrap().to_string(), l.line)
+    };
+    assert_eq!(at(0x8000), ("main.s".to_string(), 4));
+    assert_eq!(at(0x8004), ("main.s".to_string(), 5));
+    assert_eq!(at(0x8008), ("print.inc".to_string(), 3));
+    // One unit, named after the module's source, in assembler.
+    let units = debug.units();
+    assert_eq!(units.len(), 1);
+    assert_eq!(units[0].name.as_deref(), Some("main.s"));
+    assert!(units[0].producer.as_deref().unwrap().starts_with("ca65"));
+    // `.proc`s are functions; labels are named within their scopes; RAM labels are data.
+    let print = bin.symbols().by_name("print").unwrap();
+    assert_eq!(
+        (print.address, print.size, print.kind),
+        (0x8006, 5, SymbolKind::Function)
+    );
+    assert_eq!(bin.symbols().by_name("print::loop").unwrap().address, 0x8008);
+    let ptr = bin.symbols().by_name("ptr").unwrap();
+    assert_eq!((ptr.address, ptr.kind), (0, SymbolKind::Data));
+    assert!(bin.symbols().by_name("@skip").is_none());
+    // The functions are subprograms.
+    let (u, offset) = debug.function_die_at(0x8009).unwrap();
+    assert_eq!(debug.die(u, offset).unwrap().die.name.as_deref(), Some("print"));
+    // Only for a game's ROM.
+    assert!(
+        open("tiny-elf-x64")
+            .attach_debug_file("game.dbg", CA65_DBG.as_bytes())
+            .is_err()
+    );
+}
+
+#[test]
+fn pointers_into_a_switched_bank() {
+    // UxROM: banks 0-2 switch at $8000, bank 3 is fixed at $C000.
+    let mut prg = vec![0u8; 0x10000];
+    // Bank 1's text at $8100, and bank 2's (another string at the same address).
+    prg[0x4100..0x4108].copy_from_slice(b"BANKED\0\0");
+    prg[0x8100..0x8106].copy_from_slice(b"OTHER\0");
+    // The fixed bank: a table of two words into the window, and one on its own.
+    prg[0xC200..0xC204].copy_from_slice(&[0x00, 0x81, 0x07, 0x81]);
+    prg[0xC300..0xC302].copy_from_slice(&[0x00, 0x81]);
+    // Bank 2 points at its own $8100.
+    prg[0x8200..0x8202].copy_from_slice(&[0x00, 0x81]);
+    prg[0xC000..0xC003].copy_from_slice(&[0x4C, 0x00, 0xC0]);
+    prg[0xFFFA..].copy_from_slice(&[0x00, 0xC0, 0x00, 0xC0, 0x00, 0xC0]);
+    let mut rom = b"NES\x1a".to_vec();
+    rom.extend_from_slice(&[4, 0, 0x20, 0]);
+    rom.extend_from_slice(&[0; 8]);
+    rom.extend_from_slice(&prg);
+    let bin = Binary::parse(rom).unwrap();
+    bin.prepare_xrefs();
+    let from = |lo: u64| -> Vec<u64> {
+        bin.references_to(lo, lo + 6, 0, 50)
+            .refs
+            .iter()
+            .map(|r| r.source)
+            .collect()
+    };
+    // From the fixed bank, any bank could be switched in: the table's word
+    // counts (it points into the window with its neighbour), the lone one doesn't.
+    assert_eq!(from(0x1_8100), [0x3_C200]);
+    // Bank 2's own pointer means bank 2's text.
+    assert_eq!(from(0x2_8100), [0x2_8200, 0x3_C200]);
 }
 
 #[test]

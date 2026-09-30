@@ -1,5 +1,5 @@
 // Typed client for the WebAssembly session running in a worker.
-import type { Annotation, AttributedRange, Attribution, AttributionMode, BaselineSource, BinaryHeader, CallEdge, CallGraph, Comparison, ContainerInfo, Coverage, CrashReport, DebugMapObject, DebugMapReport, DieDetails, DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection, LabelFile, LabelFormat, LabelImport, LogSummary, PatchFormat, PatchState, FunctionDiff, DiffLine, LineProgramInfo, LineRange, LineRow, MapStatus, ObjcCounts, ObjcEntry, ObjcInterface, ObjcKind, Opened, PackageInfo, PackageSource, PathEntry, PathStep, RefCounts, Reference, RefPage, RegionInfo, RegionKind, RelativeSearch, Resolved, ScopeInfo, SearchResults, Section, Segment, SelectorUses, SizeReport, SourceFile, Span, StringPage, Summary, Sym, Symbolicated, SymbolPage, SymbolQuery, TableText, TagCount, UnitInfo } from './types';
+import type { Annotation, AttributedRange, Attribution, AttributionMode, BaselineSource, BinaryHeader, CallEdge, CallGraph, Comparison, ContainerInfo, Coverage, Worklist, CrashReport, DebugMapObject, DebugMapReport, DieDetails, DiePage, DieSummary, Disassembly, DwarfCheck, DwarfProblem, DwarfSummary, Export, FunctionPage, FunctionSummary, HitKind, Import, Inspection, LabelFile, LabelFormat, LabelImport, LogSummary, PatchFormat, PatchState, FunctionDiff, DiffLine, LineProgramInfo, LineRange, LineRow, MapStatus, ObjcCounts, ObjcEntry, ObjcInterface, ObjcKind, Opened, PackageInfo, PackageSource, PathEntry, PathStep, RefCounts, Reference, RefPage, RegionInfo, RegionKind, RelativeSearch, Resolved, ScopeInfo, SearchResults, Section, Segment, SelectorUses, SizeReport, SourceFile, Span, StringPage, Summary, Sym, Symbolicated, SymbolPage, SymbolQuery, TableText, TagCount, UnitInfo } from './types';
 
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
 
@@ -118,6 +118,7 @@ export class Api {
   attribution(mode: AttributionMode) { return this.call<Attribution | undefined>('attribution', mode); }
   attributedRanges(mode: AttributionMode, id: number) { return this.call<AttributedRange[]>('attributedRanges', mode, id); }
   coverage(maxGaps: number) { return this.call<Coverage>('coverage', maxGaps); }
+  worklist(limit: number) { return this.call<Worklist>('worklist', limit); }
   coverageStrip(section: number, buckets: number) { return this.call<MapStatus[]>('coverageStrip', section, buckets); }
   coverageMap(buckets: number) { return this.call<MapStatus[]>('coverageMap', buckets); }
   setAnnotations(list: Annotation[]) { return this.call<Summary>('setAnnotations', list); }

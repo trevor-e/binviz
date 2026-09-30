@@ -61,7 +61,7 @@ fn handle(server: &mut tools::Server, msg: &Value) -> Option<Value> {
             let version = PROTOCOLS.iter().find(|&&p| p == asked).unwrap_or(&PROTOCOLS[1]);
             Ok(json!({
                 "protocolVersion": version,
-                "capabilities": { "tools": { "listChanged": false } },
+                "capabilities": { "tools": { "listChanged": false }, "prompts": { "listChanged": false } },
                 "serverInfo": { "name": "binviz", "title": "binviz", "version": env!("CARGO_PKG_VERSION") },
                 "instructions": tools::INSTRUCTIONS,
             }))
@@ -89,7 +89,12 @@ fn handle(server: &mut tools::Server, msg: &Value) -> Option<Value> {
         }
         "resources/list" => Ok(json!({ "resources": [] })),
         "resources/templates/list" => Ok(json!({ "resourceTemplates": [] })),
-        "prompts/list" => Ok(json!({ "prompts": [] })),
+        "prompts/list" => Ok(json!({ "prompts": tools::prompts() })),
+        "prompts/get" => {
+            let name = params.get("name").and_then(Value::as_str).unwrap_or("");
+            let args = params.get("arguments").cloned().unwrap_or_else(|| json!({}));
+            tools::prompt(name, &args).map_err(|e| (-32602, e))
+        }
         _ => Err((-32601, format!("method not found: {method}"))),
     };
     Some(match result {

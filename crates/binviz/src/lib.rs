@@ -70,6 +70,7 @@ pub mod tables;
 mod util;
 mod wasm;
 mod xbe;
+pub mod worklist;
 pub mod xrefs;
 pub mod zip;
 

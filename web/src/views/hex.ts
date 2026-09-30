@@ -261,7 +261,8 @@ export class HexView extends View {
     const ins = await store.api.inspectOffset(o);
     if (mine !== this.hoverSeq) return;
     const leaf = ins.path[ins.path.length - 1];
-    this.setHover(leaf ? { start: leaf.start, end: leaf.end } : null);
+    const str = ins.string;
+    this.setHover(str ? { start: str.offset, end: str.offset + BigInt(str.size) } : leaf ? { start: leaf.start, end: leaf.end } : null);
     const colors = familyColors();
     const rows: Node[] = [h('div', { class: 't-value' }, `${hex(o)}${ins.address !== undefined ? ` · ${fmtAddr(ins.address)}` : ''}`)];
     ins.path.slice(-4).forEach((p) =>
@@ -269,6 +270,7 @@ export class HexView extends View {
     );
     if (ins.symbol) rows.push(h('div', { class: 'muted' }, `in ${ins.symbol.demangled ?? ins.symbol.name}+${hex(ins.symbol.offset)}`));
     if (ins.source) rows.push(h('div', { class: 'muted' }, `${ins.source.path.split(/[\\/]/).pop()}:${ins.source.line}`));
+    if (ins.string) rows.push(h('div', null, `“${truncate(ins.string.text.replace(/\n/g, '⏎'), 60)}”`));
     tooltip.show(e.clientX, e.clientY, ...rows);
   }, 40);
 
@@ -360,7 +362,9 @@ export class HexView extends View {
   protected onSelection() {
     const sel = store.selection;
     const leaf = sel.inspection?.path[sel.inspection.path.length - 1];
-    this.selRange = leaf ? { start: leaf.start, end: leaf.end } : null;
+    // A string lights up whole, wherever in it the click was.
+    const str = sel.inspection?.string;
+    this.selRange = str ? { start: str.offset, end: str.offset + BigInt(str.size) } : leaf ? { start: leaf.start, end: leaf.end } : null;
     if (sel.offset !== undefined && sel.origin !== 'hex') this.list.scrollToIndex(num(sel.offset / 16n), 'center');
     this.list.refresh();
     this.status.textContent = sel.offset !== undefined ? `offset ${hex(sel.offset)}${sel.address !== undefined ? ` · address ${fmtAddr(sel.address)}` : ''}` : sel.address !== undefined ? `address ${fmtAddr(sel.address)} has no file bytes` : '';

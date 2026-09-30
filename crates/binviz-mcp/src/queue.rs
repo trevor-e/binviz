@@ -69,7 +69,7 @@ fn update(o: &mut Open, start: u64, change: impl FnOnce(&mut Decomp)) -> Decomp 
             reviewed: false,
             kind: None,
             decomp: None,
-            ctype: None,
+            ctype: None, author: String::new(),
         },
     };
     let mut d = a.decomp.take().unwrap_or_default();
@@ -123,7 +123,7 @@ pub(crate) fn record_report(o: &mut Open, functions: &[binviz::matching::Functio
                     reviewed: false,
                     kind: None,
                     decomp: None,
-                    ctype: None,
+                    ctype: None, author: String::new(),
                 });
                 list.len() - 1
             });

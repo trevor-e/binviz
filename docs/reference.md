@@ -377,6 +377,14 @@ matching decompilation), *reviewed*, *annotated*, *named* (symbols and debug inf
 *format structure* (tables binviz decodes), *recovered* (functions from unwind
 tables and function-start lists, and strings), *padding*, or *unexplored*.
 
+**Next up** lists the unnamed functions to look at next, those whose callees
+all have names first.
+
+**Follow file…** (Chrome and Edge) follows a notes file while an agent writes
+it: its notes come in as they are saved, yours go out to it. Notes an agent
+wrote are marked as its own (*by agent*) until you **Confirm** them (or all at
+once, under **Agents' names to check**); renaming one makes it yours.
+
 Drop a folder onto the page (or use **Sources**) to load source code; files are
 matched to the paths recorded in DWARF by their trailing path components.
 
@@ -429,6 +437,8 @@ cargo run --release -p binviz-cli -- info path/to/binary
 | `refs <file> <addr\|symbol> [from]` | References to an address (`from`: the references a function or data makes) |
 | `calls <file> <addr\|symbol> [up] [down]` · `calls <file> <from> to <to>` | The call graph around a function (`callers` or `callees` for just those); a shortest chain of calls |
 | `coverage <file>` | Reverse-engineering coverage per section and the largest gaps |
+| `worklist <file> [n] [k/n]` | The unnamed functions to name next (`k/n`: one of n shares, for agents working at once) |
+| `score <file> <names>` | The notes' names (`--notes`, or `<file>.binviz-notes.json`) against the real ones, from its debug file (`.dbg`, `.pdb`, `.debug`...) or an unstripped build |
 | `globals <file> [filter]` | The data the code uses, typed by its use and named where nothing names it (see below) |
 | `objc <file> [name]` | Objective-C classes, categories and protocols; with a name, one declared as its header would, or a selector's implementations and senders |
 | `classes <file> [filter]` | C++ classes from an MSVC binary's RTTI: bases with their offsets, vtables with their virtual functions |
@@ -511,12 +521,31 @@ Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 | `list_symbols` · `list_strings` · `hexdump` | Browse tables and bytes |
 | `list_globals` | The data the code uses, typed by its use: floats and doubles with their values, integers by width, pointers to structures with the offsets reached through them, tables of functions, strings or pointers, records holding pointers, arrays, jump tables, and tables of function pointers filled at run time and called through (an engine's import table, with where it is filled) |
 | `coverage` | How much is mapped out, and the largest unexplored gaps |
+| `worklist` | The unnamed functions to name next, each with its callers, callees, strings and data; `shard` splits them between agents |
+| `compare_names` | The notes' names against the real ones (a debug file, or an unstripped build): how a blind mapping did |
 | `annotate` · `remove_annotation` · `list_annotations` | Name functions, comment addresses, mark code reviewed, give a function its prototype or data its type (which names the fields reached through them) |
 | `next_functions` · `mark` · `similar_functions` · `match_project` · … | For a matching decompilation: see [Decompilation](#decompilation-playstation-nintendo-64-x86-pc) |
 
 Notes are saved next to the binary in `<file>.binviz-notes.json`, the format
 the web UI imports and exports (Layout → Coverage → Import), so an agent can map
 out a binary and you can look at the result in the UI, or the other way round.
+Several sessions and the web UI can share one: each change is made on top of
+what the file holds then (under a lock), and a session picks up what others
+wrote before its next call (`annotate` also takes `notes: [...]` for several
+at once, and `list_annotations` can list them by author).
+
+### Mapping a binary with an agent
+
+The server offers a `map_binary` prompt (`/mcp__binviz__map_binary` in Claude
+Code) that runs the loop: open the binary, take the worklist, work out what
+each function does from its callers, callees, strings and the data it touches
+(disassembling it when that isn't enough), name them together with `annotate`,
+and report progress from `coverage`, until most functions have names. An
+agent's notes carry its name (`author`, `agent` by default) until you confirm
+them in the web UI (Layout → Coverage → **Follow file…** shows them as they
+come). To split a large binary, start several sessions with `shard: "1/3"`,
+`"2/3"` and `"3/3"`; each takes its share of the worklist, and all of them
+write the one notes file.
 
 Things to ask: *"Open ~/Downloads/MyApp and tell me why it's so big"*, *"Find
 the code that parses deep links and name what you find"*, *"Which functions
@@ -719,10 +748,14 @@ crates/binviz        the library
   src/pointers.rs    pointers stored in data: chained fixups, dyld binds, ELF relocations, plain addresses
   src/objc.rs        Objective-C metadata: classes, categories, protocols, selectors, their names
   src/rom/           game ROMs: each console's header, memory map and registers, and
-                     the code followed from the vectors (analysis.rs); emulators'
-                     code/data logs (cdl.rs) and label files (labels.rs)
+                     the code followed from the vectors (analysis.rs), the pointers
+                     to data it builds (pointers.rs); emulators' code/data logs
+                     (cdl.rs) and label files (labels.rs)
   src/cpu/           decoders for consoles' CPUs: 6502 and 65816, SM83, ARM7TDMI, 68000, MIPS
   src/tables.rs      games' text: relative search and table files
+  src/notes.rs       notes files (the JSON the UI, the CLI and the MCP server share)
+  src/worklist.rs    what to name next: leaves of the call graph first, shares for agents;
+                     names in notes scored against the real ones
   src/patch.rs       IPS, UPS and BPS patches: applying, creating, where they change things
   src/stubs.rs       names for import stubs, PLT entries, GOT and IAT slots
   src/size.rs        where the bytes go: sections, symbols, owners (Swift, ObjC, C++, C)
@@ -738,6 +771,8 @@ crates/binviz        the library
   src/dwarf/check.rs         the DWARF checker
   src/dwarf/debugmap.rs      Mach-O debug maps: the objects' DWARF, linked to the binary
   src/dwarf/pdb.rs           PDBs: modules, procedures, line records and types, written as DWARF
+  src/dwarf/ca65.rs          ld65's debug files (cc65 homebrew), written as DWARF
+  src/dwarf/synth.rs         DWARF written from other debug info (ld65's files)
   src/dwarf/ctypes.rs        the types as C: merged across units, named, laid out explicitly;
                              the member at an offset
   src/dwarf/header.rs        C headers of them, in dependency order, with layout asserts

@@ -406,6 +406,28 @@ impl Table {
             .collect())
     }
 
+    /// The string the byte at `offset` is part of: from just after the end
+    /// marker (or byte the table doesn't read) before it, to its own end
+    /// marker; at least `min` entries of text.
+    pub fn string_around(&self, data: &[u8], offset: usize, min: usize) -> Option<TableText> {
+        const BACK: usize = 512;
+        let mut start = offset;
+        while start > 0 && offset - start < BACK {
+            let b = &data[start - 1..start];
+            if !self.entries.contains_key(b) || self.ends.contains(b) {
+                break;
+            }
+            start -= 1;
+        }
+        let found = self.strings(&data[start..data.len().min(start + 4096)], min, 1);
+        let s = found.into_iter().next()?;
+        let first = start + s.offset as usize;
+        (first <= offset && offset < first + s.len as usize).then_some(TableText {
+            offset: first as u64,
+            ..s
+        })
+    }
+
     /// The text in `data`: runs of `min` entries or more that the table reads
     /// without a gap (ended by an end marker, or by a byte it doesn't cover).
     pub fn strings(&self, data: &[u8], min: usize, limit: usize) -> Vec<TableText> {

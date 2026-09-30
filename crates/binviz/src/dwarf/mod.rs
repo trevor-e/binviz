@@ -2,6 +2,7 @@
 //! source lookups (including inlined frames, via `addr2line`).
 
 pub mod attribution;
+pub(crate) mod ca65;
 mod check;
 mod ctypes;
 pub mod debugmap;
@@ -11,6 +12,7 @@ mod expr;
 mod header;
 mod lines;
 pub(crate) mod pdb;
+pub(crate) mod synth;
 
 use std::borrow::Cow;
 use std::sync::{Arc, OnceLock};

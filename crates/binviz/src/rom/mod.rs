@@ -19,6 +19,7 @@ pub mod labels;
 mod megadrive;
 mod n64;
 mod nes;
+pub(crate) mod pointers;
 mod psx;
 pub mod psyq;
 mod snes;

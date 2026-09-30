@@ -7,6 +7,7 @@ import type {
   PackageSource, PatchFormat, PatchState, RefCounts, RegionKind, Section, Segment, SizeReport, SourceFile, Summary, Symbolicated,
   BaselineSource, Comparison,
 } from './types';
+import { toast } from './ui';
 import { basename, setAddressStyle } from './util';
 
 export type ViewName = 'folder' | 'crash' | 'diff' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'dwarf' | 'sources' | 'text' | 'tiles' | 'patch';
@@ -96,6 +97,8 @@ type Events = {
   patch: [];
   /** History restored a view's state (its tab…) while it was shown. */
   viewstate: [ViewName];
+  /** A notes file started or stopped being followed, or was read. */
+  notesfile: [];
 };
 
 /** A request for a view to reveal something specific when it is next shown. */
@@ -631,12 +634,16 @@ class Store {
   /** Replaces all annotations, saves them for this file, and refreshes what depends on them. */
   async setAnnotations(list: Annotation[]) {
     if (!this.file) return;
+    // No author is you: an `author: undefined` would reach the worker as a value.
+    list = list.map(({ author, ...a }) => (author ? { ...a, author } : a));
     try {
       const summary = await this.api.setAnnotations(list);
       this.file = { ...this.file, summary };
       this.indexNotes(list);
       saveNotes(this.file.summary.fingerprint, this.file.name, this.annotations);
       this.emit('annotations');
+      // Changes made here go to the followed notes file too.
+      if (this.notesFile && !this.syncingNotes) void this.syncNotesFile(true);
       await this.reselect();
     } catch (e) {
       this.error(e);
@@ -653,6 +660,108 @@ class Store {
 
   async removeAnnotation(a: Annotation) {
     await this.setAnnotations(this.annotations.filter((x) => !(x.address === a.address && x.size === a.size)));
+  }
+
+  // --- A followed notes file ------------------------------------------------------
+
+  /**
+   * A notes file (`<binary>.binviz-notes.json`) followed while an agent, or
+   * another window, writes it: their notes come in as they are saved, and
+   * the ones made here go out to it.
+   */
+  notesFile: FollowedNotes | null = null;
+  private syncingNotes = false;
+
+  /** Starts following a notes file; asks to write it too (to share the notes made here). */
+  async followNotes(handle: FileSystemFileHandle) {
+    this.stopFollowingNotes();
+    let writable = false;
+    try {
+      const h = handle as FileSystemFileHandle & { requestPermission?: (o: { mode: string }) => Promise<string> };
+      writable = (await h.requestPermission?.({ mode: 'readwrite' })) === 'granted';
+    } catch {
+      /* read only */
+    }
+    this.notesFile = { handle, name: handle.name, writable, stamp: '', synced: new Map(), timer: 0, lastRead: 0, first: true };
+    await this.syncNotesFile(false);
+    if (this.notesFile) this.notesFile.timer = window.setInterval(() => void this.syncNotesFile(false), 1500);
+    this.emit('notesfile');
+  }
+
+  stopFollowingNotes() {
+    if (!this.notesFile) return;
+    clearInterval(this.notesFile.timer);
+    this.notesFile = null;
+    this.emit('notesfile');
+  }
+
+  /**
+   * Merges the followed file with the notes here: what changed in the file
+   * since it was last read comes in (on the first read, the file wins); what
+   * changed here since then goes out (`push`: write even if the file didn't change).
+   */
+  private async syncNotesFile(push: boolean) {
+    const nf = this.notesFile;
+    if (!nf || !this.file || this.syncingNotes) return;
+    this.syncingNotes = true;
+    try {
+      let file: File;
+      try {
+        file = await nf.handle.getFile();
+      } catch {
+        this.stopFollowingNotes();
+        toast(`Stopped following ${nf.name}: it can’t be read any more`, 'error');
+        return;
+      }
+      const stamp = `${file.lastModified}:${file.size}`;
+      if (stamp === nf.stamp && !push) return;
+      const text = await file.text();
+      const disk = parseAnnotations(text);
+      if (nf.first) {
+        let fingerprint: string | undefined;
+        try {
+          fingerprint = JSON.parse(text)?.fingerprint;
+        } catch {
+          /* not JSON */
+        }
+        if (fingerprint && fingerprint !== this.file.summary.fingerprint) toast(`${nf.name} was saved for a different build: check its notes still line up`, 'error');
+      }
+      const key = (a: Annotation) => `${a.address}:${a.size}`;
+      const body = (a: Annotation | undefined) => (a ? JSON.stringify([a.name, a.comment, a.reviewed, a.author ?? '']) : undefined);
+      const diskBy = new Map(disk.map((a) => [key(a), a]));
+      const here = new Map(this.annotations.map((a) => [key(a), a]));
+      const merged: Annotation[] = [];
+      let incoming = 0;
+      for (const k of new Set([...diskBy.keys(), ...here.keys(), ...nf.synced.keys()])) {
+        const d = diskBy.get(k);
+        const l = here.get(k);
+        const base = nf.synced.get(k);
+        const theirs = body(d) !== base;
+        const ours = body(l) !== base;
+        const pick = theirs && (!ours || nf.first) ? d : l;
+        if (theirs && (!ours || nf.first) && body(d) !== body(l)) incoming++;
+        if (pick) merged.push(pick);
+      }
+      const same = (a: Annotation[], b: Map<string, Annotation>) => a.length === b.size && a.every((x) => body(x) === body(b.get(key(x))));
+      if (!same(merged, here)) await this.setAnnotations(merged);
+      if (nf.writable && !same(merged, diskBy)) {
+        const w = await nf.handle.createWritable();
+        await w.write(serializeAnnotations(this.annotations, this.file.name, this.file.summary.fingerprint));
+        await w.close();
+        file = await nf.handle.getFile();
+      }
+      if (this.notesFile !== nf) return;
+      nf.stamp = `${file.lastModified}:${file.size}`;
+      nf.synced = new Map(this.annotations.map((a) => [key(a), body(a)!]));
+      nf.lastRead = Date.now();
+      if (incoming > 0 && !nf.first) toast(`${incoming} note${incoming === 1 ? '' : 's'} from ${nf.name}`);
+      nf.first = false;
+      this.emit('notesfile');
+    } catch (e) {
+      this.error(e);
+    } finally {
+      this.syncingNotes = false;
+    }
   }
 
   exportAnnotations(): string {
@@ -689,7 +798,14 @@ class Store {
       byKey.set(
         key,
         old
-          ? { ...old, name: a.name || old.name, comment: a.comment || old.comment, reviewed: a.reviewed || old.reviewed, decomp: a.decomp ?? old.decomp }
+          ? {
+              ...old,
+              name: a.name || old.name,
+              comment: a.comment || old.comment,
+              reviewed: a.reviewed || old.reviewed,
+              decomp: a.decomp ?? old.decomp,
+              author: a.name ? a.author : old.author,
+            }
           : a,
       );
     }
@@ -1155,6 +1271,22 @@ export const PATCH_FILE = /\.(ips|ups|bps)$/i;
 
 /** Emulators' label files, by name. */
 export const LABEL_FILE = /\.(mlb|nl|sym)$/i;
+
+/** A notes file being followed (see `Store.followNotes`). */
+export interface FollowedNotes {
+  handle: FileSystemFileHandle;
+  name: string;
+  /** Notes made here are written to it. */
+  writable: boolean;
+  /** Its modification time and size when last read. */
+  stamp: string;
+  /** Each note as it was at the last sync, to tell whose changes are whose. */
+  synced: Map<string, string>;
+  timer: number;
+  /** When it was last read (ms). */
+  lastRead: number;
+  first: boolean;
+}
 
 const NOTES_KEY = (fingerprint: string) => `binviz-notes:${fingerprint}`;
 

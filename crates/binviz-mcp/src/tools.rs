@@ -19,7 +19,7 @@ For game ROMs and console executables (NES, SNES, Game Boy and Game Boy Color, G
 For WebAssembly (a browser port's module, from Emscripten, wasm-ld or rustc): an address is an offset in the module file, as browsers print one (wasm-function[12]:0x1a2b); a function's is where its body starts, and linear memory sits at 0x80000000 (memory address 0x400 is 0x80000400), its data segments and zero-filled variables as sections there. Functions are named by the name section, else DWARF, else exports, else func[N] (the index traces give); disassemble shows the bytecode with calls, globals and memory named, and what a call_indirect can reach. Its DWARF is read with addresses moved to the module's; a source map (emcc -gsource-map) or the module with the DWARF (emcc -gseparate-dwarf's .debug.wasm, or an unstripped build) attach as debug_file, found beside the module when it names them. \
 To see what grew between two builds: size_diff compares two binaries or two folders or zips (.ipa files, say) without opening them. \
 For a crash: symbolicate takes an Apple .crash or .ips, an Android tombstone, a stack trace, or a browser's or Node's stack trace through WebAssembly, and turns every frame into its function, source line and inlined calls with the open binaries (each image found by UUID or build ID) — open the app's folder or zip with its dSYMs first. \
-To map a binary out: annotate names functions, comments addresses and marks code reviewed (names show up in disassembly and search); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, which the binviz web UI can import. \
+To map a binary out: worklist says which unnamed functions to name next (leaves first: everything they call already named) with what each calls and touches; annotate names functions, comments addresses and marks code reviewed (notes: [...] saves several at once; an agent's notes are marked as its own, author, until someone confirms them); coverage shows how much is named, recovered, reviewed or still unexplored, with the largest unexplored gaps. Notes persist in <binary>.binviz-notes.json, shared with other sessions and with the binviz web UI (which can follow the file as it changes). The map_binary prompt runs this loop. \
 For a matching decompilation (C that compiles back to the same bytes), the loop is: next_functions says what to do next, best first — functions shaped like one already matched (its C is a template), then those whose callees are all done, cheapest for what they unlock — and claim: true takes one, so parallel agents don't collide; decomp_context gives everything for writing it in one call (code, prototype guess, callers and callees with theirs, strings, globals, and the matched functions shaped like it with their source files); match_function scores the compiled object (MIPS ELF, or x86 and x86-64 COFF from MSVC or clang-cl, or ELF) against the original and explains each difference; mark records the outcome (matched with its source file, nonmatching, attempted with its percent, skipped, library), which re-ranks the rest, and place_report records a whole objdiff report at once, as match_project (record: true) does for a build folder of objects. After three tries without a match, move on: the function comes back once something it calls is done. identify_sdk marks library code (a console SDK's, a statically linked C runtime's) found by the signatures of its libraries, which callers don't wait on. \
 Addresses can be written 0x401000 (hex, also without 0x), a symbol name, name+0x10, or @0x200 for a file offset.";
 
@@ -39,6 +39,10 @@ pub(crate) struct Open {
     pub debug_note: Option<String>,
     /// Whether the DWARF its debug map names has been looked for (Mach-O built without dsymutil).
     pub debug_map_tried: bool,
+    /// The table file `table_text` last read a game's text with: `inspect` reads with it too.
+    pub table: Option<binviz::tables::Table>,
+    /// When the notes file last changed, as this session saw it (see [`sync_notes`]).
+    pub notes_stamp: Option<(std::time::SystemTime, u64)>,
 }
 
 #[derive(Default)]
@@ -665,7 +669,7 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "annotate",
             "Add or update a note",
-            "Names a function or range, comments an address, and/or marks it reviewed. Updates the note already at that address if there is one (only the fields you pass change). Names become symbols everywhere. Saved to the notes file.",
+            "Names a function or range, comments an address, and/or marks it reviewed. Updates the note already at that address if there is one (only the fields you pass change). Names become symbols everywhere. notes: [...] adds or updates several at once. Saved to the notes file, on top of what other sessions or the web UI wrote to it; the notes are marked as the agent's (author) until someone confirms them.",
             json!({
                 "at": address("Where the note starts"),
                 "size": { "type": "integer", "description": "Bytes covered; 0 or omitted means the symbol or instruction there." },
@@ -673,9 +677,38 @@ pub fn definitions() -> Vec<Value> {
                 "comment": { "type": "string" },
                 "reviewed": { "type": "boolean", "description": "Mark as understood." },
                 "type": { "type": "string", "description": "Its type in C, which names the fields code reaches through it: a function's prototype (void SP_monster_soldier(edict_t *self), the name optional), or the data's type (level_locals_t, cvar_t *). Structures come from the debug info or the types file." },
+                "notes": {
+                    "type": "array",
+                    "description": "Several notes at once, each {at, name, comment, reviewed, size}; instead of at/name/comment above.",
+                    "items": { "type": "object" },
+                },
+                "author": { "type": "string", "description": "Who writes the notes (default \"agent\"; a name tells agents working at once apart; \"\" for the user)." },
             }),
-            &["at"],
+            &[],
             false,
+        ),
+        tool(
+            "compare_names",
+            "Score the notes' names",
+            "How the names in the notes compare with the real ones, from this binary's debug file (the .dbg ld65 writes for a game, a .pdb, a .debug file or a dSYM) or an unstripped build: for each function those name, whether the notes name it too (the same, close, or differently), the ones they miss, and names where no real function starts. An answer key for mapping a binary blind; the notes and the open binary stay as they are.",
+            json!({
+                "with": { "type": "string", "description": "The debug file, or a build with its names." },
+                "limit": { "type": "integer", "description": "How many functions to list (default 100)." },
+            }),
+            &["with"],
+            true,
+        ),
+        tool(
+            "worklist",
+            "What to name next",
+            "The unnamed functions to look at next while mapping out the binary: those whose callees all have names first (what they call says what they do), then those called the most. Each comes with its callers, callees, the strings it uses and the data it touches, often enough to name it (disassemble it when not). Also how far along the mapping is. shard (\"1/3\") splits the functions between agents working at once; skip leaves out ones given up on.",
+            json!({
+                "limit": { "type": "integer", "description": "How many (default 5, at most 50)." },
+                "shard": { "type": "string", "description": "k/n: the k-th of n equal parts (from 1), for n agents working at once." },
+                "skip": { "type": "array", "items": { "type": "string" }, "description": "Functions to leave out (addresses or names)." },
+            }),
+            &[],
+            true,
         ),
         tool(
             "remove_annotation",
@@ -689,7 +722,9 @@ pub fn definitions() -> Vec<Value> {
             "list_annotations",
             "List notes",
             "Your notes, in address order, optionally filtered by name or comment.",
-            json!({ "filter": { "type": "string" } }),
+            json!({ "filter": { "type": "string" },
+                "author": { "type": "string", "description": "Only notes by: \"you\", \"agents\" (any), or one agent's name." },
+            }),
             &[],
             true,
         ),
@@ -885,6 +920,8 @@ impl Server {
                     "next_functions" => crate::queue::next_functions(o, args)?,
                     "mark" => crate::queue::mark(o, args)?,
                     "similar_functions" => crate::queue::similar_functions(o, args)?,
+                    "worklist" => worklist(o, args)?,
+                    "compare_names" => compare_names(o, args)?,
                     "function_info" => function_info(o, args)?,
                     "xrefs" => xrefs(o, args)?,
                     "callers" => call_list(o, args, true)?,
@@ -941,6 +978,7 @@ impl Server {
             None => self.current.unwrap_or(self.open.len() - 1),
         };
         self.attach_pending(i);
+        sync_notes(&mut self.open[i]);
         Ok(i)
     }
 
@@ -1092,6 +1130,8 @@ impl Server {
             pending_debug: None,
             debug_note: None,
             debug_map_tried: true,
+            table: None,
+            notes_stamp: None,
         };
         let mut folders = Vec::new();
         if let Some(debug) = string(args, "debug_file") {
@@ -1231,6 +1271,7 @@ pub(crate) fn load_notes(open: &mut Open, notes_path: &Path) -> Option<String> {
         Ok((list, fingerprint)) => {
             let n = list.len();
             open.bin.set_annotations(list);
+            open.notes_stamp = notes::stamp(notes_path);
             let mut note = format!("Loaded {n} notes from {}", notes_path.display());
             if fingerprint.is_some_and(|f| f != open.bin.summary().fingerprint) {
                 note.push_str(" (they were saved for a different build of this file: check they still line up)");
@@ -1269,13 +1310,14 @@ fn relative_search(o: &Open, args: &Value) -> Result<String, String> {
     Ok(out)
 }
 
-fn table_text(o: &Open, args: &Value) -> Result<String, String> {
+fn table_text(o: &mut Open, args: &Value) -> Result<String, String> {
     let text = match (string(args, "table"), string(args, "table_file")) {
         (Some(t), _) => t.to_string(),
         (None, Some(path)) => std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?,
         (None, None) => return Err("table (its lines) or table_file (a .tbl path) is required".into()),
     };
     let table = binviz::tables::Table::parse(&text)?;
+    o.table = Some(table.clone());
     let data = o.bin.data();
     let limit = int(args, "limit", 300, 5000) as usize;
     let show = |s: &str| s.replace('\n', "⏎");
@@ -1705,7 +1747,12 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
         Loc::Address(a) => Target::Address(a),
         Loc::Offset(off) => Target::Offset(off),
     };
-    let i = o.bin.inspect(target);
+    let mut i = o.bin.inspect(target);
+    if let (Some(t), Some(off)) = (&o.table, i.offset)
+        && let Some(s) = o.bin.string_at(off, Some(t))
+    {
+        i.string = Some(s);
+    }
     let mut out = String::new();
     let _ = writeln!(
         out,
@@ -1794,7 +1841,17 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
             );
         }
     }
-    if let Some(ins) = &i.instruction {
+    if let Some(s) = &i.string {
+        let _ = writeln!(
+            out,
+            "String ({}, {} bytes{}): {}",
+            s.encoding,
+            s.size,
+            s.address.map(|a| format!(" at {a:#x}")).unwrap_or_default(),
+            clip(&format!("\"{}\"", s.text.replace('\n', "⏎")), 300)
+        );
+    }
+    if let Some(ins) = i.instruction.as_ref().filter(|_| i.string.is_none()) {
         let _ = writeln!(
             out,
             "Instruction: {} {}{}   [{}]",
@@ -1810,9 +1867,14 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
     if let Some(address) = i.address
         && o.bin.xrefs_ready()
     {
-        let c = o.bin.reference_counts(address, address + 1);
+        // A string is referred to as a whole (and a ROM's through words holding its address).
+        let c = match i.string.as_ref().and_then(|s| Some((s.address?, s.size))) {
+            Some((start, size)) => o.bin.references_to(start, start + u64::from(size.max(1)), 0, 0).counts,
+            None => o.bin.reference_counts(address, address + 1),
+        };
         if c.total() > 0 {
-            let _ = writeln!(out, "Referenced by: {} (see xrefs)", ref_counts(&c));
+            let what = if i.string.is_some() { "the string" } else { "it" };
+            let _ = writeln!(out, "Referenced by: {} (xrefs on {what} lists them)", ref_counts(&c));
         }
     }
     if let Some(a) = i.annotation.as_ref().filter(|a| a.is_note()) {
@@ -2121,12 +2183,14 @@ fn coverage(o: &Open, args: &Value) -> String {
     );
     let _ = writeln!(
         out,
-        "Functions: {} named, {} recovered (unnamed), {} named by you · notes: {} ({} reviewed)",
+        "Functions: {} named, {} recovered (unnamed), {} named by you, {} by agents (unconfirmed) · notes: {} ({} reviewed, {} by agents)",
         count(c.functions.named),
         count(c.functions.recovered),
         count(c.functions.user),
+        count(c.functions.agents),
         count(c.annotations),
-        count(c.reviewed)
+        count(c.reviewed),
+        count(c.agent_notes)
     );
     if o.bin.annotations().iter().any(|a| a.decomp.is_some()) {
         let p = o.bin.decomp_progress();
@@ -2390,14 +2454,45 @@ fn labels(o: &mut Open, args: &Value) -> Result<String, String> {
     ))
 }
 
-pub(crate) fn save_notes(o: &Open) -> String {
+pub(crate) fn save_notes(o: &mut Open) -> String {
     match &o.notes {
         Some(path) => match notes::save(path, &o.label, &o.bin.summary().fingerprint, o.bin.annotations()) {
-            Ok(()) => format!("saved to {}", path.display()),
+            Ok(()) => {
+                o.notes_stamp = notes::stamp(path);
+                format!("saved to {}", path.display())
+            }
             Err(e) => format!("NOT saved ({e}); kept in memory for this session"),
         },
         None => "kept in memory".into(),
     }
+}
+
+/// Picks up what others wrote to the notes file (another session, the web UI)
+/// since this session last read or wrote it.
+pub(crate) fn sync_notes(o: &mut Open) {
+    let Some(path) = &o.notes else { return };
+    let now = notes::stamp(path);
+    if now.is_none() || now == o.notes_stamp {
+        return;
+    }
+    if let Ok((list, _)) = notes::load(path) {
+        o.bin.set_annotations(list);
+        o.notes_stamp = now;
+    }
+}
+
+/// Changes the notes on top of what the notes file holds now (another session
+/// or the web UI may have written it), under its lock, and saves them.
+fn update_notes<R>(o: &mut Open, change: impl FnOnce(&mut Vec<Annotation>) -> R) -> Result<(R, String), String> {
+    let _lock = match &o.notes {
+        Some(path) => notes::Lock::acquire(path)?,
+        None => None,
+    };
+    sync_notes(o);
+    let mut list = o.bin.annotations().to_vec();
+    let r = change(&mut list);
+    o.bin.set_annotations(list);
+    Ok((r, save_notes(o)))
 }
 
 fn function_signature(o: &Open, args: &Value) -> Result<String, String> {
@@ -2882,93 +2977,109 @@ fn source_counterparts(o: &Open, args: &Value) -> Result<String, String> {
 }
 
 fn annotate(o: &mut Open, args: &Value) -> Result<String, String> {
-    let at = string(args, "at").ok_or("at is required")?;
-    let address = address_of(&o.bin, at)?;
-    let size = args.get("size").and_then(Value::as_u64);
-    let mut list: Vec<Annotation> = o.bin.annotations().to_vec();
-    let existing = list
-        .iter()
-        .position(|a| a.address == address && size.is_none_or(|s| s == a.size || a.size == 0 || s == 0));
-    let mut a = match existing {
-        Some(i) => list.remove(i),
-        None => Annotation {
-            address,
-            size: 0,
-            name: String::new(),
-            comment: String::new(),
-            reviewed: false,
-            kind: None, decomp: None, ctype: None,
-        },
+    // Who writes: an agent, unless told otherwise ("" for you).
+    let author = args
+        .get("author")
+        .and_then(Value::as_str)
+        .unwrap_or("agent")
+        .trim()
+        .to_string();
+    // One note, or several at once.
+    let items: Vec<&Value> = match args.get("notes").and_then(Value::as_array) {
+        Some(list) if !list.is_empty() => list.iter().collect(),
+        _ => vec![args],
     };
-    if let Some(s) = size {
-        a.size = s;
+    let mut places = Vec::new();
+    for item in &items {
+        let at = string(item, "at").ok_or("at is required (for each note)")?;
+        places.push(address_of(&o.bin, at)?);
     }
-    if let Some(n) = args.get("name").and_then(Value::as_str) {
-        a.name = n.trim().to_string();
-    }
-    if let Some(c) = args.get("comment").and_then(Value::as_str) {
-        a.comment = c.trim().to_string();
-    }
-    if let Some(r) = args.get("reviewed").and_then(Value::as_bool) {
-        a.reviewed = r;
-    }
-    if let Some(t) = args.get("type").and_then(Value::as_str) {
-        let t = t.trim();
-        a.ctype = (!t.is_empty()).then(|| t.to_string());
-    }
-    let summary = format!(
-        "{} note at {address:#x}{}{}{}",
-        if existing.is_some() { "Updated" } else { "Added" },
-        if a.name.is_empty() {
-            String::new()
-        } else {
-            format!(" named {}", a.name)
-        },
-        if a.comment.is_empty() {
-            String::new()
-        } else {
-            format!(": {}", clip(&a.comment, 80))
-        },
-        if a.reviewed { " (reviewed)" } else { "" }
-    );
-    let summary = match &a.ctype {
-        Some(t) => format!("{summary}, typed {t}"),
-        None => summary,
-    };
-    list.push(a);
-    o.bin.set_annotations(list);
+    let (lines, saved) = update_notes(o, |list| {
+        let mut lines = Vec::new();
+        for (item, &address) in items.iter().zip(&places) {
+            let size = item.get("size").and_then(Value::as_u64);
+            let existing = list
+                .iter()
+                .position(|a| a.address == address && size.is_none_or(|s| s == a.size || a.size == 0 || s == 0));
+            let mut a = match existing {
+                Some(i) => list.remove(i),
+                None => Annotation {
+                    address,
+                    ..Default::default()
+                },
+            };
+            if let Some(s) = size {
+                a.size = s;
+            }
+            let renamed = item.get("name").and_then(Value::as_str);
+            if let Some(n) = renamed {
+                a.name = n.trim().to_string();
+            }
+            if let Some(c) = item.get("comment").and_then(Value::as_str) {
+                a.comment = c.trim().to_string();
+            }
+            if let Some(r) = item.get("reviewed").and_then(Value::as_bool) {
+                a.reviewed = r;
+            }
+            if let Some(t) = item.get("type").and_then(Value::as_str) {
+                let t = t.trim();
+                a.ctype = (!t.is_empty()).then(|| t.to_string());
+            }
+            // A note is its namer's: whoever made it, or last renamed it.
+            if existing.is_none() || renamed.is_some() {
+                a.author = author.clone();
+            }
+            let line = format!(
+                "{} note at {address:#x}{}{}{}",
+                if existing.is_some() { "Updated" } else { "Added" },
+                if a.name.is_empty() {
+                    String::new()
+                } else {
+                    format!(" named {}", a.name)
+                },
+                if a.comment.is_empty() {
+                    String::new()
+                } else {
+                    format!(": {}", clip(&a.comment, 80))
+                },
+                if a.reviewed { " (reviewed)" } else { "" }
+            );
+            lines.push(match &a.ctype {
+                Some(t) => format!("{line}, typed {t}"),
+                None => line,
+            });
+            list.push(a);
+        }
+        lines
+    })?;
     Ok(format!(
-        "{summary}. {} notes, {}.",
-        o.bin.annotations().len(),
-        save_notes(o)
+        "{}\n{} notes, {saved}.",
+        lines.join("\n"),
+        o.bin.annotations().len()
     ))
 }
 
 fn remove_annotation(o: &mut Open, args: &Value) -> Result<String, String> {
     let at = string(args, "at").ok_or("at is required")?;
     let address = address_of(&o.bin, at)?;
-    let before = o.bin.annotations().len();
-    let list: Vec<Annotation> = o
-        .bin
-        .annotations()
-        .iter()
-        .filter(|a| a.address != address)
-        .cloned()
-        .collect();
-    let removed = before - list.len();
+    let (removed, saved) = update_notes(o, |list| {
+        let before = list.len();
+        list.retain(|a| a.address != address);
+        before - list.len()
+    })?;
     if removed == 0 {
         return Err(format!("no note starts at {address:#x}"));
     }
-    o.bin.set_annotations(list);
     Ok(format!(
-        "Removed {removed} note(s) at {address:#x}; {} left, {}.",
-        o.bin.annotations().len(),
-        save_notes(o)
+        "Removed {removed} note(s) at {address:#x}; {} left, {saved}.",
+        o.bin.annotations().len()
     ))
 }
 
 fn list_annotations(o: &Open, args: &Value) -> String {
     let filter = string(args, "filter").map(str::to_lowercase);
+    // "you", "agents" (any), or one agent's name.
+    let who = string(args, "author");
     let notes: Vec<&Annotation> = o
         .bin
         .annotations()
@@ -2977,6 +3088,12 @@ fn list_annotations(o: &Open, args: &Value) -> String {
             filter
                 .as_ref()
                 .is_none_or(|f| a.name.to_lowercase().contains(f) || a.comment.to_lowercase().contains(f))
+        })
+        .filter(|a| match who {
+            None => true,
+            Some("you") => a.author.is_empty(),
+            Some("agents") => !a.author.is_empty(),
+            Some(w) => a.author == w,
         })
         .collect();
     if notes.is_empty() {
@@ -2993,7 +3110,7 @@ fn list_annotations(o: &Open, args: &Value) -> String {
     for a in notes.iter().take(2000) {
         let _ = writeln!(
             out,
-            "  {:#x}{} {}{}{}",
+            "  {:#x}{} {}{}{}{}",
             a.address,
             if a.size > 0 {
                 format!("+{:#x}", a.size)
@@ -3001,6 +3118,11 @@ fn list_annotations(o: &Open, args: &Value) -> String {
                 String::new()
             },
             if a.reviewed { "[reviewed] " } else { "" },
+            if a.author.is_empty() {
+                String::new()
+            } else {
+                format!("[by {}] ", a.author)
+            },
             if a.name.is_empty() {
                 String::new()
             } else {
@@ -3020,9 +3142,6 @@ fn list_annotations(o: &Open, args: &Value) -> String {
     out
 }
 
-// --- Cross-references and the call graph ----------------------------------------------
-
-/// Builds the reference index if needed; says so when that took a while.
 fn ensure_xrefs(o: &Open) -> Result<String, String> {
     if !o.bin.xrefs_supported() {
         return Err(format!(
@@ -4008,6 +4127,236 @@ fn struct_field(o: &Open, args: &Value) -> Result<String, String> {
             }
         };
         let _ = writeln!(out, "  {offset:#x}  {line}");
+    }
+    Ok(out)
+}
+
+fn worklist(o: &Open, args: &Value) -> Result<String, String> {
+    let limit = int(args, "limit", 5, 50) as usize;
+    let shard = match string(args, "shard") {
+        Some(s) => {
+            let parse = |t: &str| t.trim().parse::<u32>().ok();
+            let (k, n) = s
+                .split_once('/')
+                .and_then(|(k, n)| Some((parse(k)?, parse(n)?)))
+                .filter(|&(k, n)| k >= 1 && k <= n)
+                .ok_or("shard is k/n, with 1 <= k <= n (1/3: the first of three parts)")?;
+            Some((k - 1, n))
+        }
+        None => None,
+    };
+    let mut skip = Vec::new();
+    for v in args.get("skip").and_then(Value::as_array).into_iter().flatten() {
+        if let Some(s) = v.as_str() {
+            skip.push(address_of(&o.bin, s)?);
+        }
+    }
+    let w = o.bin.worklist(limit, shard, &skip);
+    let mut out = String::new();
+    let _ = writeln!(
+        out,
+        "Named: {} of {} functions ({}); {} to go{}.",
+        count(w.named),
+        count(w.functions),
+        pct(u64::from(w.named), u64::from(w.functions)),
+        count(w.functions - w.named),
+        match (shard, string(args, "shard")) {
+            (Some(_), Some(s)) => format!(" ({} in shard {s})", count(w.remaining)),
+            _ => String::new(),
+        }
+    );
+    if w.items.is_empty() {
+        let _ = writeln!(
+            out,
+            "Nothing left to name{}.",
+            if skip.is_empty() { "" } else { " but what you skipped" }
+        );
+        return Ok(out);
+    }
+    let _ = writeln!(out, "Next:");
+    let names = |edges: &[binviz::xrefs::CallEdge]| -> String {
+        let list: Vec<&str> = edges.iter().take(5).map(|e| e.name.as_str()).collect();
+        let more = edges.len().saturating_sub(5);
+        format!(
+            "{}{}",
+            list.join(", "),
+            if more > 0 { format!(", +{more}") } else { String::new() }
+        )
+    };
+    for (i, item) in w.items.iter().enumerate() {
+        let _ = writeln!(
+            out,
+            "{}. {} at {:#x}: {} bytes; {}; {}",
+            i + 1,
+            item.name,
+            item.address,
+            item.size,
+            if item.callers == 0 {
+                "nothing calls it directly".to_string()
+            } else {
+                format!("called by {}", count(item.callers))
+            },
+            match (item.callees, item.unnamed_callees) {
+                (0, _) => "calls nothing".to_string(),
+                (n, 0) => format!("calls {}, all named", count(n)),
+                (n, u) => format!("calls {} ({} unnamed)", count(n), count(u)),
+            }
+        );
+        let Some(f) = o.bin.function_summary(item.address, 8) else {
+            continue;
+        };
+        if !f.callers.is_empty() {
+            let _ = writeln!(out, "   callers: {}", names(&f.callers));
+        }
+        if !f.callees.is_empty() {
+            let _ = writeln!(out, "   calls: {}", names(&f.callees));
+        }
+        if !f.strings.is_empty() {
+            let texts: Vec<String> = f
+                .strings
+                .iter()
+                .take(4)
+                .map(|s| format!("\"{}\"", clip(&s.text.replace('\n', "⏎"), 60)))
+                .collect();
+            let _ = writeln!(out, "   strings: {}", texts.join(", "));
+        }
+        if !f.data.is_empty() {
+            let data: Vec<String> = f
+                .data
+                .iter()
+                .take(6)
+                .map(|r| {
+                    format!(
+                        "{} {}",
+                        match r.kind {
+                            binviz::xrefs::RefKind::Write => "writes",
+                            binviz::xrefs::RefKind::Address => "takes",
+                            _ => "reads",
+                        },
+                        r.to.clone().unwrap_or_else(|| format!("{:#x}", r.target))
+                    )
+                })
+                .collect();
+            let _ = writeln!(out, "   data: {}", data.join(", "));
+        }
+    }
+    let _ = writeln!(
+        out,
+        "\nName them with annotate (notes: [...] for several at once), then call worklist again for the next."
+    );
+    Ok(out)
+}
+
+// --- Prompts -----------------------------------------------------------------------
+
+/// The prompts this server offers (as slash commands in clients that show them).
+pub fn prompts() -> Value {
+    json!([{
+        "name": "map_binary",
+        "title": "Map out a binary",
+        "description": "Work through a binary or game ROM naming its functions, a worklist at a time, saving notes as it goes (the binviz web UI can follow them live).",
+        "arguments": [
+            { "name": "path", "description": "The binary, ROM, folder or zip to map.", "required": true },
+            { "name": "goal", "description": "When to stop, or what to look into (default: 80% of the functions named, or none left to name).", "required": false },
+            { "name": "shard", "description": "k/n when n agents share the work: this one takes the k-th part.", "required": false }
+        ]
+    }])
+}
+
+/// A prompt, filled in with its arguments.
+pub fn prompt(name: &str, args: &Value) -> Result<Value, String> {
+    if name != "map_binary" {
+        return Err(format!("no prompt {name:?}; there is map_binary"));
+    }
+    let path = string(args, "path").ok_or("path is required")?;
+    let goal =
+        string(args, "goal").unwrap_or("stop when 80% of the functions have names, or the worklist has none left");
+    let shard = string(args, "shard")
+        .map(|s| format!(" with shard: \"{s}\" (other agents take the other parts)"))
+        .unwrap_or_default();
+    let text = format!(
+        "Map out {path} with the binviz tools, naming what you work out as notes.\n\
+        \n\
+        First: open_binary {path}, then binary_summary and coverage to see what it is and how much is mapped already (notes from earlier sessions load with it).\n\
+        \n\
+        Then repeat:\n\
+        1. worklist{shard}: the unnamed functions to do next, with their callers, callees, strings and data. Those whose callees all have names come first.\n\
+        2. Work out what each does. The worklist entry is often enough; otherwise disassemble it, and use function_info, xrefs or inspect on what it touches (a hardware register, a string, a table).\n\
+        3. annotate them together (notes: [{{at, name, comment}}, ...]): a short snake_case name, and a one-line comment on what it does and anything you are unsure of. Name the data you work out too: tables, strings, variables. Set reviewed only when you are sure.\n\
+        4. Every few rounds, run coverage and report progress in a line.\n\
+        \n\
+        A plain accurate name (update_timer) beats a specific wrong one. When a function stays unclear after a look, comment what you know and pass its address in skip to the next worklist. The notes are shared: other sessions and the binviz web UI (Coverage, Follow notes file) see them as you save them, marked as an agent's until someone confirms them.\n\
+        \n\
+        Goal: {goal}. Finish with a summary of how the program is organized: its main parts, and the functions that tie them together."
+    );
+    Ok(json!({
+        "description": "Map out a binary",
+        "messages": [{ "role": "user", "content": { "type": "text", "text": text } }]
+    }))
+}
+
+fn compare_names(o: &Open, args: &Value) -> Result<String, String> {
+    let with = string(args, "with").ok_or("with is required: a debug file, or a build with its names")?;
+    let limit = int(args, "limit", 100, 5000) as usize;
+    let data = std::fs::read(with).map_err(|e| format!("{with}: {e}"))?;
+    let mut real = Binary::parse(o.bin.data().to_vec()).map_err(|e| e.to_string())?;
+    let real = match real.attach_debug_file(with, data.clone()) {
+        Ok(()) => real,
+        // Not its debug file: a build with its names, if it names functions.
+        Err(e) => match Binary::parse(data) {
+            Ok(other)
+                if other
+                    .symbols()
+                    .functions()
+                    .any(|f| f.source != binviz::SymbolSource::Discovered) =>
+            {
+                other
+            }
+            _ => return Err(format!("{with}: {e}")),
+        },
+    };
+    let c = o.bin.compare_names(&real);
+    let same = c.pairs.iter().filter(|p| p.same).count();
+    let close = c.pairs.iter().filter(|p| p.close).count();
+    let mut out = String::new();
+    let _ = writeln!(
+        out,
+        "The notes name {} of the {} functions the real names cover ({}): {same} the same, {close} close (sharing a word), {} different; {} missed.",
+        count(c.pairs.len() as u64),
+        count(c.functions),
+        pct(c.pairs.len() as u64, u64::from(c.functions)),
+        count((c.pairs.len() - same - close) as u64),
+        count(c.missed.len() as u64)
+    );
+    if !c.extra.is_empty() {
+        let _ = writeln!(
+            out,
+            "{} names in the notes are where no real function starts (data, labels, or a wrong start).",
+            count(c.extra.len() as u64)
+        );
+    }
+    let _ = writeln!(out, "\nNamed in both (notes → real):");
+    for p in c.pairs.iter().take(limit) {
+        let _ = writeln!(
+            out,
+            "  {:#x}  {} → {}{}",
+            p.address,
+            p.noted,
+            p.real,
+            if p.same {
+                "  (same)"
+            } else if p.close {
+                "  (close)"
+            } else {
+                ""
+            }
+        );
+    }
+    if !c.missed.is_empty() {
+        let _ = writeln!(out, "\nMissed:");
+        for (address, name) in c.missed.iter().take(limit) {
+            let _ = writeln!(out, "  {address:#x}  {name}");
+        }
     }
     Ok(out)
 }

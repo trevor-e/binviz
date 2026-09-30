@@ -95,6 +95,8 @@ impl Server {
                 pending_debug: None,
                 debug_note: None,
                 debug_map_tried: false,
+                table: None,
+                notes_stamp: None,
             };
             let notes_path = string(args, "notes_file")
                 .filter(|_| i == 0)

@@ -312,6 +312,7 @@ impl NameProposals {
                 kind: Some(if p.data { "data" } else { "function" }.into()),
                 decomp: None,
                 ctype: None,
+                author: String::new(),
             })
             .collect()
     }

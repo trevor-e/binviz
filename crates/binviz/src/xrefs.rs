@@ -119,6 +119,13 @@ impl XrefIndex {
         self.lists[kind as usize].iter().map(|&v| self.target(v))
     }
 
+    /// Every reference of one kind: (source, target).
+    pub(crate) fn pairs(&self, kind: RefKind) -> impl Iterator<Item = (u64, u64)> + '_ {
+        self.lists[kind as usize]
+            .iter()
+            .map(|&v| (self.source(v), self.target(v)))
+    }
+
     fn contains(&self, kind: RefKind, source: u64, target: u64) -> bool {
         let (Some(s), Some(t)) = (source.checked_sub(self.base), target.checked_sub(self.base)) else {
             return false;
@@ -816,23 +823,37 @@ impl Binary {
     }
 
     /// References to addresses in `lo..hi`, by kind (calls first), then by source.
+    /// For a ROM and a place the size of a string or a table, the words in its
+    /// data holding the place's address too (see [`Binary::rom_pointers_to`]).
     pub fn references_to(&self, lo: u64, hi: u64, offset: u32, limit: u32) -> RefPage {
         let index = self.xref_index();
         let mut counts = RefCounts::default();
+        let mut more: [Vec<(u64, u64)>; 6] = Default::default();
+        if self.rom.is_some() && hi.saturating_sub(lo) <= 256 {
+            for (s, t, k) in self.rom_pointers_to(lo, hi) {
+                if !index.contains(k, s, t) {
+                    more[k as usize].push((s, t));
+                }
+            }
+        }
         let slices: Vec<(RefKind, &[u64])> = KINDS
             .iter()
             .map(|&k| {
                 let s = index.range(k, lo, hi);
-                counts.add(k, s.len() as u32);
+                counts.add(k, (s.len() + more[k as usize].len()) as u32);
                 (k, s)
             })
             .collect();
         let refs = slices
             .iter()
-            .flat_map(|&(k, s)| s.iter().map(move |&v| (k, v)))
+            .flat_map(|&(k, s)| {
+                s.iter()
+                    .map(move |&v| (index.source(v), index.target(v), k))
+                    .chain(more[k as usize].iter().map(move |&(s, t)| (s, t, k)))
+            })
             .skip(offset as usize)
             .take(limit as usize)
-            .map(|(k, v)| self.describe_ref(index.source(v), index.target(v), k))
+            .map(|(s, t, k)| self.describe_ref(s, t, k))
             .collect();
         RefPage {
             total: counts.total(),
@@ -921,6 +942,14 @@ impl Binary {
                     out.push((s, t, k));
                 }
             });
+            // A ROM's code also builds pointers to data, found while following it.
+            if let Some(rom) = &self.rom {
+                let refs = &rom.analysis.refs;
+                let first = refs.partition_point(|r| r.0 < lo);
+                out.extend(refs[first..].iter().take_while(|r| r.0 < hi).copied());
+                out.sort_unstable();
+                out.dedup();
+            }
         } else {
             let index = self.xref_index();
             let step = if self.is64 { 8 } else { 4 };
@@ -1054,6 +1083,18 @@ impl Binary {
     /// Swift literals run into each other), so once references are indexed the
     /// text also ends where the next referenced address begins.
     pub(crate) fn string_at_address(&self, address: u64) -> Option<String> {
+        // A ROM's text: ASCII outside its code.
+        if self.rom.is_some() {
+            let long = self
+                .address_to_offset(address)
+                .and_then(|o| self.string_at(o, None))
+                .and_then(|s| {
+                    let text: String = s.text.chars().skip((address - s.address?) as usize).collect();
+                    (text.chars().count() >= 2).then_some(text)
+                });
+            // Shorter than two characters: one only when the code takes its address.
+            return long.or_else(|| self.short_string(address));
+        }
         let Some(text) = self.string_preview(address, 200) else {
             return self.short_string(address);
         };

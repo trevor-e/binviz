@@ -375,10 +375,27 @@ pub struct Inspection {
     /// references are indexed.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global: Option<crate::globals::Global>,
+    /// The string this byte is part of, if it is text.
+    pub string: Option<StringHere>,
+}
+
+/// A string a location is part of: where it starts, how long it is, its text.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StringHere {
+    /// File offset of its first byte.
+    pub offset: u64,
+    pub address: Option<u64>,
+    /// Bytes it occupies (a table's end marker included; a C string's NUL not).
+    pub size: u32,
+    /// At most a few hundred characters of it.
+    pub text: String,
+    /// `ascii`, `utf-16`, or `table` (read with a game's table file).
+    pub encoding: &'static str,
 }
 
 /// A note the user attached to an address range while reverse engineering.
-#[derive(Debug, Clone, Serialize, serde::Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Annotation {
     pub address: u64,
@@ -407,6 +424,10 @@ pub struct Annotation {
     /// or the types file, and name the fields the code reaches through it.
     #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
     pub ctype: Option<String>,
+    /// Who wrote it, when not you: an agent mapping the binary (`agent`, or
+    /// the name it was given). Its names are guesses until you confirm them.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub author: String,
 }
 
 impl Annotation {

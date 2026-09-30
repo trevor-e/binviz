@@ -47,6 +47,12 @@ COMMANDS:
                                    strings or pointers, arrays, function pointers called through
     classes <file> [filter]        C++ classes from an MSVC binary's RTTI: bases with their
                                    offsets, vtables with their virtual functions
+    worklist <file> [n] [k/n]      The unnamed functions to name next: those whose callees
+                                   all have names first, then the most called (k/n: one
+                                   of n shares, for agents working at once)
+    score <file> <names>           The --notes' names (or <file>.binviz-notes.json's) against
+                                   the real ones: <names> is its debug file (.dbg, .pdb,
+                                   .debug...) or an unstripped build
     objc <file> [name]             Objective-C classes, categories and protocols; with a name,
                                    one declared as its header would, or a selector's
                                    implementations and the functions that send it
@@ -1022,6 +1028,105 @@ fn run(
                 println!("  {:#x} {:>6}  {:<20} {}", g.address, g.size, name, g.description);
             }
         }
+        "score" => {
+            let with = arg(2).ok_or("missing the file with the real names (a debug file, or an unstripped build)")?;
+            let mut bin = bin;
+            if bin.annotations().is_empty() {
+                let sidecar = format!("{}.binviz-notes.json", args[1]);
+                let text = std::fs::read_to_string(&sidecar)
+                    .map_err(|_| format!("no notes to score: pass --notes, or keep them in {sidecar}"))?;
+                bin.set_annotations(binviz::notes::parse(&text).map_err(|e| format!("{sidecar}: {e}"))?.0);
+            }
+            // A debug file for this binary, else a build of it with its names.
+            let data = std::fs::read(with).map_err(|e| format!("{with}: {e}"))?;
+            let mut real = Binary::parse(bin.data().to_vec()).map_err(|e| e.to_string())?;
+            let real = match real.attach_debug_file(with, data.clone()) {
+                Ok(()) => real,
+                // Not its debug file: a build with its names, if it names functions.
+                Err(e) => match Binary::parse(data) {
+                    Ok(other)
+                        if other
+                            .symbols()
+                            .functions()
+                            .any(|f| f.source != binviz::SymbolSource::Discovered) =>
+                    {
+                        other
+                    }
+                    _ => return Err(format!("{with}: {e}")),
+                },
+            };
+            let c = bin.compare_names(&real);
+            let same = c.pairs.iter().filter(|p| p.same).count();
+            let close = c.pairs.iter().filter(|p| p.close).count();
+            let pct = |n: usize| n as f64 * 100.0 / f64::from(c.functions.max(1));
+            println!(
+                "The notes name {} of the {} functions {with} names ({:.0}%): {same} the same, {close} close, {} different.",
+                c.pairs.len(),
+                c.functions,
+                pct(c.pairs.len()),
+                c.pairs.len() - same - close
+            );
+            if !c.extra.is_empty() {
+                println!(
+                    "{} names in the notes are where no function starts (data, labels, or a wrong start).",
+                    c.extra.len()
+                );
+            }
+            println!("\n{:<18}  {:<32}  real name", "address", "notes");
+            for p in &c.pairs {
+                println!(
+                    "{:#018x}  {:<32}  {}{}",
+                    p.address,
+                    p.noted,
+                    p.real,
+                    if p.same {
+                        "  ="
+                    } else if p.close {
+                        "  ~"
+                    } else {
+                        ""
+                    }
+                );
+            }
+            if !c.missed.is_empty() {
+                println!("\nNot named in the notes ({}):", c.missed.len());
+                for (address, name) in c.missed.iter().take(200) {
+                    println!("{address:#018x}  {name}");
+                }
+            }
+        }
+        "worklist" => {
+            let limit = arg(2).and_then(|n| n.parse().ok()).unwrap_or(20);
+            let shard = match arg(3).or(arg(2).filter(|a| a.contains('/'))) {
+                Some(s) => {
+                    let (k, n) = s
+                        .split_once('/')
+                        .and_then(|(k, n)| Some((k.parse::<u32>().ok()?, n.parse::<u32>().ok()?)))
+                        .filter(|&(k, n)| k >= 1 && k <= n)
+                        .ok_or("the share is k/n, with 1 <= k <= n")?;
+                    Some((k - 1, n))
+                }
+                None => None,
+            };
+            let w = bin.worklist(limit, shard, &[]);
+            println!(
+                "{} of {} functions named; {} to go{}",
+                w.named,
+                w.functions,
+                w.functions - w.named,
+                if shard.is_some() {
+                    format!(" ({} in this share)", w.remaining)
+                } else {
+                    String::new()
+                }
+            );
+            for item in &w.items {
+                println!(
+                    "{:#018x} {:>7}  {:>4} callers  {:>3} callees ({} unnamed)  {}",
+                    item.address, item.size, item.callers, item.callees, item.unnamed_callees, item.name
+                );
+            }
+        }
         "coverage" => {
             let c = bin.coverage(15);
             let pct = |n: u64, total: u64| {
@@ -1050,8 +1155,14 @@ fn run(
             let total: u64 = c.sections.iter().map(|s| s.size).sum();
             row("TOTAL", &c.totals, total);
             println!(
-                "functions: {} named, {} recovered, {} yours; {} annotations ({} reviewed)",
-                c.functions.named, c.functions.recovered, c.functions.user, c.annotations, c.reviewed
+                "functions: {} named, {} recovered, {} yours, {} agents'; {} annotations ({} reviewed, {} by agents)",
+                c.functions.named,
+                c.functions.recovered,
+                c.functions.user,
+                c.functions.agents,
+                c.annotations,
+                c.reviewed,
+                c.agent_notes
             );
             println!("{} unexplored gaps; largest:", c.gap_count);
             for g in &c.gaps {
@@ -1950,7 +2061,15 @@ fn print_inspection(bin: &Binary, i: &binviz::Inspection) {
             f.line.unwrap_or(0)
         );
     }
-    if let Some(ins) = &i.instruction {
+    if let Some(s) = &i.string {
+        println!(
+            "string ({}, {} bytes{}): \"{}\"",
+            s.encoding,
+            s.size,
+            s.address.map(|a| format!(" at {a:#x}")).unwrap_or_default(),
+            s.text.replace('\n', "⏎")
+        );
+    } else if let Some(ins) = &i.instruction {
         println!("instruction: {:#x} {} {}", ins.address, ins.mnemonic, ins.operands);
     }
 }

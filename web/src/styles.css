@@ -306,6 +306,12 @@ a:hover,
   border-color: var(--warn-border, #e0a400);
 }
 
+/* A note an agent wrote: a guess until confirmed. */
+.chip.agent {
+  border-style: dashed;
+  color: var(--accent, var(--text-2));
+}
+
 .chip.warn::before {
   content: '';
   width: 6px;
@@ -3806,4 +3812,39 @@ table.data td.diff-name {
 
 .fd-ops {
   color: var(--text-2);
+}
+
+/* A string in the inspector: its text, wrapped. */
+.str-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 12em;
+  overflow: auto;
+}
+
+/* The Coverage tab's lists: what to name next, and agents' names to check. */
+.work-list {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 2px 12px;
+  align-items: baseline;
+}
+
+.work-list > .row {
+  display: contents;
+}
+
+.work-list > .row > * {
+  padding: 3px 0;
+}
+
+.work-list > .row:hover > * {
+  background: var(--hover);
+}
+
+.follow-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
 }

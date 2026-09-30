@@ -517,7 +517,7 @@ mod tests {
             name: "GetState".into(),
             comment: "reads the state word".into(),
             reviewed: false,
-            kind: None, decomp: None, ctype: None,
+            kind: None, decomp: None, ctype: None, author: String::new(),
         }]);
         let c = bin.decomp_context(0x8001_0000, 64).unwrap();
         assert_eq!((c.name.as_str(), c.size), ("entry", 0x1C));

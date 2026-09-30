@@ -129,6 +129,8 @@ pub struct FunctionCounts {
     pub recovered: u32,
     /// Functions the user named.
     pub user: u32,
+    /// Functions an agent named (its notes carry an author), not yet confirmed.
+    pub agents: u32,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -143,6 +145,8 @@ pub struct Coverage {
     pub functions: FunctionCounts,
     pub annotations: u32,
     pub reviewed: u32,
+    /// Notes an agent wrote (carrying an author).
+    pub agent_notes: u32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -495,8 +499,15 @@ impl Binary {
         let gaps = gaps.into_iter().map(|(idx, r)| self.describe_gap(idx, r)).collect();
 
         let mut functions = FunctionCounts::default();
+        let by_agents: std::collections::HashSet<u64> = self
+            .annotations
+            .iter()
+            .filter(|a| !a.author.is_empty() && !a.name.is_empty())
+            .map(|a| a.address)
+            .collect();
         for f in self.symbols.functions() {
             match f.source {
+                SymbolSource::User if by_agents.contains(&f.address) => functions.agents += 1,
                 SymbolSource::User => functions.user += 1,
                 SymbolSource::Discovered => functions.recovered += 1,
                 _ => functions.named += 1,
@@ -510,6 +521,7 @@ impl Binary {
             functions,
             annotations: self.annotations.iter().filter(|a| a.is_note()).count() as u32,
             reviewed: self.annotations.iter().filter(|a| a.reviewed).count() as u32,
+            agent_notes: self.annotations.iter().filter(|a| !a.author.is_empty()).count() as u32,
         }
     }
 

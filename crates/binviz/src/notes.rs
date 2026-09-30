@@ -1,10 +1,11 @@
-//! Notes files: the JSON the web UI exports and imports, and the MCP
-//! server keeps next to a binary (`<binary>.binviz-notes.json`).
+//! Notes files: the JSON the web UI exports and imports, the MCP server keeps
+//! next to a binary (`<binary>.binviz-notes.json`), and the CLI reads with
+//! `--notes`.
 //!
 //! ```json
 //! { "format": "binviz-annotations", "version": 1, "file": "App", "fingerprint": "…",
 //!   "annotations": [ { "address": "0x100004000", "size": "0x40", "name": "main",
-//!                      "comment": "…", "reviewed": true,
+//!                      "comment": "…", "reviewed": true, "author": "agent",
 //!                      "decomp": { "state": "matched", "percent": 100, "attempts": 1,
 //!                                  "since": 1790000000, "source": "src/main.c" } } ] }
 //! ```
@@ -83,6 +84,7 @@ pub fn parse(text: &str) -> Result<(Vec<Annotation>, Option<String>), String> {
                 kind: a.get("kind").and_then(Value::as_str).map(str::to_string),
                 decomp: a.get("decomp").and_then(decomp),
                 ctype: a.get("type").and_then(Value::as_str).map(str::to_string),
+                author: a.get("author").and_then(Value::as_str).unwrap_or("").to_string(),
             })
         })
         .collect();
@@ -107,6 +109,9 @@ pub fn document(file: &str, fingerprint: &str, notes: &[Annotation]) -> String {
             }
             if a.reviewed {
                 o["reviewed"] = json!(true);
+            }
+            if !a.author.is_empty() {
+                o["author"] = json!(a.author);
             }
             if let Some(kind) = &a.kind {
                 o["kind"] = json!(kind);
@@ -152,6 +157,7 @@ mod tests {
                 source: "src/entity.c".into(),
             }),
             ctype: Some("int (Entity *e, int dx)".into()),
+            author: "agent".into(),
         }];
         let text = document("game.exe", "abc", &notes);
         assert_eq!(parse(&text), Ok((notes, Some("abc".into()))));
@@ -161,5 +167,6 @@ mod tests {
             (list[0].address, list[0].name.as_str(), fingerprint),
             (0x8001_0000, "f", None)
         );
+        assert!(list[0].author.is_empty());
     }
 }

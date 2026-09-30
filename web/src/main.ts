@@ -127,7 +127,7 @@ const button = (label: string, title: string, iconName: Parameters<typeof icon>[
   return b;
 };
 const openBtn = button('Open', 'Open a binary (Ctrl+O)', 'open', () => fileInput.click());
-const debugBtn = button('Debug file', 'Load debug info from a separate file (.dSYM DWARF, .debug, .pdb, unstripped copy)', 'debug', () => debugInput.click());
+const debugBtn = button('Debug file', 'Load debug info from a separate file (.dSYM DWARF, .debug, .pdb, unstripped copy; for a game, the .dbg ld65 writes)', 'debug', () => debugInput.click());
 const sourcesBtn = button('Sources', 'Load a source folder to show code next to addresses', 'source', () => sourcesInput.click());
 const themeBtn = button('', 'Toggle light/dark theme', 'theme', () => {
   const next = document.documentElement.dataset.resolvedTheme === 'dark' ? 'light' : 'dark';
@@ -415,6 +415,11 @@ async function openFile(file: File) {
     }
     if (LABEL_FILE.test(file.name)) {
       await importLabels(file);
+      return;
+    }
+    // The debug file ld65 wrote for it (cc65 homebrew): source lines, procs and labels.
+    if (/\.dbg$/i.test(file.name) || (await startsWith(file, 'version\tmajor='))) {
+      await store.attachDebug(file.name, file);
       return;
     }
   }

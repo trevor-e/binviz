@@ -47,7 +47,7 @@ export class Inspector {
       this.el.replaceChildren(head, h('div', { class: 'insp-section muted' }, 'Click a byte, instruction, symbol or line to see what it is.'));
       return;
     }
-    const sections = [this.location(ins), this.path(ins), this.placement(ins), this.references(ins), this.notes(ins), this.source(ins), this.scopeVars(ins), this.instruction(ins), this.actions(ins)];
+    const sections = [this.location(ins), this.path(ins), this.string(ins), this.placement(ins), this.references(ins), this.notes(ins), this.source(ins), this.scopeVars(ins), this.instruction(ins), this.actions(ins)];
     this.el.replaceChildren(head, ...sections.filter((s): s is HTMLElement => s !== null));
   }
 
@@ -98,6 +98,25 @@ export class Inspector {
     return section;
   }
 
+  /** The string the selection is part of: its text, and (below) who refers to it. */
+  private string(ins: Inspection): HTMLElement | null {
+    const s = ins.string;
+    if (!s) return null;
+    const how = s.encoding === 'table' ? 'read with the table file' : s.encoding === 'utf-16' ? 'UTF-16' : 'ASCII';
+    const text = s.text.length > 400 ? `${s.text.slice(0, 400)}…` : s.text;
+    const copy = h('button', { class: 'btn ghost small icon-only', title: 'Copy the text', 'aria-label': 'Copy the text' }, icon('copy'));
+    copy.addEventListener('click', () => copyText(s.text));
+    const start = h('span', { class: 'link', title: 'Select the whole string' }, s.address !== undefined ? fmtAddr(s.address) : hex(s.offset));
+    start.addEventListener('click', () => void store.select(s.address !== undefined ? { address: s.address } : { offset: s.offset }));
+    return h(
+      'div',
+      { class: 'insp-section' },
+      h('h3', null, 'String'),
+      h('div', { class: 'str-text mono' }, `“${text.replace(/\n/g, '⏎')}”`),
+      h('div', { class: 'muted', style: 'margin-top:4px' }, `${formatCount(s.size)} bytes · ${how} · starts at `, start, ' ', copy),
+    );
+  }
+
   private placement(ins: Inspection): HTMLElement | null {
     const f = store.file!;
     const seg = ins.segment !== undefined ? f.segments[ins.segment] : undefined;
@@ -136,12 +155,17 @@ export class Inspector {
 
   private async fillReferences(ins: Inspection, body: HTMLElement) {
     const sym = ins.symbol;
-    // A function's callers refer to its start; data is referred to anywhere inside.
+    // A function's callers refer to its start; a string and other data are referred to anywhere inside.
     let lo = ins.address!;
     let hi = lo + 1n;
     let what = 'this address';
-    const code = ins.instruction !== undefined;
-    if (sym && code) {
+    const str = ins.string;
+    const code = ins.instruction !== undefined && !str;
+    if (str && str.address !== undefined) {
+      lo = str.address;
+      hi = lo + BigInt(Math.max(1, str.size));
+      what = `“${str.text.length > 24 ? `${str.text.slice(0, 24)}…` : str.text}”`;
+    } else if (sym && code) {
       lo = sym.address;
       hi = lo + 1n;
       what = sym.demangled ?? sym.name;
@@ -226,11 +250,18 @@ export class Inspector {
           { class: 'note' },
           a.name ? h('div', { class: 'note-name mono' }, a.name) : null,
           a.comment ? h('div', { class: 'note-comment' }, a.comment) : null,
-          h('div', { class: 'note-meta' }, a.reviewed ? h('span', { class: 'chip ok' }, 'Reviewed') : null, h('span', { class: 'muted mono' }, a.size > 0n ? `${fmtAddr(a.address)}..${fmtAddr(a.address + a.size)}` : `at ${fmtAddr(a.address)}`)),
+          h(
+            'div',
+            { class: 'note-meta' },
+            a.author ? h('span', { class: 'chip agent', title: 'An agent wrote this: its name is a guess until you confirm it' }, `by ${a.author}`) : null,
+            a.reviewed ? h('span', { class: 'chip ok' }, 'Reviewed') : null,
+            h('span', { class: 'muted mono' }, a.size > 0n ? `${fmtAddr(a.address)}..${fmtAddr(a.address + a.size)}` : `at ${fmtAddr(a.address)}`),
+          ),
         ),
         h(
           'div',
           { class: 'btn-row' },
+          a.author ? btn('Confirm', () => void store.annotate({ ...a, author: undefined }), 'Make it yours: the name stops counting as an agent’s guess') : null,
           btn('Edit', () => this.startNote(), 'Edit this note (N)'),
           btn(a.reviewed ? 'Unmark reviewed' : 'Mark reviewed', () => void store.annotate({ ...a, reviewed: !a.reviewed })),
           btn('Delete', () => void store.removeAnnotation(a)),
@@ -269,6 +300,8 @@ export class Inspector {
     const save = () => {
       const t = targets[Number(target.value)] ?? targets[0];
       const next: Annotation = { address: t.address, size: t.size, name: name.value.trim(), comment: comment.value.trim(), reviewed: reviewed.checked };
+      // A note is its namer's: renamed here, it is yours.
+      if (a?.author && next.name === a.name) next.author = a.author;
       this.editing = false;
       if (!next.name && !next.comment && !next.reviewed) {
         if (a) void store.removeAnnotation(a);
@@ -395,7 +428,8 @@ export class Inspector {
 
   private instruction(ins: Inspection): HTMLElement | null {
     const i = ins.instruction;
-    if (!i) return null;
+    // Text in a ROM decodes as instructions too; it isn't any.
+    if (!i || ins.string) return null;
     const target = i.target !== undefined ? h('span', { class: 'link' }, i.targetSymbol ? `<${i.targetSymbol}>` : fmtAddr(i.target)) : null;
     if (target && i.target !== undefined) {
       const t = i.target;
