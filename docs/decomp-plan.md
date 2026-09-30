@@ -443,6 +443,18 @@ Reuse across projects, cheapest first:
       frame setup left out, window 6/8: 12–25 % / 3–14 % of the rest is in a run a
       done function has (strict), 16–30 % / 5–17 % ignoring registers. Not yet
       measured on FF9 or on GCC 2.7 MIPS; that number decides whether to wire it in.
+- [x] **Structures across calls, callers' arguments, stack slots** (MIPS; `mipsflow.rs`,
+      `structs.rs`, `signature.rs`; CLI `structs`, MCP `structures`, both in `signature` and
+      `context`). What Ghidra's decompiler does by propagating types, done as a points-to
+      unification: pointers passed to calls, stored in fields and returned by getters join
+      their callee's argument, the field's target, the callers' result; each structure's layout
+      is every offset any member reaches. Checked on the PS1 samples against their source:
+      `Vm` (13 functions: every field at the right offset and width), `Token` (the struct
+      returned through a hidden pointer, joined with its caller's local), `Emitter`, `World`
+      with its `Entity` array's stride. Callers' `$a0`–`$a3` and stack stores give arguments the
+      callee ignores (`make_token`'s fifth, on the stack); a local's address passed to a
+      call gives its extent and fields. Not done: x86 (its stack walk would feed the same
+      unification), and walking a loop's pointer increments as array strides.
 - [ ] **Identical functions inside one binary**: 13 groups of identical code among
       FF9's 1 182 keyed boot-exe functions (and more across overlays, which share
       library code). The queue should treat a group as one work item and offer a

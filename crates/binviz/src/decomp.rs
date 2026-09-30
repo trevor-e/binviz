@@ -102,6 +102,9 @@ pub struct DecompContext {
     /// The same from sibling decompilations (other games built with the
     /// same compiler), for before this one has its own.
     pub sibling_examples: Vec<Example>,
+    /// MIPS: the structures it hands around or reaches, as other functions'
+    /// code also uses them: (what it is here, the structure).
+    pub structures: Vec<(String, crate::structs::Structure)>,
 }
 
 impl Binary {
@@ -267,6 +270,11 @@ impl Binary {
             decomp: self.decomp_at(lo).cloned(),
             examples,
             sibling_examples,
+            structures: self
+                .structures_of(lo)
+                .into_iter()
+                .map(|(what, s)| (what, s.clone()))
+                .collect(),
         })
     }
 }
@@ -332,6 +340,16 @@ impl DecompContext {
                     },
                     e.binary.as_ref().map_or(String::new(), |b| format!("  ({b})"))
                 );
+            }
+        }
+        if !self.structures.is_empty() {
+            let _ = writeln!(
+                out,
+                "Structures across calls (every function's accesses joined up; names are made up, offsets are what code reaches):"
+            );
+            for (what, s) in &self.structures {
+                let _ = write!(out, "{what} is ");
+                out.push_str(&s.describe(6));
             }
         }
         for (label, list, count) in [

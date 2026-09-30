@@ -585,6 +585,7 @@ impl Binary {
             pointers: std::sync::OnceLock::new(),
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
+            structs: std::sync::OnceLock::new(),
             rom: None,
             wasm: None,
         };

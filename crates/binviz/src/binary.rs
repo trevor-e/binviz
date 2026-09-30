@@ -58,6 +58,8 @@ pub struct Binary {
     pub(crate) objc: std::sync::OnceLock<crate::objc::ObjcInfo>,
     /// The functions summed up to find look-alikes, on first use.
     pub(crate) similar: std::sync::OnceLock<crate::similar::SimilarIndex>,
+    /// MIPS: structures matched up across calls, and what callers pass, on first use.
+    pub(crate) structs: std::sync::OnceLock<crate::structs::StructIndex>,
     /// For a game ROM: its console, memory map and the code found in it.
     pub(crate) rom: Option<crate::rom::Rom>,
     /// For a WebAssembly module: its sections and what they declare.
@@ -552,6 +554,7 @@ impl Binary {
             pointers: std::sync::OnceLock::new(),
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
+            structs: std::sync::OnceLock::new(),
             rom: None,
             wasm: None,
         };
@@ -636,6 +639,7 @@ impl Binary {
             pointers: std::sync::OnceLock::new(),
             objc: std::sync::OnceLock::new(),
             similar: std::sync::OnceLock::new(),
+            structs: std::sync::OnceLock::new(),
             rom: None,
             wasm: None,
         };

@@ -12,6 +12,8 @@
 //! [`crate::stack`]) says which arguments are read, and `ret N`, `ecx` and
 //! `edx` say the calling convention.
 
+use std::fmt::Write;
+
 use serde::Serialize;
 
 use crate::binary::Binary;
@@ -68,6 +70,39 @@ pub struct FunctionSignature {
     /// started, so what a call pops was guessed wrong somewhere (a call
     /// through a pointer to a function that pops its arguments, say).
     pub unbalanced: bool,
+    /// MIPS: what the direct callers set up before calling it; the prototype
+    /// takes the more arguments of this and what its own code reads (an
+    /// argument it ignores is still passed).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub callers_pass: Option<crate::structs::CallerArgs>,
+    /// MIPS: the slots of its stack frame it uses, by offset from `$sp` after
+    /// the prologue (the registers it saves aside).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub stack: Vec<StackSlot>,
+}
+
+/// A slot of a MIPS function's stack frame.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StackSlot {
+    /// From `$sp` after the prologue; past the frame's size is the caller's frame.
+    pub offset: i32,
+    pub size: u32,
+    /// `local`; `outgoing a4` (an argument past the fourth, stored for a call);
+    /// `argument a4` (one this function takes on the stack); `home of a0`
+    /// (the caller's slot for a register argument, where it is spilled).
+    pub kind: String,
+    /// `r`, `w` or `rw`, directly off `$sp`.
+    pub access: String,
+    /// Widths it is read or written with.
+    pub widths: Vec<u8>,
+    /// Its address is taken (an array or a structure on the stack), and
+    /// what it is passed to: `Foo as a1`.
+    pub address_taken: bool,
+    pub passed_to: Vec<String>,
+    /// For a local whose address is taken: the offsets inside it the
+    /// function reaches directly, relative to its start.
+    pub fields: Vec<i32>,
 }
 
 /// The offsets a function loads and stores off one base register.
@@ -187,6 +222,8 @@ impl Binary {
             aligned: None,
             returns_float: false,
             unbalanced: false,
+            callers_pass: None,
+            stack: Vec::new(),
         };
         // Registers written so far; a call clobbers the caller-saved ones after its delay slot.
         let mut written: u32 = 1;
@@ -348,8 +385,31 @@ impl Binary {
                 .iter()
                 .find(|a| a.base == "a0")
                 .is_some_and(|a| a.fields.len() >= 2 && a.fields.iter().all(|f| f.access == "w"));
-        let mut args: Vec<String> = (0..sig.register_args).map(|i| format!("int a{i}")).collect();
-        args.extend((0..sig.stack_args).map(|i| format!("int a{}", 4 + i)));
+        sig.stack = self.mips_stack_slots(f.address, sig.frame);
+        // Arguments read from the caller's frame through `$fp` too.
+        let read_on_stack = sig
+            .stack
+            .iter()
+            .filter_map(|s| s.kind.strip_prefix("argument a")?.parse::<u32>().ok())
+            .map(|k| k.saturating_sub(3))
+            .max()
+            .unwrap_or(0);
+        if read_on_stack > sig.stack_args {
+            sig.stack_args = read_on_stack;
+            sig.register_args = 4;
+        }
+        sig.callers_pass = self.caller_args(f.address).cloned();
+        // An argument the code ignores is still passed: the callers say how many there are.
+        let (mut registers, mut on_stack) = (sig.register_args, sig.stack_args);
+        if let Some(c) = &sig.callers_pass {
+            registers = registers.max(c.register_args);
+            on_stack = on_stack.max(c.stack_args);
+            if on_stack > 0 {
+                registers = 4;
+            }
+        }
+        let mut args: Vec<String> = (0..registers).map(|i| format!("int a{i}")).collect();
+        args.extend((0..on_stack).map(|i| format!("int a{}", 4 + i)));
         if sig.returns_struct {
             args[0] = "struct *ret".into();
         }
@@ -364,6 +424,120 @@ impl Binary {
 }
 
 impl Binary {
+    /// The stack slots of the MIPS function at `address` with a frame of `frame` bytes.
+    fn mips_stack_slots(&self, address: u64, frame: u32) -> Vec<StackSlot> {
+        use crate::mipsflow::Origin;
+        let Some((_, flow)) = self.mips_flow(address) else {
+            return Vec::new();
+        };
+        let frame = frame as i32;
+        let saved: Vec<i32> = flow.saved.iter().map(|s| s.1).collect();
+        // What is stored for the calls (never read back), and where locals' addresses go.
+        let mut outgoing: Vec<i32> = Vec::new();
+        let mut passed: std::collections::BTreeMap<i32, Vec<String>> = Default::default();
+        for c in &flow.calls {
+            for &(k, _) in &c.stack {
+                outgoing.push(16 + 4 * k as i32);
+            }
+            let to = c.target.map_or_else(
+                || "a call through a pointer".to_string(),
+                |t| self.symbols.at(t).map_or_else(|| format!("{t:#x}"), |s| s.display_name().into_owned()),
+            );
+            let args = c.args.iter().enumerate().map(|(j, v)| (j as u32, *v));
+            let stack = c.stack.iter().map(|&(k, v)| (4 + k, v));
+            for (j, v) in args.chain(stack) {
+                if let Some((n, 0)) = v
+                    && let Origin::Local(off) = flow.nodes[n as usize]
+                {
+                    let e = passed.entry(off).or_default();
+                    let text = format!("{to} as a{j}");
+                    if !e.contains(&text) {
+                        e.push(text);
+                    }
+                }
+            }
+        }
+        let mut taken: Vec<i32> = flow.taken.clone();
+        taken.sort_unstable();
+        taken.dedup();
+        // Uses by offset: (widths, read, written).
+        let mut uses: std::collections::BTreeMap<i32, (Vec<u8>, bool, bool)> = Default::default();
+        for u in flow.slots.iter().filter(|u| !saved.contains(&u.offset)) {
+            let e = uses.entry(u.offset).or_default();
+            if !e.0.contains(&u.width) {
+                e.0.push(u.width);
+                e.0.sort_unstable();
+            }
+            if u.store {
+                e.2 = true;
+            } else {
+                e.1 = true;
+            }
+        }
+        let rw = |r: bool, w: bool| match (r, w) {
+            (true, true) => "rw",
+            (true, false) => "r",
+            (false, true) => "w",
+            _ => "",
+        };
+        let mut out: Vec<StackSlot> = Vec::new();
+        // Locals whose address is taken span up to the next such local, saved register or the frame's end.
+        let mut inside: std::collections::HashSet<i32> = Default::default();
+        for (i, &off) in taken.iter().enumerate() {
+            let end = taken
+                .get(i + 1)
+                .copied()
+                .into_iter()
+                .chain(saved.iter().copied().filter(|&s| s > off))
+                .chain(std::iter::once(frame.max(off + 4)))
+                .min()
+                .unwrap_or(off + 4);
+            let mut fields = Vec::new();
+            let (mut r, mut w) = (false, false);
+            for (&o, e) in uses.range(off..end) {
+                inside.insert(o);
+                fields.push(o - off);
+                r |= e.1;
+                w |= e.2;
+            }
+            out.push(StackSlot {
+                offset: off,
+                size: (end - off).max(1) as u32,
+                kind: if off >= frame { "home or argument slot".into() } else { "local".into() },
+                access: rw(r, w).into(),
+                widths: Vec::new(),
+                address_taken: true,
+                passed_to: passed.remove(&off).unwrap_or_default(),
+                fields,
+            });
+        }
+        for (&off, (widths, r, w)) in &uses {
+            if inside.contains(&off) {
+                continue;
+            }
+            let kind = if off >= frame {
+                let k = (off - frame) / 4;
+                if off - frame < 16 { format!("home of a{k}") } else { format!("argument a{k}") }
+            } else if outgoing.contains(&off) {
+                format!("outgoing a{}", 4 + (off - 16) / 4)
+            } else {
+                "local".into()
+            };
+            out.push(StackSlot {
+                offset: off,
+                size: *widths.last().unwrap_or(&4) as u32,
+                kind,
+                access: rw(*r, *w).into(),
+                widths: widths.clone(),
+                address_taken: false,
+                passed_to: Vec::new(),
+                fields: Vec::new(),
+            });
+        }
+        out.sort_by_key(|s| s.offset);
+        out
+    }
+
     /// [`Self::function_signature`] for x86 code: from its stack frame.
     fn x86_signature(&self, address: u64) -> Option<FunctionSignature> {
         use crate::stack::Convention;
@@ -449,6 +623,8 @@ impl Binary {
             aligned: frame.aligned,
             returns_float: frame.returns_float,
             unbalanced: frame.unbalanced,
+            callers_pass: None,
+            stack: Vec::new(),
         })
     }
 }
@@ -475,6 +651,60 @@ impl FunctionSignature {
         if self.returns_struct {
             out.push_str("  returns a structure by value: a0 is the hidden pointer it is built in, handed back in $v0
 ");
+        }
+        if let Some(c) = &self.callers_pass {
+            let set: Vec<String> = (0..4)
+                .filter(|&k| c.set[k] > 0)
+                .map(|k| format!("$a{k} at {}", c.set[k]))
+                .collect();
+            let own = self.register_args + self.stack_args;
+            let theirs = c.register_args + c.stack_args;
+            let _ = writeln!(
+                out,
+                "  its {} direct call{} set up {}{}{}",
+                c.sites,
+                if c.sites == 1 { "" } else { "s" },
+                if set.is_empty() { "no argument registers".to_string() } else { set.join(", ") },
+                if c.stack_args > 0 { format!(" and {} on the stack", c.stack_args) } else { String::new() },
+                if theirs > own {
+                    format!(": {theirs} arguments, {} more than its code reads (unused, but passed)", theirs - own)
+                } else {
+                    String::new()
+                }
+            );
+        }
+        if !self.stack.is_empty() {
+            out.push_str("  stack (offsets from $sp after the prologue):\n");
+            for slot in &self.stack {
+                let widths: Vec<&str> = slot
+                    .widths
+                    .iter()
+                    .map(|w| match w {
+                        1 => "u8",
+                        2 => "u16",
+                        8 => "u64",
+                        _ => "u32",
+                    })
+                    .collect();
+                let mut line = format!("    sp+{:#x} {}", slot.offset, slot.kind);
+                if slot.address_taken {
+                    let _ = write!(line, ", {} bytes, its address taken", slot.size);
+                    if !slot.passed_to.is_empty() {
+                        let _ = write!(line, " (passed to {})", slot.passed_to.join(", "));
+                    }
+                    if !slot.fields.is_empty() {
+                        let f: Vec<String> = slot.fields.iter().map(|o| format!("+{o:#x}")).collect();
+                        let _ = write!(line, "; reached directly at {}", f.join(", "));
+                    }
+                } else if !widths.is_empty() {
+                    let _ = write!(line, " {}", widths.join("/"));
+                }
+                if !slot.access.is_empty() {
+                    let _ = write!(line, " {}", slot.access);
+                }
+                out.push_str(&line);
+                out.push('\n');
+            }
         }
         self.describe_accesses(&mut out);
         out

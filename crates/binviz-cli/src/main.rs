@@ -48,6 +48,9 @@ COMMANDS:
                                    in place of up and down lists just those
     calls <file> <from> to <to>    A shortest chain of calls between two functions
     coverage <file>                How much of the code and data is mapped out
+    structs <file> [function|name] Structures joined up across calls (MIPS): what a pointer passed
+                                   around is, as every function that reaches it uses it, as C;
+                                   for one function, those it hands around or reaches
     blocks <file> [--window N] [--done 10,25,50] [--top N] [--loose]
                                    Runs of N instructions (default 12, registers renamed, numbers
                                    and names left out) found in several functions, and how much of
@@ -1211,6 +1214,35 @@ fn run(
                 );
                 for t in &b.text {
                     println!("    {t}");
+                }
+            }
+        }
+        "structs" => {
+            let list = bin.structures();
+            if list.is_empty() {
+                return Err("no structures found: MIPS code only, and only those more than one function reaches".into());
+            }
+            match arg(2) {
+                Some(which) => {
+                    let addr = resolve_address(&bin, which).ok();
+                    let found: Vec<String> = match addr {
+                        Some(a) if bin.symbols().function_containing(a).is_some() => bin
+                            .structures_of(a)
+                            .into_iter()
+                            .map(|(what, s)| format!("{what} is {}", s.describe(12)))
+                            .collect(),
+                        _ => list.iter().filter(|s| s.name == which).map(|s| s.describe(1000)).collect(),
+                    };
+                    if found.is_empty() {
+                        return Err(format!("no structure named or used by {which}"));
+                    }
+                    println!("{}", found.join("\n"));
+                }
+                None => {
+                    println!("{} structures reached by more than one function, the most used first:\n", list.len());
+                    for s in list {
+                        println!("{}", s.describe(4));
+                    }
                 }
             }
         }

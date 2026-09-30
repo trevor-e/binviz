@@ -207,7 +207,8 @@ impl Binary {
         let w = options.window.max(2);
         let mut seen = std::collections::HashSet::new();
         // Per function: start, instruction shapes, and the addresses.
-        let mut funcs: Vec<(u64, Vec<Shape>, Vec<(u64, String)>)> = Vec::new();
+        type Read = (u64, Vec<Shape>, Vec<(u64, String)>);
+        let mut funcs: Vec<Read> = Vec::new();
         for f in self.symbols().functions() {
             if f.size == 0 || !f.defined || !seen.insert(f.address) {
                 continue;
@@ -297,7 +298,7 @@ impl Binary {
         let repeating = by_run.values().filter(|v| v.0 > 1).count();
 
         // The runs in most functions, one per stretch of code.
-        let mut ranked: Vec<(&u64, &(usize, usize, usize, u32))> = by_run.iter().filter(|(_, v)| v.0 > 1).collect();
+        let mut ranked: Vec<_> = by_run.iter().filter(|(_, v)| v.0 > 1).collect();
         ranked.sort_by(|a, b| b.1.0.cmp(&a.1.0).then(b.1.1.cmp(&a.1.1)).then(a.0.cmp(b.0)));
         let mut top: Vec<Block> = Vec::new();
         let mut listed: Vec<(usize, u32)> = Vec::new();

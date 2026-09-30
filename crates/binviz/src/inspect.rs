@@ -463,6 +463,7 @@ impl Binary {
         // Function boundaries shape the references found in code, and what is summed up.
         self.xrefs = std::sync::OnceLock::new();
         self.similar = std::sync::OnceLock::new();
+        self.structs = std::sync::OnceLock::new();
         self.rebuild_user_symbols();
     }
 

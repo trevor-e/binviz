@@ -457,9 +457,21 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "function_signature",
             "A function's prototype, from its code",
-            "What a function's code says about how it is called. MIPS: which of $a0-$a3 it reads before writing, arguments taken from the stack, whether $v0 carries a result. x86: the calling convention (cdecl, stdcall from `ret N`, thiscall with `this` in ecx, fastcall with ecx and edx; Microsoft x64 or System V for x86-64), the arguments it reads with the stack pointer followed from the entry, whether eax or the FPU stack carries a result. Both: its frame size and saved registers, whether it calls anything, and the offsets it loads and stores off each base register, named after the argument it holds (structure layout hints). disassemble and decomp_context name each stack slot the same way (arg1, local_10, saved esi) however the pushes before calls move esp.",
+            "What a function's code says about how it is called. MIPS: which of $a0-$a3 it reads before writing, arguments taken from the stack, whether $v0 carries a result. x86: the calling convention (cdecl, stdcall from `ret N`, thiscall with `this` in ecx, fastcall with ecx and edx; Microsoft x64 or System V for x86-64), the arguments it reads with the stack pointer followed from the entry, whether eax or the FPU stack carries a result. Both: its frame size and saved registers, whether it calls anything, and the offsets it loads and stores off each base register, named after the argument it holds (structure layout hints). MIPS also: what its direct callers set up in $a0-$a3 and on the stack (the prototype takes the more of that and what it reads: an ignored argument is still passed), and its stack slots (locals, those whose address is taken and what they are passed to, outgoing arguments, its own arguments on the caller's stack). disassemble and decomp_context name each stack slot the same way (arg1, local_10, saved esi) however the pushes before calls move esp.",
             json!({ "at": address("A function or address inside it") }),
             &["at"],
+            true,
+        ),
+        tool(
+            "structures",
+            "Structures joined up across calls (MIPS)",
+            "What the pointers a program hands around are, as every function that reaches them uses them, like a points-to analysis. A pointer passed to a function is the same structure as that function's argument; a pointer stored in a field is what the field points to; a getter's result is what it returns; locals whose address is passed and globals join in too. Each structure's layout is every offset any of its functions reaches, with widths and reads/writes, as a C declaration (made-up names; runs of the same field a fixed distance apart shown as an array). Functions that take any pointer (memcpy, string routines: they walk a buffer rather than reach fields) don't join what's passed to them. With at: the structures one function holds, named as it holds them (a0, a0->0x10, sp+0x18, a global). decomp_context lists these too.",
+            json!({
+                "at": address("A function (any address in it); without it, every structure more than one function reaches"),
+                "name": { "type": "string", "description": "One structure by its name (s_80012340_a0, VM_t)." },
+                "limit": { "type": "integer", "description": "Structures to list without at (default 30, max 500)." },
+            }),
+            &[],
             true,
         ),
         tool(
@@ -1045,6 +1057,7 @@ impl Server {
                     "c_header" => c_header(o, args)?,
                     "struct_field" => struct_field(o, args)?,
                     "function_signature" => function_signature(o, args)?,
+                    "structures" => structures(o, args)?,
                     "match_function" => match_function(o, args)?,
                     "match_object" => match_object(o, args)?,
                     "match_project" => match_project(o, args)?,
@@ -2621,6 +2634,38 @@ fn function_signature(o: &Open, args: &Value) -> Result<String, String> {
         .function_signature(start)
         .ok_or("not in a function, or not MIPS or x86 code (signatures are for those so far)")?;
     Ok(s.describe())
+}
+
+fn structures(o: &Open, args: &Value) -> Result<String, String> {
+    let list = o.bin.structures();
+    if list.is_empty() {
+        return Err("no structures: MIPS code only, and only those more than one function reaches".into());
+    }
+    if let Some(at) = string(args, "at") {
+        let start = function_at(&o.bin, at)?;
+        let held = o.bin.structures_of(start);
+        if held.is_empty() {
+            return Ok("it holds no structure another function also reaches".into());
+        }
+        return Ok(held.iter().map(|(what, s)| format!("{what} is {}", s.describe(12))).collect::<Vec<_>>().join("\n"));
+    }
+    if let Some(name) = string(args, "name") {
+        return list
+            .iter()
+            .find(|s| s.name == name)
+            .map(|s| s.describe(1000))
+            .ok_or_else(|| format!("no structure named {name}"));
+    }
+    let limit = args.get("limit").and_then(Value::as_u64).unwrap_or(30).clamp(1, 500) as usize;
+    let mut out = format!("{} structures reached by more than one function, the most used first:\n\n", list.len());
+    for s in list.iter().take(limit) {
+        out.push_str(&s.describe(4));
+        out.push('\n');
+    }
+    if list.len() > limit {
+        out.push_str(&format!("… and {} more (limit)\n", list.len() - limit));
+    }
+    Ok(out)
 }
 
 fn match_function(o: &Open, args: &Value) -> Result<String, String> {
