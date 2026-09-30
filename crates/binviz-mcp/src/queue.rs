@@ -10,17 +10,70 @@ use serde_json::Value;
 use crate::tools::{Open, address_of, count, human, int, pct, save_notes, string};
 
 /// Seconds since 1970.
-fn now() -> u64 {
+pub(crate) fn now() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs())
+}
+
+/// What built a function's C: recorded with it so that a match can be reused
+/// by a project with the same build, and only by one.
+#[derive(Default)]
+pub(crate) struct Build {
+    compiler: String,
+    flags: String,
+    sdk: String,
+}
+
+/// Said after a function is marked matched with no compiler on record.
+const NO_BUILD: &str = " No compiler recorded for it: pass compiler (and flags, sdk) so another project can reuse the match.";
+
+impl Build {
+    pub(crate) fn from_args(args: &Value) -> Build {
+        let text = |k: &str| string(args, k).map(|s| s.trim().to_string()).unwrap_or_default();
+        Build {
+            compiler: text("compiler"),
+            flags: text("flags"),
+            sdk: text("sdk"),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.compiler.is_empty() && self.flags.is_empty() && self.sdk.is_empty()
+    }
+
+    /// Sets what was given, over what was there.
+    fn apply(&self, d: &mut Decomp) {
+        for (mine, theirs) in [
+            (&self.compiler, &mut d.compiler),
+            (&self.flags, &mut d.flags),
+            (&self.sdk, &mut d.sdk),
+        ] {
+            if !mine.is_empty() {
+                theirs.clone_from(mine);
+            }
+        }
+    }
+
+    /// Sets what was given where nothing is recorded yet.
+    fn apply_if_missing(&self, d: &mut Decomp) {
+        for (mine, theirs) in [
+            (&self.compiler, &mut d.compiler),
+            (&self.flags, &mut d.flags),
+            (&self.sdk, &mut d.sdk),
+        ] {
+            if theirs.is_empty() {
+                theirs.clone_from(mine);
+            }
+        }
+    }
 }
 
 /// How long a claim holds before others may take the function.
 const CLAIM_TTL: u64 = 3600;
 
 /// The start of the function holding `at`.
-fn function_start(bin: &Binary, at: &str) -> Result<u64, String> {
+pub(crate) fn function_start(bin: &Binary, at: &str) -> Result<u64, String> {
     let address = address_of(bin, at)?;
     bin.symbols()
         .function_containing(address)
@@ -28,7 +81,7 @@ fn function_start(bin: &Binary, at: &str) -> Result<u64, String> {
         .ok_or_else(|| format!("{address:#x} is not inside a known function"))
 }
 
-fn name(bin: &Binary, address: u64) -> String {
+pub(crate) fn name(bin: &Binary, address: u64) -> String {
     bin.symbols()
         .at(address)
         .map_or_else(|| format!("{address:#x}"), |s| s.display_name().into_owned())
@@ -42,6 +95,14 @@ pub(crate) fn state_text(d: &Decomp) -> String {
     }
     if !d.source.is_empty() {
         let _ = write!(out, " in {}", d.source);
+    }
+    if d.state == DecompState::Matched && !d.compiler.is_empty() {
+        let _ = write!(out, ", built with {}", d.compiler);
+        for part in [&d.flags, &d.sdk] {
+            if !part.is_empty() {
+                let _ = write!(out, " {part}");
+            }
+        }
     }
     if d.attempts > 0 {
         let _ = write!(out, ", tried {}×", d.attempts);
@@ -105,7 +166,11 @@ fn claim(o: &mut Open, start: u64, agent: &str) -> String {
 /// (its unit for its source, when it has none), the others keep their best
 /// percent, and a function matched before that no longer is goes back to be
 /// done. Returns the functions newly matched, and those no longer matching.
-pub(crate) fn record_report(o: &mut Open, functions: &[binviz::matching::FunctionProgress]) -> (u32, Vec<u64>) {
+pub(crate) fn record_report(
+    o: &mut Open,
+    functions: &[binviz::matching::FunctionProgress],
+    build: &Build,
+) -> (u32, Vec<u64>) {
     let now = now();
     let mut list: Vec<Annotation> = o.bin.annotations().to_vec();
     let (mut matched, mut lost) = (0, Vec::new());
@@ -136,6 +201,7 @@ pub(crate) fn record_report(o: &mut Open, functions: &[binviz::matching::Functio
             d.state = DecompState::Matched;
             d.by.clear();
             d.percent = Some(100.0);
+            build.apply_if_missing(d);
         } else if d.state == DecompState::Matched {
             lost.push(f.address);
             d.state = DecompState::Todo;
@@ -281,6 +347,7 @@ pub(crate) fn mark(o: &mut Open, args: &Value) -> Result<String, String> {
         .and_then(Value::as_f64)
         .map(|p| p.clamp(0.0, 100.0) as f32);
     let source = string(args, "source").map(|s| s.trim().to_string());
+    let build = Build::from_args(args);
     let agent = string(args, "agent").unwrap_or("agent").to_string();
     let best = |old: Option<f32>| match (old, percent) {
         (Some(a), Some(b)) => Some(a.max(b)),
@@ -319,8 +386,14 @@ pub(crate) fn mark(o: &mut Open, args: &Value) -> Result<String, String> {
     if let Some(source) = source {
         update(o, start, |d| d.source = source);
     }
+    if !build.is_empty() {
+        update(o, start, |d| build.apply(d));
+    }
     let d = o.bin.decomp_at(start).cloned().unwrap_or(d);
     let mut out = format!("{} ({start:#x}): {}{note}.", name(&o.bin, start), state_text(&d));
+    if d.state == DecompState::Matched && d.compiler.is_empty() {
+        out.push_str(NO_BUILD);
+    }
     if d.state.is_done() {
         let ready: Vec<String> = o
             .bin

@@ -54,6 +54,14 @@ COMMANDS:
                                    strings or pointers, arrays, function pointers called through
     classes <file> [filter]        C++ classes from an MSVC binary's RTTI: bases with their
                                    offsets, vtables with their virtual functions
+    store <file> record <src-root> [project]
+                                   Keep the --notes' matched functions, each with its C (read
+                                   from the file its note names, under src-root) and what built
+                                   it, in your store (BINVIZ_STORE, else
+                                   ~/.local/share/binviz/store), for the next project
+    store <file> hits              The unmatched functions the store has a match for: the same
+                                   code as a function matched in another project
+    store <file> <addr|symbol>     One function's matches, with their C
     worklist <file> [n] [k/n]      The unnamed functions to name next: those whose callees
                                    all have names first, then the most called (k/n: one
                                    of n shares, for agents working at once)
@@ -1414,6 +1422,70 @@ fn run(
                 );
             }
             more(f.data_count, f.data.len());
+        }
+        "store" => {
+            let store = binviz::store::Store::open_default().ok_or("no place for the store: set BINVIZ_STORE")?;
+            let sub = arg(2).ok_or("store <file> record <src-root> [project] | hits | <addr|symbol>")?;
+            match sub {
+                "record" => {
+                    let root = arg(3).ok_or("store <file> record <src-root> [project]")?;
+                    let label = std::path::Path::new(&args[1])
+                        .file_name()
+                        .map_or_else(|| "binary".to_string(), |n| n.to_string_lossy().into_owned());
+                    let project = arg(4).map_or(label, str::to_string);
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map_or(0, |d| d.as_secs());
+                    let rec = bin.store_entries(std::path::Path::new(root), &project, now);
+                    for e in &rec.entries {
+                        store.add(e).map_err(|e| format!("{}: {e}", store.dir().display()))?;
+                    }
+                    println!(
+                        "Kept {} matched function(s) of {project} in {}.",
+                        rec.entries.len(),
+                        store.dir().display()
+                    );
+                    for (address, name, why) in &rec.skipped {
+                        println!("  not kept: {name} ({address:#x}): {why}");
+                    }
+                }
+                "hits" => {
+                    let hits = bin.store_hits(&store.index());
+                    println!(
+                        "{} unmatched function(s) have a match in the store at {}:",
+                        hits.len(),
+                        store.dir().display()
+                    );
+                    for h in &hits {
+                        let e = &h.entries[0];
+                        println!(
+                            "  {:#x} {} ({} instructions) = {} in {}, {}",
+                            h.address,
+                            h.name,
+                            h.instructions,
+                            e.name,
+                            e.project,
+                            e.build()
+                        );
+                    }
+                }
+                at => {
+                    let addr = resolve_address(&bin, at)?;
+                    let key = bin.function_key(addr).ok_or_else(|| {
+                        format!(
+                            "not the start of a function of {} instructions or more",
+                            binviz::store::MIN_INSTRUCTIONS
+                        )
+                    })?;
+                    let found = store.find(&key.key);
+                    if found.is_empty() {
+                        println!("nothing in the store matches {addr:#x} (key {})", key.key);
+                    }
+                    for e in &found {
+                        println!("{} in {}, built with {}\n{}\n", e.name, e.project, e.build(), e.c);
+                    }
+                }
+            }
         }
         "signature" => {
             let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;

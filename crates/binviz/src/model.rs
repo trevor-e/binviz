@@ -459,6 +459,16 @@ pub struct Decomp {
     /// The source file its C is in (for library code, the library).
     #[serde(default)]
     pub source: String,
+    /// What built the C that matched: the compiler (`gcc 2.8.1 + maspsx`),
+    /// its flags (`-O2 -G0`) and the SDK release linked (`Psy-Q 4.6`). A match
+    /// only means something for the same build, so these are what let another
+    /// project reuse it. Empty until recorded.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub compiler: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub flags: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub sdk: String,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, serde::Deserialize)]

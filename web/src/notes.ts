@@ -10,6 +10,9 @@ interface StoredDecomp {
   by?: string;
   since?: number;
   source?: string;
+  compiler?: string;
+  flags?: string;
+  sdk?: string;
 }
 
 interface Stored {
@@ -32,6 +35,9 @@ function storeDecomp(d: Decomp): StoredDecomp {
     ...(d.by ? { by: d.by } : {}),
     ...(d.since ? { since: Number(d.since) } : {}),
     ...(d.source ? { source: d.source } : {}),
+    ...(d.compiler ? { compiler: d.compiler } : {}),
+    ...(d.flags ? { flags: d.flags } : {}),
+    ...(d.sdk ? { sdk: d.sdk } : {}),
   };
 }
 
@@ -47,6 +53,9 @@ function readDecomp(v: unknown): Decomp | undefined {
     by: typeof o.by === 'string' ? o.by : '',
     since: typeof o.since === 'number' && Number.isSafeInteger(o.since) && o.since > 0 ? BigInt(o.since) : 0n,
     source: typeof o.source === 'string' ? o.source : '',
+    ...(typeof o.compiler === 'string' && o.compiler ? { compiler: o.compiler } : {}),
+    ...(typeof o.flags === 'string' && o.flags ? { flags: o.flags } : {}),
+    ...(typeof o.sdk === 'string' && o.sdk ? { sdk: o.sdk } : {}),
   };
 }
 

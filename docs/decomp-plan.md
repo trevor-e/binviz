@@ -415,8 +415,78 @@ Tests still to run (none can run without the games and agents; not done):
       the same function on the same asset in the original (under an emulator)
       and in the port. Consider last.
 
+## Sharing across projects, and publishing
+
+Decided 2026-09-29: matching work is reused across the user's own projects
+only (never other people's code), and what is published is a repository
+that holds none of the game. `~/dev/ff9-decomp` (the FF9 repository: notes,
+docs, splat config, `src/`, the toolchain recipe) is the one to grow into
+that repository.
+
+Reuse across projects, cheapest first:
+
+- [x] **Provenance on every match** (compiler, flags, SDK release beside the
+      note's source file: `mark`, `place_report` and `match_project` take them;
+      matched with none says so). Without it a match can't be told to apply to
+      another project's build.
+- [x] **A store of your own matches** (`store.rs`; CLI `store`, MCP
+      `store_record`/`store_lookup`, candidates in `decomp_context`). A function's
+      key hashes its code without where it was linked (data addresses, calls named
+      by their callee's code, branches as offsets); the store keeps that with the
+      function's C and build in `~/.local/share/binviz/store`, outside every project.
+      Exact matches only; a hit is a candidate and `match_function` decides. Known
+      gap: two functions reading different globals share a key.
+- [ ] **Identical functions inside one binary**: 13 groups of identical code among
+      FF9's 1 182 keyed boot-exe functions (and more across overlays, which share
+      library code). The queue should treat a group as one work item and offer a
+      match to all its copies. Not checked whether `next_functions` already does.
+- [ ] **Matched library and middleware code as signatures** for the next game's
+      SDK scan (A1's matcher fed from your own matched objects), for middleware
+      you have no libraries for.
+- [ ] **Near matches** across projects: the similarity index over the store, as
+      `examples_from` does for an opened sibling. After a second project exists.
+- [ ] **A lessons file** the agents read and add to: what fixed which mismatch
+      for a compiler. A markdown file; no code needed.
+
+Publishing (a repository someone else builds with their own disc):
+
+- The repository holds what the user wrote or what carries no game content:
+  matched C, splat config, `symbol_addrs.txt`, notes, build scripts, expected
+  file hashes. It does not hold the disc, its files, the executable's bytes, the
+  assembly of functions not yet matched, Sony's SDK (libraries, headers, compiler)
+  or data tables copied into C.
+- Setup on the user's machine: extract the executable and archive from their disc
+  (`files`/`extract`), run splat on the executable to write the assembly and data
+  of everything not yet matched, take the SDK from their own copy, build, and
+  compare the result's hash with the expected one. A repository 95 % decompiled
+  still builds a whole executable: the last 5 % is generated from their disc.
+- [ ] **Repository scaffold**: `binviz repo` writing the setup script, build
+      files, hash check, `.gitignore` for disc data and a README from a project's
+      map (extends `splat.rs`).
+- [ ] **Pre-publish audit**: scan the repository for runs of bytes or strings that
+      occur in the user's disc image (the search `locate` uses), and for Sony's
+      headers, and list them. A cheap check against committing game data by accident.
+- [ ] **Headers without Sony's**: the C includes libgpu.h and the like; the
+      repository needs headers written from scratch, or a setup step that takes them
+      from the user's SDK.
+- [ ] **Data stays extracted**: keep tables as extracted data referred to by
+      symbol, not pasted into C. A convention to follow while matching.
+- Legal: decompiled source is a derivative of the original code, and publishers
+  have sent takedowns to repositories holding no assets. Get an opinion before
+  going public.
+
 ## Progress log
 
+- 2026-09-29 (sharing): matches keep their build (`compiler`, `flags`, `sdk` on the
+  note; the web UI carries them through), and a store of the user's own matches
+  (`store.rs`) lets a later project start from them: `store_record`, `store_lookup`,
+  candidates in `decomp_context`, CLI `store`. Tested end to end over MCP (a match in
+  x86demo found in its /FIXED link, filtered by compiler) and on FF9's boot executable:
+  1 304 functions keyed in 0.3 s, 1 182 of them long enough to key. A first version
+  masked calls by `T` alone and put 32 groups of "identical" code in the boot exe, most
+  of them wrappers of different functions; naming a call by a hash of its callee's code
+  left 13, the ones checked identical or differing only in which global they read.
+  Open items are in the section above.
 - 2026-09-29 (FF9 disc 1, US v1.1, SLUS-01251): first contact with the real game. Findings:
   the boot executable `SLUS_012.51` is 1.96 MB but only ~350 KB of it is code
   (`0x80010000`–`0x80068000`; the rest is data and zeroed BSS), linked from Psy-Q libraries

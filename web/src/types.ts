@@ -207,6 +207,10 @@ export interface Decomp {
   since: bigint;
   /** The source file its C is in. */
   source: string;
+  /** What built the C that matched: compiler, flags and SDK release. Only carried through, set by agents. */
+  compiler?: string;
+  flags?: string;
+  sdk?: string;
 }
 
 /** A line shown before an instruction: where a piece of the function, a switch's case or a jump table starts. */

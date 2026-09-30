@@ -493,6 +493,9 @@ pub fn definitions() -> Vec<Value> {
                 "paths": { "type": "array", "items": { "type": "string" }, "description": "Object files (.o, .obj), or folders of them." },
                 "limit": { "type": "integer", "description": "Functions not matching yet to list (default 50, max 1000)." },
                 "record": { "type": "boolean", "description": "Record the outcomes in the notes (default false)." },
+                "compiler": { "type": "string", "description": "With record: what built these objects, recorded on the functions newly matched (e.g. \"gcc 2.8.1 + maspsx\")." },
+                "flags": { "type": "string", "description": "With record: the compiler's flags." },
+                "sdk": { "type": "string", "description": "With record: the SDK release linked." },
             }),
             &["paths"],
             false,
@@ -506,6 +509,9 @@ pub fn definitions() -> Vec<Value> {
                 "below": { "type": "number", "description": "List only functions matched below this percent (default 100: the unfinished ones)." },
                 "limit": { "type": "integer", "description": "Functions to list (default 100, max 5000)." },
                 "record": { "type": "boolean", "description": "Record the verdicts in the notes (default true)." },
+                "compiler": { "type": "string", "description": "What built the C that matched, recorded on the functions newly matched: e.g. \"gcc 2.8.1 + maspsx\". Needed to reuse a match in another project." },
+                "flags": { "type": "string", "description": "The compiler's flags, e.g. \"-O2 -G0\"." },
+                "sdk": { "type": "string", "description": "The SDK release linked, e.g. \"Psy-Q 4.6\"." },
             }),
             &["report"],
             false,
@@ -813,6 +819,9 @@ pub fn definitions() -> Vec<Value> {
                 "state": { "type": "string", "enum": ["matched", "nonmatching", "attempted", "in-progress", "skipped", "library", "todo"] },
                 "percent": { "type": "number", "description": "How much of it matched (0-100), as objdiff or your compare says." },
                 "source": { "type": "string", "description": "The source file its C is in." },
+                "compiler": { "type": "string", "description": "What built the C that matched: e.g. \"gcc 2.8.1 + maspsx\". Give it with matched: a match is reusable in another project only for the same build." },
+                "flags": { "type": "string", "description": "The compiler's flags, e.g. \"-O2 -G0\"." },
+                "sdk": { "type": "string", "description": "The SDK release linked, e.g. \"Psy-Q 4.6\"." },
                 "agent": { "type": "string", "description": "Your name, for in-progress (default \"agent\")." },
             }),
             &["at", "state"],
@@ -828,6 +837,32 @@ pub fn definitions() -> Vec<Value> {
                 "done_only": { "type": "boolean", "description": "Only functions already matched or nonmatching." },
             }),
             &["at"],
+            true,
+        ),
+        tool(
+            "store_record",
+            "Keep this project's matches for other projects",
+            "Keeps each matched function's C, with what built it, in a store of your own that outlives the project (BINVIZ_STORE, else ~/.local/share/binviz/store), so a later project containing the same code (the same SDK library or middleware, the same engine routine) starts from a match. Each function is read from the source file its note names, under source_root. A matched function with no compiler recorded is skipped: mark it again with compiler, flags and sdk. Only your own C and hashes are kept, none of the game's bytes.",
+            json!({
+                "source_root": { "type": "string", "description": "The folder the notes' source files are relative to (default: the repository above the notes file's notes/ folder)." },
+                "project": { "type": "string", "description": "This project's name in the store (default: the binary's label)." },
+                "dry_run": { "type": "boolean", "description": "Say what would be kept, and write nothing." },
+                "store": { "type": "string", "description": "The store's folder, if not the default." },
+            }),
+            &[],
+            false,
+        ),
+        tool(
+            "store_lookup",
+            "Functions another project already matched",
+            "Which of this binary's unmatched functions the store holds a match for: the same code as a function matched in another project, whatever address it was linked at and whatever it calls or points to. With at, one function's candidates with their C. A hit is a candidate, not a verdict: compile it here and match_function decides. decomp_context shows a function's candidates too.",
+            json!({
+                "at": address("One function (any address in it); without it, every hit in the binary"),
+                "compiler": { "type": "string", "description": "Only entries whose build contains this text (e.g. \"gcc 2.8\"): a match is for one build." },
+                "limit": { "type": "integer", "description": "Hits to list (default 50, max 1000)." },
+                "store": { "type": "string", "description": "The store's folder, if not the default." },
+            }),
+            &[],
             true,
         ),
     ]
@@ -985,6 +1020,8 @@ impl Server {
                     "next_functions" => crate::queue::next_functions(o, args)?,
                     "mark" => crate::queue::mark(o, args)?,
                     "similar_functions" => crate::queue::similar_functions(o, args)?,
+                    "store_record" => crate::store::record(o, args)?,
+                    "store_lookup" => crate::store::lookup(o, args)?,
                     "worklist" => worklist(o, args)?,
                     "compare_names" => compare_names(o, args)?,
                     "function_info" => function_info(o, args)?,
@@ -1094,6 +1131,7 @@ impl Server {
             .decomp_context_with(start, limit, &siblings)
             .ok_or("not in a function")?;
         out.push_str(&c.describe());
+        out.push_str(&crate::store::context_section(o, c.address));
         Ok(out)
     }
 
@@ -2688,7 +2726,8 @@ fn match_project(o: &mut Open, args: &Value) -> Result<String, String> {
     let limit = int(args, "limit", 50, 1000) as usize;
     let mut out = p.to_text(limit);
     if args.get("record").and_then(Value::as_bool).unwrap_or(false) {
-        let (matched, lost) = crate::queue::record_report(o, &p.progress());
+        let build = crate::queue::Build::from_args(args);
+        let (matched, lost) = crate::queue::record_report(o, &p.progress(), &build);
         let _ = write!(out, "\nRecorded in the notes: {} newly matched", count(matched));
         if !lost.is_empty() {
             let names: Vec<String> = lost
@@ -2739,7 +2778,8 @@ fn place_report(o: &mut Open, args: &Value) -> Result<String, String> {
         let _ = writeln!(out, "\nNot found here: {}", p.unplaced.iter().take(30).cloned().collect::<Vec<_>>().join(", "));
     }
     if args.get("record").and_then(Value::as_bool).unwrap_or(true) {
-        let (matched, lost) = crate::queue::record_report(o, &p.functions);
+        let build = crate::queue::Build::from_args(args);
+        let (matched, lost) = crate::queue::record_report(o, &p.functions, &build);
         let _ = write!(out, "\nRecorded in the notes: {} newly matched", count(matched));
         if !lost.is_empty() {
             let names: Vec<String> = lost

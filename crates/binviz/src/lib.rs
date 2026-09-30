@@ -65,6 +65,7 @@ pub mod similar;
 pub mod size;
 pub mod splat;
 mod stack;
+pub mod store;
 mod strings;
 mod stubs;
 mod switches;

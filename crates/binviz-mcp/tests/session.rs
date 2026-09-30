@@ -948,3 +948,79 @@ fn an_archive_of_overlays_is_searched_for_code() {
     assert!(error && text.contains("past the end"), "{text}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_match_is_kept_for_the_next_project() {
+    // Project one: x86demo with its names; two functions matched, one without a compiler on record.
+    let path = fixture_copy_for("x86demo.exe", "store-a-");
+    let dir = path.parent().unwrap().to_path_buf();
+    let pdb = dir.join("x86demo.pdb");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin/x86demo.pdb"),
+        &pdb,
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.join("src")).unwrap();
+    std::fs::write(
+        dir.join("src/stats.c"),
+        "int clamp_health(int h)\n{\n    if (h > 100) {\n        return 100;\n    }\n    return h;\n}\n",
+    )
+    .unwrap();
+    let store = dir.join("store");
+    let mut s = Session::start();
+    s.ok(
+        "open_binary",
+        json!({ "path": path.to_str().unwrap(), "debug_file": pdb.to_str().unwrap() }),
+    );
+    // No compiler given: the mark says so, and the store won't take it.
+    let bare = s.ok(
+        "mark",
+        json!({ "at": "clamp_health", "state": "matched", "source": "src/stats.c" }),
+    );
+    assert!(bare.contains("No compiler recorded"), "{bare}");
+    let skipped = s.ok(
+        "store_record",
+        json!({ "source_root": dir.to_str().unwrap(), "store": store.to_str().unwrap() }),
+    );
+    assert!(
+        skipped.contains("Kept 0") && skipped.contains("no compiler recorded"),
+        "{skipped}"
+    );
+    // With the build recorded, it is kept, with its C.
+    let done = s.ok(
+        "mark",
+        json!({ "at": "clamp_health", "state": "matched", "source": "src/stats.c",
+                "compiler": "msvc 19.29", "flags": "/O2", "sdk": "none" }),
+    );
+    assert!(
+        done.contains("matched in src/stats.c, built with msvc 19.29 /O2 none") && !done.contains("No compiler"),
+        "{done}"
+    );
+    let kept = s.ok(
+        "store_record",
+        json!({ "source_root": dir.to_str().unwrap(), "store": store.to_str().unwrap(), "project": "demo-one" }),
+    );
+    assert!(kept.contains("Kept 1 matched function of demo-one"), "{kept}");
+
+    // Project two: the same code, another link of it, nothing decompiled yet.
+    let other = fixture_copy_for("x86demo-fixed.exe", "store-b-");
+    let mut t = Session::start();
+    t.ok("open_binary", json!({ "path": other.to_str().unwrap() }));
+    let hits = t.ok("store_lookup", json!({ "store": store.to_str().unwrap() }));
+    assert!(
+        hits.contains("1 of this binary's unmatched functions") && hits.contains("clamp_health in demo-one, msvc 19.29"),
+        "{hits}"
+    );
+    let at = hits.split("(0x").nth(1).and_then(|r| r.split(',').next()).expect("an address");
+    let one = t.ok(
+        "store_lookup",
+        json!({ "at": format!("0x{at}"), "store": store.to_str().unwrap() }),
+    );
+    assert!(one.contains("int clamp_health(int h)") && one.contains("return 100;"), "{one}");
+    // A different build is filtered out.
+    let none = t.ok(
+        "store_lookup",
+        json!({ "store": store.to_str().unwrap(), "compiler": "gcc 2.8" }),
+    );
+    assert!(none.contains("0 of this binary's unmatched functions"), "{none}");
+}

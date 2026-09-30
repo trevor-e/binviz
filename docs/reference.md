@@ -565,6 +565,7 @@ CLI and the MCP server:
 | `signature <file> <fn>` | `function_signature` | What a function's code says about its prototype: `$a0`–`$a3` read before written, stack arguments, whether `$v0` carries a result, frame size, saved registers, calls, GTE/FPU use, and the offsets loaded and stored off each base register (structure layout hints, named after the argument they came from). For x86 and x86-64 too: the stack pointer is followed from the entry through pushes, calls (what each callee pops: `ret N` in its code, the arguments of a Windows import, the stack adding up at the returns for a call through a pointer), merged `add esp, N`, `ebp` frames and `and esp, -N` alignment, so the calling convention (cdecl, stdcall, thiscall, fastcall; Microsoft x64, System V), the arguments read (a `float` or `double` where the code reads one, an argument on the x87 stack as `double st0`), the frame, the saved registers and a result in `eax` or on the FPU stack come out, and every stack slot in `disasm` and `context` is named against the entry frame (`arg2`, `local_10`, `saved esi`) however the pushes before calls move `esp` |
 | — | `next_functions` · `mark` | The work queue (any architecture): what to write C for next, best first, and claiming it so parallel agents don't collide; each outcome recorded in the notes (see below) |
 | — | `similar_functions` | The functions whose instructions are shaped most like a function's, with where each stands: a matched one's C is the worked example |
+| `store <file> record <src-root> [project]` · `store <file> hits` · `store <file> <fn>` | `store_record` · `store_lookup` | A store of your own matches that outlives the project ([below](#matches-kept-across-projects)): `record` keeps each matched function's C and the build that matched it; `hits` lists this binary's unmatched functions that another project already matched; with a function, its candidates with their C. `decomp_context` shows a function's candidates too |
 | `context <file> <fn> [n]` | `decomp_context` | The code with names resolved (switches' cases and pieces marked), the signature, callers and callees with theirs, strings, globals and notes (the first 24 of each list, with how many more), where a callback's address is taken, where decompiling it stands, and the matched functions shaped like it with their source files: one call per function. With `--examples-from <binary>` (MCP: `examples_from`, open binaries' ids), a sibling decompilation's too: another game built with the same compiler, its notes marking what it matched (`<binary>.binviz-notes.json`, or `--examples-notes`), so the first functions here have worked examples (four instructions or more, half alike or more; the same source built for Windows's and System V's x86-64 finds its functions at 87%) |
 | `asm <file> <fn>` · `m2c <file> <fn> [cmd]` | `export_asm` | A MIPS function as GNU assembler source, the way splat writes it: `glabel`, each instruction with its offset, address and word in a comment, branches to `.L` labels, calls by name, `%hi`/`%lo` where one `lui` starts an address on every path to the instruction that finishes it (followed through branches, loops, delay slots and the registers a call changes), `%gp_rel` into the small data, and in `.rodata`, as splat migrates them with the function, the jump tables its `switch`es read (`jtbl_`, what m2c needs to write the `switch`) and the strings it uses (so m2c writes them as literals). Pseudo-instructions with more than one encoding are spelled out (`move` as `addu` or `or`, `li` as `addiu` or `ori`, `div $zero, …`), so an assembler turns it back into the same words. `m2c` runs m2c on it (the command given, `m2c` by default) for a first draft of the C; where m2c can't (a BIOS call through `jr $t2`), its reason follows the source |
 | `match <file> <obj> [name]` | `match_function`, `match_object` | The compiler's object file (MIPS ELF; x86 or x86-64 COFF from MSVC or clang-cl, or ELF) scored against the original: instructions lined up by shape, relocation fields masked, each relocation's symbol checked against where the original points, every difference explained (registers allocated differently, stack frame or slot size, branch length, reordering, a nop missing from a delay slot; for x86, see below: an argument slot is named, so operands swapped read as `arg1` for `arg2`), and for each kind of difference what to try in the C (the rewrites that usually fix it). Functions are found by the object's names as they are, undecorated (`_foo`, `_foo@8`, `@foo@8`) or demangled (`?scaled@Shape@@QBEHH@Z` is `Shape::scaled`), so a PDB's names and the user's notes work |
@@ -586,6 +587,33 @@ CLI and the MCP server:
 Strings in a console's code area (a PlayStation executable's one section, a
 ROM's banks) are found like those in data sections, so the strings a
 function uses show for PlayStation games too.
+
+#### Matches kept across projects
+
+A match only means something for the build that made it, so `mark` (and
+`place_report`, `match_project` with `record`) take `compiler`, `flags` and
+`sdk` and keep them with the function's note (`decomp.compiler`, `flags`,
+`sdk`); marking a function matched with no compiler says so.
+
+`store_record` (CLI `store <file> record`) then keeps each matched function's
+C, read out of the source file its note names, with that build, in a folder of
+your own (`BINVIZ_STORE`, else `~/.local/share/binviz/store`): one JSON file
+per function, holding only what you wrote and hashes, none of the game's
+bytes. A matched function with no compiler on record is not kept.
+
+The next project asks with `store_lookup` (CLI `store <file> hits`), and
+`decomp_context` lists the same for the function it is about. A function's
+key is a hash of what its code does with what depends on where it was
+linked left out: the addresses of data (`lui`/`addiu` pairs, absolute
+addresses), branches (kept as offsets inside the function), and each call,
+which is named by a hash of the callee's own code and not its address. So
+the same SDK routine, middleware or engine function linked into two games at
+two addresses has one key; constants, registers and the shape of the code
+stay in it. Functions of under six instructions are left out. A hit is a
+candidate, not a verdict: it does not say which data the function touches
+(two functions reading different globals look alike), so its C is compiled
+here and `match_function` decides. On FF9's boot executable, 1 304 functions
+are keyed in 0.3 s and 13 groups of identical code turn up inside it.
 
 The notes keep where each function stands: matched (and its source file),
 nonmatching, tried and how close it came, claimed by an agent, set aside, or
@@ -745,6 +773,7 @@ crates/binviz        the library
                      difference explained (MIPS; x86 and x86-64 in x86.rs); objdiff's reports
   src/sigs.rs        library code found by its bytes: signatures from Psy-Q and COFF libraries
   src/similar.rs     functions shaped alike (MinHash of instruction shapes, banded)
+  src/store.rs       the store of matched functions kept across projects: keys, entries, C text
   src/discover/      function recovery from .pdata, .eh_frame, LC_FUNCTION_STARTS,
                      and by following x86 code (x86.rs) for 32-bit PE images and XBEs
   src/strings.rs     strings in data sections

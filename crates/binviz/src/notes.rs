@@ -39,6 +39,9 @@ fn decomp(v: &Value) -> Option<Decomp> {
         by: text("by"),
         since: v.get("since").and_then(Value::as_u64).unwrap_or(0),
         source: text("source"),
+        compiler: text("compiler"),
+        flags: text("flags"),
+        sdk: text("sdk"),
     })
 }
 
@@ -58,6 +61,11 @@ fn decomp_json(d: &Decomp) -> Value {
     }
     if !d.source.is_empty() {
         o["source"] = json!(d.source);
+    }
+    for (key, value) in [("compiler", &d.compiler), ("flags", &d.flags), ("sdk", &d.sdk)] {
+        if !value.is_empty() {
+            o[key] = json!(value);
+        }
     }
     o
 }
@@ -155,6 +163,9 @@ mod tests {
                 by: "agent-1".into(),
                 since: 1_790_000_000,
                 source: "src/entity.c".into(),
+                compiler: "gcc 2.8.1 + maspsx".into(),
+                flags: "-O2 -G0".into(),
+                sdk: "Psy-Q 4.6".into(),
             }),
             ctype: Some("int (Entity *e, int dx)".into()),
             author: "agent".into(),

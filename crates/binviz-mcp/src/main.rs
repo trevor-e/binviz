@@ -17,6 +17,7 @@ mod files;
 mod folders;
 mod notes;
 mod queue;
+mod store;
 mod tools;
 
 use std::io::{BufRead, Write};
