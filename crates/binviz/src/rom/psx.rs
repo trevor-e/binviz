@@ -718,9 +718,9 @@ mod tests {
     }
 
     #[test]
-    fn two_called_pieces_stay_apart_when_one_falls_into_the_other() {
-        // A calls a function that never returns, so its code runs into B's; but B is
-        // called too, so each is an entry point of its own.
+    fn a_piece_falling_into_a_called_function_shares_its_tail() {
+        // A's code runs into B's, and B is called too: GCC's layout for a function
+        // sharing its tail with another, read as one function from A's start.
         let words = [
             0x0C04_0005, // 0x80100000 (A): jal 0x80100014 (B)
             0x0000_0000,
@@ -737,8 +737,9 @@ mod tests {
             0x0000_0000,
         ];
         let bin = overlay_of(&words);
-        assert_eq!(extent(&bin, 0x8010_0010), (0x8010_0000, 20));
-        assert_eq!(extent(&bin, 0x8010_0014), (0x8010_0014, 12));
+        assert_eq!(extent(&bin, 0x8010_0010), (0x8010_0000, 32));
+        assert_eq!(extent(&bin, 0x8010_0014), (0x8010_0000, 32));
+        assert_eq!(extent(&bin, 0x8010_0024), (0x8010_0024, 16));
     }
 
     #[test]

@@ -243,7 +243,9 @@ pub struct MatchResult {
 pub fn difference_weight(kind: &str) -> u32 {
     let k = kind.trim_start();
     let starts = |prefixes: &[&str]| prefixes.iter().any(|p| k.starts_with(p));
-    if starts(&["registers differ"]) {
+    if starts(&["extent differs"]) {
+        0
+    } else if starts(&["registers differ"]) {
         1
     } else if starts(&[
         "reordered",
@@ -755,7 +757,56 @@ impl Binary {
 
     fn match_mips(&self, address: u64, func: &Words) -> Option<MatchResult> {
         let (name, start, orig, big) = self.function_words(address)?;
-        Some(self.match_mips_words(name, start, &orig, big, func))
+        let mut m = self.match_mips_words(name, start, &orig, big, func);
+        self.note_extent(&mut m, start, &orig, &func.words, big);
+        Some(m)
+    }
+
+    /// When the rebuild is longer than the original's function and its extra
+    /// instructions are the code that follows the function, the difference is
+    /// the extent the analysis gave the function, not the C: say so, and which
+    /// function the rebuild runs on into. (`extra in the rebuild` stays
+    /// counted; this names the cause.)
+    fn note_extent(&self, m: &mut MatchResult, start: u64, orig: &[u32], cand: &[u32], big: bool) {
+        if cand.len() <= orig.len() {
+            return;
+        }
+        let extra = cand.len() - orig.len();
+        let end = start + 4 * orig.len() as u64;
+        let Some(bytes) = self.code_bytes(end) else { return };
+        let beyond: Vec<u32> = bytes
+            .chunks_exact(4)
+            .take(extra)
+            .map(|c| {
+                let b = [c[0], c[1], c[2], c[3]];
+                if big { u32::from_be_bytes(b) } else { u32::from_le_bytes(b) }
+            })
+            .collect();
+        if beyond.len() < extra.min(2) {
+            return;
+        }
+        let shape = |w: u32| w & !layout_mask(MipsWord(w));
+        let same = cand[orig.len()..].iter().zip(&beyond).filter(|(a, b)| shape(**a) == shape(**b)).count();
+        if same * 5 < beyond.len() * 4 {
+            return;
+        }
+        // The function the rebuild runs on into: the next one starting in the extra
+        // instructions (past any padding), else whatever holds the first of them.
+        let reach = end + 4 * extra as u64;
+        let next = self
+            .symbols()
+            .functions()
+            .find(|f| f.address >= end && f.address < reach)
+            .or_else(|| self.symbols().function_containing(end))
+            .map_or_else(|| format!("{end:#x}"), |f| f.display_name().into_owned());
+        m.differences.push((
+            format!(
+                "extent differs: the rebuild goes on {extra} instructions into {next}; the original's function is {} bytes as the analysis cut it, so a note sizing it to {:#x} bytes (or match --range) compares the whole",
+                4 * orig.len(),
+                4 * cand.len()
+            ),
+            1,
+        ));
     }
 
     /// The rebuilt `func` against the original's code in `start..end`,
@@ -1715,7 +1766,9 @@ fn explain(a: u32, b: u32, otherwise: &str) -> String {
 /// decompilers apply them by hand, and as rule-based rewriting does before
 /// asking a model.
 pub fn rewrite_hint(kind: &str) -> Option<&'static str> {
+    let kind = kind.split([':', ';']).next().unwrap_or(kind).trim();
     let hints: &[(&str, &str)] = &[
+        ("extent differs", "not the C: the original's function was cut short by the analysis (a function sharing its tail with the next, a call target inside it). Give the function its full size with a note (annotate with size), or score it with match --range"),
         ("registers differ", "reorder the declarations or the statements computing them, reuse a temporary where the original does (or split one), inline or pull out a subexpression, or give a variable another type (a pointer, a char, an unsigned): register allocation follows the code's shape, and decomp-permuter searches these"),
         ("stack slot offset differs", "arguments read in another order are operands swapped (a - b for b - a, the parameters' order); locals in another order or size: reorder their declarations, merge two into one or split one, or give one another type or array size"),
         ("stack frame size differs", "the frame holds other locals: remove or add a temporary, size an array as the original does, or keep a value from living across a call"),
@@ -1754,10 +1807,16 @@ pub fn rewrite_hint(kind: &str) -> Option<&'static str> {
 impl MatchResult {
     /// For each kind of difference found, what to try in the C.
     pub fn hints(&self) -> Vec<(String, &'static str)> {
-        self.differences
-            .iter()
-            .filter_map(|(k, _)| Some((k.clone(), rewrite_hint(k)?)))
-            .collect()
+        let mut out: Vec<(String, &'static str)> = Vec::new();
+        for (k, _) in &self.differences {
+            let kind = category(k);
+            if let Some(h) = rewrite_hint(&kind)
+                && !out.iter().any(|(seen, _)| *seen == kind)
+            {
+                out.push((kind, h));
+            }
+        }
+        out
     }
 
     /// The result as text: the score, the kinds of difference and what to
@@ -2551,6 +2610,34 @@ mod tests {
         assert_eq!(scores_from_json(&json).unwrap().len(), 4);
         assert_eq!(scores_from_json(&serde_json::to_string(&after).unwrap()).unwrap().len(), 4);
         assert!(scores_from_json("{}").is_err());
+    }
+
+    #[test]
+    fn a_rebuild_running_into_the_next_function_is_told_from_bad_c() {
+        // The original's function is cut at 0x80010030 (the leaf there is called), but
+        // the C written for it covers the leaf too: the rebuild is 2 instructions longer,
+        // and those 2 are the leaf's.
+        let mut words = ORIGINAL.to_vec();
+        words.extend([0x03E0_0008, 0x2402_0001]);
+        let bin = exe(&words);
+        let mut rebuilt = vec![
+            0x27BD_FFE8, 0xAFBF_0014, 0x0C00_0000, 0x0000_0000, 0x3C02_0000, 0x8C42_0010, 0x8FBF_0014, 0x0000_0000,
+            0x03E0_0008, 0x27BD_0018, 0x0000_0000, 0x0000_0000,
+        ];
+        rebuilt.extend([0x03E0_0008, 0x2402_0001]);
+        let relocs = [(2, r::MIPS_26, "sub_80010030"), (4, r::MIPS_HI16, "gState"), (5, r::MIPS_LO16, "gState")];
+        let obj = object(&rebuilt, &relocs);
+        let m = bin.match_function(0x8001_0000, &object_functions(&obj).unwrap()[0]).unwrap();
+        let extent = m.differences.iter().find(|(k, _)| k.starts_with("extent differs")).expect("the extent is named");
+        assert!(extent.0.contains("4 instructions into sub_80010030") && extent.0.contains("0x38 bytes"), "{}", extent.0);
+        assert!(m.to_text().contains("extent differs: not the C"), "{}", m.to_text());
+        assert_eq!(difference_weight(&extent.0), 0);
+        // A rebuild longer by code that isn't what follows: no such note.
+        let mut other = rebuilt.clone();
+        other[12] = 0x2402_0005;
+        other[13] = 0x2402_0006;
+        let m = bin.match_function(0x8001_0000, &object_functions(&object(&other, &relocs)).unwrap()[0]).unwrap();
+        assert!(!m.differences.iter().any(|(k, _)| k.starts_with("extent differs")), "{:?}", m.differences);
     }
 
     #[test]

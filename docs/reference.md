@@ -613,8 +613,12 @@ wrong bytes. Pin the extent by hand: a note with the size and no name
 "size": "0x1a0" }`) sizes the function at that address under the name it has,
 covering whatever pieces the analysis made of it and cutting anything it
 joined on; `match --range start end` (MCP `range`) scores one rebuild
-against any stretch without a note. A piece something calls is never joined
-to another called piece, so a called routine keeps its own entry.
+against any stretch without a note. A piece that falls through into a called
+function is joined to it (GCC lays a function that shares its tail with
+another out that way, and a decompilation writes the two as one), and when a
+rebuild is longer than the original's function by exactly the code that
+follows it, `match` says `extent differs` and names the function it runs on
+into, rather than counting the C wrong.
 
 Names given to an address inside a function that was later joined (the
 prologue where a split function used to start, say) stay as labels there:

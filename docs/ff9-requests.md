@@ -92,3 +92,39 @@ d=44, sub_80051f54: d=2032); `progress` and the cache run. One regression agains
   with a short prologue is how GCC lays out functions that share a tail. A note's `size` fixes it per function, but nothing
   says which ones need it; `match` could report "extent differs from the object's: the object is longer than the function
   and covers its neighbour" instead of "extra in the rebuild".
+
+### Response (2026-10-01)
+
+Reverted: a piece falling through into a called function joins it again, as before c8fa8b4 (the "never absorb a
+called piece" precaution cut the twelve shared-tail functions). And `match` now says it when the difference is the
+extent: a rebuild longer than the original's function by the code that follows it gets `extent differs: the rebuild
+goes on N instructions into <next>; … a note sizing it to 0x… bytes (or match --range) compares the whole`, weighted 0
+in the distance, with the hint that it is not the C.
+
+## Status (2026-10-01)
+
+Landed in binviz, against the asks above:
+
+1. `match <exe> <folder> --json` and MCP `match_project` `format: "json"`: one entry per function with `unit`, `name`,
+   `address`, `percent`, `exact`, `distance`, `clusters`, the instruction counts, `differences` (kind → count) and the
+   compilers the epilogues imply. `match <exe> <object> --json` does the same for one object.
+2. `distance` on every score, weighted by kind (registers 1; reordered, immediate, offset, shift 2; another instruction,
+   signedness, condition, operand size 3; missing, extra, branch and call targets 4; frame size, stack slot, arguments
+   popped, alignment 6; else 3); `clusters` counts runs of differing instructions.
+3. `rank <exe> <objects|folders>… [--function f] [--top N] [--json]` (MCP `rank_builds` with `function`/`by`, `top`,
+   `format`) ranks variants closest first by distance in one process. `flags` gained `--jobs N`, variants as files (a
+   folder of sources), a batch command (`{srcdir}`/`{outdir}`, run once for the folder) and `--record --meta`.
+4. A content-hash score cache (`$BINVIZ_CACHE`, else `~/.cache/binviz/scores`), keyed on the original's fingerprint, the
+   function's extent, the notes' names, and the object function's code and relocations; `--no-cache` / `cache: false`.
+5. `match <exe> <folder> --record [--meta compiler=…,flags=…,sdk=…]` writes the outcomes into `--notes` (else
+   `<exe>.binviz-notes.json`) through the journal, as MCP `record` does.
+6. The compiler tell is in the JSON; `resolve <name|address>` (MCP `resolve`) says which function holds a name now;
+   `progress` counts merged ranges once and prints totals per area of the image.
+
+From the workers' shell history, later: `scores <before.json> <after.json>` sets two runs against each other (what
+`cmp.py` did); `asm` takes many functions, a list file or `--all`, writes one `.s` each with `--out`, and `--bare`
+drops the comments (the per-function `asm | sed` loop); a wave of new functions is one `flags` call on a folder of
+sources with `--record` (the per-function `try.sh` loop). `docs/agent-playbook.md` says which command to reach for
+instead of a script, for the FF9 repository's CLAUDE.md.
+
+Not done: the per-process startup (~70 ms) is unchanged; a batch is the way around it.
