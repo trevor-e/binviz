@@ -507,6 +507,14 @@ Publishing (a repository someone else builds with their own disc):
 
 ## Progress log
 
+- 2026-10-01 (from `docs/ff9-requests.md`): the N+1 patterns around scoring. `match <exe> <folder>
+  --json` gives every function's score with a weighted `distance` and `clusters` (what a search
+  over C rewrites climbs where the percent stays flat); `rank` scores hundreds of variants in one
+  process, closest first; `flags` compiles variants in parallel (`--jobs`), takes a folder of
+  sources, and runs a batch command once for all of them; scores are cached on disk by content
+  hash; `match --record --meta` writes outcomes into the notes from the CLI; `resolve` says which
+  function holds an old name; `progress` has totals per area. Status in `docs/ff9-requests.md`.
+
 - 2026-09-30 (from the FF9 workers' list): what cost the agents the most time on the real game,
   moved into binviz. Function boundaries (`rom/analysis.rs`): prologues are followed after the
   calls, so a `jal` to a function's true start wins over the prologue found where GCC's

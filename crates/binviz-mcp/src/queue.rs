@@ -171,53 +171,15 @@ pub(crate) fn record_report(
     functions: &[binviz::matching::FunctionProgress],
     build: &Build,
 ) -> (u32, Vec<u64>) {
-    let now = now();
     let mut list: Vec<Annotation> = o.bin.annotations().to_vec();
-    let (mut matched, mut lost) = (0, Vec::new());
-    for f in functions {
-        let i = list
-            .iter()
-            .position(|a| a.address == f.address && a.decomp.is_some())
-            .or_else(|| list.iter().position(|a| a.address == f.address && a.size == 0))
-            .unwrap_or_else(|| {
-                list.push(Annotation {
-                    address: f.address,
-                    size: 0,
-                    name: String::new(),
-                    comment: String::new(),
-                    reviewed: false,
-                    kind: None,
-                    decomp: None,
-                    ctype: None, author: String::new(),
-                });
-                list.len() - 1
-            });
-        let d = list[i].decomp.get_or_insert_with(Decomp::default);
-        let before = d.clone();
-        if f.percent >= 100.0 {
-            if d.state != DecompState::Matched {
-                matched += 1;
-            }
-            d.state = DecompState::Matched;
-            d.by.clear();
-            d.percent = Some(100.0);
-            build.apply_if_missing(d);
-        } else if d.state == DecompState::Matched {
-            lost.push(f.address);
-            d.state = DecompState::Todo;
-            d.percent = Some(f.percent);
-        } else {
-            d.percent = Some(d.percent.map_or(f.percent, |p| p.max(f.percent)));
-        }
-        if d.source.is_empty() {
-            d.source = f.unit.clone();
-        }
-        if *d != before {
-            d.since = now;
-        }
-    }
+    let info = binviz::queue::BuildInfo {
+        compiler: build.compiler.clone(),
+        flags: build.flags.clone(),
+        sdk: build.sdk.clone(),
+    };
+    let r = binviz::queue::record_scores(&mut list, functions, &info, now());
     o.bin.set_annotations(list);
-    (matched, lost)
+    r
 }
 
 pub(crate) fn next_functions(o: &mut Open, args: &Value) -> Result<String, String> {

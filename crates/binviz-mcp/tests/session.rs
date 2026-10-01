@@ -528,6 +528,38 @@ fn x86_objects_are_matched_project_by_project() {
     );
     let info = s.ok("function_info", json!({ "at": "_lib_checksum" }));
     assert!(info.contains("Decompilation: matched in lib/x86lib-a.obj"), "{info}");
+    // Every function's score as JSON, with its distance; the cache gives it straight back.
+    let scored = s.ok(
+        "match_project",
+        json!({ "paths": [build.to_str().unwrap()], "format": "json", "cache": false }),
+    );
+    let v: serde_json::Value = serde_json::from_str(&scored).unwrap();
+    let scores = v["scores"].as_array().unwrap();
+    assert_eq!(scores.len(), 20, "{scored}");
+    let diff_score = scores.iter().find(|f| f["name"] == "diff").unwrap();
+    assert!(
+        diff_score["distance"].as_u64().unwrap() > 0 && diff_score["exact"] == false,
+        "{diff_score}"
+    );
+    assert!(
+        diff_score["differences"]["stack slot offset differs"]
+            .as_u64()
+            .is_some(),
+        "{diff_score}"
+    );
+    // Variants of one function ranked closest first: the untouched object wins.
+    let ranked = s.ok(
+        "rank_builds",
+        json!({ "objects": [edited.to_str().unwrap(), bin.join("x86match.obj").to_str().unwrap()], "labels": ["edited", "clean"], "function": "diff" }),
+    );
+    let lines: Vec<&str> = ranked.lines().filter(|l| l.starts_with("d=")).collect();
+    assert!(
+        lines.len() == 2 && lines[0].starts_with("d=0 ") && lines[0].ends_with("clean") && lines[1].ends_with("edited"),
+        "{ranked}"
+    );
+    // Where a name is now.
+    let at = s.ok("resolve", json!({ "at": "diff" }));
+    assert!(at.contains("the start of diff"), "{at}");
     let info = s.ok("function_info", json!({ "at": "diff" }));
     assert!(
         info.contains("Decompilation: todo in src/game.obj, best 33.3%"),

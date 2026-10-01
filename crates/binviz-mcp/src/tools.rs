@@ -509,6 +509,8 @@ pub fn definitions() -> Vec<Value> {
             json!({
                 "paths": { "type": "array", "items": { "type": "string" }, "description": "Object files (.o, .obj), or folders of them." },
                 "limit": { "type": "integer", "description": "Functions not matching yet to list (default 50, max 1000)." },
+                "format": { "type": "string", "enum": ["text", "json"], "description": "json: the totals and one entry per function (unit, name, address, percent, exact, distance, clusters, instruction counts, the kinds of difference counted, the compilers the epilogues imply), the unplaced and the failed." },
+                "cache": { "type": "boolean", "description": "Use the score cache (default true): an object scored before from the same bytes is read back, not rescored." },
                 "record": { "type": "boolean", "description": "Record the outcomes in the notes (default false)." },
                 "compiler": { "type": "string", "description": "With record: what built these objects, recorded on the functions newly matched (e.g. \"gcc 2.8.1 + maspsx\")." },
                 "flags": { "type": "string", "description": "With record: the compiler's flags." },
@@ -591,12 +593,27 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "rank_builds",
             "Rank builds of a unit",
-            "Several builds of one unit — its source compiled with different flags (-O1, -O2, -fno-inline…) or by different compilers, each an object file — matched against the original and ranked, best first: the flags the unit was built with are the first's. Compile them yourself, then pass the objects; label each with its flags.",
+            "Several builds of one unit — its source compiled with different flags (-O1, -O2, -fno-inline…) or by different compilers, each an object file — matched against the original and ranked, best first: the flags the unit was built with are the first's. Compile them yourself, then pass the objects (or folders of them); label each with its flags. With function, hundreds of variants of one function (rewrites of its C, each compiled) are scored in one call and ranked by distance, the weighted count of differing instructions (registers 1, reordering and constants 2, another instruction 3, missing or extra 4, frame and slots 6), which a search can climb where the percent stays flat; clusters counts the runs of differences.",
             json!({
-                "objects": { "type": "array", "items": { "type": "string" }, "description": "The object files, one per build." },
+                "objects": { "type": "array", "items": { "type": "string" }, "description": "The object files, one per build, or folders of them (each object labelled by its file name)." },
                 "labels": { "type": "array", "items": { "type": "string" }, "description": "What tells each build apart (its flags), in the same order; the file names otherwise." },
+                "function": { "type": "string", "description": "Rank variants of this one function (its name in the objects) by distance, closest first, instead of whole units by percent: for a search over many rewrites of one function." },
+                "by": { "type": "string", "enum": ["unit", "function"], "description": "\"function\": rank every function of every object by distance (default: whole units by percent)." },
+                "top": { "type": "integer", "description": "With function or by: how many to list (default 20)." },
+                "format": { "type": "string", "enum": ["text", "json"], "description": "With function or by: json gives each score with its distance, clusters and kinds of difference." },
+                "cache": { "type": "boolean", "description": "Use the score cache (default true): an object scored before from the same bytes is read back, not rescored." },
             }),
             &["objects"],
+            true,
+        ),
+        tool(
+            "resolve",
+            "Where a name or address is now",
+            "The function that holds a name or address: its start, or the function it is inside and at what offset. For a name given to a fragment that is now inside a joined function, says which function holds it.",
+            json!({
+                "at": address("A name or an address"),
+            }),
+            &["at"],
             true,
         ),
         tool(
@@ -1084,6 +1101,7 @@ impl Server {
                     "library_sources" => binviz::rcs::sources_text(&o.bin.library_sources()),
                     "locate" => locate(o, args)?,
                     "rank_builds" => rank_builds(o, args)?,
+                    "resolve" => resolve_where(o, args)?,
                     "export_asm" => export_asm(o, args)?,
                     _ => return Err(format!("unknown tool {name}")),
                 };
@@ -2819,9 +2837,15 @@ fn match_project(o: &mut Open, args: &Value) -> Result<String, String> {
     if objects.is_empty() {
         return Err("no object files (.o, .obj) found".into());
     }
-    let p = o.bin.match_project(&objects);
+    let cache = score_cache(args);
+    let p = o.bin.match_project_cached(&objects, cache.as_ref());
     let limit = int(args, "limit", 50, 1000) as usize;
-    let mut out = p.to_text(limit);
+    let json = string(args, "format") == Some("json");
+    let mut out = if json {
+        serde_json::to_string(&p.to_json()).map_err(|e| e.to_string())?
+    } else {
+        p.to_text(limit)
+    };
     if args.get("record").and_then(Value::as_bool).unwrap_or(false) {
         let build = crate::queue::Build::from_args(args);
         let (matched, lost) = crate::queue::record_report(o, &p.progress(), &build);
@@ -2840,10 +2864,18 @@ fn match_project(o: &mut Open, args: &Value) -> Result<String, String> {
             let _ = write!(out, "; {} no longer match: {}", lost.len(), names.join(", "));
         }
         let _ = writeln!(out, ". {}.", save_notes(o));
-    } else {
-        out.push_str("\nrecord: true records these outcomes in the notes; match_function shows one function lined up.");
+    } else if !json {
+        out.push_str("\nrecord: true records these outcomes in the notes; match_function shows one function lined up; format: \"json\" gives every function's score with its distance.");
     }
     Ok(out)
+}
+
+/// The score cache, unless the call says `cache: false`.
+fn score_cache(args: &Value) -> Option<binviz::matching::cache::ScoreCache> {
+    if args.get("cache").and_then(Value::as_bool) == Some(false) {
+        return None;
+    }
+    binviz::matching::cache::ScoreCache::open(None)
 }
 
 fn place_report(o: &mut Open, args: &Value) -> Result<String, String> {
@@ -3101,24 +3133,100 @@ fn rank_builds(o: &Open, args: &Value) -> Result<String, String> {
         .map(|a| a.iter().filter_map(Value::as_str).collect())
         .unwrap_or_default();
     if objects.is_empty() {
-        return Err("objects is required: the builds' object files".into());
+        return Err("objects is required: the builds' object files, or folders of them".into());
     }
     let labels: Vec<&str> = args
         .get("labels")
         .and_then(Value::as_array)
         .map(|a| a.iter().filter_map(Value::as_str).collect())
         .unwrap_or_default();
-    let builds: Vec<(String, binviz::Result<Vec<u8>>)> = objects
-        .iter()
-        .enumerate()
-        .map(|(i, path)| {
+    // Each object (a folder's, by file name), labelled.
+    let mut builds: Vec<(String, binviz::Result<Vec<u8>>)> = Vec::new();
+    for (i, path) in objects.iter().enumerate() {
+        let p = Path::new(path);
+        if p.is_dir() {
+            for f in binviz::matching::object_files(p).map_err(|e| format!("{path}: {e}"))? {
+                let label = f.strip_prefix(p).unwrap_or(&f).to_string_lossy().replace('\\', "/");
+                builds.push((
+                    label,
+                    std::fs::read(&f).map_err(|e| binviz::Error::new(format!("{}: {e}", f.display()))),
+                ));
+            }
+        } else {
             let label = labels.get(i).map_or_else(|| path.to_string(), |l| l.to_string());
-            (label, std::fs::read(path).map_err(|e| binviz::Error::new(format!("{path}: {e}"))))
-        })
-        .collect();
+            builds.push((
+                label,
+                std::fs::read(path).map_err(|e| binviz::Error::new(format!("{path}: {e}"))),
+            ));
+        }
+    }
     let mut out = ensure_xrefs(o)?;
-    out.push_str(&binviz::matching::builds_text(&o.bin.rank_builds(&builds)));
+    let by_function = string(args, "function").is_some() || string(args, "by") == Some("function");
+    if !by_function {
+        out.push_str(&binviz::matching::builds_text(&o.bin.rank_builds(&builds)));
+        return Ok(out);
+    }
+    // Variants of one function, closest first by distance.
+    let mut variants = Vec::new();
+    let mut failed = Vec::new();
+    for (label, bytes) in builds {
+        match bytes {
+            Ok(b) => variants.push((label, b)),
+            Err(e) => failed.push((label, e.to_string())),
+        }
+    }
+    let cache = score_cache(args);
+    let mut ranking = o.bin.rank_variants(&variants, string(args, "function"), cache.as_ref());
+    ranking.failed.extend(failed);
+    let top = int(args, "top", 20, 5000) as usize;
+    if string(args, "format") == Some("json") {
+        ranking.scores.truncate(top);
+        return serde_json::to_string(&ranking).map_err(|e| e.to_string());
+    }
+    out.push_str(&ranking.to_text(top));
     Ok(out)
+}
+
+fn resolve_where(o: &Open, args: &Value) -> Result<String, String> {
+    let what = string(args, "at").ok_or("at is required: a name or an address")?;
+    let address = address_of(&o.bin, what)?;
+    Ok(resolve_text(&o.bin, what, address))
+}
+
+/// Where a name or address is now: the function holding it (a fragment a
+/// split function used to start at is a label inside one since the join).
+pub(crate) fn resolve_text(bin: &Binary, what: &str, address: u64) -> String {
+    let mut out = format!("{what} is {address:#x}");
+    match bin.symbols().function_containing(address) {
+        Some(f) if f.address == address => {
+            let _ = write!(out, ": the start of {} ({} bytes)", f.display_name(), f.size);
+        }
+        Some(f) => {
+            let _ = write!(
+                out,
+                ": inside {} ({:#x}, {} bytes), at offset {:#x}",
+                f.display_name(),
+                f.address,
+                f.size,
+                address - f.address
+            );
+        }
+        None => out.push_str(": in no known function"),
+    }
+    if let Some(s) = bin.symbols().at(address).filter(|s| s.address == address) {
+        let _ = write!(out, "; named {}", s.display_name());
+    }
+    let noted: Vec<String> = bin
+        .annotations()
+        .iter()
+        .filter(|a| a.address == address && !a.name.is_empty())
+        .map(|a| a.name.clone())
+        .collect();
+    if !noted.is_empty() {
+        let _ = write!(out, "; notes there: {}", noted.join(", "));
+    }
+    out.push('\n');
+    out
 }
 
 fn locate(o: &Open, args: &Value) -> Result<String, String> {

@@ -14,6 +14,7 @@
 //! MIPS (PlayStation, Nintendo 64) objects in ELF; x86 and x86-64 ones in
 //! COFF (MSVC, clang-cl) or ELF, lined up and explained by `x86.rs`.
 
+pub mod cache;
 mod x86;
 
 pub(crate) use x86::padding_only;
@@ -224,7 +225,173 @@ pub struct MatchResult {
     pub original_compiler: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rebuilt_compiler: Option<&'static str>,
+    /// How far from a match, as a search sees it: each difference weighted by
+    /// its kind (see [`difference_weight`]), so a register allocated
+    /// otherwise costs less than an instruction missing, and two near-misses
+    /// at the same percent still compare.
+    pub distance: u32,
+    /// Runs of differing instructions: one swapped register pair in forty
+    /// places is forty clusters, forty differences in a row one.
+    pub clusters: u32,
 }
+
+/// What a kind of difference (a name in [`MatchResult::differences`]) costs
+/// in [`MatchResult::distance`]: registers 1; reordering, constants, offsets
+/// and shifts 2; another instruction, signedness, a condition, an operand
+/// size 3; instructions missing or extra, branch and call targets 4; the
+/// frame's size, a stack slot, arguments popped, alignment 6; anything else 3.
+pub fn difference_weight(kind: &str) -> u32 {
+    let k = kind.trim_start();
+    let starts = |prefixes: &[&str]| prefixes.iter().any(|p| k.starts_with(p));
+    if starts(&["registers differ"]) {
+        1
+    } else if starts(&[
+        "reordered",
+        "immediate differs",
+        "offset differs",
+        "shift amount differs",
+    ]) {
+        2
+    } else if starts(&[
+        "stack frame size",
+        "stack slot offset",
+        "stack alignment",
+        "arguments popped",
+    ]) {
+        6
+    } else if starts(&[
+        "extra",
+        "missing",
+        "nop ",
+        "an instruction in the original, nop",
+        "branch offset",
+        "branch target",
+        "jump target",
+        "short vs near",
+        "call target",
+        "calls ",
+        "global differs",
+        "jump table",
+        "%hi(",
+        "%lo(",
+        "alignment padding",
+    ]) {
+        4
+    } else {
+        3
+    }
+}
+
+impl MatchResult {
+    /// Sets the distance and the clusters from the lines and the counts.
+    fn finish(mut self) -> MatchResult {
+        self.distance = self.differences.iter().map(|(k, n)| difference_weight(k) * n).sum();
+        let mut clusters = 0;
+        let mut in_one = false;
+        for l in &self.lines {
+            let differs = l.kind != LineKind::Same;
+            if differs && !in_one {
+                clusters += 1;
+            }
+            in_one = differs;
+        }
+        self.clusters = clusters;
+        self
+    }
+
+    /// Whether every instruction matches (relocations aside).
+    pub fn exact(&self) -> bool {
+        self.percent >= 100.0
+    }
+
+    /// The result without its lines: what a batch of scores keeps per function.
+    pub fn score(&self, unit: &str) -> FunctionScore {
+        FunctionScore {
+            unit: unit.to_string(),
+            name: self.name.clone(),
+            address: self.address,
+            percent: self.percent,
+            exact: self.exact(),
+            distance: self.distance,
+            clusters: self.clusters,
+            matched_instructions: self.matched_instructions,
+            original_instructions: self.original_instructions,
+            rebuilt_instructions: self.rebuilt_instructions,
+            original_bytes: self.original_bytes,
+            rebuilt_bytes: self.rebuilt_bytes,
+            differences: self.differences.iter().cloned().collect(),
+            original_compiler: self.original_compiler.map(str::to_string),
+            rebuilt_compiler: self.rebuilt_compiler.map(str::to_string),
+        }
+    }
+}
+
+/// One function's score in a batch (an object of a project, a variant of
+/// one function): everything of a [`MatchResult`] but the lines.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FunctionScore {
+    /// The object (its path in the build folder), or the variant's label.
+    pub unit: String,
+    pub name: String,
+    pub address: u64,
+    pub percent: f32,
+    pub exact: bool,
+    pub distance: u32,
+    pub clusters: u32,
+    pub matched_instructions: u32,
+    pub original_instructions: u32,
+    pub rebuilt_instructions: u32,
+    pub original_bytes: u64,
+    pub rebuilt_bytes: u64,
+    /// Kinds of difference, with how many of each.
+    pub differences: BTreeMap<String, u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_compiler: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rebuilt_compiler: Option<String>,
+}
+
+impl FunctionScore {
+    /// The score as a result with no lines (what a cache gives back).
+    pub fn into_result(self) -> MatchResult {
+        let tell = |t: Option<String>| t.and_then(|t| COMPILER_TELLS.iter().copied().find(|k| *k == t));
+        MatchResult {
+            name: self.name,
+            address: self.address,
+            original_instructions: self.original_instructions,
+            rebuilt_instructions: self.rebuilt_instructions,
+            matched_instructions: self.matched_instructions,
+            original_bytes: self.original_bytes,
+            rebuilt_bytes: self.rebuilt_bytes,
+            percent: self.percent,
+            lines: Vec::new(),
+            differences: self.differences.into_iter().collect(),
+            original_compiler: tell(self.original_compiler),
+            rebuilt_compiler: tell(self.rebuilt_compiler),
+            distance: self.distance,
+            clusters: self.clusters,
+        }
+    }
+
+    /// One line: distance, percent, instructions, the function and its unit.
+    pub fn line(&self) -> String {
+        format!(
+            "d={:<5} {:>5.1}%  {:>5} of {:<5} {:<32} {}",
+            self.distance,
+            self.percent,
+            self.matched_instructions,
+            self.original_instructions.max(self.rebuilt_instructions),
+            self.name,
+            self.unit
+        )
+    }
+}
+
+const COMPILER_TELLS: [&str; 2] = [
+    "GCC 2.8 or later (the frame is popped in the return's delay slot)",
+    "GCC 2.7.2 (the frame is popped before the return, a nop in its delay slot)",
+];
 
 /// What a MIPS function's epilogue says about the compiler that built it.
 /// GCC 2.7.2 (the PlayStation's, `lw $ra; addiu $sp; jr $ra; nop`) pops the
@@ -240,9 +407,9 @@ pub fn compiler_tell(words: &[u32]) -> Option<&'static str> {
         }
         let slot = words.get(i + 1).copied().unwrap_or(0);
         if pops_sp(slot) {
-            tell = Some("GCC 2.8 or later (the frame is popped in the return's delay slot)");
+            tell = Some(COMPILER_TELLS[0]);
         } else if slot == 0 && words[i.saturating_sub(3)..i].iter().any(|&w| pops_sp(w)) {
-            return Some("GCC 2.7.2 (the frame is popped before the return, a nop in its delay slot)");
+            return Some(COMPILER_TELLS[1]);
         }
     }
     tell
@@ -725,7 +892,10 @@ impl Binary {
             differences: counts.into_iter().collect(),
             original_compiler: compiler_tell(orig),
             rebuilt_compiler: compiler_tell(cand),
+            distance: 0,
+            clusters: 0,
         }
+        .finish()
     }
 
     /// Why the original's word `a` and the rebuild's `b`, lined up, differ (None: they match).
@@ -785,6 +955,20 @@ impl Binary {
     }
 
     fn match_unit_with(&self, unit: &str, bytes: &[u8], lookups: &Lookups) -> Result<UnitMatch> {
+        self.match_unit_cached(unit, bytes, lookups, None, None)
+    }
+
+    /// [`Binary::match_unit`] through a score `cache` (a function scored
+    /// before from the same bytes gives its score back without its lines),
+    /// for `only` that function of the object when given.
+    fn match_unit_cached(
+        &self,
+        unit: &str,
+        bytes: &[u8],
+        lookups: &Lookups,
+        cache: Option<&cache::ScoreCache>,
+        only: Option<&str>,
+    ) -> Result<UnitMatch> {
         let functions = object_functions(bytes)?;
         if let Some(f) = functions.first() {
             self.check_isa(f.isa)?;
@@ -794,12 +978,29 @@ impl Binary {
             functions: Vec::new(),
             unplaced: Vec::new(),
         };
-        for f in &functions {
-            match self
-                .cached_symbol_address(lookups, &f.name)
-                .and_then(|a| self.match_function_with(a, f, lookups))
+        let wanted: Vec<&ObjectFunction> = match only {
+            Some(name) => find_function(&functions, name).into_iter().collect(),
+            None => functions.iter().collect(),
+        };
+        for f in wanted {
+            let Some(address) = self.cached_symbol_address(lookups, &f.name) else {
+                out.unplaced.push(f.name.clone());
+                continue;
+            };
+            let key = cache.map(|c| c.key(self, address, f));
+            if let (Some(c), Some(key)) = (cache, &key)
+                && let Some(score) = c.get(key)
             {
-                Some(m) => out.functions.push(m),
+                out.functions.push(score.into_result());
+                continue;
+            }
+            match self.match_function_with(address, f, lookups) {
+                Some(m) => {
+                    if let (Some(c), Some(key)) = (cache, &key) {
+                        c.put(key, &m.score(unit));
+                    }
+                    out.functions.push(m);
+                }
                 None => out.unplaced.push(f.name.clone()),
             }
         }
@@ -811,10 +1012,19 @@ impl Binary {
     /// A project's object files (name, bytes) matched against the original,
     /// unit by unit (see [`Binary::match_unit`]); units worst first.
     pub fn match_project(&self, objects: &[(String, Vec<u8>)]) -> ProjectMatch {
+        self.match_project_cached(objects, None)
+    }
+
+    /// [`Binary::match_project`] through a score cache (see [`cache`]).
+    pub fn match_project_cached(
+        &self,
+        objects: &[(String, Vec<u8>)],
+        cache: Option<&cache::ScoreCache>,
+    ) -> ProjectMatch {
         let mut p = ProjectMatch::default();
         let lookups = Lookups::default();
         for (name, bytes) in objects {
-            match self.match_unit_with(name, bytes, &lookups) {
+            match self.match_unit_cached(name, bytes, &lookups, cache, None) {
                 Ok(u) => p.units.push(u),
                 Err(e) => p.failed.push((name.clone(), e.to_string())),
             }
@@ -844,6 +1054,71 @@ impl Binary {
                 .then_with(|| a.unit.cmp(&b.unit))
         });
         p
+    }
+
+    /// Variants of one function (or of several), each an object file (label,
+    /// bytes), scored and ranked closest first: by distance, then percent,
+    /// then label, so a search over hundreds of rewrites reads one list.
+    /// With `function`, only that function of each object; `cache` as for
+    /// [`Binary::match_project_cached`]. An object that can't be scored is
+    /// in `failed`.
+    pub fn rank_variants(
+        &self,
+        variants: &[(String, Vec<u8>)],
+        function: Option<&str>,
+        cache: Option<&cache::ScoreCache>,
+    ) -> Ranking {
+        let lookups = Lookups::default();
+        let mut out = Ranking::default();
+        for (label, bytes) in variants {
+            match self.match_unit_cached(label, bytes, &lookups, cache, function) {
+                Ok(u) => {
+                    if u.functions.is_empty() {
+                        let what = function.map_or("none of its functions", |_| "the function");
+                        out.failed
+                            .push((label.clone(), format!("{what} is named in the original")));
+                    }
+                    out.scores.extend(u.functions.iter().map(|m| m.score(label)));
+                }
+                Err(e) => out.failed.push((label.clone(), e.to_string())),
+            }
+        }
+        out.scores.sort_by(|a, b| {
+            a.distance
+                .cmp(&b.distance)
+                .then(b.percent.total_cmp(&a.percent))
+                .then(a.name.cmp(&b.name))
+                .then(a.unit.cmp(&b.unit))
+        });
+        out
+    }
+}
+
+/// Variants ranked (see [`Binary::rank_variants`]).
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ranking {
+    /// Closest first.
+    pub scores: Vec<FunctionScore>,
+    /// Variants that couldn't be scored, with why.
+    pub failed: Vec<(String, String)>,
+}
+
+impl Ranking {
+    /// The `top` closest, one line each, then what failed.
+    pub fn to_text(&self, top: usize) -> String {
+        let mut out = String::new();
+        for s in self.scores.iter().take(top) {
+            out.push_str(&s.line());
+            out.push('\n');
+        }
+        if self.scores.len() > top {
+            out.push_str(&format!("  … {} more\n", self.scores.len() - top));
+        }
+        for (label, why) in &self.failed {
+            out.push_str(&format!("   —  {label}: {why}\n"));
+        }
+        out
     }
 }
 
@@ -980,6 +1255,42 @@ pub struct ProjectMatch {
 }
 
 impl ProjectMatch {
+    /// Every function scored, unit by unit, worst first within each.
+    pub fn scores(&self) -> Vec<FunctionScore> {
+        self.units
+            .iter()
+            .flat_map(|u| u.functions.iter().map(|m| m.score(&u.unit)))
+            .collect()
+    }
+
+    /// The whole batch as JSON: the totals, one entry per function (its
+    /// unit, name, address, percent, whether exact, the distance and
+    /// clusters, the instruction counts, the kinds of difference counted,
+    /// the compilers the epilogues imply), the functions no function here
+    /// is named like, and the objects that failed.
+    pub fn to_json(&self) -> serde_json::Value {
+        let unplaced: Vec<serde_json::Value> = self
+            .units
+            .iter()
+            .flat_map(|u| {
+                u.unplaced
+                    .iter()
+                    .map(move |n| serde_json::json!({ "unit": u.unit, "name": n }))
+            })
+            .collect();
+        serde_json::json!({
+            "objects": self.units.len(),
+            "functions": self.functions,
+            "exact": self.exact,
+            "codeBytes": self.code_bytes,
+            "matchedBytes": self.matched_bytes,
+            "fuzzyPercent": self.fuzzy_percent,
+            "scores": self.scores(),
+            "unplaced": unplaced,
+            "failed": self.failed.iter().map(|(u, e)| serde_json::json!({ "unit": u, "error": e })).collect::<Vec<_>>(),
+        })
+    }
+
     /// The summary as text: the totals, each unit (worst first) with its
     /// worst functions, then the `limit` worst functions of all.
     pub fn to_text(&self, limit: usize) -> String {
@@ -1875,6 +2186,142 @@ mod tests {
     }
 
     #[test]
+    fn scores_have_a_distance_and_rank_variants_and_cache() {
+        let mut words = ORIGINAL.to_vec();
+        words.extend([0x03E0_0008, 0x2402_0001]);
+        let mut bin = exe(&words);
+        // The original's function under the name the objects give theirs.
+        bin.set_annotations(vec![crate::model::Annotation {
+            address: 0x8001_0000,
+            name: "func".into(),
+            ..Default::default()
+        }]);
+        let relocs = [
+            (2, r::MIPS_26, "sub_80010030"),
+            (4, r::MIPS_HI16, "gState"),
+            (5, r::MIPS_LO16, "gState"),
+        ];
+        let exact = object(
+            &[
+                0x27BD_FFE8,
+                0xAFBF_0014,
+                0x0C00_0000,
+                0x0000_0000,
+                0x3C02_0000,
+                0x8C42_0010,
+                0x8FBF_0014,
+                0x0000_0000,
+                0x03E0_0008,
+                0x27BD_0018,
+            ],
+            &relocs,
+        );
+        // Another register for the global: two cheap differences in one cluster.
+        let regs = object(
+            &[
+                0x27BD_FFE8,
+                0xAFBF_0014,
+                0x0C00_0000,
+                0x0000_0000,
+                0x3C03_0000,
+                0x8C43_0010,
+                0x8FBF_0014,
+                0x0000_0000,
+                0x03E0_0008,
+                0x27BD_0018,
+            ],
+            &relocs,
+        );
+        // The nop before the return missing: dearer, and at the same percent as a register swap would be.
+        let missing = object(
+            &[
+                0x27BD_FFE8,
+                0xAFBF_0014,
+                0x0C00_0000,
+                0x0000_0000,
+                0x3C02_0000,
+                0x8C42_0010,
+                0x8FBF_0014,
+                0x03E0_0008,
+                0x27BD_0018,
+            ],
+            &relocs,
+        );
+        let score = |obj: &[u8]| {
+            bin.match_function(0x8001_0000, &object_functions(obj).unwrap()[0])
+                .unwrap()
+        };
+        let (e, g, m) = (score(&exact), score(&regs), score(&missing));
+        assert_eq!((e.distance, e.clusters, e.exact()), (0, 0, true));
+        assert_eq!((g.distance, g.clusters), (2, 1), "{:?}", g.differences);
+        assert_eq!(m.distance, 4, "{:?}", m.differences);
+        assert!(m.percent < 100.0 && g.percent < 100.0 && !g.exact());
+        // As a batch's score, and back.
+        let s = g.score("v1.o");
+        assert_eq!(
+            (s.unit.as_str(), s.distance, s.differences.get("registers differ")),
+            ("v1.o", 2, Some(&2))
+        );
+        let back = s.clone().into_result();
+        assert_eq!(
+            (back.percent, back.distance, back.original_compiler),
+            (g.percent, 2, g.original_compiler)
+        );
+        // Variants ranked closest first, whatever order they come in.
+        let variants = vec![
+            ("missing.o".to_string(), missing.clone()),
+            ("regs.o".to_string(), regs.clone()),
+            ("exact.o".to_string(), exact.clone()),
+        ];
+        let r = bin.rank_variants(&variants, Some("func"), None);
+        let order: Vec<&str> = r.scores.iter().map(|s| s.unit.as_str()).collect();
+        assert_eq!(order, ["exact.o", "regs.o", "missing.o"]);
+        assert!(
+            r.to_text(2).starts_with("d=0 ") && r.to_text(2).contains("… 1 more"),
+            "{}",
+            r.to_text(2)
+        );
+        assert_eq!(bin.rank_variants(&variants, Some("nothing"), None).failed.len(), 3);
+        // The whole batch as JSON.
+        let p = bin.match_project(&variants);
+        let j = p.to_json();
+        assert_eq!(j["scores"].as_array().unwrap().len(), 3);
+        assert_eq!(j["exact"], 1);
+        // The cache gives the same scores back, without rescoring.
+        let dir = std::env::temp_dir().join(format!("binviz-score-cache-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let cache = cache::ScoreCache::open(Some(&dir)).unwrap();
+        let first = bin.match_project_cached(&variants, Some(&cache));
+        assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 3);
+        let again = bin.match_project_cached(&variants, Some(&cache));
+        assert_eq!(first.scores(), again.scores());
+        assert!(
+            again
+                .units
+                .iter()
+                .all(|u| u.functions.iter().all(|m| m.lines.is_empty())),
+            "read back, not rescored"
+        );
+        // Another extent for the function is another key.
+        let mut sized = exe(&words);
+        sized.set_annotations(vec![crate::model::Annotation {
+            address: 0x8001_0000,
+            size: 0x30,
+            ..Default::default()
+        }]);
+        let f = &object_functions(&exact).unwrap()[0];
+        assert_ne!(cache.key(&bin, 0x8001_0000, f), cache.key(&sized, 0x8001_0000, f));
+        let _ = std::fs::remove_dir_all(&dir);
+        // What a build is called on the command line.
+        let b = crate::queue::BuildInfo::parse("compiler=gcc 2.7.2.3, flags=\"-O2, -G0\",sdk=Psy-Q 4.3").unwrap();
+        assert_eq!(
+            (b.compiler.as_str(), b.flags.as_str(), b.sdk.as_str()),
+            ("gcc 2.7.2.3", "-O2, -G0", "Psy-Q 4.3")
+        );
+        assert!(crate::queue::BuildInfo::parse("cc=x").is_err());
+    }
+
+    #[test]
     fn a_range_is_scored_and_the_epilogue_names_the_compiler() {
         let mut words = ORIGINAL.to_vec();
         words.extend([0x03E0_0008, 0x2402_0001]);
@@ -1948,6 +2395,19 @@ mod tests {
             text.contains("the original looks built by GCC 2.7.2") && text.contains("the rebuild by GCC 2.8"),
             "{text}"
         );
+    }
+
+    #[test]
+    fn differences_are_weighted_by_kind() {
+        assert_eq!(difference_weight("registers differ"), 1);
+        assert_eq!(difference_weight("reordered"), 2);
+        assert_eq!(difference_weight("immediate differs"), 2);
+        assert_eq!(difference_weight("instruction differs"), 3);
+        assert_eq!(difference_weight("missing in the rebuild"), 4);
+        assert_eq!(difference_weight("nop missing in the rebuild (a delay slot?)"), 4);
+        assert_eq!(difference_weight("calls foo in the rebuild"), 4);
+        assert_eq!(difference_weight("stack frame size differs"), 6);
+        assert_eq!(difference_weight("something new"), 3);
     }
 
     #[test]

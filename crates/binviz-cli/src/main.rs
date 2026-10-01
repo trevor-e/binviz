@@ -141,16 +141,37 @@ COMMANDS:
                                    That function against the original's code in a range you
                                    give (start..end or start+length work too), whatever extent
                                    the notes give the function (MIPS)
+    match <file> <folder> [--json] [--record [--meta compiler=..,flags=..,sdk=..]] [--no-cache]
+                                   --json: every function's score as JSON (unit, name, address,
+                                   percent, exact, distance, clusters, instruction counts, the
+                                   kinds of difference, the compilers the epilogues imply);
+                                   --record: the outcomes into --notes (or <file>.binviz-notes.json)
+                                   through its journal, as the MCP server's record does; the
+                                   score cache (BINVIZ_CACHE, else ~/.cache/binviz/scores) gives
+                                   objects scored before straight back
+    rank <file> <object|folder>... [--function name] [--top N] [--json] [--no-cache]
+                                   Variants (objects, or folders of them) scored in one process
+                                   and ranked closest first by distance: differing instructions
+                                   weighted by kind (registers 1, reordering and constants 2,
+                                   another instruction 3, missing or extra 4, frame and slots 6),
+                                   so a search over rewrites has a gradient where the percent
+                                   stays flat; --function: that function of each object only
+    resolve <file> <name|address>  Which function holds a name or address now (a fragment a split
+                                   function used to start at is inside the joined one)
     asm <file> <addr|symbol>       A MIPS function as GNU assembler source, as splat writes it
                                    (labels, calls by name, %hi/%lo pairs, jump tables): m2c's input
     m2c <file> <addr|symbol> [cmd] m2c's first draft of its C (cmd: how to run m2c, \"python3
                                    m2c.py\" say; through sh on Unix, split into words on Windows),
                                    with the prototypes of the function and its callees from the
                                    notes' types or their code, so it doesn't invent arguments
-    flags <file> <source> <command> <flags>...
+    flags <file> <source|folder> <command> [<flags>...] [--jobs N] [--function name] [--top N] [--json]
                                    The source compiled with each set of flags (the command's
                                    {src}, {out} and {flags} filled in) and matched against the
-                                   file, best first: the flags a unit is built with
+                                   file, best first: the flags a unit is built with. --jobs N
+                                   runs N compiles at once; a folder of sources makes each file
+                                   a variant (ranked by distance, --function for one function);
+                                   a command with {srcdir} and {outdir} is run once for the
+                                   whole folder and must write <name>.o for each <name>.c there
     report <file> <report.json>    objdiff's report placed on the file's functions
     progress <file> [json]         Where the decompilation stands (the notes' statuses): the
                                    counts by state, partial credit (each function's best percent
@@ -1636,28 +1657,74 @@ fn run(
         "match" => {
             let object = arg(2).ok_or("which object file? binviz match <file> <object.o|folder> [name]")?;
             let folder = std::path::Path::new(object);
+            let mut rest: Vec<&str> = args[3..].iter().map(String::as_str).collect();
+            let json = take_flag(&mut rest, "--json");
+            let cache = if take_flag(&mut rest, "--no-cache") {
+                None
+            } else {
+                binviz::matching::cache::ScoreCache::open(None)
+            };
+            let record = take_flag(&mut rest, "--record");
+            let meta = take_value(&mut rest, "--meta");
             if folder.is_dir() {
                 // A project's build output: every object, unit by unit.
-                let mut objects = Vec::new();
-                for path in binviz::matching::object_files(folder).map_err(|e| format!("{object}: {e}"))? {
-                    let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-                    let unit = path
-                        .strip_prefix(folder)
-                        .unwrap_or(&path)
-                        .to_string_lossy()
-                        .replace('\\', "/");
-                    objects.push((unit, bytes));
-                }
+                let objects = objects_in(&[object.to_string()])?;
                 if objects.is_empty() {
                     return Err(format!("no object files (.o, .obj) in {object}"));
                 }
-                print!("{}", bin.match_project(&objects).to_text(50));
+                let p = bin.match_project_cached(&objects, cache.as_ref());
+                if json {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&p.to_json()).map_err(|e| e.to_string())?
+                    );
+                } else {
+                    print!("{}", p.to_text(50));
+                }
+                if record {
+                    // Into the notes file, through its journal: the MCP server's record.
+                    let path = notes
+                        .map(str::to_string)
+                        .unwrap_or_else(|| format!("{}.binviz-notes.json", args[1]));
+                    let build = match meta {
+                        Some(m) => binviz::queue::BuildInfo::parse(&m)?,
+                        None => binviz::queue::BuildInfo::default(),
+                    };
+                    let (before, _, folded) = binviz::notes::read(std::path::Path::new(&path))?;
+                    let mut after = before.clone();
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map_or(0, |d| d.as_secs());
+                    let (matched, lost) = binviz::queue::record_scores(&mut after, &p.progress(), &build, now);
+                    let file = std::path::Path::new(&args[1])
+                        .file_name()
+                        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+                    let lines = binviz::notes::write(
+                        std::path::Path::new(&path),
+                        &file,
+                        &bin.summary().fingerprint,
+                        &before,
+                        &after,
+                        folded,
+                    )?;
+                    eprintln!(
+                        "Recorded in {path}: {matched} newly matched, {} no longer match, {lines} journal lines{}",
+                        lost.len(),
+                        if build == binviz::queue::BuildInfo::default() {
+                            " (no --meta compiler=…: a match with no compiler can't be reused elsewhere)"
+                        } else {
+                            ""
+                        }
+                    );
+                }
                 return Ok(());
+            }
+            if record {
+                return Err("--record is for a folder of objects: binviz match <file> <folder> --record".into());
             }
             let bytes = std::fs::read(object).map_err(|e| format!("{object}: {e}"))?;
             // --range start end (or start..end, start+length): the original's code to
             // compare, whatever extent the notes give the function.
-            let mut rest: Vec<&str> = args[3..].iter().map(String::as_str).collect();
             let range = match rest.iter().position(|a| *a == "--range") {
                 Some(i) => {
                     let first = rest
@@ -1698,6 +1765,11 @@ fn run(
                     if unit.functions.is_empty() {
                         return Err("no function of the object has a name the binary knows".into());
                     }
+                    if json {
+                        let scores: Vec<_> = unit.functions.iter().map(|m| m.score(&unit.unit)).collect();
+                        println!("{}", serde_json::to_string_pretty(&scores).map_err(|e| e.to_string())?);
+                        return Ok(());
+                    }
                     let matched = unit.exact();
                     print!("{} functions compared, {matched} match exactly", unit.functions.len());
                     if !unit.unplaced.is_empty() {
@@ -1709,6 +1781,40 @@ fn run(
                     }
                 }
             }
+        }
+        "rank" => {
+            // Variants (objects, or folders of them), ranked closest first by distance.
+            let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+            let json = take_flag(&mut rest, "--json");
+            let cache = if take_flag(&mut rest, "--no-cache") {
+                None
+            } else {
+                binviz::matching::cache::ScoreCache::open(None)
+            };
+            let function = take_value(&mut rest, "--function");
+            let top = match take_value(&mut rest, "--top") {
+                Some(n) => num(&n)? as usize,
+                None => 20,
+            };
+            if rest.is_empty() {
+                return Err("binviz rank <file> <object|folder>... [--function name] [--top N] [--json]".into());
+            }
+            let variants = objects_in(&rest.iter().map(|s| s.to_string()).collect::<Vec<_>>())?;
+            if variants.is_empty() {
+                return Err("no object files (.o, .obj) given".into());
+            }
+            let mut ranking = bin.rank_variants(&variants, function.as_deref(), cache.as_ref());
+            if json {
+                ranking.scores.truncate(top);
+                println!("{}", serde_json::to_string_pretty(&ranking).map_err(|e| e.to_string())?);
+            } else {
+                print!("{}", ranking.to_text(top));
+            }
+        }
+        "resolve" => {
+            let what = arg(2).ok_or("binviz resolve <file> <name|address>")?;
+            let address = resolve_address(&bin, what)?;
+            print!("{}", resolve_text(&bin, what, address));
         }
         "report" => {
             let path = arg(2).ok_or("which report? binviz report <file> <report.json>")?;
@@ -1909,37 +2015,178 @@ fn run(
             }
         }
         "flags" => {
-            let usage = "binviz flags <file> <source> \"<command with {src} {out} {flags}>\" \"<flags>\"...";
-            let (Some(src), Some(command)) = (arg(2), arg(3)) else {
+            let usage = "binviz flags <file> <source|folder> \"<command with {src} {out} {flags}>\" [\"<flags>\"...] [--jobs N] [--function name] [--top N] [--json]";
+            let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+            let jobs = match take_value(&mut rest, "--jobs") {
+                Some(n) => (num(&n)? as usize).max(1),
+                None => 1,
+            };
+            let json = take_flag(&mut rest, "--json");
+            let function = take_value(&mut rest, "--function");
+            let top = match take_value(&mut rest, "--top") {
+                Some(n) => num(&n)? as usize,
+                None => 20,
+            };
+            let (Some(&src), Some(&command)) = (rest.first(), rest.get(1)) else {
                 return Err(usage.into());
             };
-            let sets = args.get(4..).unwrap_or(&[]);
-            if sets.is_empty() || !command.contains("{out}") {
-                return Err(format!("{usage}\n(the command compiles {{src}} with {{flags}} into the object {{out}})"));
+            let sets: Vec<String> = rest[2..].iter().map(|s| s.to_string()).collect();
+            let batch = command.contains("{srcdir}") && command.contains("{outdir}");
+            if !batch && !command.contains("{out}") {
+                return Err(format!(
+                    "{usage}\n(the command compiles {{src}} with {{flags}} into the object {{out}}; or, given a folder\nof sources {{srcdir}}, compiles each into {{outdir}} under the same name with a .o extension)"
+                ));
+            }
+            // The variants: each source (a file, or every .c and .cpp in a folder) with each set of flags.
+            let src_path = std::path::Path::new(src);
+            let mut sources: Vec<std::path::PathBuf> = if src_path.is_dir() {
+                let mut v: Vec<_> = std::fs::read_dir(src_path)
+                    .map_err(|e| format!("{src}: {e}"))?
+                    .filter_map(|e| e.ok().map(|e| e.path()))
+                    .filter(|p| {
+                        p.extension()
+                            .is_some_and(|x| x == "c" || x == "cpp" || x == "cc" || x == "s")
+                    })
+                    .collect();
+                v.sort();
+                v
+            } else {
+                vec![src_path.to_path_buf()]
+            };
+            if sources.is_empty() {
+                return Err(format!("no sources in {src}"));
+            }
+            if sets.is_empty() && batch {
+                sources.sort();
+            }
+            let sets: Vec<String> = if sets.is_empty() { vec![String::new()] } else { sets };
+            if sets.len() > 1 && batch {
+                return Err(
+                    "a batch command ({srcdir}/{outdir}) takes one set of flags; give variants as files instead".into(),
+                );
             }
             let dir = std::env::temp_dir().join(format!("binviz-flags-{}", std::process::id()));
             std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-            let mut builds = Vec::new();
-            for (i, flags) in sets.iter().enumerate() {
-                let out = dir.join(format!("build-{i}.o"));
+            // (label, source, flags, object path)
+            let mut plan: Vec<(String, std::path::PathBuf, String, std::path::PathBuf)> = Vec::new();
+            for (k, source) in sources.iter().enumerate() {
+                for (i, flags) in sets.iter().enumerate() {
+                    let stem = source
+                        .file_stem()
+                        .map_or_else(|| format!("src{k}"), |n| n.to_string_lossy().into_owned());
+                    let label = match (sources.len() > 1, flags.is_empty()) {
+                        (true, true) => stem.clone(),
+                        (true, false) => format!("{stem} [{flags}]"),
+                        (false, _) => flags.clone(),
+                    };
+                    let out = if batch {
+                        dir.join("out").join(format!("{stem}.o"))
+                    } else {
+                        dir.join(format!("build-{k}-{i}.o"))
+                    };
+                    plan.push((label, source.clone(), flags.clone(), out));
+                }
+            }
+            let outcome = |ran: std::io::Result<std::process::Output>, out: &std::path::Path| match ran {
+                Ok(o) if o.status.success() => {
+                    std::fs::read(out).map_err(|e| binviz::Error::new(format!("no object: {e}")))
+                }
+                Ok(o) => {
+                    let err = String::from_utf8_lossy(&o.stderr);
+                    Err(binviz::Error::new(format!(
+                        "didn't compile: {}",
+                        err.lines().next().unwrap_or("")
+                    )))
+                }
+                Err(e) => Err(binviz::Error::new(e.to_string())),
+            };
+            let mut builds: Vec<(String, binviz::Result<Vec<u8>>)> = Vec::new();
+            if batch {
+                // One command for all the sources: the caller fans out inside it (one container call).
+                let srcdir = dir.join("src");
+                let outdir = dir.join("out");
+                std::fs::create_dir_all(&srcdir).map_err(|e| format!("{}: {e}", srcdir.display()))?;
+                std::fs::create_dir_all(&outdir).map_err(|e| format!("{}: {e}", outdir.display()))?;
+                for (_, source, _, _) in &plan {
+                    let to = srcdir.join(source.file_name().unwrap_or_default());
+                    std::fs::copy(source, &to).map_err(|e| format!("{}: {e}", source.display()))?;
+                }
                 let line = command
-                    .replace("{src}", &shell_quote(src))
-                    .replace("{out}", &shell_quote(&out.to_string_lossy()))
-                    .replace("{flags}", flags);
+                    .replace("{srcdir}", &shell_quote(&srcdir.to_string_lossy()))
+                    .replace("{outdir}", &shell_quote(&outdir.to_string_lossy()))
+                    .replace("{flags}", &sets[0]);
                 let ran = run_line(&line, &[]);
-                let object = match ran {
-                    Ok(o) if o.status.success() => std::fs::read(&out).map_err(|e| binviz::Error::new(e.to_string())),
-                    Ok(o) => {
-                        let err = String::from_utf8_lossy(&o.stderr);
-                        Err(binviz::Error::new(format!("didn't compile: {}", err.lines().next().unwrap_or(""))))
+                let stderr = ran
+                    .as_ref()
+                    .ok()
+                    .map(|o| String::from_utf8_lossy(&o.stderr).into_owned());
+                for (label, _, _, out) in &plan {
+                    let object = match &ran {
+                        Ok(_) if out.exists() => std::fs::read(out).map_err(|e| binviz::Error::new(e.to_string())),
+                        Ok(_) => Err(binviz::Error::new(format!(
+                            "no object written: {}",
+                            stderr.as_deref().and_then(|e| e.lines().next()).unwrap_or("")
+                        ))),
+                        Err(e) => Err(binviz::Error::new(e.to_string())),
+                    };
+                    builds.push((label.clone(), object));
+                }
+            } else {
+                // Each variant its own command, `jobs` at a time.
+                let results: std::sync::Mutex<Vec<(usize, binviz::Result<Vec<u8>>)>> =
+                    std::sync::Mutex::new(Vec::new());
+                let next = std::sync::atomic::AtomicUsize::new(0);
+                std::thread::scope(|scope| {
+                    for _ in 0..jobs.min(plan.len()) {
+                        scope.spawn(|| {
+                            loop {
+                                let i = next.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                                let Some((label, source, flags, out)) = plan.get(i) else {
+                                    break;
+                                };
+                                let line = command
+                                    .replace("{src}", &shell_quote(&source.to_string_lossy()))
+                                    .replace("{out}", &shell_quote(&out.to_string_lossy()))
+                                    .replace("{flags}", flags);
+                                let object = outcome(run_line(&line, &[]), out);
+                                eprintln!("{label}: {}", if object.is_ok() { "compiled" } else { "failed" });
+                                results.lock().unwrap().push((i, object));
+                            }
+                        });
                     }
-                    Err(e) => Err(binviz::Error::new(e.to_string())),
-                };
-                eprintln!("{flags}: {}", if object.is_ok() { "compiled" } else { "failed" });
-                builds.push((flags.clone(), object));
+                });
+                let mut results = results.into_inner().unwrap();
+                results.sort_by_key(|r| r.0);
+                for (i, object) in results {
+                    builds.push((plan[i].0.clone(), object));
+                }
             }
             let _ = std::fs::remove_dir_all(&dir);
-            print!("{}", binviz::matching::builds_text(&bin.rank_builds(&builds)));
+            if function.is_some() || sources.len() > 1 {
+                // Variants of a function: closest first by distance.
+                let (ok, failed): (Vec<_>, Vec<_>) = builds.into_iter().partition(|b| b.1.is_ok());
+                let variants: Vec<(String, Vec<u8>)> =
+                    ok.into_iter().map(|(l, o)| (l, o.unwrap_or_default())).collect();
+                let mut ranking = bin.rank_variants(&variants, function.as_deref(), None);
+                ranking.failed.extend(
+                    failed
+                        .into_iter()
+                        .map(|(l, e)| (l, e.err().map_or(String::new(), |e| e.to_string()))),
+                );
+                if json {
+                    ranking.scores.truncate(top);
+                    println!("{}", serde_json::to_string_pretty(&ranking).map_err(|e| e.to_string())?);
+                } else {
+                    print!("{}", ranking.to_text(top));
+                }
+            } else {
+                let scores = bin.rank_builds(&builds);
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&scores).map_err(|e| e.to_string())?);
+                } else {
+                    print!("{}", binviz::matching::builds_text(&scores));
+                }
+            }
         }
         "progress" => {
             let report = bin.progress_report();
@@ -1947,6 +2194,12 @@ fn run(
                 println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
             } else {
                 println!("{}", bin.decomp_progress().summary());
+                let areas = bin.decomp_progress_by_area();
+                if areas.len() > 1 {
+                    for (name, p) in &areas {
+                        println!("  {name}: {}", p.summary());
+                    }
+                }
                 print!("{}", progress_text(&report));
             }
         }
@@ -2080,6 +2333,79 @@ fn open_with_its_debug_file(path: &str, data: Vec<u8>) -> Result<Binary, String>
         }
     }
     Ok(bin)
+}
+
+/// Removes `name` from the arguments, saying whether it was there.
+fn take_flag(rest: &mut Vec<&str>, name: &str) -> bool {
+    match rest.iter().position(|a| *a == name) {
+        Some(i) => {
+            rest.remove(i);
+            true
+        }
+        None => false,
+    }
+}
+
+/// Removes `name` and its value from the arguments, giving the value.
+fn take_value(rest: &mut Vec<&str>, name: &str) -> Option<String> {
+    let i = rest.iter().position(|a| *a == name)?;
+    let value = rest.get(i + 1).map(|v| v.to_string());
+    rest.drain(i..(i + 2).min(rest.len()));
+    value
+}
+
+/// The object files among `paths` (each a file, or a folder searched with its
+/// subfolders), named by their path in the folder given: (unit, bytes).
+fn objects_in(paths: &[String]) -> Result<Vec<(String, Vec<u8>)>, String> {
+    let mut objects = Vec::new();
+    for p in paths {
+        let path = std::path::Path::new(p);
+        if path.is_dir() {
+            for f in binviz::matching::object_files(path).map_err(|e| format!("{p}: {e}"))? {
+                let bytes = std::fs::read(&f).map_err(|e| format!("{}: {e}", f.display()))?;
+                let unit = f.strip_prefix(path).unwrap_or(&f).to_string_lossy().replace('\\', "/");
+                objects.push((unit, bytes));
+            }
+        } else {
+            let bytes = std::fs::read(path).map_err(|e| format!("{p}: {e}"))?;
+            objects.push((p.clone(), bytes));
+        }
+    }
+    Ok(objects)
+}
+
+/// Where a name or address is now: the function holding it.
+fn resolve_text(bin: &Binary, what: &str, address: u64) -> String {
+    let mut out = format!("{what} is {address:#x}");
+    match bin.symbols().function_containing(address) {
+        Some(f) if f.address == address => {
+            out.push_str(&format!(": the start of {} ({} bytes)", f.display_name(), f.size));
+        }
+        Some(f) => {
+            out.push_str(&format!(
+                ": inside {} ({:#x}, {} bytes), at offset {:#x}",
+                f.display_name(),
+                f.address,
+                f.size,
+                address - f.address
+            ));
+        }
+        None => out.push_str(": in no known function"),
+    }
+    if let Some(s) = bin.symbols().at(address).filter(|s| s.address == address) {
+        out.push_str(&format!("; named {}", s.display_name()));
+    }
+    let noted: Vec<String> = bin
+        .annotations()
+        .iter()
+        .filter(|a| a.address == address && !a.name.is_empty())
+        .map(|a| a.name.clone())
+        .collect();
+    if !noted.is_empty() {
+        out.push_str(&format!("; notes there: {}", noted.join(", ")));
+    }
+    out.push('\n');
+    out
 }
 
 fn resolve_address(bin: &Binary, s: &str) -> Result<u64, String> {

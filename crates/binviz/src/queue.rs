@@ -23,7 +23,7 @@ use std::collections::{HashMap, HashSet};
 use serde::Serialize;
 
 use crate::binary::Binary;
-use crate::model::{Decomp, DecompState};
+use crate::model::{Annotation, Decomp, DecompState};
 use crate::similar::Similar;
 
 /// Functions at least this alike, and this long, are a template for each other.
@@ -122,6 +122,118 @@ pub struct DecompProgress {
     pub credited_bytes: f64,
 }
 
+/// What built the C that matched: kept with a function's note so the match
+/// can be reused in another project of the same build.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct BuildInfo {
+    pub compiler: String,
+    pub flags: String,
+    pub sdk: String,
+}
+
+impl BuildInfo {
+    /// `compiler=gcc 2.7.2.3,flags=-O2 -G0,sdk=Psy-Q 4.3`: keys and values,
+    /// comma-separated (a value with a comma goes in quotes).
+    pub fn parse(text: &str) -> Result<BuildInfo, String> {
+        let mut b = BuildInfo::default();
+        for part in split_meta(text) {
+            let (k, v) = part
+                .split_once('=')
+                .ok_or_else(|| format!("not key=value: {part} (compiler=…, flags=…, sdk=…)"))?;
+            let v = v.trim().trim_matches('"').to_string();
+            match k.trim() {
+                "compiler" => b.compiler = v,
+                "flags" => b.flags = v,
+                "sdk" => b.sdk = v,
+                other => return Err(format!("unknown key {other} (compiler, flags, sdk)")),
+            }
+        }
+        Ok(b)
+    }
+
+    /// Sets what was given where nothing is recorded yet.
+    pub fn apply_if_missing(&self, d: &mut Decomp) {
+        for (mine, theirs) in [
+            (&self.compiler, &mut d.compiler),
+            (&self.flags, &mut d.flags),
+            (&self.sdk, &mut d.sdk),
+        ] {
+            if theirs.is_empty() {
+                theirs.clone_from(mine);
+            }
+        }
+    }
+}
+
+fn split_meta(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let mut quoted = false;
+    for c in text.chars() {
+        match c {
+            '"' => quoted = !quoted,
+            ',' if !quoted => out.push(std::mem::take(&mut cur)),
+            _ => cur.push(c),
+        }
+    }
+    if !cur.trim().is_empty() {
+        out.push(cur);
+    }
+    out.into_iter().filter(|p| !p.trim().is_empty()).collect()
+}
+
+/// Records a batch's verdicts in `notes` as objdiff's report would be:
+/// each function at 100% becomes matched (its unit the source file, the
+/// build kept where none is), one that matched before and no longer does
+/// goes back to todo, and the others keep their best percent. Returns how
+/// many are newly matched, and the addresses that stopped matching.
+/// `now`: seconds since 1970, for when a state changed.
+pub fn record_scores(
+    notes: &mut Vec<Annotation>,
+    functions: &[crate::matching::FunctionProgress],
+    build: &BuildInfo,
+    now: u64,
+) -> (u32, Vec<u64>) {
+    let (mut matched, mut lost) = (0, Vec::new());
+    for f in functions {
+        let i = notes
+            .iter()
+            .position(|a| a.address == f.address && a.decomp.is_some())
+            .or_else(|| notes.iter().position(|a| a.address == f.address && a.size == 0))
+            .unwrap_or_else(|| {
+                notes.push(Annotation {
+                    address: f.address,
+                    ..Default::default()
+                });
+                notes.len() - 1
+            });
+        let d = notes[i].decomp.get_or_insert_with(Decomp::default);
+        let before = d.clone();
+        if f.percent >= 100.0 {
+            if d.state != DecompState::Matched {
+                matched += 1;
+            }
+            d.state = DecompState::Matched;
+            d.by.clear();
+            d.percent = Some(100.0);
+            build.apply_if_missing(d);
+        } else if d.state == DecompState::Matched {
+            lost.push(f.address);
+            d.state = DecompState::Todo;
+            d.percent = Some(f.percent);
+        } else {
+            d.percent = Some(d.percent.map_or(f.percent, |p| p.max(f.percent)));
+        }
+        if d.source.is_empty() {
+            d.source = f.unit.clone();
+        }
+        if *d != before {
+            d.since = now;
+        }
+    }
+    (matched, lost)
+}
+
 impl DecompProgress {
     /// One line: how much is done, with partial credit.
     pub fn summary(&self) -> String {
@@ -178,9 +290,33 @@ impl Binary {
 
     /// How far the decompilation has come.
     pub fn decomp_progress(&self) -> DecompProgress {
+        self.progress_over(&self.functions_as_noted())
+    }
+
+    /// [`Binary::decomp_progress`] by area: each loaded part of the image
+    /// with code in it (a boot executable's program, an overlay, a memory
+    /// image's RAM) and where its functions stand, in address order.
+    pub fn decomp_progress_by_area(&self) -> Vec<(String, DecompProgress)> {
+        let mut areas: Vec<(String, Vec<(u64, u64)>)> = Vec::new();
+        for f in self.functions_as_noted() {
+            let name = self
+                .section_at(f.0)
+                .map_or_else(|| "(outside any section)".to_string(), |s| s.name.clone());
+            match areas.last_mut() {
+                Some(a) if a.0 == name => a.1.push(f),
+                _ => areas.push((name, vec![f])),
+            }
+        }
+        areas
+            .into_iter()
+            .map(|(name, fs)| (name, self.progress_over(&fs)))
+            .collect()
+    }
+
+    fn progress_over(&self, functions: &[(u64, u64)]) -> DecompProgress {
         let mut p = DecompProgress::default();
         // The functions as the notes size them: a range merged by a note counts once.
-        for (address, bytes) in self.functions_as_noted() {
+        for &(address, bytes) in functions {
             p.functions += 1;
             p.bytes += bytes;
             let d = self.decomp_at(address);

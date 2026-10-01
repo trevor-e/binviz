@@ -224,6 +224,28 @@ pub fn read(path: &Path) -> Result<(Vec<Annotation>, Option<String>, usize), Str
     Ok((notes, fingerprint, lines.max(folded)))
 }
 
+/// Writes `after` as the notes file at `path`, for `file` (the build
+/// `fingerprint` names): what changed since `before` (as [`read`] gave it,
+/// with `folded` journal lines) goes to the journal first, then the file is
+/// rewritten (written whole, then renamed into place) folding those lines
+/// too. Returns the journal lines appended.
+pub fn write(
+    path: &Path,
+    file: &str,
+    fingerprint: &str,
+    before: &[Annotation],
+    after: &[Annotation],
+    folded: usize,
+) -> Result<usize, String> {
+    let changes = changes_between(before, after);
+    let lines = append_journal(path, &changes).map_err(|e| format!("{}: {e}", journal_path(path).display()))?;
+    let text = document_folding(file, fingerprint, after, folded + lines);
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, text).map_err(|e| format!("{}: {e}", tmp.display()))?;
+    std::fs::rename(&tmp, path).map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(lines)
+}
+
 /// Appends `changes` to the notes file's journal, one line each: one write,
 /// which the file system keeps whole against other writers appending.
 pub fn append_journal(path: &Path, changes: &[Change]) -> std::io::Result<usize> {

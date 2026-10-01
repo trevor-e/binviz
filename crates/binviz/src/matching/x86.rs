@@ -520,7 +520,10 @@ impl Match<'_> {
             differences: counts.into_iter().collect(),
             original_compiler: None,
             rebuilt_compiler: None,
+            distance: 0,
+            clusters: 0,
         }
+        .finish()
     }
 
     /// The steps of the edit script, with the instructions it removes in

@@ -77,3 +77,27 @@ the scoring. Items 1-4 are what that tool needs from binviz to be fast and to ha
 `tools/farm-compile.py` and `tools/solve.py` (written by a worker, in progress) implement items 1-3 in Python on top of
 folder-mode `match` and a container batch; their throughput numbers and the operators that paid off will be in
 `docs/solve.md` and are the specification this request should be refined against.
+
+## Status (2026-10-01)
+
+Landed in binviz, against the asks above:
+
+1. `match <exe> <folder> --json` and MCP `match_project` `format: "json"`: one entry per function with `unit`, `name`,
+   `address`, `percent`, `exact`, `distance`, `clusters`, the instruction counts, `differences` (kind → count) and the
+   compilers the epilogues imply. `match <exe> <object> --json` does the same for one object.
+2. `distance` on every score, weighted by kind (registers 1; reordered, immediate, offset, shift 2; another instruction,
+   signedness, condition, operand size 3; missing, extra, branch and call targets 4; frame size, stack slot, arguments
+   popped, alignment 6; else 3); `clusters` counts runs of differing instructions.
+3. `rank <exe> <objects|folders>… [--function f] [--top N] [--json]` (MCP `rank_builds` with `function`/`by`, `top`,
+   `format`) ranks variants closest first by distance in one process. `flags` gained `--jobs N`, variants as files (a
+   folder of sources), and a batch command (`{srcdir}`/`{outdir}`, run once for the folder).
+4. A content-hash score cache (`$BINVIZ_CACHE`, else `~/.cache/binviz/scores`), keyed on the original's fingerprint, the
+   function's extent, the notes' names, and the object function's code and relocations; used by folder-mode `match`,
+   `rank` and MCP; `--no-cache` / `cache: false` to skip.
+5. `match <exe> <folder> --record [--meta compiler=…,flags=…,sdk=…]` writes the outcomes into `--notes` (else
+   `<exe>.binviz-notes.json`) through the journal, as MCP `record` does.
+6. The compiler tell is in the JSON (`originalCompiler`, `rebuiltCompiler`); `resolve <name|address>` (MCP `resolve`)
+   says which function holds a name now; `progress` counts merged ranges once and prints totals per area of the image;
+   a piece that is a `jal` target elsewhere is never joined to another called piece.
+
+Not done: the per-process startup (~70 ms) is unchanged; a batch is the way around it.
