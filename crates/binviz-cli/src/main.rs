@@ -158,8 +158,16 @@ COMMANDS:
                                    stays flat; --function: that function of each object only
     resolve <file> <name|address>  Which function holds a name or address now (a fragment a split
                                    function used to start at is inside the joined one)
-    asm <file> <addr|symbol>       A MIPS function as GNU assembler source, as splat writes it
-                                   (labels, calls by name, %hi/%lo pairs, jump tables): m2c's input
+    scores <before.json> <after.json> [--top N] [--json]
+                                   Two runs' scores (match --json, rank --json) set against each
+                                   other: which functions got closer or further (by distance,
+                                   then percent), how many stayed, exact counts before and after
+    asm <file> <addr|symbol>... [--list <file>] [--all] [--out <dir>] [--bare]
+                                   MIPS functions as GNU assembler source, as splat writes it
+                                   (labels, calls by name, %hi/%lo pairs, jump tables): m2c's
+                                   input. Several at once (names, a file with one per line, or
+                                   --all), to stdout or one <name>.s each in --out; --bare leaves
+                                   out the offset/address/word comments
     m2c <file> <addr|symbol> [cmd] m2c's first draft of its C (cmd: how to run m2c, \"python3
                                    m2c.py\" say; through sh on Unix, split into words on Windows),
                                    with the prototypes of the function and its callees from the
@@ -171,7 +179,9 @@ COMMANDS:
                                    runs N compiles at once; a folder of sources makes each file
                                    a variant (ranked by distance, --function for one function);
                                    a command with {srcdir} and {outdir} is run once for the
-                                   whole folder and must write <name>.o for each <name>.c there
+                                   whole folder and must write <name>.o for each <name>.c there;
+                                   --record [--meta compiler=..,flags=..] puts each function's
+                                   best outcome into the notes, as match --record does
     report <file> <report.json>    objdiff's report placed on the file's functions
     progress <file> [json]         Where the decompilation stands (the notes' statuses): the
                                    counts by state, partial credit (each function's best percent
@@ -573,6 +583,29 @@ fn run(
     if cmd == "blobs" {
         return blobs(&args[1], psx.exe);
     }
+    if cmd == "scores" {
+        // Two runs' scores (match --json, rank --json) set against each other.
+        let mut rest: Vec<&str> = args[1..].iter().map(String::as_str).collect();
+        let json = take_flag(&mut rest, "--json");
+        let top = match take_value(&mut rest, "--top") {
+            Some(n) => num(&n)? as usize,
+            None => 30,
+        };
+        let (Some(a), Some(b)) = (rest.first(), rest.get(1)) else {
+            return Err("binviz scores <before.json> <after.json> [--top N] [--json]".into());
+        };
+        let read = |p: &str| {
+            let text = std::fs::read_to_string(p).map_err(|e| format!("{p}: {e}"))?;
+            binviz::matching::scores_from_json(&text).map_err(|e| format!("{p}: {e}"))
+        };
+        let diff = binviz::matching::compare_scores(&read(a)?, &read(b)?);
+        if json {
+            println!("{}", serde_json::to_string_pretty(&diff).map_err(|e| e.to_string())?);
+        } else {
+            print!("{}", diff.to_text(top));
+        }
+        return Ok(());
+    }
     let path = std::path::Path::new(&args[1]);
     let mut bin = if binviz::package::is_package_path(path) {
         let mut pkg = binviz::package::DiskPackage::open(path)?;
@@ -633,7 +666,10 @@ fn run(
         bin = logged;
     }
     if let Some(path) = notes {
-        bin.set_annotations(read_notes(path)?);
+        // A notes file that --record will create may not exist yet.
+        if std::path::Path::new(path).exists() || !args.iter().any(|a| a == "--record") {
+            bin.set_annotations(read_notes(path)?);
+        }
     }
     if let Some(path) = types {
         let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
@@ -1682,40 +1718,7 @@ fn run(
                     print!("{}", p.to_text(50));
                 }
                 if record {
-                    // Into the notes file, through its journal: the MCP server's record.
-                    let path = notes
-                        .map(str::to_string)
-                        .unwrap_or_else(|| format!("{}.binviz-notes.json", args[1]));
-                    let build = match meta {
-                        Some(m) => binviz::queue::BuildInfo::parse(&m)?,
-                        None => binviz::queue::BuildInfo::default(),
-                    };
-                    let (before, _, folded) = binviz::notes::read(std::path::Path::new(&path))?;
-                    let mut after = before.clone();
-                    let now = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .map_or(0, |d| d.as_secs());
-                    let (matched, lost) = binviz::queue::record_scores(&mut after, &p.progress(), &build, now);
-                    let file = std::path::Path::new(&args[1])
-                        .file_name()
-                        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
-                    let lines = binviz::notes::write(
-                        std::path::Path::new(&path),
-                        &file,
-                        &bin.summary().fingerprint,
-                        &before,
-                        &after,
-                        folded,
-                    )?;
-                    eprintln!(
-                        "Recorded in {path}: {matched} newly matched, {} no longer match, {lines} journal lines{}",
-                        lost.len(),
-                        if build == binviz::queue::BuildInfo::default() {
-                            " (no --meta compiler=…: a match with no compiler can't be reused elsewhere)"
-                        } else {
-                            ""
-                        }
-                    );
+                    record_outcomes(&bin, &args[1], notes, meta.as_deref(), &p.progress())?;
                 }
                 return Ok(());
             }
@@ -1967,17 +1970,80 @@ fn run(
             }
         }
         "asm" | "m2c" => {
-            let addr = resolve_address(&bin, arg(2).ok_or("missing address or symbol")?)?;
-            let text = bin
-                .gnu_asm(addr)
-                .ok_or("not in a function, or not MIPS code (GNU assembler source is for MIPS so far)")?;
+            let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+            let bare = take_flag(&mut rest, "--bare");
+            let all = take_flag(&mut rest, "--all");
+            let out_dir = take_value(&mut rest, "--out");
+            let list = take_value(&mut rest, "--list");
             if cmd == "asm" {
-                print!("{text}");
+                // Every function asked for (names or addresses, a file of them, or all), in one
+                // process: to stdout one after another, or each to <name>.s in --out.
+                let mut wanted: Vec<String> = rest.iter().map(|s| s.to_string()).collect();
+                if let Some(list) = &list {
+                    let text = std::fs::read_to_string(list).map_err(|e| format!("{list}: {e}"))?;
+                    // The first word of each line (a lanes file's address, a plain list's name).
+                    wanted.extend(
+                        text.lines()
+                            .map(str::trim)
+                            .filter(|l| !l.is_empty() && !l.starts_with('#'))
+                            .filter_map(|l| l.split_whitespace().next().map(str::to_string)),
+                    );
+                }
+                if all {
+                    wanted.extend(bin.symbols().functions().map(|f| format!("{:#x}", f.address)));
+                }
+                if wanted.is_empty() {
+                    return Err("binviz asm <file> <addr|symbol>... [--list <file>] [--all] [--out <dir>] [--bare]".into());
+                }
+                if let Some(dir) = &out_dir {
+                    std::fs::create_dir_all(dir).map_err(|e| format!("{dir}: {e}"))?;
+                }
+                let (mut written, mut failed) = (0, Vec::new());
+                let mut done = std::collections::HashSet::new();
+                for what in &wanted {
+                    let Ok(addr) = resolve_address(&bin, what) else {
+                        failed.push(format!("{what}: no such symbol"));
+                        continue;
+                    };
+                    let Some(f) = bin.symbols().function_containing(addr) else {
+                        failed.push(format!("{what}: not in a function"));
+                        continue;
+                    };
+                    if !done.insert(f.address) {
+                        continue;
+                    }
+                    let Some(text) = bin.gnu_asm_with(f.address, bare) else {
+                        failed.push(format!("{what}: not MIPS code"));
+                        continue;
+                    };
+                    match &out_dir {
+                        Some(dir) => {
+                            let name = f.display_name().replace(|c: char| !c.is_ascii_alphanumeric() && c != '_', "_");
+                            let path = std::path::Path::new(dir).join(format!("{name}.s"));
+                            std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+                            written += 1;
+                        }
+                        None => print!("{text}{}", if wanted.len() > 1 { "\n" } else { "" }),
+                    }
+                }
+                if let Some(dir) = &out_dir {
+                    eprintln!("{written} functions written to {dir}");
+                }
+                if !failed.is_empty() {
+                    if wanted.len() == 1 {
+                        return Err(failed.remove(0));
+                    }
+                    eprintln!("{} not written:\n  {}", failed.len(), failed.join("\n  "));
+                }
             } else {
+                let addr = resolve_address(&bin, rest.first().copied().ok_or("missing address or symbol")?)?;
+                let text = bin
+                    .gnu_asm(addr)
+                    .ok_or("not in a function, or not MIPS code (GNU assembler source is for MIPS so far)")?;
                 // m2c's first draft of the C: the command given (default m2c), run on the source
                 // written out, with a context file of prototypes (the function's and its
                 // callees', from the notes' types or the code) so it doesn't invent arguments.
-                let m2c = arg(3).unwrap_or("m2c");
+                let m2c = rest.get(1).copied().unwrap_or("m2c");
                 let stem = std::env::temp_dir().join(format!("binviz-{}-{addr:x}", std::process::id()));
                 let path = stem.with_extension("s");
                 std::fs::write(&path, &text).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -2023,6 +2089,8 @@ fn run(
             };
             let json = take_flag(&mut rest, "--json");
             let function = take_value(&mut rest, "--function");
+            let record = take_flag(&mut rest, "--record");
+            let meta = take_value(&mut rest, "--meta");
             let top = match take_value(&mut rest, "--top") {
                 Some(n) => num(&n)? as usize,
                 None => 20,
@@ -2179,6 +2247,26 @@ fn run(
                 } else {
                     print!("{}", ranking.to_text(top));
                 }
+                if record {
+                    // Each function's best score among the variants, into the notes.
+                    let mut best: std::collections::BTreeMap<u64, binviz::matching::FunctionProgress> =
+                        Default::default();
+                    for s in &ranking.scores {
+                        let e = best.entry(s.address).or_insert_with(|| binviz::matching::FunctionProgress {
+                            address: s.address,
+                            name: s.name.clone(),
+                            unit: s.unit.clone(),
+                            size: s.original_bytes,
+                            percent: s.percent,
+                        });
+                        if s.percent > e.percent {
+                            e.percent = s.percent;
+                            e.unit = s.unit.clone();
+                        }
+                    }
+                    let outcomes: Vec<_> = best.into_values().collect();
+                    record_outcomes(&bin, &args[1], notes, meta.as_deref(), &outcomes)?;
+                }
             } else {
                 let scores = bin.rank_builds(&builds);
                 if json {
@@ -2333,6 +2421,51 @@ fn open_with_its_debug_file(path: &str, data: Vec<u8>) -> Result<Binary, String>
         }
     }
     Ok(bin)
+}
+
+/// Records a batch's outcomes in the notes file (`--notes`, else the one
+/// beside the binary), through its journal, as the MCP server's `record`
+/// does: functions at 100% matched (with the build `meta` names), the
+/// others' best percent kept, those no longer matching sent back to do.
+fn record_outcomes(
+    bin: &Binary,
+    file: &str,
+    notes: Option<&str>,
+    meta: Option<&str>,
+    outcomes: &[binviz::matching::FunctionProgress],
+) -> Result<(), String> {
+    let path = notes.map(str::to_string).unwrap_or_else(|| format!("{file}.binviz-notes.json"));
+    let build = match meta {
+        Some(m) => binviz::queue::BuildInfo::parse(m)?,
+        None => binviz::queue::BuildInfo::default(),
+    };
+    let (before, _, folded) = binviz::notes::read(std::path::Path::new(&path))?;
+    let mut after = before.clone();
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    let (matched, lost) = binviz::queue::record_scores(&mut after, outcomes, &build, now);
+    let name = std::path::Path::new(file)
+        .file_name()
+        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+    let lines = binviz::notes::write(
+        std::path::Path::new(&path),
+        &name,
+        &bin.summary().fingerprint,
+        &before,
+        &after,
+        folded,
+    )?;
+    eprintln!(
+        "Recorded in {path}: {matched} newly matched, {} no longer match, {lines} journal lines{}",
+        lost.len(),
+        if build == binviz::queue::BuildInfo::default() {
+            " (no --meta compiler=…: a match with no compiler can't be reused elsewhere)"
+        } else {
+            ""
+        }
+    );
+    Ok(())
 }
 
 /// Removes `name` from the arguments, saying whether it was there.

@@ -22,6 +22,13 @@ impl Binary {
     /// tables its `switch`es read (`jtbl_`) and the strings it uses. `None`
     /// for code that isn't MIPS.
     pub fn gnu_asm(&self, address: u64) -> Option<String> {
+        self.gnu_asm_with(address, false)
+    }
+
+    /// [`Binary::gnu_asm`]; `bare` leaves out the comment before each
+    /// instruction (its offset, address and word), for a file to diff or
+    /// hand to a tool that doesn't want them.
+    pub fn gnu_asm_with(&self, address: u64, bare: bool) -> Option<String> {
         let little = self.mips_endian()? == crate::util::Endian::Little;
         let f = self.symbols().function_containing(address)?;
         let start = f.address;
@@ -160,10 +167,11 @@ impl Binary {
                 operands = replace_last_number(&operands, &format!("%gp_rel({})", data_name(i.address, t)));
             }
             let offset = i.offset.map_or(String::new(), |o| format!("{o:X} "));
-            let line = format!(
-                "/* {offset}{:08X} {:08X} */  {mnemonic:<9} {operands}",
-                i.address, words[k].0
-            );
+            let line = if bare {
+                format!("    {mnemonic:<9} {operands}")
+            } else {
+                format!("/* {offset}{:08X} {:08X} */  {mnemonic:<9} {operands}", i.address, words[k].0)
+            };
             out.push_str(line.trim_end());
             out.push('\n');
         }
@@ -603,6 +611,17 @@ mod tests {
             exe[0x800 + 4 * k..0x800 + 4 * k + 4].copy_from_slice(&w.to_le_bytes());
         }
         Binary::parse(exe).expect("a PS-X EXE")
+    }
+
+    #[test]
+    fn bare_source_has_no_comments() {
+        let words = [0x2402_0001, 0x03E0_0008, 0x0000_0000];
+        let bin = psx(&words);
+        let full = bin.gnu_asm(0x8001_0000).unwrap();
+        let bare = bin.gnu_asm_with(0x8001_0000, true).unwrap();
+        assert!(full.contains("/* ") && !bare.contains("/* "), "{bare}");
+        assert!(bare.contains("\n    jr        $ra\n"), "{bare}");
+        assert_eq!(full.lines().count(), bare.lines().count());
     }
 
     #[test]

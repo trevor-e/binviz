@@ -106,6 +106,69 @@ fn a_folder_of_objects_scores_as_json_and_records_into_the_notes() {
         text.starts_with("diff is 0x") && text.contains("the start of diff"),
         "{text}"
     );
+
+    // Two runs set against each other: the clean object after the edited one.
+    let before = dir.join("before.json");
+    let after = dir.join("after.json");
+    std::fs::write(
+        &before,
+        stdout(&run(&["match", &exe, &build, "--json", "--debug", &pdb])),
+    )
+    .unwrap();
+    std::fs::copy(fixture("x86match.obj"), dir.join("build/game.obj")).unwrap();
+    std::fs::write(
+        &after,
+        stdout(&run(&["match", &exe, &build, "--json", "--debug", &pdb])),
+    )
+    .unwrap();
+    let (before, after) = (before.to_str().unwrap(), after.to_str().unwrap());
+    let text = stdout(&run(&["scores", before, after]));
+    assert!(
+        text.contains("8 closer, 0 further") && text.contains("exact 7 -> 15") && text.contains("UP   diff"),
+        "{text}"
+    );
+    let text = stdout(&run(&["scores", before, after, "--json"]));
+    let d: serde_json::Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(d["exactAfter"], 15, "{text}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn many_functions_export_as_assembler_in_one_process() {
+    let dir = std::env::temp_dir().join(format!("binviz-cli-asm-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    // A list the way a worker keeps one: the first word of each line names the function.
+    std::fs::write(dir.join("lanes.txt"), "# wave\nentry 0x40 entry boot\n0x12345678 bad\n").unwrap();
+    let out = dir.join("asm");
+    let run = binviz(&[
+        "asm",
+        &fixture("tiny.z64"),
+        "--list",
+        dir.join("lanes.txt").to_str().unwrap(),
+        "--out",
+        out.to_str().unwrap(),
+        "--bare",
+    ]);
+    assert!(run.status.success(), "{}", String::from_utf8_lossy(&run.stderr));
+    let err = String::from_utf8_lossy(&run.stderr);
+    assert!(
+        err.contains("1 functions written to") && err.contains("1 not written"),
+        "{err}"
+    );
+    let text = std::fs::read_to_string(out.join("entry.s")).unwrap();
+    assert!(
+        text.starts_with(".set noat") && text.contains("glabel entry\n") && !text.contains("/* "),
+        "{text}"
+    );
+    // Several to stdout, one after another; the comments kept.
+    let text = stdout(&binviz(&["asm", &fixture("tiny.z64"), "entry", "entry"]));
+    assert_eq!(
+        text.matches("glabel entry").count(),
+        1,
+        "the same function once: {text}"
+    );
+    assert!(text.contains("/* "));
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -158,6 +221,31 @@ fn variants_compile_in_parallel_and_in_one_batch() {
         .map(|s| s["unit"].as_str().unwrap())
         .collect();
     assert_eq!(units, ["clean", "edited"], "{r}");
+    // Recorded: the best of the variants (the clean one, a match) into the notes given.
+    let notes = dir.join("notes.json");
+    let out = binviz(&[
+        "flags",
+        &fixture("x86match.exe"),
+        &src,
+        "cp {src} {out}",
+        "--function",
+        "diff",
+        "--record",
+        "--meta",
+        "compiler=msvc 6",
+        "--notes",
+        notes.to_str().unwrap(),
+        "--debug",
+        &fixture("x86match.pdb"),
+    ]);
+    stdout(&out);
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(err.contains("1 newly matched"), "{err}");
+    let text = std::fs::read_to_string(&notes).unwrap();
+    assert!(
+        text.contains("\"matched\"") && text.contains("msvc 6") && text.contains("\"source\": \"clean\""),
+        "{text}"
+    );
     // The old way still works: one source, several flag sets.
     let out = binviz(&[
         "flags",

@@ -1094,6 +1094,129 @@ impl Binary {
     }
 }
 
+/// The scores in a JSON file `match --json` or `rank --json` wrote (the
+/// document with its `scores`, or a bare list of them).
+pub fn scores_from_json(text: &str) -> Result<Vec<FunctionScore>> {
+    let v: serde_json::Value = serde_json::from_str(text).map_err(|e| Error::new(format!("not JSON: {e}")))?;
+    let list = v.get("scores").unwrap_or(&v);
+    serde_json::from_value(list.clone()).map_err(|e| Error::new(format!("not a list of scores: {e}")))
+}
+
+/// One function's score in two runs (see [`compare_scores`]).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScoreChange {
+    pub name: String,
+    pub address: u64,
+    pub unit: String,
+    pub before_percent: f32,
+    pub after_percent: f32,
+    pub before_distance: u32,
+    pub after_distance: u32,
+}
+
+/// Two runs' scores set against each other (see [`compare_scores`]).
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScoreDiff {
+    /// Closer in the second run (a smaller distance, or the same distance and a higher percent); biggest gain first.
+    pub up: Vec<ScoreChange>,
+    /// Further in the second run; biggest loss first.
+    pub down: Vec<ScoreChange>,
+    pub same: u32,
+    pub exact_before: u32,
+    pub exact_after: u32,
+    /// Functions only the first run has, and only the second.
+    pub only_before: Vec<String>,
+    pub only_after: Vec<String>,
+    /// Across every function in both: the sum of distances before and after.
+    pub distance_before: u64,
+    pub distance_after: u64,
+}
+
+/// What changed between two runs of scores (a toolchain change, other
+/// flags, a batch of rewrites): each function paired by name and address,
+/// which got closer, which further, how many stayed, and the exact counts.
+pub fn compare_scores(before: &[FunctionScore], after: &[FunctionScore]) -> ScoreDiff {
+    let key = |s: &FunctionScore| (s.name.clone(), s.address);
+    let mut d = ScoreDiff::default();
+    let after_by: BTreeMap<(String, u64), &FunctionScore> = after.iter().map(|s| (key(s), s)).collect();
+    let mut seen = std::collections::HashSet::new();
+    for a in before {
+        let k = key(a);
+        let Some(b) = after_by.get(&k) else {
+            d.only_before.push(a.name.clone());
+            continue;
+        };
+        seen.insert(k);
+        d.exact_before += a.exact as u32;
+        d.exact_after += b.exact as u32;
+        d.distance_before += u64::from(a.distance);
+        d.distance_after += u64::from(b.distance);
+        let change = ScoreChange {
+            name: a.name.clone(),
+            address: a.address,
+            unit: b.unit.clone(),
+            before_percent: a.percent,
+            after_percent: b.percent,
+            before_distance: a.distance,
+            after_distance: b.distance,
+        };
+        let closer = b.distance < a.distance || (b.distance == a.distance && b.percent > a.percent);
+        let further = b.distance > a.distance || (b.distance == a.distance && b.percent < a.percent);
+        if closer {
+            d.up.push(change);
+        } else if further {
+            d.down.push(change);
+        } else {
+            d.same += 1;
+        }
+    }
+    for b in after {
+        if !seen.contains(&key(b)) {
+            d.only_after.push(b.name.clone());
+        }
+    }
+    let gain = |c: &ScoreChange| i64::from(c.before_distance) - i64::from(c.after_distance);
+    d.up.sort_by(|x, y| gain(y).cmp(&gain(x)).then(x.name.cmp(&y.name)));
+    d.down.sort_by(|x, y| gain(x).cmp(&gain(y)).then(x.name.cmp(&y.name)));
+    d
+}
+
+impl ScoreDiff {
+    /// The totals, then what moved, one line each (`top` of each way).
+    pub fn to_text(&self, top: usize) -> String {
+        let mut out = format!(
+            "{} closer, {} further, {} the same; exact {} -> {}; total distance {} -> {}\n",
+            self.up.len(),
+            self.down.len(),
+            self.same,
+            self.exact_before,
+            self.exact_after,
+            self.distance_before,
+            self.distance_after
+        );
+        for (what, list) in [("UP  ", &self.up), ("DOWN", &self.down)] {
+            for c in list.iter().take(top) {
+                out.push_str(&format!(
+                    "{what} {:<32} {:>5.1}% -> {:<5.1}%  d={} -> {}  {}\n",
+                    c.name, c.before_percent, c.after_percent, c.before_distance, c.after_distance, c.unit
+                ));
+            }
+            if list.len() > top {
+                out.push_str(&format!("     … {} more\n", list.len() - top));
+            }
+        }
+        if !self.only_before.is_empty() {
+            out.push_str(&format!("only in the first: {}\n", self.only_before.join(", ")));
+        }
+        if !self.only_after.is_empty() {
+            out.push_str(&format!("only in the second: {}\n", self.only_after.join(", ")));
+        }
+        out
+    }
+}
+
 /// Variants ranked (see [`Binary::rank_variants`]).
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -2395,6 +2518,39 @@ mod tests {
             text.contains("the original looks built by GCC 2.7.2") && text.contains("the rebuild by GCC 2.8"),
             "{text}"
         );
+    }
+
+    #[test]
+    fn two_runs_of_scores_are_set_against_each_other() {
+        let score = |name: &str, percent: f32, distance: u32| FunctionScore {
+            unit: "u.o".into(),
+            name: name.into(),
+            address: 0x8001_0000,
+            percent,
+            exact: percent >= 100.0,
+            distance,
+            clusters: 0,
+            matched_instructions: 0,
+            original_instructions: 0,
+            rebuilt_instructions: 0,
+            original_bytes: 0,
+            rebuilt_bytes: 0,
+            differences: BTreeMap::new(),
+            original_compiler: None,
+            rebuilt_compiler: None,
+        };
+        let before = [score("a", 90.0, 10), score("b", 100.0, 0), score("c", 50.0, 40), score("gone", 1.0, 99)];
+        let after = [score("a", 96.0, 4), score("b", 95.0, 3), score("c", 50.0, 40), score("new", 2.0, 98)];
+        let d = compare_scores(&before, &after);
+        assert_eq!((d.up.len(), d.down.len(), d.same, d.exact_before, d.exact_after), (1, 1, 1, 1, 0));
+        assert_eq!((d.only_before.as_slice(), d.only_after.as_slice()), (["gone".to_string()].as_slice(), ["new".to_string()].as_slice()));
+        assert_eq!((d.distance_before, d.distance_after), (50, 47));
+        let text = d.to_text(10);
+        assert!(text.starts_with("1 closer, 1 further, 1 the same; exact 1 -> 0") && text.contains("UP   a") && text.contains("DOWN b"), "{text}");
+        let json = serde_json::to_string(&serde_json::json!({ "scores": before })).unwrap();
+        assert_eq!(scores_from_json(&json).unwrap().len(), 4);
+        assert_eq!(scores_from_json(&serde_json::to_string(&after).unwrap()).unwrap().len(), 4);
+        assert!(scores_from_json("{}").is_err());
     }
 
     #[test]

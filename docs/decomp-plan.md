@@ -507,6 +507,11 @@ Publishing (a repository someone else builds with their own disc):
 
 ## Progress log
 
+- 2026-10-01 (later): `scores` compares two runs; `asm` exports many functions in one process
+  (`--list`, `--all`, `--out`, `--bare`); `flags` records a wave's outcomes (`--record --meta`);
+  `docs/agent-playbook.md` tells an agent which binviz command replaces the script it is about
+  to write.
+
 - 2026-10-01 (from `docs/ff9-requests.md`): the N+1 patterns around scoring. `match <exe> <folder>
   --json` gives every function's score with a weighted `distance` and `clusters` (what a search
   over C rewrites climbs where the percent stays flat); `rank` scores hundreds of variants in one

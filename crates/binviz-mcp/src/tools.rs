@@ -586,6 +586,7 @@ pub fn definitions() -> Vec<Value> {
             "A MIPS function (PlayStation, Nintendo 64) as GNU assembler source, the way splat writes it: glabel, branches to .L labels, calls by name, %hi/%lo where one lui starts an address on every path to the instruction that finishes it, %gp_rel into the small data, and in .rodata the jump tables its switches read (jtbl_) and the strings it uses, each instruction with its offset, address and word in a comment. Pseudo-instructions with more than one encoding (move, li) are spelled out, so it assembles back to the same words. It is what m2c takes to write a first draft of the C (m2c -t mips-gcc-c for GCC-built code), and what a decompilation keeps under asm/nonmatchings for a function not matched yet.",
             json!({
                 "at": address("A function or address inside it"),
+                "bare": { "type": "boolean", "description": "Leave out the comment before each instruction (its offset, address and word)." },
             }),
             &["at"],
             true,
@@ -3121,8 +3122,9 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
 fn export_asm(o: &Open, args: &Value) -> Result<String, String> {
     let at = string(args, "at").ok_or("at is required")?;
     let start = function_at(&o.bin, at)?;
+    let bare = args.get("bare").and_then(Value::as_bool).unwrap_or(false);
     o.bin
-        .gnu_asm(start)
+        .gnu_asm_with(start, bare)
         .ok_or_else(|| "not MIPS code (assembler source is for MIPS so far)".to_string())
 }
 
