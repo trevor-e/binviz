@@ -148,20 +148,39 @@ fn read(
     callee: &dyn Fn(usize) -> Option<String>,
 ) -> Side {
     let mut side = Side::default();
-    // Where each register last got a `lui`: the next `addiu`/`ori`/load/store
-    // off it completes an address, not a constant.
-    let mut lui_at = [usize::MAX; 32];
+    // Which registers hold an address: set by `lui`, kept by the `addiu`/`ori`
+    // that completes it and by an `addu` off it, lost to any other writer and
+    // to a call (the caller-saved ones). An immediate or offset off such a
+    // register is part of an address, not a constant.
+    let mut holds_address = [false; 32];
+    let mut clobber_after: Option<usize> = None;
     for (i, &raw) in words.iter().enumerate() {
         let w = MipsWord(raw);
+        if clobber_after == Some(i) {
+            for r in (1..16).chain(24..26) {
+                holds_address[r] = false;
+            }
+            clobber_after = None;
+        }
         if raw == 0 {
             continue;
         }
         let t = text(raw, start + 4 * i as u64, big);
         let mnemonic = t.split(' ').next().unwrap_or("").to_string();
         *side.mnemonics.entry(mnemonic.clone()).or_default() += 1;
-        let paired = |r: u32| lui_at[r as usize] != usize::MAX && i - lui_at[r as usize] <= 4;
+        let paired = |r: u32| holds_address[r as usize];
+        let keeps = match w.op() {
+            0xF => true,
+            9 | 0xD => paired(w.rs()),
+            0 if matches!(w.funct(), 0x21 | 0x23) => paired(w.rs()) || paired(w.rt()),
+            _ => false,
+        };
+        let written = w.writes();
+        if w.op() == 3 || (w.op() == 0 && w.funct() == 9) {
+            clobber_after = Some(i + 2);
+        }
         if w.op() == 0xF {
-            lui_at[w.rt() as usize] = i;
+            holds_address[w.rt() as usize] = true;
             continue;
         }
         let hex = |v: i64| {
@@ -197,6 +216,11 @@ fn read(
                 }
             }
             _ => {}
+        }
+        if let Some(r) = written
+            && r != 0
+        {
+            holds_address[r as usize] = keeps;
         }
         if w.op() == 3
             && let Some(name) = callee(i)
