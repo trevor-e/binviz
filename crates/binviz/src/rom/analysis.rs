@@ -366,6 +366,10 @@ fn gap_seeds(w: &Walk<'_>, runs: &[(u64, u64, u64)]) -> Vec<(u64, u64)> {
     let rom = w.rom;
     let big = rom.cpu == Cpu::MipsR4300;
     let mut seeds = Vec::new();
+    // An entry point (a function another image names, a note's function) is a
+    // boundary: what sits before it in a gap is never made part of it, or the
+    // function would start before the address the note gave it.
+    let pinned: HashSet<u64> = rom.entries.iter().map(|e| e.1).collect();
     // Where a word's value would point: into the image, or anywhere loaded.
     let pointer_like = |v: u32| {
         let v = u64::from(v);
@@ -495,6 +499,7 @@ fn gap_seeds(w: &Walk<'_>, runs: &[(u64, u64, u64)]) -> Vec<(u64, u64)> {
             continue;
         }
         if let Some(next) = after
+            && !pinned.contains(&next)
             && branches_into(next)
         {
             seeds.push((gap_start, next));
