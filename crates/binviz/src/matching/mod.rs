@@ -907,6 +907,7 @@ impl Binary {
                 }
             }
         }
+        let expected = self.reloc_fields(func);
         let mut lines = Vec::new();
         let mut counts: BTreeMap<String, u32> = BTreeMap::new();
         let mut matched = 0u32;
@@ -917,7 +918,16 @@ impl Binary {
                 Edit::Keep => {
                     let (a, b) = (orig[i], cand[j]);
                     let pc = start + 4 * i as u64;
-                    let note = self.compare(a, b, pc, func.relocs.get(&j), func, j);
+                    // A relocation note stands only when the original's field occurs in
+                    // none of the rebuild's relocations: a symbol scheduled elsewhere
+                    // (its `lui` hoisted, two loads swapped) is not a wrong symbol.
+                    let note = self.compare(a, b, pc, func.relocs.get(&j), func, j).filter(|n| {
+                        !(n.starts_with("calls ") || n.starts_with("%lo(") || n.starts_with("%hi("))
+                            || func
+                                .relocs
+                                .get(&j)
+                                .is_none_or(|r| !expected.contains(&(r.kind, a & reloc_mask(r.kind))))
+                    });
                     let kind = if note.is_none() {
                         LineKind::Same
                     } else {
@@ -1060,6 +1070,48 @@ impl Binary {
     }
 
     /// Why the original's word `a` and the rebuild's `b`, lined up, differ (None: they match).
+    /// The address a relocated symbol resolves to: known in the original by
+    /// name, or, under strict relocations, carried by its name.
+    fn reloc_target(&self, symbol: &str) -> Option<u64> {
+        self.object_symbol_address(symbol).or_else(|| {
+            STRICT_RELOCS
+                .load(Ordering::Relaxed)
+                .then(|| address_in_name(symbol))
+                .flatten()
+        })
+    }
+
+    /// Every (relocation kind, field value) the rebuild's relocations resolve
+    /// to, wherever they sit: what the original's fields are checked against
+    /// when a row's own relocation disagrees.
+    fn reloc_fields(&self, func: &Words) -> std::collections::HashSet<(u32, u32)> {
+        let mut out = std::collections::HashSet::new();
+        for (&j, rel) in &func.relocs {
+            if rel.section_symbol {
+                continue;
+            }
+            let Some(target) = self.reloc_target(&rel.symbol) else {
+                continue;
+            };
+            let w = MipsWord(func.words[j]);
+            let field = match rel.kind {
+                r::MIPS_26 => ((target.wrapping_add(rel.addend as u64) >> 2) & 0x03FF_FFFF) as u32,
+                r::MIPS_LO16 => (target as i64 + w.simm()) as u32 & 0xFFFF,
+                r::MIPS_HI16 => {
+                    let lo = func
+                        .relocs
+                        .range(j + 1..)
+                        .find(|(_, r)| r.kind == r::MIPS_LO16)
+                        .map_or(0, |(at, _)| MipsWord(func.words[*at]).simm());
+                    ((target as i64 + (i64::from(w.imm()) << 16) + lo + 0x8000) >> 16) as u32 & 0xFFFF
+                }
+                _ => continue,
+            };
+            out.insert((rel.kind, field));
+        }
+        out
+    }
+
     fn compare(&self, a: u32, b: u32, pc: u64, reloc: Option<&Reloc>, func: &Words, j: usize) -> Option<String> {
         let (wa, wb) = (MipsWord(a), MipsWord(b));
         let mask = reloc.map_or(0, |r| reloc_mask(r.kind));
@@ -1069,12 +1121,7 @@ impl Binary {
         let rel = reloc.filter(|r| !r.section_symbol)?;
         // The linker's field: the same symbol in the original, when it is known
         // there; under strict relocations, else at the address its name carries.
-        let target = self.object_symbol_address(&rel.symbol).or_else(|| {
-            STRICT_RELOCS
-                .load(Ordering::Relaxed)
-                .then(|| address_in_name(&rel.symbol))
-                .flatten()
-        })?;
+        let target = self.reloc_target(&rel.symbol)?;
         let field = |w: MipsWord| w.0 & mask;
         match rel.kind {
             r::MIPS_26 => {
