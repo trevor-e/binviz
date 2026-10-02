@@ -107,3 +107,58 @@ resolves to itself.
 
 Not installed for the decompilation workers until that is fixed. The new features (`compare` of two runs, bulk `asm` export,
 record from `flags`) look useful, especially bulk asm export: workers still run one `binviz asm` per function.
+
+## Request: instruction-to-C-line mapping for a rebuilt object (2026-10-01, from the staged search)
+
+A search over C rewrites should try the statements nearest the mismatching instructions first. `match <exe> <obj> <fn>`
+lines the two functions up but says nothing about which line of the C each rebuilt instruction came from.
+
+What exists today without binviz: an object built with `cc1 -g` (GCC 2.8.1 writes stabs: `.stabn 68,line,$LMn` labels, so
+the object has `.stab` N_SLINE entries with the instruction offset of every line change). `tools/solve_aim.py` uses it:
+compile with `-g -dg` (cpp WITHOUT `-P`, so the line markers keep the real file lines), read `objdump --stabs`, and look
+up the rebuilt instruction index in the match rows. Two catches that cost work: (1) with `-g` maspsx lays out `nop`s
+differently (the stab labels sit between instructions and stop its load-delay logic), so the `-g` object is not the real
+one and its instructions have to be matched to the real object's by order, ignoring nops (`tools/farm-runner.py
+debug_build`); (2) the stabs addresses are `.text` offsets, the FUN stab of a function comes after its first line stab,
+so lines are attributed to functions by offset range, not by stab order.
+
+Ask: `match <exe> <obj> <fn> --lines` (and in `--json`): per rebuilt instruction the source file and line from the
+object's own `.stab`/`.debug_line`/`.loc` data when present, and per difference row the line(s) of the rebuilt side (for
+"missing in the rebuild": the lines of the neighbouring rebuilt instructions). Then a caller can say "the mismatch is on
+line 35" without compiling twice and aligning nops. Also useful there: the allocator dump (`cc1 -dg`: which hard register
+each pseudo got) is how the search tells a pin with a second writer from a clean one; if binviz ever reads cc1's dumps,
+"registers shared by a pinned variable and another value" would be a single answer.
+
+## Consolidated asks after thirteen waves (2026-10-02)
+
+State: 4705 of 5471 functions exact, 51.8% of the bytes; 765 partial functions left. What cost the most time or hid the most
+bugs, in the order I would build it. Evidence is from `lanes/result-wave*.txt` and the tools in `tools/`.
+
+1. **Never join away a boundary the notes name** (see the ab60342 section above). Still the blocker for using anything newer than c8fa8b4.
+2. **Instruction to C-line mapping for a rebuilt object** (section above): `tools/solve_aim.py` does it from a `-g` compile aligned
+   to the object; the staged search aims mutations with it. Native support in `match --json` (per mismatching instruction: the
+   source line from the object's `.loc`) would remove that script and help every reader of a diff.
+3. **Constants, widths and call arities, side by side.** Most real bugs this project found (about 80 behaviour bugs that the
+   percent hid) were found by private scans over diffs: the multiset of immediates present on one side only, mnemonic counts
+   (`lb`/`lbu`, `sb`/`sh`, `sra`/`srl`, `lwl`), stack-argument stores of original vs rebuilt, and a call's argument count against
+   the callee's own signature (about 50 hits, 6 real in one pass). A `match --json` field per function for each, plus an
+   `arity` check against `signature` of the callee, would replace several Python scripts (`build/w11p1/*.py`, `build/w9p4/`).
+4. **`reordered` in folder-mode `match --json`** (it never appears there; scheduling-only differences have to be classified by a
+   private multiset test; `tools/remaining-classify.py`). Also a stable `distance` per kind in the JSON.
+5. **Unmasked relocation check.** The scorer masks relocations, so a wrong global or callee scores 100%: found only by linking the
+   object at its real addresses and comparing unmasked values (`build/w9p3/audit.py`, `wasm/addrcheck.py`, `wasm/calleecheck.py`).
+   A `match --strict-relocs` that compares symbol targets to the original's would catch these everywhere.
+6. **Bulk `asm` export**: workers still call `binviz asm` once per function. One call for a list or a unit (as splat writes it)
+   would remove the N+1; `m2c` the same (`binviz m2c` starts a Python process per function, 0.4 s of start-up for 0.25 s of work).
+7. **Twin detection**: `tools/twins.py` groups functions by relocation-masked bytes and found 250+ exact transplants in one run
+   (the biggest single win). `diff functions`, `names` and `store hits` are close; a `twins <file...>` command that returns
+   groups, near-twins (>= 95% of masked words) and the relocation correspondence (the pairs of words that carry an address) would
+   replace most of it.
+8. **Progress**: `progress` that counts a merged range once, takes data ranges out of the denominator (`config/data-ranges.tsv`),
+   reports by area and by function size band, and exports a treemap-ready JSON (see `docs/progress-treemap.html`: tiles = functions
+   sized by bytes, coloured by state; in this project it is generated by `tools/treemap.py`). The measure that matters is exact
+   bytes; function count runs far ahead of it because the large functions are the hard ones.
+9. **A per-function `extent` warning**: "the object is longer than the function and covers its neighbour" or "the function runs
+   past the unit image" instead of 'extra in the rebuild'. Several capped functions looked like register puzzles for hours
+   (`sub_800de11c`, `sub_800bc600`, hoisted `lui/lw` heads that start 8 bytes early).
+10. **Score cache and `rank` for variants** are used by the farm (`tools/farmlib.py`: 35-70 variants/s). Keep them.
