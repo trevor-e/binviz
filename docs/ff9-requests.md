@@ -190,3 +190,8 @@ Built on main, in this order, and tried on the FF9 boot executable's 1489 object
 
 Still open: the instruction-to-C-line mapping (ask 2), twins (ask 7), progress by area and size band (ask 8), the per-function
 extent warning as a field rather than a difference text (ask 9; the text exists since ab60342).
+
+Follow-ups (same day): a gap before a pinned function is never attached to it (an overlay image starting mid-function had moved
+sub_800b7954's start to the image start); a relocation note stands only when the original's field occurs in none of the rebuild's
+relocations (20 of 67 audit hits were a hoisted `lui`); the audit tracks address-holding registers instead of a four-instruction `lui`
+window. The FF9 project switched its scorer to this build (`binviz-pin.exe`, 47 extent pins): 54 more functions scored, nothing lost.
