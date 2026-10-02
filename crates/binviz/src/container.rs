@@ -211,7 +211,10 @@ impl Container {
                 None => format!("@{:#010x}", m.offset),
             };
             let note = m.arch.as_deref().map_or(String::new(), |a| format!("  ({a})"));
-            out.push_str(&format!("  [{}] {at} {:>11} bytes  {}{note}\n", m.index, m.size, m.name));
+            out.push_str(&format!(
+                "  [{}] {at} {:>11} bytes  {}{note}\n",
+                m.index, m.size, m.name
+            ));
         }
         out
     }

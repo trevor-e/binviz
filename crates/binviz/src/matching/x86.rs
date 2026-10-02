@@ -520,6 +520,7 @@ impl Match<'_> {
             differences: counts.into_iter().collect(),
             original_compiler: None,
             rebuilt_compiler: None,
+            audit: None,
             distance: 0,
             clusters: 0,
         }
@@ -975,9 +976,9 @@ impl Match<'_> {
                             // Named from the original's frame: arguments used in another order show as such.
                             let at = self.start + x.at as u64;
                             let frame = self.bin.stack_frame(self.start);
-                            let names = frame.as_ref().and_then(|f| {
-                                Some((f.slot_at(at)?, f.slot_moved(at, db - da)?))
-                            });
+                            let names = frame
+                                .as_ref()
+                                .and_then(|f| Some((f.slot_at(at)?, f.slot_moved(at, db - da)?)));
                             match names {
                                 Some((na, nb)) if na.starts_with("arg") && nb.starts_with("arg") => format!(
                                     "stack slot offset differs: {ma} ({na}) in the original, {mb} ({nb}) in the rebuild (the arguments used in another order?)"

@@ -14,15 +14,19 @@
 //! MIPS (PlayStation, Nintendo 64) objects in ELF; x86 and x86-64 ones in
 //! COFF (MSVC, clang-cl) or ELF, lined up and explained by `x86.rs`.
 
+mod audit;
 pub mod cache;
 mod x86;
+
+pub use audit::{Audit, CallArity};
 
 pub(crate) use x86::padding_only;
 #[cfg(test)]
 pub(crate) use x86::tests as x86_tests;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use object::{Object, ObjectSection, ObjectSymbol, RelocationTarget};
 use serde::{Deserialize, Serialize};
@@ -233,6 +237,10 @@ pub struct MatchResult {
     /// Runs of differing instructions: one swapped register pair in forty
     /// places is forty clusters, forty differences in a row one.
     pub clusters: u32,
+    /// The two sides compared for what a percent hides (immediates, offsets,
+    /// the mnemonic mix, stack stores, call arities), when anything differs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub audit: Option<Audit>,
 }
 
 /// What a kind of difference (a name in [`MatchResult::differences`]) costs
@@ -324,6 +332,7 @@ impl MatchResult {
             differences: self.differences.iter().cloned().collect(),
             original_compiler: self.original_compiler.map(str::to_string),
             rebuilt_compiler: self.rebuilt_compiler.map(str::to_string),
+            audit: self.audit.clone(),
         }
     }
 }
@@ -352,6 +361,9 @@ pub struct FunctionScore {
     pub original_compiler: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rebuilt_compiler: Option<String>,
+    /// See [`MatchResult::audit`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit: Option<Audit>,
 }
 
 impl FunctionScore {
@@ -373,6 +385,7 @@ impl FunctionScore {
             rebuilt_compiler: tell(self.rebuilt_compiler),
             distance: self.distance,
             clusters: self.clusters,
+            audit: self.audit,
         }
     }
 
@@ -688,7 +701,11 @@ impl Binary {
             .chunks_exact(4)
             .map(|c| {
                 let b = [c[0], c[1], c[2], c[3]];
-                if big { u32::from_be_bytes(b) } else { u32::from_le_bytes(b) }
+                if big {
+                    u32::from_be_bytes(b)
+                } else {
+                    u32::from_le_bytes(b)
+                }
             })
             .collect();
         Some((f.display_name().into_owned(), f.address, words, big))
@@ -779,14 +796,22 @@ impl Binary {
             .take(extra)
             .map(|c| {
                 let b = [c[0], c[1], c[2], c[3]];
-                if big { u32::from_be_bytes(b) } else { u32::from_le_bytes(b) }
+                if big {
+                    u32::from_be_bytes(b)
+                } else {
+                    u32::from_le_bytes(b)
+                }
             })
             .collect();
         if beyond.len() < extra.min(2) {
             return;
         }
         let shape = |w: u32| w & !layout_mask(MipsWord(w));
-        let same = cand[orig.len()..].iter().zip(&beyond).filter(|(a, b)| shape(**a) == shape(**b)).count();
+        let same = cand[orig.len()..]
+            .iter()
+            .zip(&beyond)
+            .filter(|(a, b)| shape(**a) == shape(**b))
+            .count();
         if same * 5 < beyond.len() * 4 {
             return;
         }
@@ -850,6 +875,38 @@ impl Binary {
         let ta: Vec<u32> = orig.iter().map(|&w| shape(w)).collect();
         let tb: Vec<u32> = cand.iter().map(|&w| shape(w)).collect();
         let script = line_up(&ta, &tb, 4000);
+        // Reordered: an instruction removed in one place and added in another,
+        // wherever the two are (a statement the scheduler moved across a call
+        // lands in another hunk). Each removal pairs with one addition of the
+        // same shape: shape -> (removals left, additions left). Not nops.
+        let mut moved: HashMap<u32, (usize, usize)> = HashMap::new();
+        {
+            let (mut dels, mut ins): (HashMap<u32, usize>, HashMap<u32, usize>) = (HashMap::new(), HashMap::new());
+            let (mut i, mut j) = (0usize, 0usize);
+            for e in &script {
+                match e {
+                    Edit::Keep => {
+                        i += 1;
+                        j += 1;
+                    }
+                    Edit::Delete => {
+                        *dels.entry(ta[i]).or_default() += 1;
+                        i += 1;
+                    }
+                    _ => {
+                        *ins.entry(tb[j]).or_default() += 1;
+                        j += 1;
+                    }
+                }
+            }
+            for (s, d) in dels {
+                if s != 0
+                    && let Some(&n) = ins.get(&s)
+                {
+                    moved.insert(s, (d.min(n), d.min(n)));
+                }
+            }
+        }
         let mut lines = Vec::new();
         let mut counts: BTreeMap<String, u32> = BTreeMap::new();
         let mut matched = 0u32;
@@ -861,7 +918,11 @@ impl Binary {
                     let (a, b) = (orig[i], cand[j]);
                     let pc = start + 4 * i as u64;
                     let note = self.compare(a, b, pc, func.relocs.get(&j), func, j);
-                    let kind = if note.is_none() { LineKind::Same } else { LineKind::Changed };
+                    let kind = if note.is_none() {
+                        LineKind::Same
+                    } else {
+                        LineKind::Changed
+                    };
                     if note.is_none() {
                         matched += 1;
                     } else if let Some(n) = &note {
@@ -891,28 +952,61 @@ impl Binary {
                         }
                         k += 1;
                     }
-                    // Reordered: the same instruction removed here and added here.
-                    let reordered: Vec<u32> = dels
-                        .iter()
-                        .filter(|(_, w)| ins.iter().any(|(_, x)| shape(*x) == shape(*w)))
-                        .map(|(_, w)| shape(*w))
-                        .collect();
-                    let n = dels.len().max(ins.len());
-                    let mut dels = dels.into_iter();
-                    let mut ins = ins.into_iter();
+                    // The moved instructions first (removed here, added elsewhere, or
+                    // the reverse); what is left is paired up as changed, missing, extra.
+                    let mut rest_dels = Vec::new();
+                    for (i, w) in dels {
+                        match moved.get_mut(&shape(w)) {
+                            Some((left, _)) if *left > 0 => {
+                                *left -= 1;
+                                let note = "reordered: this instruction is elsewhere in the rebuild".to_string();
+                                *counts.entry(category(&note)).or_default() += 1;
+                                lines.push(MatchLine {
+                                    kind: LineKind::Removed,
+                                    address: Some(start + 4 * i as u64),
+                                    original: Some(text(w, start + 4 * i as u64, big)),
+                                    rebuilt: None,
+                                    note: Some(note),
+                                });
+                            }
+                            _ => rest_dels.push((i, w)),
+                        }
+                    }
+                    let mut rest_ins = Vec::new();
+                    for (j, w) in ins {
+                        match moved.get_mut(&shape(w)) {
+                            Some((_, left)) if *left > 0 => {
+                                *left -= 1;
+                                let note = "reordered: this instruction is elsewhere in the original".to_string();
+                                *counts.entry(category(&note)).or_default() += 1;
+                                lines.push(MatchLine {
+                                    kind: LineKind::Added,
+                                    address: None,
+                                    original: None,
+                                    rebuilt: Some(text(w, start + 4 * j as u64, func.big_endian)),
+                                    note: Some(note),
+                                });
+                            }
+                            _ => rest_ins.push((j, w)),
+                        }
+                    }
+                    let n = rest_dels.len().max(rest_ins.len());
+                    let mut dels = rest_dels.into_iter();
+                    let mut ins = rest_ins.into_iter();
                     for _ in 0..n {
                         let (old, new) = (dels.next(), ins.next());
                         let (kind, note) = match (&old, &new) {
-                            (Some((_, a)), Some((_, b))) => (LineKind::Changed, Some(explain(*a, *b, "instruction differs"))),
-                            (Some((_, a)), None) if reordered.contains(&shape(*a)) => {
-                                (LineKind::Removed, Some("reordered: this instruction is elsewhere in the rebuild".into()))
+                            (Some((_, a)), Some((_, b))) => {
+                                (LineKind::Changed, Some(explain(*a, *b, "instruction differs")))
                             }
-                            (Some((_, a)), None) if *a == 0 => (LineKind::Removed, Some("nop missing in the rebuild (a delay slot?)".into())),
+                            (Some((_, a)), None) if *a == 0 => (
+                                LineKind::Removed,
+                                Some("nop missing in the rebuild (a delay slot?)".into()),
+                            ),
                             (Some(_), None) => (LineKind::Removed, Some("missing in the rebuild".into())),
-                            (None, Some((_, b))) if reordered.contains(&shape(*b)) => {
-                                (LineKind::Added, Some("reordered: this instruction is elsewhere in the original".into()))
+                            (None, Some((_, b))) if *b == 0 => {
+                                (LineKind::Added, Some("extra nop in the rebuild".into()))
                             }
-                            (None, Some((_, b))) if *b == 0 => (LineKind::Added, Some("extra nop in the rebuild".into())),
                             _ => (LineKind::Added, Some("extra in the rebuild".into())),
                         };
                         if let Some(n) = &note {
@@ -930,6 +1024,17 @@ impl Binary {
             }
         }
         let total = orig.len().max(cand.len()) as u32;
+        let callee_of = |dest: u64| self.symbols().lookup(dest).map(|s| s.name);
+        let signature_args = |name: &str| {
+            self.object_symbol_address(name)
+                .and_then(|a| self.function_signature(a))
+                .map(|s| s.register_args + s.stack_args)
+        };
+        let audit = if matched as usize == orig.len() && orig.len() == cand.len() {
+            None
+        } else {
+            audit::audit(orig, start, big, func, &callee_of, &signature_args)
+        };
         MatchResult {
             name,
             address: start,
@@ -938,13 +1043,18 @@ impl Binary {
             matched_instructions: matched,
             original_bytes: 4 * orig.len() as u64,
             rebuilt_bytes: 4 * cand.len() as u64,
-            percent: if total == 0 { 100.0 } else { matched as f32 * 100.0 / total as f32 },
+            percent: if total == 0 {
+                100.0
+            } else {
+                matched as f32 * 100.0 / total as f32
+            },
             lines,
             differences: counts.into_iter().collect(),
             original_compiler: compiler_tell(orig),
             rebuilt_compiler: compiler_tell(cand),
             distance: 0,
             clusters: 0,
+            audit,
         }
         .finish()
     }
@@ -957,8 +1067,14 @@ impl Binary {
             return Some(explain(a, b, "instruction differs"));
         }
         let rel = reloc.filter(|r| !r.section_symbol)?;
-        // The linker's field: the same symbol in the original, when it is known there.
-        let target = self.object_symbol_address(&rel.symbol)?;
+        // The linker's field: the same symbol in the original, when it is known
+        // there; under strict relocations, else at the address its name carries.
+        let target = self.object_symbol_address(&rel.symbol).or_else(|| {
+            STRICT_RELOCS
+                .load(Ordering::Relaxed)
+                .then(|| address_in_name(&rel.symbol))
+                .flatten()
+        })?;
         let field = |w: MipsWord| w.0 & mask;
         match rel.kind {
             r::MIPS_26 => {
@@ -1362,9 +1478,10 @@ impl Binary {
         let mut out: Vec<BuildScore> = builds
             .iter()
             .map(|(label, object)| {
-                let unit = object.as_ref().map_err(|e| e.to_string()).and_then(|bytes| {
-                    self.match_unit(label, bytes).map_err(|e| e.to_string())
-                });
+                let unit = object
+                    .as_ref()
+                    .map_err(|e| e.to_string())
+                    .and_then(|bytes| self.match_unit(label, bytes).map_err(|e| e.to_string()));
                 match unit {
                     Ok(u) => BuildScore {
                         label: label.clone(),
@@ -1639,6 +1756,23 @@ pub fn find_function<'a>(functions: &'a [ObjectFunction], name: &str) -> Option<
 /// `foo@@8` for vectorcall, and an import's `__imp_` slot); and for C++,
 /// the qualified name its mangling spells (`?scaled@Shape@@QBEHH@Z` and
 /// `_ZNK5Shape6scaledEi` are `Shape::scaled`).
+/// Strict relocations (`match --strict-relocs`): a symbol the original does
+/// not know by name is taken at the address its name carries (`D_800CB188`,
+/// `dword_800685fc`, `sub_8004bb7c`: the naming of a decompilation's globals),
+/// so a global or callee copied from another unit, which the masked compare
+/// scores as exact, is reported as a relocation that differs.
+pub static STRICT_RELOCS: AtomicBool = AtomicBool::new(false);
+
+/// The address a decompilation's name carries: eight hex digits after its
+/// last underscore.
+pub fn address_in_name(name: &str) -> Option<u64> {
+    let (_, hex) = name.rsplit_once('_')?;
+    if hex.len() != 8 || !hex.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    u64::from_str_radix(hex, 16).ok()
+}
+
 pub fn source_names(name: &str) -> Vec<String> {
     let mut out = vec![name.to_string()];
     let mut add = |n: String| {
@@ -1717,7 +1851,11 @@ fn explain(a: u32, b: u32, otherwise: &str) -> String {
     let (wa, wb) = (MipsWord(a), MipsWord(b));
     let same_op = wa.op() == wb.op() && (wa.op() != 0 || wa.funct() == wb.funct());
     if a == 0 || b == 0 {
-        return if a == 0 { "nop in the original, an instruction in the rebuild".into() } else { "an instruction in the original, nop in the rebuild".into() };
+        return if a == 0 {
+            "nop in the original, an instruction in the rebuild".into()
+        } else {
+            "an instruction in the original, nop in the rebuild".into()
+        };
     }
     if !same_op {
         // The same operation with a register on one side and a constant on the other.
@@ -1731,7 +1869,8 @@ fn explain(a: u32, b: u32, otherwise: &str) -> String {
             (0, 43) => Some(11),
             _ => None,
         };
-        let pair = |r: MipsWord, i: MipsWord| immediate_form(r).is_some_and(|op| op == i.op() || (op == 8 && i.op() == 9));
+        let pair =
+            |r: MipsWord, i: MipsWord| immediate_form(r).is_some_and(|op| op == i.op() || (op == 8 && i.op() == 9));
         if pair(wa, wb) {
             return "uses a register in the original, a constant in the rebuild (a variable became a constant?)".into();
         }
@@ -1768,38 +1907,134 @@ fn explain(a: u32, b: u32, otherwise: &str) -> String {
 pub fn rewrite_hint(kind: &str) -> Option<&'static str> {
     let kind = kind.split([':', ';']).next().unwrap_or(kind).trim();
     let hints: &[(&str, &str)] = &[
-        ("extent differs", "not the C: the original's function was cut short by the analysis (a function sharing its tail with the next, a call target inside it). Give the function its full size with a note (annotate with size), or score it with match --range"),
-        ("registers differ", "reorder the declarations or the statements computing them, reuse a temporary where the original does (or split one), inline or pull out a subexpression, or give a variable another type (a pointer, a char, an unsigned): register allocation follows the code's shape, and decomp-permuter searches these"),
-        ("stack slot offset differs", "arguments read in another order are operands swapped (a - b for b - a, the parameters' order); locals in another order or size: reorder their declarations, merge two into one or split one, or give one another type or array size"),
-        ("stack frame size differs", "the frame holds other locals: remove or add a temporary, size an array as the original does, or keep a value from living across a call"),
-        ("stack alignment differs", "the frame is aligned otherwise: a double or an aligned local, or other compiler flags"),
-        ("arguments popped differ", "the call passes other arguments: check the callee's prototype (a parameter missing or extra, a double for a float, a structure by value)"),
-        ("immediate differs", "a constant differs: check the literal (a #define, an enum, a sizeof), and what the compiler folded (x + 1 written as x - -1, a multiply as shifts)"),
-        ("shift amount differs", "a constant differs: check the literal, and what the compiler folded (a multiply or divide by a power of two)"),
-        ("offset differs", "another field or element: check the structure's layout (a member's type or order) or the index (off by one, a pointer stepped by another size)"),
-        ("condition inverted", "swap the if and else branches, negate the test (if (!x) for if (x)), or turn a while into a do-while (or back): the compiler lays out branches in the order it is given them"),
-        ("condition differs", "another comparison: < for <=, signed for unsigned, or the operands swapped (a > b for b < a)"),
-        ("signedness differs", "make the variable or the cast unsigned where the original's is, or signed (s32/u32, char/unsigned char, int/unsigned)"),
-        ("operand size differs", "a variable of another width: a short for an int, a char for a short"),
-        ("short vs near jump", "the code jumped over is a different length: this follows from the other differences"),
-        ("branch offset differs", "the code between is a different length: this follows from the other differences"),
-        ("branch target differs", "the control flow differs: an else missing, a break or continue, a goto, a loop tested at the top rather than the bottom, or a switch's cases in another order"),
-        ("jump target differs", "the control flow differs: a tail call the original makes (or doesn't), a goto, or a switch's cases in another order"),
-        ("jump table differs", "the switch's cases lead elsewhere: cases in another order, merged or split, or the default placed otherwise"),
-        ("call target differs", "another function is called: check which one the original calls, and whether one was inlined (or a macro expanded) on either side"),
-        ("global differs", "another global: check which variable the original uses, or a static placed otherwise"),
-        ("reordered", "the same instructions in another order: move a statement above or below its neighbour (often an assignment across a call); the compiler schedules within what a statement allows"),
-        ("missing in the rebuild", "the rebuild lacks code the original has: a statement, a check (a NULL test, a bound), or an expression the rebuild's compiler folded away"),
-        ("extra in the rebuild", "the rebuild has code the original doesn't: a statement too many, a check the original skips, or an expression the original's compiler folded"),
-        ("nop missing in the rebuild", "MIPS: the rebuild fills a delay slot the original leaves empty: move a statement across the branch or call, or check the optimization level and the assembler's reordering"),
-        ("an instruction in the original, nop in the rebuild", "MIPS: the original fills a delay slot the rebuild leaves empty: move a statement next to the branch or call"),
-        ("nop in the original, an instruction in the rebuild", "MIPS: the rebuild fills a delay slot the original leaves empty: move a statement across the branch or call"),
-        ("uses a register in the original, a constant in the rebuild", "the original keeps the value in a variable: use one (the compiler didn't fold it), or pass it in"),
-        ("uses a constant in the original, a register in the rebuild", "the original uses the constant itself: write it as a literal (or a #define) rather than a variable"),
-        ("reads memory in the original, a constant in the rebuild", "the original reads a global the rebuild doesn't: make it a variable the code reads, not a #define or a const"),
-        ("encoding differs", "the same instruction in other bytes: another assembler or compiler version (check the compiler the Rich header or the SDK release names)"),
-        ("alignment padding differs", "padding only: it follows from the length of the code before it"),
-        ("instruction differs", "another instruction: often another operator or expression (a shift for a multiply, an lea for an add, a load of another width)"),
+        (
+            "extent differs",
+            "not the C: the original's function was cut short by the analysis (a function sharing its tail with the next, a call target inside it). Give the function its full size with a note (annotate with size), or score it with match --range",
+        ),
+        (
+            "registers differ",
+            "reorder the declarations or the statements computing them, reuse a temporary where the original does (or split one), inline or pull out a subexpression, or give a variable another type (a pointer, a char, an unsigned): register allocation follows the code's shape, and decomp-permuter searches these",
+        ),
+        (
+            "stack slot offset differs",
+            "arguments read in another order are operands swapped (a - b for b - a, the parameters' order); locals in another order or size: reorder their declarations, merge two into one or split one, or give one another type or array size",
+        ),
+        (
+            "stack frame size differs",
+            "the frame holds other locals: remove or add a temporary, size an array as the original does, or keep a value from living across a call",
+        ),
+        (
+            "stack alignment differs",
+            "the frame is aligned otherwise: a double or an aligned local, or other compiler flags",
+        ),
+        (
+            "arguments popped differ",
+            "the call passes other arguments: check the callee's prototype (a parameter missing or extra, a double for a float, a structure by value)",
+        ),
+        (
+            "immediate differs",
+            "a constant differs: check the literal (a #define, an enum, a sizeof), and what the compiler folded (x + 1 written as x - -1, a multiply as shifts)",
+        ),
+        (
+            "shift amount differs",
+            "a constant differs: check the literal, and what the compiler folded (a multiply or divide by a power of two)",
+        ),
+        (
+            "offset differs",
+            "another field or element: check the structure's layout (a member's type or order) or the index (off by one, a pointer stepped by another size)",
+        ),
+        (
+            "condition inverted",
+            "swap the if and else branches, negate the test (if (!x) for if (x)), or turn a while into a do-while (or back): the compiler lays out branches in the order it is given them",
+        ),
+        (
+            "condition differs",
+            "another comparison: < for <=, signed for unsigned, or the operands swapped (a > b for b < a)",
+        ),
+        (
+            "signedness differs",
+            "make the variable or the cast unsigned where the original's is, or signed (s32/u32, char/unsigned char, int/unsigned)",
+        ),
+        (
+            "operand size differs",
+            "a variable of another width: a short for an int, a char for a short",
+        ),
+        (
+            "short vs near jump",
+            "the code jumped over is a different length: this follows from the other differences",
+        ),
+        (
+            "branch offset differs",
+            "the code between is a different length: this follows from the other differences",
+        ),
+        (
+            "branch target differs",
+            "the control flow differs: an else missing, a break or continue, a goto, a loop tested at the top rather than the bottom, or a switch's cases in another order",
+        ),
+        (
+            "jump target differs",
+            "the control flow differs: a tail call the original makes (or doesn't), a goto, or a switch's cases in another order",
+        ),
+        (
+            "jump table differs",
+            "the switch's cases lead elsewhere: cases in another order, merged or split, or the default placed otherwise",
+        ),
+        (
+            "call target differs",
+            "another function is called: check which one the original calls, and whether one was inlined (or a macro expanded) on either side",
+        ),
+        (
+            "global differs",
+            "another global: check which variable the original uses, or a static placed otherwise",
+        ),
+        (
+            "reordered",
+            "the same instructions in another order: move a statement above or below its neighbour (often an assignment across a call); the compiler schedules within what a statement allows",
+        ),
+        (
+            "missing in the rebuild",
+            "the rebuild lacks code the original has: a statement, a check (a NULL test, a bound), or an expression the rebuild's compiler folded away",
+        ),
+        (
+            "extra in the rebuild",
+            "the rebuild has code the original doesn't: a statement too many, a check the original skips, or an expression the original's compiler folded",
+        ),
+        (
+            "nop missing in the rebuild",
+            "MIPS: the rebuild fills a delay slot the original leaves empty: move a statement across the branch or call, or check the optimization level and the assembler's reordering",
+        ),
+        (
+            "an instruction in the original, nop in the rebuild",
+            "MIPS: the original fills a delay slot the rebuild leaves empty: move a statement next to the branch or call",
+        ),
+        (
+            "nop in the original, an instruction in the rebuild",
+            "MIPS: the rebuild fills a delay slot the original leaves empty: move a statement across the branch or call",
+        ),
+        (
+            "uses a register in the original, a constant in the rebuild",
+            "the original keeps the value in a variable: use one (the compiler didn't fold it), or pass it in",
+        ),
+        (
+            "uses a constant in the original, a register in the rebuild",
+            "the original uses the constant itself: write it as a literal (or a #define) rather than a variable",
+        ),
+        (
+            "reads memory in the original, a constant in the rebuild",
+            "the original reads a global the rebuild doesn't: make it a variable the code reads, not a #define or a const",
+        ),
+        (
+            "encoding differs",
+            "the same instruction in other bytes: another assembler or compiler version (check the compiler the Rich header or the SDK release names)",
+        ),
+        (
+            "alignment padding differs",
+            "padding only: it follows from the length of the code before it",
+        ),
+        (
+            "instruction differs",
+            "another instruction: often another operator or expression (a shift for a multiply, an lea for an add, a load of another width)",
+        ),
     ];
     hints.iter().find(|(k, _)| kind.starts_with(k)).map(|(_, h)| *h)
 }
@@ -1835,6 +2070,10 @@ impl MatchResult {
         );
         for (what, n) in &self.differences {
             out.push_str(&format!("  {n} × {what}\n"));
+        }
+        if let Some(a) = &self.audit {
+            out.push_str("Side by side:\n");
+            out.push_str(&a.to_text());
         }
         match (self.original_compiler, self.rebuilt_compiler) {
             (Some(a), Some(b)) if a != b => {
@@ -2169,7 +2408,11 @@ impl Binary {
             }));
         }
         let category = |library: bool| {
-            let us: Vec<&Vec<F>> = units.iter().filter(|((l, _), _)| *l == library).map(|(_, f)| f).collect();
+            let us: Vec<&Vec<F>> = units
+                .iter()
+                .filter(|((l, _), _)| *l == library)
+                .map(|(_, f)| f)
+                .collect();
             let done: Vec<&&Vec<F>> = us.iter().filter(|f| complete(f)).collect();
             let code = done.iter().flat_map(|f| f.iter()).map(|f| f.size).sum();
             measures(
@@ -2273,20 +2516,27 @@ mod tests {
             out.push(0);
         }
         let shoff = out.len() as u32;
-        let mut section = |name: u32, kind: u32, flags: u32, (off, size): (u32, u32), link: u32, info: u32, entsize: u32| {
-            let mut h = [0u8; 40];
-            for (i, v) in [name, kind, flags, 0, off, size, link, info, 4, entsize].iter().enumerate() {
-                h[4 * i..4 * i + 4].copy_from_slice(&v.to_le_bytes());
-            }
-            out.extend(h);
-        };
+        let mut section =
+            |name: u32, kind: u32, flags: u32, (off, size): (u32, u32), link: u32, info: u32, entsize: u32| {
+                let mut h = [0u8; 40];
+                for (i, v) in [name, kind, flags, 0, off, size, link, info, 4, entsize]
+                    .iter()
+                    .enumerate()
+                {
+                    h[4 * i..4 * i + 4].copy_from_slice(&v.to_le_bytes());
+                }
+                out.extend(h);
+            };
         section(0, 0, 0, (0, 0), 0, 0, 0);
         section(1, 1, 6, t, 0, 0, 0);
         section(7, 9, 0, r, 3, 1, 8);
         section(17, 2, 0, sy, 4, 1, 16);
         section(25, 3, 0, st, 0, 0, 0);
         section(33, 3, 0, sh, 0, 0, 0);
-        let header: [(usize, &[u8]); 2] = [(0, &[0x7F, b'E', b'L', b'F', 1, 1, 1, 0]), (16, &[1, 0, 8, 0, 1, 0, 0, 0])];
+        let header: [(usize, &[u8]); 2] = [
+            (0, &[0x7F, b'E', b'L', b'F', 1, 1, 1, 0]),
+            (16, &[1, 0, 8, 0, 1, 0, 0, 0]),
+        ];
         for (at, b) in header {
             out[at..at + b.len()].copy_from_slice(b);
         }
@@ -2332,10 +2582,17 @@ mod tests {
             0x03E0_0008,
             0x27BD_0018,
         ];
-        let relocs = [(2, r::MIPS_26, "sub_80010030"), (4, r::MIPS_HI16, "gState"), (5, r::MIPS_LO16, "gState")];
+        let relocs = [
+            (2, r::MIPS_26, "sub_80010030"),
+            (4, r::MIPS_HI16, "gState"),
+            (5, r::MIPS_LO16, "gState"),
+        ];
         let obj = object(&rebuilt, &relocs);
         let funcs = object_functions(&obj).unwrap();
-        assert_eq!((funcs.len(), funcs[0].name.as_str(), funcs[0].relocs.len()), (1, "func", 3));
+        assert_eq!(
+            (funcs.len(), funcs[0].name.as_str(), funcs[0].relocs.len()),
+            (1, "func", 3)
+        );
         let m = bin.match_function(0x8001_0000, &funcs[0]).unwrap();
         assert_eq!((m.percent, m.matched_instructions), (100.0, 10));
 
@@ -2351,16 +2608,28 @@ mod tests {
             0x03E0_0008, // jr $ra with no nop before it
             0x27BD_0018,
         ];
-        let relocs = [(2, r::MIPS_26, "entry"), (4, r::MIPS_HI16, "gState"), (5, r::MIPS_LO16, "gState")];
+        let relocs = [
+            (2, r::MIPS_26, "entry"),
+            (4, r::MIPS_HI16, "gState"),
+            (5, r::MIPS_LO16, "gState"),
+        ];
         let obj = object(&worse, &relocs);
         let results = bin.match_object(&obj).unwrap();
         assert!(results.is_empty(), "func is not a name the original knows");
         let funcs = object_functions(&obj).unwrap();
         let m = bin.match_function(0x8001_0000, &funcs[0]).unwrap();
         let notes: Vec<&str> = m.lines.iter().filter_map(|l| l.note.as_deref()).collect();
-        assert!(notes.iter().any(|n| n.starts_with("stack frame size differs")), "{notes:?}");
+        assert!(
+            notes.iter().any(|n| n.starts_with("stack frame size differs")),
+            "{notes:?}"
+        );
         assert!(notes.iter().any(|n| n.starts_with("registers differ")), "{notes:?}");
-        assert!(notes.iter().any(|n| n.contains("calls entry in the rebuild; the original calls sub_80010030")), "{notes:?}");
+        assert!(
+            notes
+                .iter()
+                .any(|n| n.contains("calls entry in the rebuild; the original calls sub_80010030")),
+            "{notes:?}"
+        );
         assert!(notes.iter().any(|n| n.starts_with("nop missing")), "{notes:?}");
         assert_eq!(m.matched_instructions, 5);
         assert!((m.percent - 50.0).abs() < 0.01, "{}", m.percent);
@@ -2597,18 +2866,43 @@ mod tests {
             differences: BTreeMap::new(),
             original_compiler: None,
             rebuilt_compiler: None,
+            audit: None,
         };
-        let before = [score("a", 90.0, 10), score("b", 100.0, 0), score("c", 50.0, 40), score("gone", 1.0, 99)];
-        let after = [score("a", 96.0, 4), score("b", 95.0, 3), score("c", 50.0, 40), score("new", 2.0, 98)];
+        let before = [
+            score("a", 90.0, 10),
+            score("b", 100.0, 0),
+            score("c", 50.0, 40),
+            score("gone", 1.0, 99),
+        ];
+        let after = [
+            score("a", 96.0, 4),
+            score("b", 95.0, 3),
+            score("c", 50.0, 40),
+            score("new", 2.0, 98),
+        ];
         let d = compare_scores(&before, &after);
-        assert_eq!((d.up.len(), d.down.len(), d.same, d.exact_before, d.exact_after), (1, 1, 1, 1, 0));
-        assert_eq!((d.only_before.as_slice(), d.only_after.as_slice()), (["gone".to_string()].as_slice(), ["new".to_string()].as_slice()));
+        assert_eq!(
+            (d.up.len(), d.down.len(), d.same, d.exact_before, d.exact_after),
+            (1, 1, 1, 1, 0)
+        );
+        assert_eq!(
+            (d.only_before.as_slice(), d.only_after.as_slice()),
+            (["gone".to_string()].as_slice(), ["new".to_string()].as_slice())
+        );
         assert_eq!((d.distance_before, d.distance_after), (50, 47));
         let text = d.to_text(10);
-        assert!(text.starts_with("1 closer, 1 further, 1 the same; exact 1 -> 0") && text.contains("UP   a") && text.contains("DOWN b"), "{text}");
+        assert!(
+            text.starts_with("1 closer, 1 further, 1 the same; exact 1 -> 0")
+                && text.contains("UP   a")
+                && text.contains("DOWN b"),
+            "{text}"
+        );
         let json = serde_json::to_string(&serde_json::json!({ "scores": before })).unwrap();
         assert_eq!(scores_from_json(&json).unwrap().len(), 4);
-        assert_eq!(scores_from_json(&serde_json::to_string(&after).unwrap()).unwrap().len(), 4);
+        assert_eq!(
+            scores_from_json(&serde_json::to_string(&after).unwrap()).unwrap().len(),
+            4
+        );
         assert!(scores_from_json("{}").is_err());
     }
 
@@ -2621,23 +2915,53 @@ mod tests {
         words.extend([0x03E0_0008, 0x2402_0001]);
         let bin = exe(&words);
         let mut rebuilt = vec![
-            0x27BD_FFE8, 0xAFBF_0014, 0x0C00_0000, 0x0000_0000, 0x3C02_0000, 0x8C42_0010, 0x8FBF_0014, 0x0000_0000,
-            0x03E0_0008, 0x27BD_0018, 0x0000_0000, 0x0000_0000,
+            0x27BD_FFE8,
+            0xAFBF_0014,
+            0x0C00_0000,
+            0x0000_0000,
+            0x3C02_0000,
+            0x8C42_0010,
+            0x8FBF_0014,
+            0x0000_0000,
+            0x03E0_0008,
+            0x27BD_0018,
+            0x0000_0000,
+            0x0000_0000,
         ];
         rebuilt.extend([0x03E0_0008, 0x2402_0001]);
-        let relocs = [(2, r::MIPS_26, "sub_80010030"), (4, r::MIPS_HI16, "gState"), (5, r::MIPS_LO16, "gState")];
+        let relocs = [
+            (2, r::MIPS_26, "sub_80010030"),
+            (4, r::MIPS_HI16, "gState"),
+            (5, r::MIPS_LO16, "gState"),
+        ];
         let obj = object(&rebuilt, &relocs);
-        let m = bin.match_function(0x8001_0000, &object_functions(&obj).unwrap()[0]).unwrap();
-        let extent = m.differences.iter().find(|(k, _)| k.starts_with("extent differs")).expect("the extent is named");
-        assert!(extent.0.contains("4 instructions into sub_80010030") && extent.0.contains("0x38 bytes"), "{}", extent.0);
+        let m = bin
+            .match_function(0x8001_0000, &object_functions(&obj).unwrap()[0])
+            .unwrap();
+        let extent = m
+            .differences
+            .iter()
+            .find(|(k, _)| k.starts_with("extent differs"))
+            .expect("the extent is named");
+        assert!(
+            extent.0.contains("4 instructions into sub_80010030") && extent.0.contains("0x38 bytes"),
+            "{}",
+            extent.0
+        );
         assert!(m.to_text().contains("extent differs: not the C"), "{}", m.to_text());
         assert_eq!(difference_weight(&extent.0), 0);
         // A rebuild longer by code that isn't what follows: no such note.
         let mut other = rebuilt.clone();
         other[12] = 0x2402_0005;
         other[13] = 0x2402_0006;
-        let m = bin.match_function(0x8001_0000, &object_functions(&object(&other, &relocs)).unwrap()[0]).unwrap();
-        assert!(!m.differences.iter().any(|(k, _)| k.starts_with("extent differs")), "{:?}", m.differences);
+        let m = bin
+            .match_function(0x8001_0000, &object_functions(&object(&other, &relocs)).unwrap()[0])
+            .unwrap();
+        assert!(
+            !m.differences.iter().any(|(k, _)| k.starts_with("extent differs")),
+            "{:?}",
+            m.differences
+        );
     }
 
     #[test]
@@ -2670,6 +2994,9 @@ mod tests {
             "units":[{"name":"src/main","functions":[
               {"name":"entry","size":"40","fuzzy_match_percent":100.0,"metadata":{"virtual_address":"2147549184"}}]}]}"#;
         let p = bin.place_report(&ObjdiffReport::parse(json).unwrap());
-        assert_eq!((p.total_code, p.matched_code, p.functions[0].address), (40, 20, 0x8001_0000));
+        assert_eq!(
+            (p.total_code, p.matched_code, p.functions[0].address),
+            (40, 20, 0x8001_0000)
+        );
     }
 }

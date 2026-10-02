@@ -288,6 +288,63 @@ impl Binary {
         Binary::from_rom_logged(data, parts, None)
     }
 
+    /// This ROM read again with `pins` (name, address, size) as function
+    /// boundaries: each is followed as a named entry point, and the joining
+    /// of runs never absorbs it into the function before it (a note that
+    /// names a function, or gives it a size, is a boundary; the automatic
+    /// joining is for unannotated pieces). Pins outside the loaded code are
+    /// ignored. `None` when every pin already starts a function of the
+    /// current reading, or this is not a ROM: nothing would change.
+    pub fn with_function_boundaries(&self, pins: &[(String, u64, u64)]) -> Result<Option<Binary>> {
+        let Some(rom) = self.rom.as_ref() else {
+            return Ok(None);
+        };
+        let in_code = |a: u64| {
+            self.sections
+                .iter()
+                .any(|s| s.loaded && s.file_offset.is_some() && a >= s.address && a < s.address + s.size)
+        };
+        let functions = &rom.analysis.functions;
+        let starts = |a: u64| functions.binary_search_by_key(&a, |f| f.0).is_ok();
+        let pins: Vec<&(String, u64, u64)> = pins.iter().filter(|p| in_code(p.1)).collect();
+        if pins.iter().all(|p| starts(p.1)) {
+            return Ok(None);
+        }
+        let data = &self.data;
+        let mut parts = match (rom.platform, self.summary.format_name.as_str()) {
+            (Platform::PlayStation, "PlayStation memory image") => psx::memory_parts(data, rom.entries.clone()),
+            (Platform::PlayStation, "PlayStation overlay") => {
+                let load = self
+                    .sections
+                    .iter()
+                    .find(|s| s.name == "Overlay")
+                    .map(|s| s.address)
+                    .unwrap_or(0);
+                psx::overlay_parts(data, load, rom.entries.clone())
+            }
+            _ => detect(data),
+        }
+        .ok_or_else(|| Error::new("the ROM no longer reads"))?;
+        // What the earlier readings added (a trace's seeds, earlier pins) stays.
+        let mut known: std::collections::HashSet<u64> = parts.entries.iter().map(|e| e.1).collect();
+        for e in &rom.entries {
+            if known.insert(e.1) {
+                parts.entries.push(e.clone());
+            }
+        }
+        for p in pins {
+            if known.insert(p.1) {
+                parts.entries.push(p.clone());
+            }
+        }
+        let late: std::collections::HashSet<u64> = parts.late_entries.iter().copied().collect();
+        parts
+            .late_entries
+            .extend(rom.late_entries.iter().copied().filter(|a| !late.contains(a)));
+        let bin = Binary::from_rom_logged(data.clone(), parts, rom.log.clone())?;
+        Ok(Some(bin))
+    }
+
     /// The same ROM read again with a code/data log (FCEUX's or Mesen's):
     /// the code it saw run is followed too (code reached only through jump
     /// tables), what it saw read as data isn't taken for code, the 65816's

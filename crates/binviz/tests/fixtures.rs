@@ -1043,7 +1043,11 @@ fn a_float_read_from_an_absolute_address_shows_its_value() {
         "{:?}",
         summary.data
     );
-    assert!(summary.strings.iter().all(|s| s.address != 0x402090), "{:?}", summary.strings);
+    assert!(
+        summary.strings.iter().all(|s| s.address != 0x402090),
+        "{:?}",
+        summary.strings
+    );
 }
 
 #[test]
@@ -1053,7 +1057,11 @@ fn a_function_ends_at_its_code_not_at_its_padding() {
     for f in bin.symbols().functions() {
         let d = bin.disassemble_function(f.address, 4000);
         let last = d.instructions.last().unwrap();
-        assert!(!matches!(last.mnemonic.as_str(), "nop" | "int3"), "{:#x}: {last:?}", f.address);
+        assert!(
+            !matches!(last.mnemonic.as_str(), "nop" | "int3"),
+            "{:#x}: {last:?}",
+            f.address
+        );
         checked += 1;
     }
     assert!(checked > 10);
@@ -1065,7 +1073,11 @@ fn context_says_when_it_stops_short_of_the_end() {
     let f = bin.symbols().function_containing(0x4010b7).unwrap().address;
     let short = bin.decomp_context(f, 3).unwrap();
     assert!(short.truncated);
-    assert!(short.describe().contains("stopped at 3 instructions"), "{}", short.describe());
+    assert!(
+        short.describe().contains("stopped at 3 instructions"),
+        "{}",
+        short.describe()
+    );
     let all = bin.decomp_context(f, 4000).unwrap();
     assert!(!all.truncated && !all.describe().contains("stopped at"));
 }
@@ -1120,9 +1132,16 @@ fn data_the_code_uses_is_typed_and_named_by_its_use() {
     // dispatch's jump table, the const table of callbacks, the doubles ratio reads.
     assert_eq!((g(0x402000).kind, g(0x402000).count), (GlobalKind::JumpTable, 8));
     let unary = g(0x402084);
-    assert_eq!((unary.name.as_str(), unary.kind, unary.count), ("funcs_402080", GlobalKind::Functions, 3));
+    assert_eq!(
+        (unary.name.as_str(), unary.kind, unary.count),
+        ("funcs_402080", GlobalKind::Functions, 3)
+    );
     assert_eq!(g(0x402090).name, "dbl_402090");
-    assert!(g(0x402090).description.starts_with("double = 1.25, never written"), "{:?}", g(0x402090));
+    assert!(
+        g(0x402090).description.starts_with("double = 1.25, never written"),
+        "{:?}",
+        g(0x402090)
+    );
     // The disassembly names what the code reads and the tables it calls through.
     let start = bin.symbols().function_containing(0x4013f2).unwrap().address;
     let d = bin.disassemble_function(start, 4000);
@@ -1135,7 +1154,9 @@ fn data_the_code_uses_is_typed_and_named_by_its_use() {
     // The context says what a table is.
     let c = bin.decomp_context(start, 4000).unwrap();
     assert!(
-        c.typed.iter().any(|t| t.address == 0x4020a0 && t.what.starts_with("table of 2 code pointers")),
+        c.typed
+            .iter()
+            .any(|t| t.address == 0x4020a0 && t.what.starts_with("table of 2 code pointers")),
         "{:?}",
         c.typed
     );
@@ -1148,7 +1169,9 @@ fn x86_64_leaf_functions_without_unwind_data_are_found_by_following_the_code() {
     // .pdata lists only make(); the virtual functions are leaves, with no unwind data.
     let bin = open("rttidemo64.dll");
     let mut named = open("rttidemo64.dll");
-    named.attach_debug_file("rttidemo64.pdb", fixture("rttidemo64.pdb")).unwrap();
+    named
+        .attach_debug_file("rttidemo64.pdb", fixture("rttidemo64.pdb"))
+        .unwrap();
     let theirs: Vec<(u64, u64)> = named
         .symbols()
         .functions()
@@ -1162,7 +1185,10 @@ fn x86_64_leaf_functions_without_unwind_data_are_found_by_following_the_code() {
 
 #[test]
 fn msvc_rtti_names_a_stripped_binarys_classes_as_its_pdb_does() {
-    for (dll, pdb) in [("rttidemo32.dll", "rttidemo32.pdb"), ("rttidemo64.dll", "rttidemo64.pdb")] {
+    for (dll, pdb) in [
+        ("rttidemo32.dll", "rttidemo32.pdb"),
+        ("rttidemo64.dll", "rttidemo64.pdb"),
+    ] {
         let bin = open(dll);
         let mut named = open(dll);
         named.attach_debug_file(pdb, fixture(pdb)).unwrap();
@@ -1176,7 +1202,10 @@ fn msvc_rtti_names_a_stripped_binarys_classes_as_its_pdb_does() {
         assert!(found.len() >= 25, "{dll}: {found:?}");
         let mut compared = 0;
         for (address, name) in &found {
-            let Some(theirs) = named.symbols().at(*address).filter(|s| s.source == binviz::SymbolSource::DebugFile)
+            let Some(theirs) = named
+                .symbols()
+                .at(*address)
+                .filter(|s| s.source == binviz::SymbolSource::DebugFile)
             else {
                 continue;
             };
@@ -1192,7 +1221,10 @@ fn msvc_rtti_names_a_stripped_binarys_classes_as_its_pdb_does() {
         let label = classes.iter().find(|c| c.name == "Label").unwrap();
         let bases: Vec<(&str, i32)> = label.bases.iter().map(|b| (b.name.as_str(), b.offset)).collect();
         let named_at = if dll.contains("64") { 24 } else { 12 };
-        assert_eq!(bases, [("shapes::Square", 0), ("shapes::Shape", 0), ("Named", named_at)]);
+        assert_eq!(
+            bases,
+            [("shapes::Square", 0), ("shapes::Shape", 0), ("Named", named_at)]
+        );
         let fors: Vec<Option<&str>> = label.vtables.iter().map(|v| v.for_base.as_deref()).collect();
         assert_eq!(fors, [Some("shapes::Square"), Some("Named")]);
         // A virtual function's context says which slots hold it.
@@ -1206,7 +1238,9 @@ fn msvc_rtti_names_a_stripped_binarys_classes_as_its_pdb_does() {
 fn gamedemo() -> (Binary, Binary) {
     let bin = open("gamedemo.dll");
     let mut named = open("gamedemo.dll");
-    named.attach_debug_file("gamedemo.pdb", fixture("gamedemo.pdb")).unwrap();
+    named
+        .attach_debug_file("gamedemo.pdb", fixture("gamedemo.pdb"))
+        .unwrap();
     bin.prepare_xrefs();
     (bin, named)
 }
@@ -1215,12 +1249,27 @@ fn gamedemo() -> (Binary, Binary) {
 fn a_game_dll_stripped_reads_as_its_source_would() {
     use binviz::globals::GlobalKind;
     let (bin, named) = gamedemo();
-    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let at = |name: &str| {
+        named
+            .symbols()
+            .by_name(name)
+            .unwrap_or_else(|| panic!("{name}"))
+            .address
+    };
     // The engine's table of functions: filled by copying in GetGameAPI, each slot called through.
     let gi = bin.global_at(at("gi") + 0x2c).unwrap();
-    assert_eq!((gi.address, gi.kind, gi.size), (at("gi"), GlobalKind::FunctionPointers, 56));
-    assert!(gi.description.contains("filled at GetGameAPI+0x10 by copying 14 words"), "{gi:?}");
-    assert_eq!(bin.name_for(at("gi") + 0x2c), Some(format!("fptrs_{:x}+0x2c", at("gi"))));
+    assert_eq!(
+        (gi.address, gi.kind, gi.size),
+        (at("gi"), GlobalKind::FunctionPointers, 56)
+    );
+    assert!(
+        gi.description.contains("filled at GetGameAPI+0x10 by copying 14 words"),
+        "{gi:?}"
+    );
+    assert_eq!(
+        bin.name_for(at("gi") + 0x2c),
+        Some(format!("fptrs_{:x}+0x2c", at("gi")))
+    );
     // cvars: pointers read, their value at 0x14.
     let dm = bin.global_at(at("deathmatch")).unwrap();
     assert_eq!(dm.kind, GlobalKind::Pointer);
@@ -1230,7 +1279,11 @@ fn a_game_dll_stripped_reads_as_its_source_would() {
     assert_eq!((frames.kind, frames.count, frames.stride), (GlobalKind::Records, 3, 12));
     let mv = bin.global_at(at("soldier_move_stand")).unwrap();
     assert_eq!(mv.kind, GlobalKind::Structure);
-    assert!(mv.description.contains(&format!("+0x8 → stru_{:x}", at("soldier_frames_stand"))), "{mv:?}");
+    assert!(
+        mv.description
+            .contains(&format!("+0x8 → stru_{:x}", at("soldier_frames_stand"))),
+        "{mv:?}"
+    );
     // The strings a letter long the code passes.
     let f = bin.function_summary(at("InitGame"), 50).unwrap();
     let texts: Vec<&str> = f.strings.iter().map(|s| s.text.as_str()).collect();
@@ -1250,9 +1303,15 @@ fn a_game_dll_stripped_reads_as_its_source_would() {
     assert_eq!(s.prototype, "void __cdecl SP_monster_soldier(void *arg1)");
     // Callbacks stored into the edict are addresses the context explains, not calls.
     let c = bin.decomp_context(at("SP_monster_soldier"), 400).unwrap();
-    assert!(c.callees.iter().all(|n| n.address != at("soldier_die")), "{:?}", c.callees);
     assert!(
-        c.typed.iter().any(|t| t.address == at("soldier_die") && t.what.contains("callback")),
+        c.callees.iter().all(|n| n.address != at("soldier_die")),
+        "{:?}",
+        c.callees
+    );
+    assert!(
+        c.typed
+            .iter()
+            .any(|t| t.address == at("soldier_die") && t.what.contains("callback")),
         "{:?}",
         c.typed
     );
@@ -1261,7 +1320,13 @@ fn a_game_dll_stripped_reads_as_its_source_would() {
 #[test]
 fn a_function_in_more_than_one_piece_reads_as_one() {
     let (bin, named) = gamedemo();
-    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let at = |name: &str| {
+        named
+            .symbols()
+            .by_name(name)
+            .unwrap_or_else(|| panic!("{name}"))
+            .address
+    };
     // find_char's found case sits before its entry: a piece of it, not a function of its own.
     let (find_char, piece) = (at("_find_char"), at("_find_char") - 5);
     assert!(bin.symbols().functions().all(|f| f.address != piece));
@@ -1269,13 +1334,23 @@ fn a_function_in_more_than_one_piece_reads_as_one() {
     let c = bin.decomp_context(find_char, 100).unwrap();
     assert_eq!(c.parts, [(piece, find_char)]);
     let text = c.describe();
-    assert!(text.contains(&format!("Has a piece away from its entry at {piece:#x}..{find_char:#x}")), "{text}");
+    assert!(
+        text.contains(&format!(
+            "Has a piece away from its entry at {piece:#x}..{find_char:#x}"
+        )),
+        "{text}"
+    );
     assert!(text.contains("lea eax, [edx-1]"), "{text}");
     // Its code pops what the entry pushed.
     let s = bin.function_signature(find_char).unwrap();
     assert!(!s.unbalanced, "{}", s.describe());
     assert_eq!(s.saved, ["ebx"]);
-    assert!(bin.coverage(1000).gaps.iter().all(|g| g.end <= piece || g.start >= find_char));
+    assert!(
+        bin.coverage(1000)
+            .gaps
+            .iter()
+            .all(|g| g.end <= piece || g.start >= find_char)
+    );
     // sqrt_either loads its argument and runs on into a second entry taking it on the FPU stack.
     let (sqrt, cisqrt) = (at("_sqrt_either"), at("__CIsqrt_either"));
     let s = bin.function_signature(sqrt).unwrap();
@@ -1292,21 +1367,36 @@ fn a_function_in_more_than_one_piece_reads_as_one() {
     // gib_die and debris_die, folded into one: the context names both.
     let c = named.decomp_context(at("_gib_die"), 100).unwrap();
     let names = [c.name.as_str(), c.aliases.first().map_or("", String::as_str)];
-    assert!(names.contains(&"_gib_die") && names.contains(&"_debris_die"), "{names:?}");
+    assert!(
+        names.contains(&"_gib_die") && names.contains(&"_debris_die"),
+        "{names:?}"
+    );
     assert!(c.describe().contains("folded into one by the linker"));
 }
 
 #[test]
 fn a_context_keeps_its_lists_short_and_says_where_a_callback_is_stored() {
     let (bin, named) = gamedemo();
-    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let at = |name: &str| {
+        named
+            .symbols()
+            .by_name(name)
+            .unwrap_or_else(|| panic!("{name}"))
+            .address
+    };
     // Each list is the first few, with how many there are.
     let f = bin.function_summary(at("InitGame"), 2).unwrap();
-    assert!(f.string_count as usize > f.strings.len() && f.strings.len() == 2, "{f:?}");
+    assert!(
+        f.string_count as usize > f.strings.len() && f.strings.len() == 2,
+        "{f:?}"
+    );
     let c = bin.decomp_context(at("InitGame"), 2).unwrap();
     assert_eq!((c.strings.len(), c.string_count), (2, f.string_count));
     let text = c.describe();
-    assert!(text.contains(&format!("  … and {} more\n", f.string_count - 2)), "{text}");
+    assert!(
+        text.contains(&format!("  … and {} more\n", f.string_count - 2)),
+        "{text}"
+    );
     assert_eq!(c.strings.len(), 2);
     // A bare `ret` only its address reaches: where that is taken, and that it may ignore arguments.
     let c = bin.decomp_context(at("player_pain"), 100).unwrap();
@@ -1314,7 +1404,10 @@ fn a_context_keeps_its_lists_short_and_says_where_a_callback_is_stored() {
     assert!(c.callers.is_empty());
     let text = c.describe();
     assert!(text.contains("Its address is taken or stored at (a callback"), "{text}");
-    assert!(text.contains(&format!("  {:#x} address sub_", c.taken_from[0].source)), "{text}");
+    assert!(
+        text.contains(&format!("  {:#x} address sub_", c.taken_from[0].source)),
+        "{text}"
+    );
     assert!(text.contains("it may be passed some it ignores"), "{text}");
 }
 
@@ -1339,10 +1432,18 @@ fn names_port_from_a_symbolized_build() {
     assert!(unary.data && unary.address == at("unary_ops"), "{unary:?}");
     assert!(p.unmatched.is_empty(), "{:?}", p.unmatched);
     let notes = p.annotations(0.9);
-    assert!(notes.iter().any(|n| n.name == "unary_ops" && n.kind.as_deref() == Some("data")));
+    assert!(
+        notes
+            .iter()
+            .any(|n| n.name == "unary_ops" && n.kind.as_deref() == Some("data"))
+    );
     // A WebAssembly build stripped of its names.
     let p = open("wasmdemo.bare.wasm").port_names(&open("wasmdemo.wasm"));
-    assert!(p.proposals.iter().any(|x| x.proposed == "check" && x.confidence == 1.0), "{}", p.to_text());
+    assert!(
+        p.proposals.iter().any(|x| x.proposed == "check" && x.confidence == 1.0),
+        "{}",
+        p.to_text()
+    );
 }
 
 #[test]
@@ -1354,20 +1455,39 @@ fn a_binary_is_set_against_its_source() {
     let only: Vec<&str> = c.only_here.iter().map(|(_, n)| n.as_str()).collect();
     assert_eq!(
         only,
-        ["GetGameAPI", "_spawn_messages", "_find_char", "_sqrt_either", "__CIsqrt_either", "_vec_length", "_debris_die"]
+        [
+            "GetGameAPI",
+            "_spawn_messages",
+            "_find_char",
+            "_sqrt_either",
+            "__CIsqrt_either",
+            "_vec_length",
+            "_debris_die"
+        ]
     );
     let strings: Vec<&str> = c.strings_only_here.iter().map(|s| s.1.as_str()).collect();
     assert_eq!(strings, ["spawned\n", "%i entities\n"]);
     assert!(c.only_in_source.is_empty(), "{:?}", c.only_in_source);
     // An older source: a function and a string the binary has aren't in it, and the other way round.
     let older = src
-        .replace("__declspec(noinline) void G_RunFrame(void) {", "void G_RunFrame_old(void) {")
+        .replace(
+            "__declspec(noinline) void G_RunFrame(void) {",
+            "void G_RunFrame_old(void) {",
+        )
         .replace("\"soldier/death1.wav\"", "\"soldier/death2.wav\"");
     let c = named.source_counterparts(&[("gamedemo.c".into(), older)]);
     assert!(c.only_here.iter().any(|(_, n)| n == "G_RunFrame"));
-    assert!(c.only_in_source.iter().any(|f| f.name == "G_RunFrame_old" && f.file == "gamedemo.c"));
+    assert!(
+        c.only_in_source
+            .iter()
+            .any(|f| f.name == "G_RunFrame_old" && f.file == "gamedemo.c")
+    );
     assert!(c.strings_only_here.iter().any(|s| s.1 == "soldier/death1.wav"));
-    assert!(c.to_text(10).contains("defined nowhere in the source (8)"), "{}", c.to_text(10));
+    assert!(
+        c.to_text(10).contains("defined nowhere in the source (8)"),
+        "{}",
+        c.to_text(10)
+    );
 }
 
 #[test]
@@ -1389,7 +1509,8 @@ fn progress_is_exported_as_objdiffs_report() {
             source: source.into(),
             ..Default::default()
         }),
-        ctype: None, author: String::new(),
+        ctype: None,
+        author: String::new(),
     };
     let notes = vec![
         note(at(&bin, "sum3"), DecompState::Matched, None, "src/math.c"),
@@ -1401,16 +1522,40 @@ fn progress_is_exported_as_objdiffs_report() {
     let report = bin.progress_report();
     // 64-bit numbers are strings, as protobuf's JSON writes them.
     assert!(report["measures"]["total_code"].is_string());
-    let units: Vec<&str> = report["units"].as_array().unwrap().iter().map(|u| u["name"].as_str().unwrap()).collect();
-    assert_eq!(units, ["(not decompiled)", "src/dispatch.c", "src/math.c", "library/libcmt"]);
+    let units: Vec<&str> = report["units"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|u| u["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        units,
+        ["(not decompiled)", "src/dispatch.c", "src/math.c", "library/libcmt"]
+    );
     let dispatch = &report["units"][1];
-    assert_eq!((dispatch["metadata"]["complete"].as_bool(), dispatch["metadata"]["source_path"].as_str()), (Some(true), Some("src/dispatch.c")));
+    assert_eq!(
+        (
+            dispatch["metadata"]["complete"].as_bool(),
+            dispatch["metadata"]["source_path"].as_str()
+        ),
+        (Some(true), Some("src/dispatch.c"))
+    );
     // It reads back as objdiff's, each verdict on its function.
     let text = serde_json::to_vec(&report).unwrap();
     let placed = bin.place_report(&binviz::matching::ObjdiffReport::parse(&text).unwrap());
     assert!(placed.unplaced.is_empty(), "{:?}", placed.unplaced);
-    let percent = |n: &str| placed.functions.iter().find(|f| f.address == at(&bin, n)).unwrap().percent;
-    assert_eq!((percent("sum3"), percent("scale"), percent("apply")), (100.0, 87.5, 0.0));
+    let percent = |n: &str| {
+        placed
+            .functions
+            .iter()
+            .find(|f| f.address == at(&bin, n))
+            .unwrap()
+            .percent
+    };
+    assert_eq!(
+        (percent("sum3"), percent("scale"), percent("apply")),
+        (100.0, 87.5, 0.0)
+    );
     assert_eq!(placed.matched_functions, 2);
     // A matched function is its own colour on the coverage map.
     let c = bin.coverage(0);
@@ -1444,13 +1589,23 @@ fn progress_is_exported_as_objdiffs_report() {
 fn operand_name(bin: &Binary, address: u64) -> Option<String> {
     let f = bin.symbols().function_containing(address).unwrap().address;
     let d = bin.disassemble_function(f, 1000);
-    d.instructions.iter().find(|i| i.address == address)?.target_symbol.clone()
+    d.instructions
+        .iter()
+        .find(|i| i.address == address)?
+        .target_symbol
+        .clone()
 }
 
 #[test]
 fn fields_are_named_through_typed_pointers() {
     let (bin, named) = gamedemo();
-    let at = |name: &str| named.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
+    let at = |name: &str| {
+        named
+            .symbols()
+            .by_name(name)
+            .unwrap_or_else(|| panic!("{name}"))
+            .address
+    };
     let soldier = at("SP_monster_soldier");
     // With the PDB: the parameter's type, a cvar pointer read from a global, a global structure,
     // and a pointer read from one of its fields.
@@ -1465,7 +1620,8 @@ fn fields_are_named_through_typed_pointers() {
     // Stripped: notes type the function and the global, a types file (the headers compiled with -g) has the structures.
     let mut bin = bin;
     assert_eq!(operand_name(&bin, soldier + 0x4c), None);
-    bin.attach_types("gamedemo-types.obj", fixture("gamedemo-types.obj")).unwrap();
+    bin.attach_types("gamedemo-types.obj", fixture("gamedemo-types.obj"))
+        .unwrap();
     let note = |address: u64, name: &str, ctype: &str| Annotation {
         address,
         size: 0,
@@ -1474,7 +1630,8 @@ fn fields_are_named_through_typed_pointers() {
         reviewed: false,
         kind: None,
         decomp: None,
-        ctype: Some(ctype.into()), author: String::new(),
+        ctype: Some(ctype.into()),
+        author: String::new(),
     };
     bin.set_annotations(vec![
         note(soldier, "SP_monster_soldier", "void SP_monster_soldier(edict_t *self)"),
@@ -1494,7 +1651,11 @@ fn fields_are_named_through_typed_pointers() {
 fn marks_at(bin: &Binary, address: u64) -> Vec<String> {
     let f = bin.symbols().function_containing(address).unwrap().address;
     let d = bin.disassemble_function(f, 1000);
-    d.marks.iter().filter(|m| m.address == address).map(|m| m.text.clone()).collect()
+    d.marks
+        .iter()
+        .filter(|m| m.address == address)
+        .map(|m| m.text.clone())
+        .collect()
 }
 
 #[test]
@@ -1515,22 +1676,36 @@ fn a_switch_says_which_cases_lead_where() {
     for t in ["cases 1, 7:", "cases 2, 3, 9:", "cases 4, 8:", "default:"] {
         assert!(texts.contains(&t), "{t}: {texts:?}");
     }
-    assert!(texts[0].starts_with("switch: cases 1–9 through the bytes at "), "{texts:?}");
-    assert!(texts.iter().any(|t| t.starts_with("jump table of the switch at ")), "{texts:?}");
+    assert!(
+        texts[0].starts_with("switch: cases 1–9 through the bytes at "),
+        "{texts:?}"
+    );
+    assert!(
+        texts.iter().any(|t| t.starts_with("jump table of the switch at ")),
+        "{texts:?}"
+    );
     // The context shows them too.
     let c = bin.decomp_context(msvc, 100).unwrap();
     assert!(c.describe().contains("  ; cases 2, 3, 9:\n"), "{}", c.describe());
     // A callee's float result discarded isn't an argument on the x87 stack.
     let start = bin.symbols().by_name("start").unwrap().address;
-    assert_eq!(bin.function_signature(start).unwrap().prototype, "void __cdecl start(void)");
+    assert_eq!(
+        bin.function_signature(start).unwrap().prototype,
+        "void __cdecl start(void)"
+    );
 
     // x86-64: clang's tables of offsets from the table, MSVC's from the image base, kept in .text.
     let bin = open("switch64.dll");
     let at = |bin: &Binary, name: &str| bin.symbols().by_name(name).unwrap_or_else(|| panic!("{name}")).address;
     let d = bin.disassemble_function(at(&bin, "opcode"), 100);
     let texts: Vec<&str> = d.marks.iter().map(|m| m.text.as_str()).collect();
-    assert!(texts[0].starts_with("switch: cases 10–17 through the table at "), "{texts:?}");
-    for t in ["case 10:", "case 11:", "case 12:", "case 14:", "case 15:", "case 17:", "default:"] {
+    assert!(
+        texts[0].starts_with("switch: cases 10–17 through the table at "),
+        "{texts:?}"
+    );
+    for t in [
+        "case 10:", "case 11:", "case 12:", "case 14:", "case 15:", "case 17:", "default:",
+    ] {
         assert!(texts.contains(&t), "{t}: {texts:?}");
     }
     assert!(!texts.iter().any(|t| t.contains("13") || t.contains("16")), "{texts:?}");
@@ -1540,9 +1715,26 @@ fn a_switch_says_which_cases_lead_where() {
     for t in ["cases 1, 7:", "cases 2, 3, 9:", "cases 4, 8:", "default:"] {
         assert!(texts.contains(&t), "{t}: {texts:?}");
     }
-    let rows: Vec<Option<u64>> = d.instructions.iter().filter(|i| i.mnemonic == "dd").map(|i| i.target).collect();
-    assert_eq!(rows, [Some(msvc + 0x27), Some(msvc + 0x2d), Some(msvc + 0x31), Some(msvc + 0x38)]);
-    let lea = d.instructions.iter().find(|i| i.mnemonic == "lea" && i.operands.starts_with("rdx")).unwrap();
+    let rows: Vec<Option<u64>> = d
+        .instructions
+        .iter()
+        .filter(|i| i.mnemonic == "dd")
+        .map(|i| i.target)
+        .collect();
+    assert_eq!(
+        rows,
+        [
+            Some(msvc + 0x27),
+            Some(msvc + 0x2d),
+            Some(msvc + 0x31),
+            Some(msvc + 0x38)
+        ]
+    );
+    let lea = d
+        .instructions
+        .iter()
+        .find(|i| i.mnemonic == "lea" && i.operands.starts_with("rdx"))
+        .unwrap();
     assert_eq!(lea.target_symbol.as_deref(), Some("__ImageBase"));
     // Each entry is a reference to its case, and the table's refer to the function's own code.
     let refs = bin.references_to(msvc + 0x27, msvc + 0x28, 0, 10).refs;
@@ -1555,13 +1747,23 @@ fn a_switch_says_which_cases_lead_where() {
 
     // An ELF lists its functions, so nothing follows its code: the switches are read from their jumps.
     use binviz::globals::GlobalKind;
-    for (file, form) in [("switch64-elf", "(offsets from the table)"), ("switch64-static", "8 cases, for")] {
+    for (file, form) in [
+        ("switch64-elf", "(offsets from the table)"),
+        ("switch64-static", "8 cases, for"),
+    ] {
         let bin = open(file);
         bin.prepare_xrefs();
         let d = bin.disassemble_function(at(&bin, "dispatch"), 100);
         let texts: Vec<&str> = d.marks.iter().map(|m| m.text.as_str()).collect();
-        assert!(texts[0].starts_with("switch: cases 0–7 through the table at "), "{file}: {texts:?}");
-        assert_eq!(texts.iter().filter(|t| t.starts_with("case ")).count(), 8, "{file}: {texts:?}");
+        assert!(
+            texts[0].starts_with("switch: cases 0–7 through the table at "),
+            "{file}: {texts:?}"
+        );
+        assert_eq!(
+            texts.iter().filter(|t| t.starts_with("case ")).count(),
+            8,
+            "{file}: {texts:?}"
+        );
         let tables: Vec<_> = bin
             .globals("", 0, 100)
             .globals
@@ -1569,7 +1771,12 @@ fn a_switch_says_which_cases_lead_where() {
             .filter(|g| g.kind == GlobalKind::JumpTable)
             .collect();
         assert_eq!(tables.len(), 2, "{file}: {tables:?}");
-        assert!(tables.iter().all(|g| g.name.starts_with("jpt_") && g.description.contains(form)), "{tables:?}");
+        assert!(
+            tables
+                .iter()
+                .all(|g| g.name.starts_with("jpt_") && g.description.contains(form)),
+            "{tables:?}"
+        );
         let f = bin.function_summary(at(&bin, "opcode"), 100).unwrap();
         assert_eq!(f.referenced_by.pointer, 0, "{file}: {:?}", f.referenced_by);
     }
@@ -1586,7 +1793,10 @@ fn with_rich_header(entries: &[(u16, u16, u32)]) -> Vec<u8> {
     data[old..new + headers.len()].fill(0);
     data[new..new + headers.len()].copy_from_slice(&headers);
     data[0x3C..0x40].copy_from_slice(&(new as u32).to_le_bytes());
-    let ids: Vec<(u32, u32)> = entries.iter().map(|&(p, b, n)| ((p as u32) << 16 | b as u32, n)).collect();
+    let ids: Vec<(u32, u32)> = entries
+        .iter()
+        .map(|&(p, b, n)| ((p as u32) << 16 | b as u32, n))
+        .collect();
     // The key is the checksum of what comes before (e_lfanew left out) and of the entries.
     let start = 0x80usize;
     let mut key = start as u32;
@@ -1611,7 +1821,13 @@ fn with_rich_header(entries: &[(u16, u16, u32)]) -> Vec<u8> {
 
 #[test]
 fn the_rich_header_names_the_compiler() {
-    let entries = [(0x0001, 0, 90), (0x000A, 8804, 41), (0x000B, 8804, 3), (0x0012, 8444, 2), (0x0004, 8447, 1)];
+    let entries = [
+        (0x0001, 0, 90),
+        (0x000A, 8804, 41),
+        (0x000B, 8804, 3),
+        (0x0012, 8444, 2),
+        (0x0004, 8447, 1),
+    ];
     let bin = Binary::parse(with_rich_header(&entries)).unwrap();
     let compiler = bin.summary().properties.iter().find(|p| p.key == "Compiler").unwrap();
     assert_eq!(
@@ -1627,7 +1843,10 @@ fn the_rich_header_names_the_compiler() {
         Some("cl 12.00.8804, C compiler (Visual C++ 6.0 SP5 or SP6): 41 objects [Utc12_C]")
     );
     let header = &path[path.len() - 2];
-    assert!(header.value.as_deref().unwrap().contains("untouched since linking"), "{header:?}");
+    assert!(
+        header.value.as_deref().unwrap().contains("untouched since linking"),
+        "{header:?}"
+    );
     // The code still reads as before.
     assert!(bin.symbols().functions().count() > 40);
 
@@ -1637,7 +1856,10 @@ fn the_rich_header_names_the_compiler() {
     let bin = Binary::parse(edited).unwrap();
     let path = bin.describe_offset(0x80 + 16);
     let header = &path[path.len() - 2];
-    assert!(header.value.as_deref().unwrap().contains("edited after linking"), "{header:?}");
+    assert!(
+        header.value.as_deref().unwrap().contains("edited after linking"),
+        "{header:?}"
+    );
 }
 
 #[test]
@@ -1657,7 +1879,8 @@ fn decompilation_goes_from_what_is_ready() {
             reviewed: false,
             kind: None,
             decomp: Some(decomp),
-            ctype: None, author: String::new(),
+            ctype: None,
+            author: String::new(),
         });
         bin.set_annotations(notes);
     };
@@ -1926,17 +2149,30 @@ fn builds_of_a_unit_rank_by_how_they_match_and_differences_say_what_to_try() {
     let ranked = bin.rank_builds(&builds);
     let order: Vec<&str> = ranked.iter().map(|b| b.label.as_str()).collect();
     assert_eq!(order, ["-O2", "-O2 -DEDITED", "broken", "not an object"]);
-    assert_eq!((ranked[0].exact, ranked[0].functions, ranked[0].percent), (15, 15, 100.0));
+    assert_eq!(
+        (ranked[0].exact, ranked[0].functions, ranked[0].percent),
+        (15, 15, 100.0)
+    );
     assert!(ranked[2].error.as_deref() == Some("didn't compile") && ranked[3].error.is_some());
     // What to try for each kind of difference in the edited build.
-    let edited = bin.match_unit("x86match-edited.obj", &fixture("x86match-edited.obj")).unwrap();
+    let edited = bin
+        .match_unit("x86match-edited.obj", &fixture("x86match-edited.obj"))
+        .unwrap();
     let below = edited.functions.iter().find(|m| m.name == "below").unwrap();
     let hints = below.hints();
-    assert!(hints.iter().any(|(k, h)| k == "condition differs" && h.contains("< for <=")), "{hints:?}");
+    assert!(
+        hints
+            .iter()
+            .any(|(k, h)| k == "condition differs" && h.contains("< for <=")),
+        "{hints:?}"
+    );
     assert!(below.to_text().contains("To try:\n"), "{}", below.to_text());
     let diff = edited.functions.iter().find(|m| m.name == "diff").unwrap();
     let note = diff.lines.iter().find_map(|l| l.note.as_deref()).unwrap();
-    assert!(note.contains("(arg1) in the original, [esp+0x8] (arg2) in the rebuild (the arguments used in another order?)"), "{note}");
+    assert!(
+        note.contains("(arg1) in the original, [esp+0x8] (arg2) in the rebuild (the arguments used in another order?)"),
+        "{note}"
+    );
     assert!(binviz::matching::rewrite_hint("nop missing in the rebuild (a delay slot?)").is_some());
 }
 
@@ -1944,7 +2180,9 @@ fn builds_of_a_unit_rank_by_how_they_match_and_differences_say_what_to_try() {
 fn msvc_x64_jump_tables_match_by_where_their_entries_lead() {
     // Entries (and the code reading them) hold offsets from the image base.
     let bin = open("switch64.dll");
-    let unit = bin.match_unit("switch64-msvc.obj", &fixture("switch64-msvc.obj")).unwrap();
+    let unit = bin
+        .match_unit("switch64-msvc.obj", &fixture("switch64-msvc.obj"))
+        .unwrap();
     assert_eq!(unit.functions.len(), 1);
     assert_eq!(unit.functions[0].percent, 100.0);
     let edited = bin
@@ -1965,14 +2203,25 @@ fn the_sdk_release_is_the_one_whose_libraries_account_for_the_code() {
     // Two releases side by side: one has both objects of the library, the other only the first.
     let bin = open("x86match.exe");
     let mut sigs = binviz::sigs::SignatureSet::default();
-    sigs.add_file("sdk/release-2/x86lib.lib", &fixture("x86lib.lib")).unwrap();
-    sigs.add_file("sdk/release-1/x86lib-a.obj", &fixture("x86lib-a.obj")).unwrap();
+    sigs.add_file("sdk/release-2/x86lib.lib", &fixture("x86lib.lib"))
+        .unwrap();
+    sigs.add_file("sdk/release-1/x86lib-a.obj", &fixture("x86lib-a.obj"))
+        .unwrap();
     let r = bin.identify_sdk(&sigs);
-    let releases: Vec<(&str, u32, u32)> = r.releases.iter().map(|x| (x.release.as_str(), x.functions, x.only)).collect();
+    let releases: Vec<(&str, u32, u32)> = r
+        .releases
+        .iter()
+        .map(|x| (x.release.as_str(), x.functions, x.only))
+        .collect();
     assert_eq!(releases, [("release-2", 4, 2), ("release-1", 2, 0)]);
     let checksum = r.matches.iter().find(|m| m.name == "lib_checksum").unwrap();
     assert_eq!(checksum.releases, ["release-1", "release-2"]);
-    assert!(r.to_text().contains("SDK release: release-2 (4 of the 4 library functions found are its, 2 of them only its)"), "{}", r.to_text());
+    assert!(
+        r.to_text()
+            .contains("SDK release: release-2 (4 of the 4 library functions found are its, 2 of them only its)"),
+        "{}",
+        r.to_text()
+    );
     // One release: nothing to tell apart.
     let mut one = binviz::sigs::SignatureSet::default();
     one.add_file("x86lib.lib", &fixture("x86lib.lib")).unwrap();
@@ -2054,7 +2303,10 @@ fn annotations_name_functions_and_mark_progress() {
             name: "main".into(),
             comment: "builds shapes and prints the total area".into(),
             reviewed: true,
-            kind: None, decomp: None, ctype: None, author: String::new(),
+            kind: None,
+            decomp: None,
+            ctype: None,
+            author: String::new(),
         },
         Annotation {
             address: main.address + 0x10,
@@ -2062,7 +2314,10 @@ fn annotations_name_functions_and_mark_progress() {
             name: String::new(),
             comment: "calls __main".into(),
             reviewed: false,
-            kind: None, decomp: None, ctype: None, author: String::new(),
+            kind: None,
+            decomp: None,
+            ctype: None,
+            author: String::new(),
         },
     ]);
     // The name becomes a symbol with the recovered function's exact size.
@@ -3376,7 +3631,8 @@ fn a_sibling_decompilation_gives_worked_examples() {
             source: "src/shapes.cpp".into(),
             ..Decomp::default()
         }),
-        ctype: None, author: String::new(),
+        ctype: None,
+        author: String::new(),
     }]);
     // Here nothing is decompiled yet, and nothing is named.
     let here = open("shapes-pe.stripped.exe");
@@ -3416,7 +3672,8 @@ fn a_sibling_decompilation_gives_worked_examples() {
                 state: DecompState::Matched,
                 ..Decomp::default()
             }),
-            ctype: None, author: String::new(),
+            ctype: None,
+            author: String::new(),
         })
         .collect();
     pe.set_annotations(marks);
@@ -3466,7 +3723,12 @@ fn a_mips_function_is_written_out_as_splat_writes_it() {
     assert!(asm.contains("glabel func_80010020\n"), "{asm}");
     assert!(asm.contains("lw        $v0, %gp_rel(entry)($gp)\n"), "{asm}");
     let x64 = open("tiny-elf-x64");
-    let main = x64.symbols().functions().find(|f| f.name() == "main").expect("main").address;
+    let main = x64
+        .symbols()
+        .functions()
+        .find(|f| f.name() == "main")
+        .expect("main")
+        .address;
     assert_eq!(x64.gnu_asm(main), None);
 }
 

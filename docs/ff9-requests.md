@@ -162,3 +162,31 @@ bugs, in the order I would build it. Evidence is from `lanes/result-wave*.txt` a
    past the unit image" instead of 'extra in the rebuild'. Several capped functions looked like register puzzles for hours
    (`sub_800de11c`, `sub_800bc600`, hoisted `lui/lw` heads that start 8 bytes early).
 10. **Score cache and `rank` for variants** are used by the farm (`tools/farmlib.py`: 35-70 variants/s). Keep them.
+
+## Status (2026-10-02, after the consolidated asks)
+
+Built on main, in this order, and tried on the FF9 boot executable's 1489 objects (`build/pintest` in the FF9 repo):
+
+1. **Notes are boundaries** (ask 1): `match`, `rank` and every other command that loads `--notes` re-read a ROM with the
+   notes' functions as entry points (`Binary::with_function_boundaries`, `notes::function_boundaries`: a note that names
+   a function, records its decompilation state, or says `function` with a size), and the run joining never absorbs an
+   entry point (`rom/analysis.rs`, `join_runs`). The MCP server does the same when it loads notes. Result on the boot
+   objects: 1308 functions scored instead of 1254, 2 unplaced instead of 66 (the 54 are the "boot functions the old
+   finder missed" that had C already); 1109 exact against c8fa8b4's 1110. **33 functions in the script-interpreter region
+   are shorter than c8fa8b4 read them** (sub_8003fbb4: 24 bytes, not 8928): c8fa8b4 had glued a six-instruction opcode
+   handler that ends in `j` to the handler after it; the walk now stops at the jump, as it should. A note with `size`
+   (config/merges.tsv) keeps the old extent where the C is written that way; `compare` of the two runs lists them.
+2. **`reordered` in folder mode** (ask 4): a removed instruction that is added elsewhere in the function is `reordered` on
+   both sides, wherever the two hunks are (before: only inside one hunk, so folder mode never showed it). 126 of the boot
+   partials now carry the kind; the distance of a scheduling-only function drops (sub_8002920c 120 -> 94).
+3. **`--strict-relocs`** (ask 5): a symbol the original has no name for is taken at the address its name carries
+   (`D_800CB188`, `dword_800685fc`, `sub_…`); `%hi`/`%lo`/`jal` fields are then compared, never through the cache. On the
+   boot objects 25 functions differ in a relocation, one of them scored exact (sub_8005c348 loads two globals into swapped
+   registers; they feed an OR, so harmless). `tools/strict-audit.py` in the FF9 repo runs it over every unit.
+4. **Side by side** (ask 3): every non-exact `match` result carries `audit`: immediates and load/store offsets on one side
+   only (address pairs and relocations left out), the mnemonic counts that differ, stack stores on one side only, and calls
+   to the same callee whose argument registers set before them differ (with the callee's own count when the original
+   knows it). Text output prints it as "Side by side:"; JSON as `audit`.
+
+Still open: the instruction-to-C-line mapping (ask 2), twins (ask 7), progress by area and size band (ask 8), the per-function
+extent warning as a field rather than a difference text (ask 9; the text exists since ab60342).

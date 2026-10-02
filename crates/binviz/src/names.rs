@@ -77,7 +77,9 @@ impl Binary {
             .map(|f| (f.address, f.display_name().into_owned()))
             .collect();
         for (address, _) in &functions {
-            let Some(s) = self.function_summary(*address, 200) else { continue };
+            let Some(s) = self.function_summary(*address, 200) else {
+                continue;
+            };
             for u in s.strings {
                 uses.entry(*address).or_default().insert(u.text.clone());
                 users.entry(u.text).or_default().push(*address);
@@ -107,11 +109,19 @@ impl Binary {
                 unmatched.push(c.name.clone());
                 continue;
             };
-            let shared = c.strings.iter().filter(|s| uses.get(&f).is_some_and(|u| u.contains(*s))).count();
+            let shared = c
+                .strings
+                .iter()
+                .filter(|s| uses.get(&f).is_some_and(|u| u.contains(*s)))
+                .count();
             let evidence = format!(
                 "{shared} of {} strings shared{}",
                 c.strings.len(),
-                if score < shared as f32 { ", some used by other functions too" } else { "" }
+                if score < shared as f32 {
+                    ", some used by other functions too"
+                } else {
+                    ""
+                }
             );
             by_score.push((score / total, i, f, evidence));
         }
@@ -137,7 +147,9 @@ impl Binary {
         for _round in 0..4 {
             let mut added = Vec::new();
             for c in candidates {
-                let Some(&f) = matched.get(c.name.as_str()) else { continue };
+                let Some(&f) = matched.get(c.name.as_str()) else {
+                    continue;
+                };
                 let want: Vec<&str> = c
                     .calls
                     .iter()
@@ -164,7 +176,11 @@ impl Binary {
                     continue;
                 }
                 taken.insert(f);
-                let key: &str = candidates.iter().find(|c| c.name == name).map(|c| c.name.as_str()).unwrap_or("");
+                let key: &str = candidates
+                    .iter()
+                    .find(|c| c.name == name)
+                    .map(|c| c.name.as_str())
+                    .unwrap_or("");
                 matched.insert(key, f);
                 proposals.push(NameProposal {
                     address: f,
@@ -240,13 +256,17 @@ impl Binary {
                 let (LineKind::Same, Some(a), Some(b)) = (line.kind, &line.old, &line.new) else {
                     continue;
                 };
-                let (Some(ta), Some(tb)) = (a.target, b.target) else { continue };
+                let (Some(ta), Some(tb)) = (a.target, b.target) else {
+                    continue;
+                };
                 let Some(r) = from.symbols().lookup(ta) else { continue };
                 let Some(s) = from.symbols().get(r.index) else { continue };
                 if s.kind != SymbolKind::Data || s.source == SymbolSource::Discovered || is_made_up(&r.name) {
                     continue;
                 }
-                let Some(start) = tb.checked_sub(r.offset) else { continue };
+                let Some(start) = tb.checked_sub(r.offset) else {
+                    continue;
+                };
                 if real_name(self, start).is_some() {
                     continue;
                 }
@@ -293,7 +313,10 @@ impl Binary {
             }
         }
         proposals.sort_by(|a, b| b.confidence.total_cmp(&a.confidence).then(a.address.cmp(&b.address)));
-        let unmatched = named.iter().filter(|(_, n)| !used.contains(n)).filter(|(a, _)| !paired.contains(a));
+        let unmatched = named
+            .iter()
+            .filter(|(_, n)| !used.contains(n))
+            .filter(|(a, _)| !paired.contains(a));
         NameProposals {
             unmatched: unmatched.map(|(_, n)| n.clone()).collect(),
             candidates: named.len() as u32,
@@ -312,7 +335,11 @@ impl NameProposals {
                 address: p.address,
                 size: p.size,
                 name: p.proposed.clone(),
-                comment: format!("named from another build: {} ({:.0}%)", p.evidence, p.confidence * 100.0),
+                comment: format!(
+                    "named from another build: {} ({:.0}%)",
+                    p.evidence,
+                    p.confidence * 100.0
+                ),
                 reviewed: false,
                 kind: Some(if p.data { "data" } else { "function" }.into()),
                 decomp: None,
@@ -328,7 +355,11 @@ impl NameProposals {
             "{} of {} functions placed{}; {} not found here.\n",
             self.proposals.len() - data,
             self.candidates,
-            if data > 0 { format!(", and {data} data") } else { String::new() },
+            if data > 0 {
+                format!(", and {data} data")
+            } else {
+                String::new()
+            },
             self.unmatched.len()
         );
         for p in &self.proposals {
@@ -361,9 +392,11 @@ fn real_name(bin: &Binary, address: u64) -> Option<String> {
 
 /// A name binviz (or a disassembler) makes up: `sub_401000`, `func[12]`.
 pub(crate) fn is_made_up(name: &str) -> bool {
-    ["sub_", "func[", "FUN_", "loc_", "unk_", "dword_", "byte_", "word_", "flt_", "dbl_", "off_", "stru_"]
-        .iter()
-        .any(|p| name.starts_with(p))
+    [
+        "sub_", "func[", "FUN_", "loc_", "unk_", "dword_", "byte_", "word_", "flt_", "dbl_", "off_", "stru_",
+    ]
+    .iter()
+    .any(|p| name.starts_with(p))
 }
 
 #[cfg(test)]
@@ -414,7 +447,12 @@ mod tests {
         let mut code: Vec<u8> = words.drain(..).flat_map(|w| w.to_le_bytes()).collect();
         code.extend(b"field.bin\0\0\0%s: %d\0\0");
         code.resize(0xA0, 0);
-        for (at, v) in [(0x10, 0x8001_0000u32), (0x14, 0x8001_8000), (0x18, 0x8001_0000), (0x1C, code.len() as u32)] {
+        for (at, v) in [
+            (0x10, 0x8001_0000u32),
+            (0x14, 0x8001_8000),
+            (0x18, 0x8001_0000),
+            (0x1C, code.len() as u32),
+        ] {
             data[at..at + 4].copy_from_slice(&v.to_le_bytes());
         }
         data.extend(code);
@@ -427,7 +465,11 @@ mod tests {
         )
         .unwrap();
         let p = bin.propose_names(&candidates);
-        let got: Vec<(u64, &str, f32)> = p.proposals.iter().map(|p| (p.address, p.proposed.as_str(), p.confidence)).collect();
+        let got: Vec<(u64, &str, f32)> = p
+            .proposals
+            .iter()
+            .map(|p| (p.address, p.proposed.as_str(), p.confidence))
+            .collect();
         assert_eq!(got.len(), 3, "{}", p.to_text());
         assert_eq!(got[0], (0x8001_0000, "LoadField", 1.0));
         assert_eq!(got[1], (0x8001_0040, "Printf", 1.0));

@@ -920,7 +920,10 @@ fn mips_functions(base: u32) -> Vec<u8> {
         let target = if i == 0 { this } else { previous };
         let call = 0x0C00_0000 | (target >> 2) & 0x03FF_FFFF;
         words.extend([0x27BD_FFE8, 0xAFBF_0014, call, 0, call, 0]);
-        words.extend(std::iter::repeat_n(0x2402_0001, (i.wrapping_mul(2_654_435_761) >> 13) as usize % 13));
+        words.extend(std::iter::repeat_n(
+            0x2402_0001,
+            (i.wrapping_mul(2_654_435_761) >> 13) as usize % 13,
+        ));
         words.extend([0x8FBF_0014, 0, 0x03E0_0008, 0x27BD_0018]);
         previous = this;
     }
@@ -1094,15 +1097,23 @@ fn a_match_is_kept_for_the_next_project() {
     t.ok("open_binary", json!({ "path": other.to_str().unwrap() }));
     let hits = t.ok("store_lookup", json!({ "store": store.to_str().unwrap() }));
     assert!(
-        hits.contains("1 of this binary's unmatched functions") && hits.contains("clamp_health in demo-one, msvc 19.29"),
+        hits.contains("1 of this binary's unmatched functions")
+            && hits.contains("clamp_health in demo-one, msvc 19.29"),
         "{hits}"
     );
-    let at = hits.split("(0x").nth(1).and_then(|r| r.split(',').next()).expect("an address");
+    let at = hits
+        .split("(0x")
+        .nth(1)
+        .and_then(|r| r.split(',').next())
+        .expect("an address");
     let one = t.ok(
         "store_lookup",
         json!({ "at": format!("0x{at}"), "store": store.to_str().unwrap() }),
     );
-    assert!(one.contains("int clamp_health(int h)") && one.contains("return 100;"), "{one}");
+    assert!(
+        one.contains("int clamp_health(int h)") && one.contains("return 100;"),
+        "{one}"
+    );
     // A different build is filtered out.
     let none = t.ok(
         "store_lookup",

@@ -144,7 +144,11 @@ fn reads(w: MipsWord) -> u32 {
         6 | 7 | 22 | 23 => rs,
         8..=14 | 24 | 25 => rs,
         16..=18 => {
-            if w.rs() >= 4 && w.rs() <= 6 { rt } else { 0 }
+            if w.rs() >= 4 && w.rs() <= 6 {
+                rt
+            } else {
+                0
+            }
         }
         40..=46 | 56 | 63 => rs | rt,
         _ => rs,
@@ -415,9 +419,19 @@ impl Binary {
         }
         sig.prototype = format!(
             "{} {}({})",
-            if sig.returns_struct { "struct *" } else if sig.returns { "int" } else { "void" },
+            if sig.returns_struct {
+                "struct *"
+            } else if sig.returns {
+                "int"
+            } else {
+                "void"
+            },
             sig.name,
-            if args.is_empty() { "void".to_string() } else { args.join(", ") }
+            if args.is_empty() {
+                "void".to_string()
+            } else {
+                args.join(", ")
+            }
         );
         Some(sig)
     }
@@ -441,7 +455,11 @@ impl Binary {
             }
             let to = c.target.map_or_else(
                 || "a call through a pointer".to_string(),
-                |t| self.symbols.at(t).map_or_else(|| format!("{t:#x}"), |s| s.display_name().into_owned()),
+                |t| {
+                    self.symbols
+                        .at(t)
+                        .map_or_else(|| format!("{t:#x}"), |s| s.display_name().into_owned())
+                },
             );
             let args = c.args.iter().enumerate().map(|(j, v)| (j as u32, *v));
             let stack = c.stack.iter().map(|&(k, v)| (4 + k, v));
@@ -503,7 +521,11 @@ impl Binary {
             out.push(StackSlot {
                 offset: off,
                 size: (end - off).max(1) as u32,
-                kind: if off >= frame { "home or argument slot".into() } else { "local".into() },
+                kind: if off >= frame {
+                    "home or argument slot".into()
+                } else {
+                    "local".into()
+                },
                 access: rw(r, w).into(),
                 widths: Vec::new(),
                 address_taken: true,
@@ -517,7 +539,11 @@ impl Binary {
             }
             let kind = if off >= frame {
                 let k = (off - frame) / 4;
-                if off - frame < 16 { format!("home of a{k}") } else { format!("argument a{k}") }
+                if off - frame < 16 {
+                    format!("home of a{k}")
+                } else {
+                    format!("argument a{k}")
+                }
             } else if outgoing.contains(&off) {
                 format!("outgoing a{}", 4 + (off - 16) / 4)
             } else {
@@ -599,7 +625,11 @@ impl Binary {
         };
         let prototype = format!(
             "{result} {keyword}{name}({})",
-            if args.is_empty() { "void".to_string() } else { args.join(", ") }
+            if args.is_empty() {
+                "void".to_string()
+            } else {
+                args.join(", ")
+            }
         );
         Some(FunctionSignature {
             address: f.address,
@@ -649,8 +679,10 @@ impl FunctionSignature {
             if self.uses_float { ", uses the FPU" } else { "" },
         ));
         if self.returns_struct {
-            out.push_str("  returns a structure by value: a0 is the hidden pointer it is built in, handed back in $v0
-");
+            out.push_str(
+                "  returns a structure by value: a0 is the hidden pointer it is built in, handed back in $v0
+",
+            );
         }
         if let Some(c) = &self.callers_pass {
             let set: Vec<String> = (0..4)
@@ -664,10 +696,21 @@ impl FunctionSignature {
                 "  its {} direct call{} set up {}{}{}",
                 c.sites,
                 if c.sites == 1 { "" } else { "s" },
-                if set.is_empty() { "no argument registers".to_string() } else { set.join(", ") },
-                if c.stack_args > 0 { format!(" and {} on the stack", c.stack_args) } else { String::new() },
+                if set.is_empty() {
+                    "no argument registers".to_string()
+                } else {
+                    set.join(", ")
+                },
+                if c.stack_args > 0 {
+                    format!(" and {} on the stack", c.stack_args)
+                } else {
+                    String::new()
+                },
                 if theirs > own {
-                    format!(": {theirs} arguments, {} more than its code reads (unused, but passed)", theirs - own)
+                    format!(
+                        ": {theirs} arguments, {} more than its code reads (unused, but passed)",
+                        theirs - own
+                    )
                 } else {
                     String::new()
                 }
@@ -741,7 +784,11 @@ impl FunctionSignature {
             "thiscall" => format!("thiscall: this in ecx{}", pops_text(self.pops)),
             "fastcall" => format!(
                 "fastcall: {} then the stack{}",
-                if self.registers.is_empty() { "ecx, edx".to_string() } else { self.registers.join(", ") },
+                if self.registers.is_empty() {
+                    "ecx, edx".to_string()
+                } else {
+                    self.registers.join(", ")
+                },
                 pops_text(self.pops)
             ),
             "win64" => format!("Microsoft x64: {}", self.arguments_text()),
@@ -778,7 +825,11 @@ impl FunctionSignature {
 }
 
 fn pops_text(pops: u32) -> String {
-    if pops > 0 { format!("; pops {pops} bytes (ret {pops})") } else { String::new() }
+    if pops > 0 {
+        format!("; pops {pops} bytes (ret {pops})")
+    } else {
+        String::new()
+    }
 }
 
 impl FunctionSignature {
@@ -789,7 +840,11 @@ impl FunctionSignature {
             (false, 0) => format!("arguments in {}", self.registers.join(", ")),
             (_, n) => format!(
                 "arguments in registers{}, and {n} on the stack",
-                if self.registers.is_empty() { String::new() } else { format!(" ({})", self.registers.join(", ")) }
+                if self.registers.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({})", self.registers.join(", "))
+                }
             ),
         }
     }

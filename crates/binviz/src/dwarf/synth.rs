@@ -159,7 +159,8 @@ fn expression(loc: Loc) -> Expression {
 
 fn set_name(unit: &mut Unit, id: UnitEntryId, name: &str) {
     if !name.is_empty() {
-        unit.get_mut(id).set(gimli::DW_AT_name, AttributeValue::String(name.as_bytes().to_vec()));
+        unit.get_mut(id)
+            .set(gimli::DW_AT_name, AttributeValue::String(name.as_bytes().to_vec()));
     }
 }
 
@@ -186,7 +187,8 @@ fn write_types(unit: &mut Unit, types: &[Ty]) -> Vec<UnitEntryId> {
         .collect();
     let set_type = |unit: &mut Unit, entry: UnitEntryId, t: Option<TyId>| {
         if let Some(&target) = t.and_then(|t| ids.get(t)) {
-            unit.get_mut(entry).set(gimli::DW_AT_type, AttributeValue::UnitRef(target));
+            unit.get_mut(entry)
+                .set(gimli::DW_AT_type, AttributeValue::UnitRef(target));
         }
     };
     for (t, &id) in types.iter().zip(&ids) {
@@ -198,7 +200,8 @@ fn write_types(unit: &mut Unit, types: &[Ty]) -> Vec<UnitEntryId> {
                 e.set(gimli::DW_AT_encoding, AttributeValue::Encoding(*encoding));
             }
             Ty::Pointer { to, size, .. } => {
-                unit.get_mut(id).set(gimli::DW_AT_byte_size, AttributeValue::Udata(*size));
+                unit.get_mut(id)
+                    .set(gimli::DW_AT_byte_size, AttributeValue::Udata(*size));
                 set_type(unit, id, *to);
             }
             Ty::Const(of) | Ty::Volatile(of) => set_type(unit, id, *of),
@@ -218,10 +221,12 @@ fn write_types(unit: &mut Unit, types: &[Ty]) -> Vec<UnitEntryId> {
             } => {
                 set_name(unit, id, name);
                 if *declaration {
-                    unit.get_mut(id).set(gimli::DW_AT_declaration, AttributeValue::Flag(true));
+                    unit.get_mut(id)
+                        .set(gimli::DW_AT_declaration, AttributeValue::Flag(true));
                     continue;
                 }
-                unit.get_mut(id).set(gimli::DW_AT_byte_size, AttributeValue::Udata(*size));
+                unit.get_mut(id)
+                    .set(gimli::DW_AT_byte_size, AttributeValue::Udata(*size));
                 for m in members {
                     let tag = if m.base {
                         gimli::DW_TAG_inheritance
@@ -246,16 +251,19 @@ fn write_types(unit: &mut Unit, types: &[Ty]) -> Vec<UnitEntryId> {
             }
             Ty::Enum { name, size, of, values } => {
                 set_name(unit, id, name);
-                unit.get_mut(id).set(gimli::DW_AT_byte_size, AttributeValue::Udata(*size));
+                unit.get_mut(id)
+                    .set(gimli::DW_AT_byte_size, AttributeValue::Udata(*size));
                 set_type(unit, id, *of);
                 for (v, value) in values {
                     let child = unit.add(id, gimli::DW_TAG_enumerator);
                     set_name(unit, child, v);
-                    unit.get_mut(child).set(gimli::DW_AT_const_value, AttributeValue::Sdata(*value));
+                    unit.get_mut(child)
+                        .set(gimli::DW_AT_const_value, AttributeValue::Sdata(*value));
                 }
             }
             Ty::Function { returns, params } => {
-                unit.get_mut(id).set(gimli::DW_AT_prototyped, AttributeValue::Flag(true));
+                unit.get_mut(id)
+                    .set(gimli::DW_AT_prototyped, AttributeValue::Flag(true));
                 set_type(unit, id, *returns);
                 for p in params {
                     let child = unit.add(id, gimli::DW_TAG_formal_parameter);
@@ -268,7 +276,12 @@ fn write_types(unit: &mut Unit, types: &[Ty]) -> Vec<UnitEntryId> {
 }
 
 /// A block's variables and blocks, under `parent`.
-fn write_scope(unit: &mut Unit, parent: UnitEntryId, b: &Block, refer: &dyn Fn(Option<TyId>) -> Option<AttributeValue>) {
+fn write_scope(
+    unit: &mut Unit,
+    parent: UnitEntryId,
+    b: &Block,
+    refer: &dyn Fn(Option<TyId>) -> Option<AttributeValue>,
+) {
     for v in &b.vars {
         let tag = if v.param {
             gimli::DW_TAG_formal_parameter
@@ -288,7 +301,10 @@ fn write_scope(unit: &mut Unit, parent: UnitEntryId, b: &Block, refer: &dyn Fn(O
     for inner in &b.blocks {
         let id = unit.add(parent, gimli::DW_TAG_lexical_block);
         let e = unit.get_mut(id);
-        e.set(gimli::DW_AT_low_pc, AttributeValue::Address(Address::Constant(inner.address)));
+        e.set(
+            gimli::DW_AT_low_pc,
+            AttributeValue::Address(Address::Constant(inner.address)),
+        );
         e.set(gimli::DW_AT_high_pc, AttributeValue::Udata(inner.size.max(1)));
         write_scope(unit, id, inner, refer);
     }
@@ -318,7 +334,10 @@ pub(crate) fn write(modules: Vec<Module>, types: &[Ty], from: &str) -> Result<Ve
         types_unit = Some(id);
     }
     let refer = |t: Option<TyId>| -> Option<AttributeValue> {
-        Some(AttributeValue::DebugInfoRef(Reference::Entry(types_unit?, *type_ids.get(t?)?)))
+        Some(AttributeValue::DebugInfoRef(Reference::Entry(
+            types_unit?,
+            *type_ids.get(t?)?,
+        )))
     };
     for mut m in modules.into_iter().filter(|m| !m.is_empty()) {
         m.rows.sort_by_key(|r| r.address);
@@ -400,7 +419,10 @@ pub(crate) fn write(modules: Vec<Module>, types: &[Ty], from: &str) -> Result<Ve
             let id = unit.add(root, gimli::DW_TAG_subprogram);
             set_name(&mut unit, id, &f.name);
             let e = unit.get_mut(id);
-            e.set(gimli::DW_AT_low_pc, AttributeValue::Address(Address::Constant(f.address)));
+            e.set(
+                gimli::DW_AT_low_pc,
+                AttributeValue::Address(Address::Constant(f.address)),
+            );
             e.set(gimli::DW_AT_high_pc, AttributeValue::Udata(f.size.max(1)));
             e.set(gimli::DW_AT_external, AttributeValue::Flag(f.external));
             if let Some(t) = refer(f.returns) {
@@ -412,7 +434,10 @@ pub(crate) fn write(modules: Vec<Module>, types: &[Ty], from: &str) -> Result<Ve
             let id = unit.add(root, gimli::DW_TAG_variable);
             set_name(&mut unit, id, &g.name);
             let e = unit.get_mut(id);
-            e.set(gimli::DW_AT_location, AttributeValue::Exprloc(expression(Loc::Addr(g.address))));
+            e.set(
+                gimli::DW_AT_location,
+                AttributeValue::Exprloc(expression(Loc::Addr(g.address))),
+            );
             e.set(gimli::DW_AT_external, AttributeValue::Flag(g.external));
             if let Some(t) = refer(g.ty) {
                 e.set(gimli::DW_AT_type, t);

@@ -271,7 +271,10 @@ fn main() {
             name: format!("fn_{:x}", f.address),
             comment: "note".into(),
             reviewed: true,
-            kind: None, decomp: None, ctype: None, author: String::new(),
+            kind: None,
+            decomp: None,
+            ctype: None,
+            author: String::new(),
         })
         .collect();
     time(&format!("set {} annotations", notes.len()), || {

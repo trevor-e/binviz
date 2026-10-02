@@ -310,7 +310,9 @@ impl Binary {
                         .filter(|&i| {
                             matches!(
                                 ins.op_kind(i),
-                                iced_x86::OpKind::Immediate32 | iced_x86::OpKind::Immediate32to64 | iced_x86::OpKind::Immediate64
+                                iced_x86::OpKind::Immediate32
+                                    | iced_x86::OpKind::Immediate32to64
+                                    | iced_x86::OpKind::Immediate64
                             )
                         })
                         .map(|i| ins.immediate(i))
@@ -351,13 +353,22 @@ impl Binary {
                                 (t == self.image_base && self.summary.format == crate::model::Format::Pe && bits == 64)
                                     .then(|| "__ImageBase".to_string())
                             };
-                            let name = |t: u64| if data { self.name_for(t).or_else(|| base(t)) } else { self.symbol_name(t) };
+                            let name = |t: u64| {
+                                if data {
+                                    self.name_for(t).or_else(|| base(t))
+                                } else {
+                                    self.symbol_name(t)
+                                }
+                            };
                             let named = match (target.and_then(name), value) {
                                 (Some(name), Some(value)) => Some(format!("{name} = {value}")),
                                 (name, value) => name.or(value),
                             };
                             // A stack slot or a structure's field, and what is stored in it or read with it.
-                            let place = frame.as_ref().and_then(|f| f.slot_at(address)).or_else(|| fields.get(&address).cloned());
+                            let place = frame
+                                .as_ref()
+                                .and_then(|f| f.slot_at(address))
+                                .or_else(|| fields.get(&address).cloned());
                             match (place, named) {
                                 (Some(place), Some(named)) => Some(format!("{place}; {named}")),
                                 (place, named) => place.or(named),
@@ -706,7 +717,8 @@ impl Binary {
             // In the order the instructions come, a piece's marks after the entry's.
             let order: std::collections::HashMap<u64, usize> =
                 d.instructions.iter().enumerate().map(|(i, x)| (x.address, i)).collect();
-            d.marks.sort_by_key(|m| order.get(&m.address).copied().unwrap_or(usize::MAX));
+            d.marks
+                .sort_by_key(|m| order.get(&m.address).copied().unwrap_or(usize::MAX));
             return d;
         }
         let start = self.instruction_boundary_before(address);

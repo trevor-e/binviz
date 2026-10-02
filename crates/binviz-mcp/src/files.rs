@@ -9,7 +9,9 @@ use crate::tools::{Server, int, string};
 
 /// The bytes of `path`, as one file.
 fn read(path: &str) -> Result<Vec<u8>, String> {
-    binviz::read_file(Path::new(path)).map(|d| d.to_vec()).map_err(|e| format!("{path}: {e}"))
+    binviz::read_file(Path::new(path))
+        .map(|d| d.to_vec())
+        .map_err(|e| format!("{path}: {e}"))
 }
 
 impl Server {
@@ -41,7 +43,9 @@ impl Server {
             }
             (Some(member), None) => {
                 if !binviz::Container::is_container(&data) {
-                    return Err(format!("{path} holds no files; give offset and length for a stretch of it"));
+                    return Err(format!(
+                        "{path} holds no files; give offset and length for a stretch of it"
+                    ));
                 }
                 let c = binviz::Container::parse(data).map_err(|e| e.to_string())?;
                 let index = c

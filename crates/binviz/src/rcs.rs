@@ -36,7 +36,9 @@ pub fn parse_id(text: &str) -> Option<LibrarySource> {
     let date = words.next()?;
     let _time = words.next()?;
     let author = words.next().unwrap_or("");
-    let ok = revision.split('.').all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()));
+    let ok = revision
+        .split('.')
+        .all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()));
     let mut ymd = date.split('/');
     let (y, m, d) = (ymd.next()?, ymd.next()?, ymd.next()?);
     if !ok || y.len() != 4 || !(y.bytes().chain(m.bytes()).chain(d.bytes())).all(|b| b.is_ascii_digit()) {
@@ -78,7 +80,10 @@ pub fn sources_text(sources: &[LibrarySource]) -> String {
     let mut out = format!("{} source files carry their version:\n", sources.len());
     for s in sources {
         let at = s.address.map_or_else(String::new, |a| format!("{a:#x}  "));
-        out.push_str(&format!("  {at}{:<14} {:<8} {}  {}\n", s.file, s.revision, s.date, s.author));
+        out.push_str(&format!(
+            "  {at}{:<14} {:<8} {}  {}\n",
+            s.file, s.revision, s.date, s.author
+        ));
     }
     let oldest = sources.iter().map(|s| &s.date).min().expect("not empty");
     let newest = sources.iter().map(|s| &s.date).max().expect("not empty");
@@ -95,7 +100,10 @@ mod tests {
     #[test]
     fn an_id_string_is_read() {
         let s = parse_id("$Id: sys.c,v 1.140 1998/01/12 07:52:27 noda Exp yos $").unwrap();
-        assert_eq!((s.file.as_str(), s.revision.as_str(), s.date.as_str()), ("sys.c", "1.140", "1998-01-12"));
+        assert_eq!(
+            (s.file.as_str(), s.revision.as_str(), s.date.as_str()),
+            ("sys.c", "1.140", "1998-01-12")
+        );
         assert_eq!(s.author, "noda");
         let s = parse_id("$Id: /cvs/psx/lib/intr.c,v 1.75 1997/02/07 09:00:36 makoto Exp $").unwrap();
         assert_eq!((s.file.as_str(), s.date.as_str()), ("intr.c", "1997-02-07"));

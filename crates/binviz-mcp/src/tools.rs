@@ -1096,7 +1096,8 @@ impl Server {
                         ensure_xrefs(o)?;
                         format!(
                             "{}",
-                            o.bin.field_refs_text(global, args.get("offset").and_then(Value::as_i64))
+                            o.bin
+                                .field_refs_text(global, args.get("offset").and_then(Value::as_i64))
                         )
                     }
                     "library_sources" => binviz::rcs::sources_text(&o.bin.library_sources()),
@@ -1202,6 +1203,11 @@ impl Server {
                                 list.len(),
                                 beside.display()
                             );
+                            if let Ok(Some(rebuilt)) =
+                                exe.with_function_boundaries(&binviz::notes::function_boundaries(&list))
+                            {
+                                exe = rebuilt;
+                            }
                             exe.set_annotations(list);
                         }
                         Err(e) => {
@@ -1316,7 +1322,9 @@ impl Server {
         }
         if let Some(types) = string(args, "types_file") {
             let data = binviz::read_file(types).map_err(|e| format!("{types}: {e}"))?;
-            open.bin.attach_types(types, data).map_err(|e| format!("{types}: {e}"))?;
+            open.bin
+                .attach_types(types, data)
+                .map_err(|e| format!("{types}: {e}"))?;
         }
         // Built without dsymutil, a Mach-O binary's DWARF is in the objects its debug map names.
         if open.bin.debug_info().is_none() && !open.bin.debug_map().is_empty() {
@@ -1440,6 +1448,13 @@ pub(crate) fn load_notes(open: &mut Open, notes_path: &Path) -> Option<String> {
     Some(match notes::load(notes_path) {
         Ok((list, fingerprint, folded)) => {
             let n = list.len();
+            // A ROM: the functions the notes record are boundaries of its reading.
+            if let Ok(Some(rebuilt)) = open
+                .bin
+                .with_function_boundaries(&binviz::notes::function_boundaries(&list))
+            {
+                open.bin = rebuilt;
+            }
             open.bin.set_annotations(list);
             open.saved = open.bin.annotations().to_vec();
             open.journal_folded = folded;
@@ -1992,7 +2007,10 @@ fn inspect(o: &Open, args: &Value) -> Result<String, String> {
             i.address
                 .filter(|&a| a != g.address)
                 .map_or(String::new(), |a| format!(" + {:#x}", a - g.address)),
-            serde_json::to_value(g.kind).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default(),
+            serde_json::to_value(g.kind)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_string))
+                .unwrap_or_default(),
             g.size,
             g.address,
             g.description
@@ -2185,22 +2203,36 @@ fn cpp_classes(o: &Open, args: &Value) -> String {
     let word = if o.bin.summary().bits == 64 { 8 } else { 4 };
     let mut out = format!("{} classes with RTTI\n", classes.len());
     for c in classes.iter().filter(|c| c.name.to_ascii_lowercase().contains(&filter)) {
-        let bases: Vec<String> = c.bases.iter().map(|b| format!("{} at {:#x}", b.name, b.offset)).collect();
+        let bases: Vec<String> = c
+            .bases
+            .iter()
+            .map(|b| format!("{} at {:#x}", b.name, b.offset))
+            .collect();
         let _ = writeln!(
             out,
             "\n{}{}",
             c.name,
-            if bases.is_empty() { String::new() } else { format!(" : {}", bases.join(", ")) }
+            if bases.is_empty() {
+                String::new()
+            } else {
+                format!(" : {}", bases.join(", "))
+            }
         );
         for v in &c.vtables {
             let _ = writeln!(
                 out,
                 "  vtable {:#x}{}",
                 v.address,
-                v.for_base.as_deref().map_or(String::new(), |b| format!(" for {b} (at {:#x})", v.offset))
+                v.for_base
+                    .as_deref()
+                    .map_or(String::new(), |b| format!(" for {b} (at {:#x})", v.offset))
             );
             for (i, f) in v.functions.iter().enumerate() {
-                let name = o.bin.symbols().at(*f).map_or(format!("{f:#x}"), |s| s.display_name().into_owned());
+                let name = o
+                    .bin
+                    .symbols()
+                    .at(*f)
+                    .map_or(format!("{f:#x}"), |s| s.display_name().into_owned());
                 let _ = writeln!(out, "    [{i}] +{:#x} {:#x} {name}", i * word, f);
             }
         }
@@ -2239,7 +2271,10 @@ fn list_globals(o: &Open, args: &Value) -> String {
             "  {:#x} {:>6}  {:<20} {}",
             g.address,
             g.size,
-            o.bin.symbols().at(g.address).map_or(g.name.clone(), |s| s.display_name().into_owned()),
+            o.bin
+                .symbols()
+                .at(g.address)
+                .map_or(g.name.clone(), |s| s.display_name().into_owned()),
             clip(&g.description, 300)
         );
     }
@@ -2712,7 +2747,11 @@ fn structures(o: &Open, args: &Value) -> Result<String, String> {
         if held.is_empty() {
             return Ok("it holds no structure another function also reaches".into());
         }
-        return Ok(held.iter().map(|(what, s)| format!("{what} is {}", s.describe(12))).collect::<Vec<_>>().join("\n"));
+        return Ok(held
+            .iter()
+            .map(|(what, s)| format!("{what} is {}", s.describe(12)))
+            .collect::<Vec<_>>()
+            .join("\n"));
     }
     if let Some(name) = string(args, "name") {
         return list
@@ -2722,7 +2761,10 @@ fn structures(o: &Open, args: &Value) -> Result<String, String> {
             .ok_or_else(|| format!("no structure named {name}"));
     }
     let limit = args.get("limit").and_then(Value::as_u64).unwrap_or(30).clamp(1, 500) as usize;
-    let mut out = format!("{} structures reached by more than one function, the most used first:\n\n", list.len());
+    let mut out = format!(
+        "{} structures reached by more than one function, the most used first:\n\n",
+        list.len()
+    );
     for s in list.iter().take(limit) {
         out.push_str(&s.describe(4));
         out.push('\n');
@@ -2741,7 +2783,12 @@ fn match_function(o: &Open, args: &Value) -> Result<String, String> {
     let f = binviz::matching::find_function(&funcs, symbol).ok_or_else(|| {
         format!(
             "no function {symbol} in {object}; it has: {}",
-            funcs.iter().map(|f| f.name.as_str()).take(40).collect::<Vec<_>>().join(", ")
+            funcs
+                .iter()
+                .map(|f| f.name.as_str())
+                .take(40)
+                .collect::<Vec<_>>()
+                .join(", ")
         )
     })?;
     o.bin.check_isa(f.isa).map_err(|e| e.to_string())?;
@@ -2790,7 +2837,11 @@ fn match_object(o: &Open, args: &Value) -> Result<String, String> {
             m.address,
             m.percent,
             m.name,
-            if kinds.is_empty() { String::new() } else { format!("({})", kinds.join(", ")) }
+            if kinds.is_empty() {
+                String::new()
+            } else {
+                format!("({})", kinds.join(", "))
+            }
         );
     }
     if results.len() > limit {
@@ -2905,7 +2956,11 @@ fn place_report(o: &mut Open, args: &Value) -> Result<String, String> {
         let _ = writeln!(out, "  … {} more", listed.len() - limit);
     }
     if !p.unplaced.is_empty() {
-        let _ = writeln!(out, "\nNot found here: {}", p.unplaced.iter().take(30).cloned().collect::<Vec<_>>().join(", "));
+        let _ = writeln!(
+            out,
+            "\nNot found here: {}",
+            p.unplaced.iter().take(30).cloned().collect::<Vec<_>>().join(", ")
+        );
     }
     if args.get("record").and_then(Value::as_bool).unwrap_or(true) {
         let build = crate::queue::Build::from_args(args);
@@ -3071,7 +3126,11 @@ fn identify_sdk(o: &mut Open, args: &Value) -> Result<String, String> {
     let mut out = format!("Libraries read:\n{loaded}\n");
     let mut text = r.to_text();
     if r.matches.len() > limit {
-        let keep: usize = text.lines().take(1 + r.libraries.len() + limit).map(|l| l.len() + 1).sum();
+        let keep: usize = text
+            .lines()
+            .take(1 + r.libraries.len() + limit)
+            .map(|l| l.len() + 1)
+            .sum();
         text.truncate(keep);
         let _ = writeln!(text, "… {} more", r.matches.len() - limit);
     }
@@ -3114,7 +3173,11 @@ fn propose_names(o: &mut Open, args: &Value) -> Result<String, String> {
         let notes = p.annotations(min);
         let n = notes.len();
         let (added, updated) = merge_notes(o, notes);
-        let _ = writeln!(out, "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.", save_notes(o));
+        let _ = writeln!(
+            out,
+            "\n{n} proposals at or above {min:.2} applied: {added} names added, {updated} changed; {}.",
+            save_notes(o)
+        );
     }
     Ok(out)
 }
@@ -3242,7 +3305,9 @@ fn locate(o: &Open, args: &Value) -> Result<String, String> {
     }
     let pieces = o.bin.psx_loaded_pieces(&blob);
     if pieces.is_empty() {
-        return Ok(format!("{path} is not in this image, whole or in part (compressed, or not loaded)."));
+        return Ok(format!(
+            "{path} is not in this image, whole or in part (compressed, or not loaded)."
+        ));
     }
     let mut out = format!("{} stretches of {path} are loaded in this image:\n", pieces.len());
     for p in pieces.iter().take(200) {
@@ -3266,7 +3331,12 @@ fn export_progress(o: &Open, args: &Value) -> Result<String, String> {
     let text = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     std::fs::write(path, text).map_err(|e| format!("{path}: {e}"))?;
     let m = &report["measures"];
-    let n = |k: &str| m[k].as_str().and_then(|s| s.parse::<u64>().ok()).or_else(|| m[k].as_u64()).unwrap_or(0);
+    let n = |k: &str| {
+        m[k].as_str()
+            .and_then(|s| s.parse::<u64>().ok())
+            .or_else(|| m[k].as_u64())
+            .unwrap_or(0)
+    };
     let mut out = format!(
         "Wrote {path}: {} of {} functions matched, {} of {} bytes of code ({:.1}%), fuzzy {:.1}% (partial credit: each function's best percent weighted by its size; a range a note merges counts once), in {} units.\n",
         n("matched_functions"),

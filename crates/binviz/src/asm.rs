@@ -170,7 +170,10 @@ impl Binary {
             let line = if bare {
                 format!("    {mnemonic:<9} {operands}")
             } else {
-                format!("/* {offset}{:08X} {:08X} */  {mnemonic:<9} {operands}", i.address, words[k].0)
+                format!(
+                    "/* {offset}{:08X} {:08X} */  {mnemonic:<9} {operands}",
+                    i.address, words[k].0
+                )
             };
             out.push_str(line.trim_end());
             out.push('\n');

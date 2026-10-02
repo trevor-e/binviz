@@ -45,7 +45,10 @@ impl Reader<'_> {
         Ok(u32::from_le_bytes([self.u8()?, self.u8()?, self.u8()?, self.u8()?]))
     }
     fn bytes(&mut self, n: usize) -> Result<&[u8]> {
-        let s = self.b.get(self.at..self.at + n).ok_or_else(|| Error::new("LNK: truncated"))?;
+        let s = self
+            .b
+            .get(self.at..self.at + n)
+            .ok_or_else(|| Error::new("LNK: truncated"))?;
         self.at += n;
         Ok(s)
     }
@@ -144,7 +147,11 @@ pub fn parse_obj(bytes: &[u8]) -> Result<Vec<ObjFunction>> {
                 let section = r.u16()?;
                 let offset = r.u32()?;
                 let name = r.string()?;
-                sections.entry(section).or_default().symbols.push((offset, format!(".{name}")));
+                sections
+                    .entry(section)
+                    .or_default()
+                    .symbols
+                    .push((offset, format!(".{name}")));
             }
             28 => {
                 r.u16()?;
@@ -380,7 +387,12 @@ mod tests {
         game[20..22].copy_from_slice(&[0x34, 0x12]);
         let mut data = vec![0u8; 0x800];
         data[..8].copy_from_slice(b"PS-X EXE");
-        for (at, v) in [(0x10, 0x8001_0000u32), (0x14, 0x8001_8000), (0x18, 0x8001_0000), (0x1C, 0x40)] {
+        for (at, v) in [
+            (0x10, 0x8001_0000u32),
+            (0x14, 0x8001_8000),
+            (0x18, 0x8001_0000),
+            (0x1C, 0x40),
+        ] {
             data[at..at + 4].copy_from_slice(&v.to_le_bytes());
         }
         data.extend(&game);
@@ -388,8 +400,28 @@ mod tests {
         let mut bin = Binary::parse(data).unwrap();
         // Functions the follower wouldn't find (the bytes are made up): name them so they exist.
         bin.set_annotations(vec![
-            Annotation { address: 0x8001_0000, size: 28, name: "f1".into(), comment: String::new(), reviewed: false, kind: Some("function".into()) , decomp: None, ctype: None, author: String::new() },
-            Annotation { address: 0x8001_001C, size: 16, name: "f2".into(), comment: String::new(), reviewed: false, kind: Some("function".into()) , decomp: None, ctype: None, author: String::new() },
+            Annotation {
+                address: 0x8001_0000,
+                size: 28,
+                name: "f1".into(),
+                comment: String::new(),
+                reviewed: false,
+                kind: Some("function".into()),
+                decomp: None,
+                ctype: None,
+                author: String::new(),
+            },
+            Annotation {
+                address: 0x8001_001C,
+                size: 16,
+                name: "f2".into(),
+                comment: String::new(),
+                reviewed: false,
+                kind: Some("function".into()),
+                decomp: None,
+                ctype: None,
+                author: String::new(),
+            },
         ]);
         let r = bin.identify_sdk(&sigs);
         let names: Vec<(u64, &str)> = r.matches.iter().map(|m| (m.address, m.name.as_str())).collect();

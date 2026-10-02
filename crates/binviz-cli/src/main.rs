@@ -142,9 +142,13 @@ COMMANDS:
                                    give (start..end or start+length work too), whatever extent
                                    the notes give the function (MIPS)
     match <file> <folder> [--json] [--record [--meta compiler=..,flags=..,sdk=..]] [--no-cache]
+                                   [--strict-relocs]
                                    --json: every function's score as JSON (unit, name, address,
                                    percent, exact, distance, clusters, instruction counts, the
                                    kinds of difference, the compilers the epilogues imply);
+                                   --strict-relocs: a symbol the original has no name for is
+                                   taken at the address its name carries (D_800CB188, sub_…), so
+                                   a wrong global or callee no longer scores as exact (no cache);
                                    --record: the outcomes into --notes (or <file>.binviz-notes.json)
                                    through its journal, as the MCP server's record does; the
                                    score cache (BINVIZ_CACHE, else ~/.cache/binviz/scores) gives
@@ -409,6 +413,20 @@ fn read_notes(path: &str) -> Result<Vec<binviz::Annotation>, String> {
     binviz::notes::read(std::path::Path::new(path)).map(|(list, _, _)| list)
 }
 
+/// Loads the notes into `bin`; for a ROM, the functions they name become
+/// boundaries of its reading first (a note never loses its function to the
+/// joining of pieces).
+fn apply_notes(bin: &mut Binary, list: Vec<binviz::Annotation>) -> Result<(), String> {
+    if let Some(rebuilt) = bin
+        .with_function_boundaries(&binviz::notes::function_boundaries(&list))
+        .map_err(|e| e.to_string())?
+    {
+        *bin = rebuilt;
+    }
+    bin.set_annotations(list);
+    Ok(())
+}
+
 fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, String> {
     let data = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
     let exe = match psx.exe {
@@ -427,7 +445,7 @@ fn open_psx(path: &str, psx: Psx<'_>, notes: Option<&str>) -> Result<Binary, Str
                 list.extend(own);
             }
             if !list.is_empty() {
-                exe.set_annotations(list);
+                apply_notes(&mut exe, list)?;
             }
             Some(exe)
         }
@@ -668,7 +686,7 @@ fn run(
     if let Some(path) = notes {
         // A notes file that --record will create may not exist yet.
         if std::path::Path::new(path).exists() || !args.iter().any(|a| a == "--record") {
-            bin.set_annotations(read_notes(path)?);
+            apply_notes(&mut bin, read_notes(path)?)?;
         }
     }
     if let Some(path) = types {
@@ -1113,20 +1131,33 @@ fn run(
             }
             let word = if bin.summary().bits == 64 { 8 } else { 4 };
             for c in classes.iter().filter(|c| c.name.to_ascii_lowercase().contains(&filter)) {
-                let bases: Vec<String> = c.bases.iter().map(|b| format!("{} at {:#x}", b.name, b.offset)).collect();
+                let bases: Vec<String> = c
+                    .bases
+                    .iter()
+                    .map(|b| format!("{} at {:#x}", b.name, b.offset))
+                    .collect();
                 println!(
                     "{}{}",
                     c.name,
-                    if bases.is_empty() { String::new() } else { format!(" : {}", bases.join(", ")) }
+                    if bases.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" : {}", bases.join(", "))
+                    }
                 );
                 for v in &c.vtables {
                     println!(
                         "  vtable {:#x}{}",
                         v.address,
-                        v.for_base.as_deref().map_or(String::new(), |b| format!(" for {b} (at {:#x})", v.offset))
+                        v.for_base
+                            .as_deref()
+                            .map_or(String::new(), |b| format!(" for {b} (at {:#x})", v.offset))
                     );
                     for (i, f) in v.functions.iter().enumerate() {
-                        let name = bin.symbols().at(*f).map_or(format!("{f:#x}"), |s| s.display_name().into_owned());
+                        let name = bin
+                            .symbols()
+                            .at(*f)
+                            .map_or(format!("{f:#x}"), |s| s.display_name().into_owned());
                         println!("    [{i}] {:#x} {name}  (vtable+{:#x})", f, i * word);
                     }
                 }
@@ -1134,13 +1165,26 @@ fn run(
         }
         "globals" => {
             if !bin.xrefs_supported() {
-                return Err("globals are found through the code's references, which aren't read for this architecture".into());
+                return Err(
+                    "globals are found through the code's references, which aren't read for this architecture".into(),
+                );
             }
             let filter = arg(2).unwrap_or("");
             let page = bin.globals(filter, 0, 100_000);
-            println!("{} globals{}", page.total, if filter.is_empty() { String::new() } else { format!(" matching {filter:?}") });
+            println!(
+                "{} globals{}",
+                page.total,
+                if filter.is_empty() {
+                    String::new()
+                } else {
+                    format!(" matching {filter:?}")
+                }
+            );
             for g in &page.globals {
-                let name = bin.symbols().at(g.address).map_or(g.name.clone(), |s| s.display_name().into_owned());
+                let name = bin
+                    .symbols()
+                    .at(g.address)
+                    .map_or(g.name.clone(), |s| s.display_name().into_owned());
                 println!("  {:#x} {:>6}  {:<20} {}", g.address, g.size, name, g.description);
             }
         }
@@ -1267,9 +1311,14 @@ fn run(
                 "{} functions, {} instructions ({} of them frame setup and teardown, left out); runs of {} instructions: {} ({} more left out as a few instructions repeated)",
                 r.functions, r.instructions, r.frame_instructions, r.window, r.windows, r.windows_skipped
             );
-            println!("{} distinct runs, {} of them in more than one function", r.distinct, r.repeating);
+            println!(
+                "{} distinct runs, {} of them in more than one function",
+                r.distinct, r.repeating
+            );
             println!("\nIf the smallest functions were done, how much of the rest their runs reach:");
-            println!("  done   functions  pending insns  in a run of a done fn  in a run of 3+ done fns  fns half covered");
+            println!(
+                "  done   functions  pending insns  in a run of a done fn  in a run of 3+ done fns  fns half covered"
+            );
             let pct = |n: usize, d: usize| if d == 0 { 0.0 } else { n as f64 * 100.0 / d as f64 };
             for t in &r.trials {
                 println!(
@@ -1300,7 +1349,9 @@ fn run(
         "structs" => {
             let list = bin.structures();
             if list.is_empty() {
-                return Err("no structures found: MIPS code only, and only those more than one function reaches".into());
+                return Err(
+                    "no structures found: MIPS code only, and only those more than one function reaches".into(),
+                );
             }
             match arg(2) {
                 Some(which) => {
@@ -1311,7 +1362,11 @@ fn run(
                             .into_iter()
                             .map(|(what, s)| format!("{what} is {}", s.describe(12)))
                             .collect(),
-                        _ => list.iter().filter(|s| s.name == which).map(|s| s.describe(1000)).collect(),
+                        _ => list
+                            .iter()
+                            .filter(|s| s.name == which)
+                            .map(|s| s.describe(1000))
+                            .collect(),
                     };
                     if found.is_empty() {
                         return Err(format!("no structure named or used by {which}"));
@@ -1319,7 +1374,10 @@ fn run(
                     println!("{}", found.join("\n"));
                 }
                 None => {
-                    println!("{} structures reached by more than one function, the most used first:\n", list.len());
+                    println!(
+                        "{} structures reached by more than one function, the most used first:\n",
+                        list.len()
+                    );
                     for s in list {
                         println!("{}", s.describe(4));
                     }
@@ -1695,7 +1753,10 @@ fn run(
             let folder = std::path::Path::new(object);
             let mut rest: Vec<&str> = args[3..].iter().map(String::as_str).collect();
             let json = take_flag(&mut rest, "--json");
-            let cache = if take_flag(&mut rest, "--no-cache") {
+            // Strict relocations change the scores: never through the cache.
+            let strict = take_flag(&mut rest, "--strict-relocs");
+            binviz::matching::STRICT_RELOCS.store(strict, std::sync::atomic::Ordering::Relaxed);
+            let cache = if take_flag(&mut rest, "--no-cache") || strict {
                 None
             } else {
                 binviz::matching::cache::ScoreCache::open(None)
@@ -1789,7 +1850,9 @@ fn run(
             // Variants (objects, or folders of them), ranked closest first by distance.
             let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
             let json = take_flag(&mut rest, "--json");
-            let cache = if take_flag(&mut rest, "--no-cache") {
+            let strict = take_flag(&mut rest, "--strict-relocs");
+            binviz::matching::STRICT_RELOCS.store(strict, std::sync::atomic::Ordering::Relaxed);
+            let cache = if take_flag(&mut rest, "--no-cache") || strict {
                 None
             } else {
                 binviz::matching::cache::ScoreCache::open(None)
@@ -1842,7 +1905,8 @@ fn run(
             }
         }
         "splat" => {
-            let second = arg(2).ok_or("binviz splat <file> <name> [dir] [split...], or splat <file> import <symbol_addrs.txt>")?;
+            let second = arg(2)
+                .ok_or("binviz splat <file> <name> [dir] [split...], or splat <file> import <symbol_addrs.txt>")?;
             if second == "import" {
                 let path = arg(3).ok_or("which symbol file?")?;
                 let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
@@ -1850,7 +1914,12 @@ fn run(
                 eprintln!("{} names", notes.len());
                 println!("{}", serde_json::to_string_pretty(&notes).map_err(|e| e.to_string())?);
             } else {
-                let splits: Vec<u64> = args.get(4..).unwrap_or(&[]).iter().map(|a| num(a)).collect::<Result<_, _>>()?;
+                let splits: Vec<u64> = args
+                    .get(4..)
+                    .unwrap_or(&[])
+                    .iter()
+                    .map(|a| num(a))
+                    .collect::<Result<_, _>>()?;
                 let e = bin.splat_export(second, &splits).map_err(|e| e.to_string())?;
                 match arg(3) {
                     Some(dir) => {
@@ -1905,7 +1974,9 @@ fn run(
             if paths.is_empty() {
                 // Without the libraries, what the code itself says about them.
                 print!("{}", binviz::rcs::sources_text(&bin.library_sources()));
-                println!("To name the library functions, give the libraries: binviz sdk <file> <lib|folder...> [notes]");
+                println!(
+                    "To name the library functions, give the libraries: binviz sdk <file> <lib|folder...> [notes]"
+                );
                 return Ok(());
             }
             for path in &paths {
@@ -1920,13 +1991,19 @@ fn run(
             }
             let r = bin.identify_sdk(&sigs);
             if as_notes {
-                println!("{}", serde_json::to_string_pretty(&r.annotations()).map_err(|e| e.to_string())?);
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&r.annotations()).map_err(|e| e.to_string())?
+                );
             } else {
                 print!("{}", r.to_text());
             }
         }
         "fieldrefs" => {
-            let global = resolve_address(&bin, arg(2).ok_or("which global pointer? binviz fieldrefs <file> <global> [offset]")?)?;
+            let global = resolve_address(
+                &bin,
+                arg(2).ok_or("which global pointer? binviz fieldrefs <file> <global> [offset]")?,
+            )?;
             let offset = match arg(3) {
                 Some(o) => {
                     let (neg, digits) = match o.strip_prefix('-') {
@@ -1993,7 +2070,9 @@ fn run(
                     wanted.extend(bin.symbols().functions().map(|f| format!("{:#x}", f.address)));
                 }
                 if wanted.is_empty() {
-                    return Err("binviz asm <file> <addr|symbol>... [--list <file>] [--all] [--out <dir>] [--bare]".into());
+                    return Err(
+                        "binviz asm <file> <addr|symbol>... [--list <file>] [--all] [--out <dir>] [--bare]".into(),
+                    );
                 }
                 if let Some(dir) = &out_dir {
                     std::fs::create_dir_all(dir).map_err(|e| format!("{dir}: {e}"))?;
@@ -2018,7 +2097,9 @@ fn run(
                     };
                     match &out_dir {
                         Some(dir) => {
-                            let name = f.display_name().replace(|c: char| !c.is_ascii_alphanumeric() && c != '_', "_");
+                            let name = f
+                                .display_name()
+                                .replace(|c: char| !c.is_ascii_alphanumeric() && c != '_', "_");
                             let path = std::path::Path::new(dir).join(format!("{name}.s"));
                             std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
                             written += 1;
@@ -2252,13 +2333,15 @@ fn run(
                     let mut best: std::collections::BTreeMap<u64, binviz::matching::FunctionProgress> =
                         Default::default();
                     for s in &ranking.scores {
-                        let e = best.entry(s.address).or_insert_with(|| binviz::matching::FunctionProgress {
-                            address: s.address,
-                            name: s.name.clone(),
-                            unit: s.unit.clone(),
-                            size: s.original_bytes,
-                            percent: s.percent,
-                        });
+                        let e = best
+                            .entry(s.address)
+                            .or_insert_with(|| binviz::matching::FunctionProgress {
+                                address: s.address,
+                                name: s.name.clone(),
+                                unit: s.unit.clone(),
+                                size: s.original_bytes,
+                                percent: s.percent,
+                            });
                         if s.percent > e.percent {
                             e.percent = s.percent;
                             e.unit = s.unit.clone();
@@ -2293,7 +2376,8 @@ fn run(
         }
         "counterparts" => {
             let dir = arg(2).ok_or("which source? binviz counterparts <file> <source folder> [n]")?;
-            let files = binviz::csource::read_source_tree(std::path::Path::new(dir)).map_err(|e| format!("{dir}: {e}"))?;
+            let files =
+                binviz::csource::read_source_tree(std::path::Path::new(dir)).map_err(|e| format!("{dir}: {e}"))?;
             if files.is_empty() {
                 return Err(format!("{dir}: no C or C++ files"));
             }
@@ -2314,7 +2398,10 @@ fn run(
             match arg(3) {
                 Some(min) => {
                     let min = num(min.trim_end_matches('%'))? as f32 / 100.0;
-                    println!("{}", serde_json::to_string_pretty(&p.annotations(min)).map_err(|e| e.to_string())?);
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&p.annotations(min)).map_err(|e| e.to_string())?
+                    );
                 }
                 None => print!("{}", p.to_text()),
             }
@@ -2388,7 +2475,12 @@ fn split_words(line: &str) -> Vec<String> {
 /// An objdiff report's totals and units, one line each.
 fn progress_text(report: &serde_json::Value) -> String {
     let line = |name: &str, m: &serde_json::Value| {
-        let n = |k: &str| m[k].as_str().and_then(|s| s.parse::<u64>().ok()).or_else(|| m[k].as_u64()).unwrap_or(0);
+        let n = |k: &str| {
+            m[k].as_str()
+                .and_then(|s| s.parse::<u64>().ok())
+                .or_else(|| m[k].as_u64())
+                .unwrap_or(0)
+        };
         format!(
             "{name:<40} {:>5} of {:>5} functions, {:>8} of {:>8} bytes ({:>5.1}%), fuzzy {:>5.1}%\n",
             n("matched_functions"),
@@ -2401,7 +2493,10 @@ fn progress_text(report: &serde_json::Value) -> String {
     };
     let mut out = line("TOTAL", &report["measures"]);
     for c in report["categories"].as_array().into_iter().flatten() {
-        out.push_str(&line(&format!("  {}", c["name"].as_str().unwrap_or("")), &c["measures"]));
+        out.push_str(&line(
+            &format!("  {}", c["name"].as_str().unwrap_or("")),
+            &c["measures"],
+        ));
     }
     for u in report["units"].as_array().into_iter().flatten() {
         out.push_str(&line(u["name"].as_str().unwrap_or(""), &u["measures"]));
@@ -2414,7 +2509,14 @@ fn open_with_its_debug_file(path: &str, data: Vec<u8>) -> Result<Binary, String>
     let mut bin = Binary::parse(data).map_err(|e| format!("{path}: {e}"))?;
     let named = bin.summary().debug_link.clone();
     if let Some(link) = named {
-        let name = link.rsplit(['\\', '/']).next().unwrap_or(&link).split(" (crc ").next().unwrap_or(&link).to_string();
+        let name = link
+            .rsplit(['\\', '/'])
+            .next()
+            .unwrap_or(&link)
+            .split(" (crc ")
+            .next()
+            .unwrap_or(&link)
+            .to_string();
         let beside = std::path::Path::new(path).with_file_name(&name);
         if let Ok(bytes) = std::fs::read(&beside) {
             let _ = bin.attach_debug_file(&beside.to_string_lossy(), bytes);
@@ -2434,7 +2536,9 @@ fn record_outcomes(
     meta: Option<&str>,
     outcomes: &[binviz::matching::FunctionProgress],
 ) -> Result<(), String> {
-    let path = notes.map(str::to_string).unwrap_or_else(|| format!("{file}.binviz-notes.json"));
+    let path = notes
+        .map(str::to_string)
+        .unwrap_or_else(|| format!("{file}.binviz-notes.json"));
     let build = match meta {
         Some(m) => binviz::queue::BuildInfo::parse(m)?,
         None => binviz::queue::BuildInfo::default(),
@@ -2657,7 +2761,9 @@ fn files_or_extract(args: &[String], list: bool) -> Result<(), String> {
         return Ok(());
     }
     if !binviz::Container::is_container(&data) {
-        return Err(format!("{path} holds no files: it is not a disc image, universal binary or archive"));
+        return Err(format!(
+            "{path} holds no files: it is not a disc image, universal binary or archive"
+        ));
     }
     let c = binviz::Container::parse(data).map_err(|e| e.to_string())?;
     if list {
@@ -2665,7 +2771,9 @@ fn files_or_extract(args: &[String], list: bool) -> Result<(), String> {
         return Ok(());
     }
     let spec = spec.ok_or("which member? binviz extract <file> <number|name> [out]  (binviz files lists them)")?;
-    let index = c.find(spec).ok_or_else(|| format!("no member {spec:?}; binviz files {path} lists them"))?;
+    let index = c
+        .find(spec)
+        .ok_or_else(|| format!("no member {spec:?}; binviz files {path} lists them"))?;
     let bytes = c.member_data(index).map_err(|e| e.to_string())?;
     let name = &c.members()[index as usize].name;
     let out = args.get(2).cloned().unwrap_or_else(|| {
@@ -2688,7 +2796,10 @@ fn blobs(path: &str, exe: Option<&str>) -> Result<(), String> {
         }
         None => None,
     };
-    print!("{}", binviz::blobs::blobs_text(&binviz::blobs::find_code_blobs(&data, skip)));
+    print!(
+        "{}",
+        binviz::blobs::blobs_text(&binviz::blobs::find_code_blobs(&data, skip))
+    );
     Ok(())
 }
 

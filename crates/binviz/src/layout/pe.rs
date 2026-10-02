@@ -766,7 +766,10 @@ fn dos_stub(b: &mut Builder, stub: u32, lfanew: u64) {
             if sum == r.xor_key {
                 format!("key {:#010x} (the checksum it is: untouched since linking)", r.xor_key)
             } else {
-                format!("key {:#010x}, but the checksum is {sum:#010x}: edited after linking", r.xor_key)
+                format!(
+                    "key {:#010x}, but the checksum is {sum:#010x}: edited after linking",
+                    r.xor_key
+                )
             },
         );
         if let Some(id) = id {

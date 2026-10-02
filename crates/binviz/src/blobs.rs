@@ -417,7 +417,10 @@ mod tests {
             let target = if i == 0 { this } else { previous };
             let call = 0x0C00_0000 | (target >> 2) & 0x03FF_FFFF;
             words.extend([0x27BD_FFE8, 0xAFBF_0014, call, 0, call, 0]);
-            words.extend(std::iter::repeat_n(0x2402_0001, (i.wrapping_mul(2_654_435_761) >> 13) as usize % 13));
+            words.extend(std::iter::repeat_n(
+                0x2402_0001,
+                (i.wrapping_mul(2_654_435_761) >> 13) as usize % 13,
+            ));
             words.extend([0x8FBF_0014, 0, 0x03E0_0008, 0x27BD_0018]);
             previous = this;
         }

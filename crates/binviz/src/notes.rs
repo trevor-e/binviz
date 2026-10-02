@@ -103,6 +103,21 @@ fn annotation(a: &Value) -> Option<Annotation> {
 
 /// The notes in a notes file's text, and the fingerprint of the build they
 /// were saved for, if it says.
+/// The notes' functions as boundaries of a ROM's reading (name, address,
+/// size): a note in the code (not data) that names a function, records how
+/// its decompilation stands, or says `function` and gives a size. For
+/// [`crate::Binary::with_function_boundaries`].
+pub fn function_boundaries(list: &[Annotation]) -> Vec<(String, u64, u64)> {
+    list.iter()
+        .filter(|a| {
+            let kind = a.kind.as_deref();
+            kind != Some("data")
+                && (!a.name.is_empty() || a.decomp.is_some() || (kind == Some("function") && a.size > 0))
+        })
+        .map(|a| (a.name.clone(), a.address, a.size))
+        .collect()
+}
+
 pub fn parse(text: &str) -> Result<(Vec<Annotation>, Option<String>), String> {
     parse_document(text).map(|(notes, fingerprint, _)| (notes, fingerprint))
 }

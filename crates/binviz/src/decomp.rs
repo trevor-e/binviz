@@ -188,8 +188,13 @@ impl Binary {
             .data
             .iter()
             .filter_map(|r| {
-                let what = if self.symbols().function_containing(r.target).is_some_and(|f| f.address == r.target)
-                    && self.section_at(r.target).is_some_and(|s| s.kind == crate::model::RegionKind::Code)
+                let what = if self
+                    .symbols()
+                    .function_containing(r.target)
+                    .is_some_and(|f| f.address == r.target)
+                    && self
+                        .section_at(r.target)
+                        .is_some_and(|s| s.kind == crate::model::RegionKind::Code)
                 {
                     "a function, its address stored or passed: a callback".to_string()
                 } else {
@@ -228,7 +233,8 @@ impl Binary {
             .filter_map(|r| {
                 let s = self.symbols().lookup(r.source)?;
                 let name = s.demangled.unwrap_or(s.name);
-                name.contains("`vftable'").then(|| format!("{name}[{}]", s.offset / word))
+                name.contains("`vftable'")
+                    .then(|| format!("{name}[{}]", s.offset / word))
             })
             .collect();
         // A function whose last instruction runs on into the next is another way into it.
@@ -245,7 +251,11 @@ impl Binary {
         Some(DecompContext {
             address: lo,
             name: f.display_name().into_owned(),
-            size: if dis.end > lo && !dis.truncated { dis.end - lo } else { hi - lo },
+            size: if dis.end > lo && !dis.truncated {
+                dis.end - lo
+            } else {
+                hi - lo
+            },
             signature: self.function_signature(lo),
             instructions: dis.instructions,
             truncated: dis.truncated,
@@ -362,7 +372,11 @@ impl DecompContext {
             let _ = writeln!(out, "{label}:");
             for n in list {
                 let name = if n.kind == NodeKind::Data {
-                    let slot = if n.name.starts_with("0x") { String::new() } else { format!(" {}", n.name) };
+                    let slot = if n.name.starts_with("0x") {
+                        String::new()
+                    } else {
+                        format!(" {}", n.name)
+                    };
                     format!("(indirect, through the pointer{slot} at {:#x})", n.address)
                 } else {
                     n.name.clone()
@@ -372,7 +386,11 @@ impl DecompContext {
                     "  {:#x} {}{}{}",
                     n.address,
                     name,
-                    if n.calls > 1 { format!(" (×{})", n.calls) } else { String::new() },
+                    if n.calls > 1 {
+                        format!(" (×{})", n.calls)
+                    } else {
+                        String::new()
+                    },
                     n.prototype.as_deref().map_or(String::new(), |p| format!("  {p}"))
                 );
             }
@@ -434,9 +452,7 @@ impl DecompContext {
                 );
             }
             // A callback whose code reads no argument may still be passed some.
-            if self.callers.is_empty()
-                && self.signature.as_ref().is_some_and(|s| s.prototype.ends_with("(void)"))
-            {
+            if self.callers.is_empty() && self.signature.as_ref().is_some_and(|s| s.prototype.ends_with("(void)")) {
                 let _ = writeln!(
                     out,
                     "Its code reads no arguments; called through a pointer, it may be passed some it ignores (the pointer's type says which)"
@@ -475,7 +491,11 @@ impl DecompContext {
                     out,
                     "  {:#x} {}{}",
                     n.address,
-                    if n.name.is_empty() { String::new() } else { format!("{} ", n.name) },
+                    if n.name.is_empty() {
+                        String::new()
+                    } else {
+                        format!("{} ", n.name)
+                    },
                     n.comment
                 );
             }
@@ -495,7 +515,12 @@ impl DecompContext {
             );
         }
         if self.truncated {
-            let _ = writeln!(out, "  … stopped at {} instructions of a {}-byte function; pass a larger count for the rest", self.instructions.len(), self.size);
+            let _ = writeln!(
+                out,
+                "  … stopped at {} instructions of a {}-byte function; pass a larger count for the rest",
+                self.instructions.len(),
+                self.size
+            );
         }
         out
     }
@@ -509,7 +534,12 @@ mod tests {
     fn context_for_a_playstation_function() {
         let mut data = vec![0u8; 0x800];
         data[..8].copy_from_slice(b"PS-X EXE");
-        for (at, v) in [(0x10, 0x8001_0000u32), (0x14, 0x8001_8000), (0x18, 0x8001_0000), (0x1C, 0x30)] {
+        for (at, v) in [
+            (0x10, 0x8001_0000u32),
+            (0x14, 0x8001_8000),
+            (0x18, 0x8001_0000),
+            (0x1C, 0x30),
+        ] {
             data[at..at + 4].copy_from_slice(&v.to_le_bytes());
         }
         // entry: addiu $sp,-0x18 / sw $ra / jal leaf / nop / lw $ra / jr $ra / addiu $sp; leaf: lui $v0, 0x8001 / lw $v0, 0x2c($v0) / jr $ra / nop
@@ -535,7 +565,10 @@ mod tests {
             name: "GetState".into(),
             comment: "reads the state word".into(),
             reviewed: false,
-            kind: None, decomp: None, ctype: None, author: String::new(),
+            kind: None,
+            decomp: None,
+            ctype: None,
+            author: String::new(),
         }]);
         let c = bin.decomp_context(0x8001_0000, 64).unwrap();
         assert_eq!((c.name.as_str(), c.size), ("entry", 0x1C));

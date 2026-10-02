@@ -793,7 +793,9 @@ impl<'a> Follower<'a> {
             let Some(sites) = jumps.get(&start) else { continue };
             // Jumped to from one other function only.
             let owners: HashSet<(u64, u64)> = sites.iter().filter_map(|&s| function_of(s)).collect();
-            let [owner] = owners.into_iter().collect::<Vec<_>>()[..] else { continue };
+            let [owner] = owners.into_iter().collect::<Vec<_>>()[..] else {
+                continue;
+            };
             if owner.0 == start || known.contains(&start) {
                 continue;
             }
@@ -850,7 +852,11 @@ impl<'a> Follower<'a> {
                 let flow = match ins.flow_control() {
                     FlowControl::Return => {
                         // The return address was at the top: anything more was popped from someone's frame.
-                        let n = if ins.op_count() > 0 { ins.immediate16() as i64 } else { 0 };
+                        let n = if ins.op_count() > 0 {
+                            ins.immediate16() as i64
+                        } else {
+                            0
+                        };
                         if sp - (self.bits as i64 / 8) - n > 0 {
                             return true;
                         }

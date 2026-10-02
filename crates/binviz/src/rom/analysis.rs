@@ -553,6 +553,12 @@ fn join_runs(w: &mut Walk<'_>, runs: &[(u64, u64, u64)], mips: bool) -> (Vec<(u6
     // entry falling into the other's start, and a decompilation writes the
     // two as one function (the FF9 project matched twelve such; cutting them
     // at the second entry lost the matches).
+    //
+    // Except an entry point: a function another image names, or one a note
+    // records (`Binary::with_function_boundaries`), is a boundary the joining
+    // never removes, whatever falls through into it. The FF9 notes record the
+    // fragments of a script interpreter and score them one by one.
+    let pinned: HashSet<u64> = rom.entries.iter().map(|e| e.1).collect();
     if mips {
         for &(_, end, function) in runs {
             if w.ends.contains(&end) {
@@ -565,6 +571,9 @@ fn join_runs(w: &mut Walk<'_>, runs: &[(u64, u64, u64)], mips: bool) -> (Vec<(u6
                 if a != b {
                     // The group is named by its lowest start: the entry.
                     let (lo, hi) = if a < b { (a, b) } else { (b, a) };
+                    if pinned.contains(&hi) {
+                        continue;
+                    }
                     parent.insert(hi, lo);
                 }
             }

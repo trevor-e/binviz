@@ -31,9 +31,10 @@ pub struct SplatExport {
 
 /// splat's own names for what it hasn't been told about.
 fn auto_name(name: &str) -> bool {
-    ["func_", "D_", "jtbl_", "L", "B_", "RODATA_"]
-        .iter()
-        .any(|p| name.strip_prefix(p).is_some_and(|rest| rest.len() == 8 && rest.chars().all(|c| c.is_ascii_hexdigit())))
+    ["func_", "D_", "jtbl_", "L", "B_", "RODATA_"].iter().any(|p| {
+        name.strip_prefix(p)
+            .is_some_and(|rest| rest.len() == 8 && rest.chars().all(|c| c.is_ascii_hexdigit()))
+    })
 }
 
 impl Binary {
@@ -50,7 +51,9 @@ impl Binary {
             .ok_or_else(|| Error::new("splat export is for PlayStation executables"))?;
         let _ = rom;
         if self.summary.format_name != "PS-X EXE" {
-            return Err(Error::new("splat export is for PS-X EXE files (the disc's boot executable)"));
+            return Err(Error::new(
+                "splat export is for PS-X EXE files (the disc's boot executable)",
+            ));
         }
         let data = self.data();
         let word = |at: usize| u32::from_le_bytes([data[at], data[at + 1], data[at + 2], data[at + 3]]) as u64;
@@ -65,16 +68,18 @@ impl Binary {
             .map(|f| (f.address, f.size))
             .collect();
         functions.sort_unstable();
-        let code_end = functions
-            .iter()
-            .map(|&(a, s)| a + s.max(4))
-            .max()
-            .unwrap_or(load);
+        let code_end = functions.iter().map(|&(a, s)| a + s.max(4)).max().unwrap_or(load);
         let code_end = (code_end + 15) & !15;
         let to_offset = |a: u64| 0x800 + (a - load);
         let mut config = String::new();
-        let _ = writeln!(config, "# splat config written by binviz for {name}: the code as followed from the entry");
-        let _ = writeln!(config, "# point, one unit per split; refine the units and mark rodata/sdata by hand.");
+        let _ = writeln!(
+            config,
+            "# splat config written by binviz for {name}: the code as followed from the entry"
+        );
+        let _ = writeln!(
+            config,
+            "# point, one unit per split; refine the units and mark rodata/sdata by hand."
+        );
         let _ = writeln!(config, "name: {name}");
         let _ = writeln!(config, "# sha1: (sha1sum of the executable)");
         let _ = writeln!(config, "options:");
@@ -113,9 +118,20 @@ impl Binary {
         splits.sort_unstable();
         splits.dedup();
         let mut unit_start = load;
-        let unit_name = |a: u64| if a == load { "main".to_string() } else { format!("unit_{a:08x}") };
+        let unit_name = |a: u64| {
+            if a == load {
+                "main".to_string()
+            } else {
+                format!("unit_{a:08x}")
+            }
+        };
         for s in splits.iter().copied().chain(std::iter::once(code_end)) {
-            let _ = writeln!(config, "      - [{:#x}, asm, {}]", to_offset(unit_start), unit_name(unit_start));
+            let _ = writeln!(
+                config,
+                "      - [{:#x}, asm, {}]",
+                to_offset(unit_start),
+                unit_name(unit_start)
+            );
             unit_start = s;
         }
         if code_end < load + size {
@@ -137,7 +153,9 @@ impl Binary {
                 continue;
             }
             let name = s.display_name();
-            let name = name.strip_prefix("sub_").map_or_else(|| name.to_string(), |a| format!("func_{a}"));
+            let name = name
+                .strip_prefix("sub_")
+                .map_or_else(|| name.to_string(), |a| format!("func_{a}"));
             if name.is_empty() {
                 continue;
             }
@@ -185,7 +203,9 @@ pub fn parse_symbol_addrs(text: &str) -> Vec<Annotation> {
             continue;
         }
         let (decl, attrs) = line.split_once("//").map_or((line, ""), |(d, a)| (d, a));
-        let Some((name, value)) = decl.split_once('=') else { continue };
+        let Some((name, value)) = decl.split_once('=') else {
+            continue;
+        };
         let name = name.trim();
         let value = value.trim().trim_end_matches(';').trim();
         let Ok(address) = u64::from_str_radix(value.trim_start_matches("0x").trim_start_matches("0X"), 16) else {
@@ -250,8 +270,16 @@ mod tests {
         assert!(e.config.contains("      - [0x810, asm, unit_80010010]"));
         assert!(e.config.contains("      - [0x820, data, main]"), "{}", e.config);
         assert!(e.config.contains("  - [0x840]"));
-        assert!(e.symbol_addrs.contains("entry = 0x80010000; // type:func size:0x10 rom:0x800"), "{}", e.symbol_addrs);
-        assert!(e.symbol_addrs.contains("func_80010010 = 0x80010010; // type:func size:0x8 rom:0x810"));
+        assert!(
+            e.symbol_addrs
+                .contains("entry = 0x80010000; // type:func size:0x10 rom:0x800"),
+            "{}",
+            e.symbol_addrs
+        );
+        assert!(
+            e.symbol_addrs
+                .contains("func_80010010 = 0x80010010; // type:func size:0x8 rom:0x810")
+        );
         assert!(e.symbol_addrs.contains("GP0 = 0x1f801810; // type:data size:0x4"));
         assert_eq!(e.functions, 2);
 
@@ -269,7 +297,11 @@ mod tests {
             author: String::new(),
         }]);
         let e = named.splat_export("tiny", &[0x8001_0010]).unwrap();
-        assert!(e.symbol_addrs.contains("OpenArchive = 0x80010010; // type:func"), "{}", e.symbol_addrs);
+        assert!(
+            e.symbol_addrs.contains("OpenArchive = 0x80010010; // type:func"),
+            "{}",
+            e.symbol_addrs
+        );
         assert!(!e.symbol_addrs.contains("func_80010010"), "{}", e.symbol_addrs);
         assert_eq!(e.functions, 2);
 

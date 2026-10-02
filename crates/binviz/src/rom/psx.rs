@@ -161,7 +161,10 @@ fn layout(b: &mut Builder<'_>) {
 /// exception vector at `0x80` and the BIOS-call entry points at `0xA0`,
 /// `0xB0` and `0xC0` each start with `lui` (into `$k0` or `$t0`) then jump.
 fn kernel_present(data: &[u8]) -> bool {
-    let word = |at: usize| data.get(at..at + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
+    let word = |at: usize| {
+        data.get(at..at + 4)
+            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    };
     word(0x80).is_some_and(|w| w & 0xFFFF_0000 == 0x3C1A_0000)
         && [0xA0, 0xB0, 0xC0]
             .iter()
@@ -212,7 +215,10 @@ fn hardware_labels() -> Vec<(String, u64, u64)> {
 /// `$ra` saved to the frame within the next few instructions (leaf functions
 /// without a frame are found by the calls to them instead).
 pub(crate) fn prologues(data: &[u8], base: u64) -> Vec<u64> {
-    let word = |at: usize| data.get(at..at + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
+    let word = |at: usize| {
+        data.get(at..at + 4)
+            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    };
     let mut out = Vec::new();
     let mut at = 0;
     while at + 4 <= data.len() {
@@ -292,13 +298,21 @@ pub(crate) fn overlay_parts(data: &[u8], load: u64, extra: Vec<(String, u64, u64
     if !(0x8000_0000..0x8080_0000).contains(&load) || size == 0 || load + size > 0x8080_0000 {
         return None;
     }
-    let ram_end = if load + size > 0x8020_0000 { 0x8080_0000 } else { 0x8020_0000 };
+    let ram_end = if load + size > 0x8020_0000 {
+        0x8080_0000
+    } else {
+        0x8020_0000
+    };
     let mut areas = vec![Area::rom("Overlay", load, size, 0)];
     if load > 0x8000_0000 {
         areas.push(Area::ram("RAM (below the overlay)", 0x8000_0000, load - 0x8000_0000));
     }
     if load + size < ram_end {
-        areas.push(Area::ram("RAM (above the overlay)", load + size, ram_end - (load + size)));
+        areas.push(Area::ram(
+            "RAM (above the overlay)",
+            load + size,
+            ram_end - (load + size),
+        ));
     }
     areas.extend(hardware_areas());
     let late_entries = prologues(data, load);
@@ -360,7 +374,11 @@ pub fn locate(blob: &[u8], ram: &[u8]) -> Option<u64> {
         }
         let start = pos - window;
         let n = blob.len().min(ram.len() - start).min(64 * 1024);
-        let same = blob[..n].iter().zip(&ram[start..start + n]).filter(|(a, b)| a == b).count();
+        let same = blob[..n]
+            .iter()
+            .zip(&ram[start..start + n])
+            .filter(|(a, b)| a == b)
+            .count();
         if same * 10 >= n * 9 {
             return Some(0x8000_0000 + start as u64);
         }
@@ -398,7 +416,10 @@ pub fn loaded_pieces(file: &[u8], ram: &[u8]) -> Vec<LoadedPiece> {
     }
     let telling = |w: &[u8]| {
         let mut seen = [false; 256];
-        w.iter().filter(|&&x| !std::mem::replace(&mut seen[x as usize], true)).count() >= 12
+        w.iter()
+            .filter(|&&x| !std::mem::replace(&mut seen[x as usize], true))
+            .count()
+            >= 12
     };
     // Every 4-byte aligned window of memory with bytes enough to tell it apart.
     let mut index: std::collections::HashMap<u64, Vec<u32>> = std::collections::HashMap::new();
@@ -454,7 +475,11 @@ pub fn loaded_pieces(file: &[u8], ram: &[u8]) -> Vec<LoadedPiece> {
             if end - start < 1024 {
                 continue;
             }
-            let same = file[start..end].iter().zip(&ram[ram_at(start)..ram_at(end)]).filter(|(x, y)| x == y).count();
+            let same = file[start..end]
+                .iter()
+                .zip(&ram[ram_at(start)..ram_at(end)])
+                .filter(|(x, y)| x == y)
+                .count();
             out.push(LoadedPiece {
                 offset: start as u64,
                 size: (end - start) as u64,
@@ -570,8 +595,14 @@ mod tests {
         ram[0x10_0000..0x10_2000].copy_from_slice(&b);
         let found = loaded_pieces(&archive, &ram);
         let placed: Vec<(u64, u64, u64)> = found.iter().map(|p| (p.offset, p.size, p.address)).collect();
-        assert_eq!(placed, [(at_a as u64, 4096, 0x8004_0000), (at_b as u64, 8192, 0x8010_0000)]);
-        assert!(found[0].same < 1.0 && found[0].same > 0.99 && found[1].same == 1.0, "{found:?}");
+        assert_eq!(
+            placed,
+            [(at_a as u64, 4096, 0x8004_0000), (at_b as u64, 8192, 0x8010_0000)]
+        );
+        assert!(
+            found[0].same < 1.0 && found[0].same > 0.99 && found[1].same == 1.0,
+            "{found:?}"
+        );
     }
 
     fn le(words: &[u32]) -> Vec<u8> {
@@ -581,14 +612,14 @@ mod tests {
     /// A function with a frame that calls `target`, then returns; 9 words.
     fn caller(target: u32) -> Vec<u32> {
         vec![
-            0x27BD_FFE8,                                // addiu $sp, $sp, -0x18
-            0xAFBF_0014,                                // sw $ra, 0x14($sp)
-            0x0C00_0000 | (target >> 2) & 0x03FF_FFFF,  // jal target
-            0x0000_0000,                                // nop
-            0x8FBF_0014,                                // lw $ra, 0x14($sp)
-            0x0000_0000,                                // nop
-            0x03E0_0008,                                // jr $ra
-            0x27BD_0018,                                // addiu $sp, $sp, 0x18
+            0x27BD_FFE8,                               // addiu $sp, $sp, -0x18
+            0xAFBF_0014,                               // sw $ra, 0x14($sp)
+            0x0C00_0000 | (target >> 2) & 0x03FF_FFFF, // jal target
+            0x0000_0000,                               // nop
+            0x8FBF_0014,                               // lw $ra, 0x14($sp)
+            0x0000_0000,                               // nop
+            0x03E0_0008,                               // jr $ra
+            0x27BD_0018,                               // addiu $sp, $sp, 0x18
             0x0000_0000,
         ]
     }
@@ -612,7 +643,10 @@ mod tests {
         let mut words = vec![0x03E0_0008, 0x0000_0000, 0x0000_0000, 0x0000_0000];
         words.extend(caller(0x8001_0000));
         let exe = exe_with(&words);
-        let f = exe.symbols().function_containing(0x8001_0010).expect("the uncalled function is found");
+        let f = exe
+            .symbols()
+            .function_containing(0x8001_0010)
+            .expect("the uncalled function is found");
         assert_eq!(f.name(), "sub_80010010");
     }
 
@@ -650,7 +684,10 @@ mod tests {
             ]
         );
         let text = exe.field_refs_text(0x8002_0010, Some(0x14));
-        assert!(text.contains("1 uses of offset 0x14") && text.contains("at 0x80010008"), "{text}");
+        assert!(
+            text.contains("1 uses of offset 0x14") && text.contains("at 0x80010008"),
+            "{text}"
+        );
     }
 
     #[test]
@@ -987,7 +1024,12 @@ mod trace_tests {
         // entry: jr $ra / nop; then, unreachable by following, a function at +0x10.
         let mut data = vec![0u8; 0x800];
         data[..8].copy_from_slice(b"PS-X EXE");
-        for (at, v) in [(0x10, 0x8001_0000u32), (0x14, 0x8001_8000), (0x18, 0x8001_0000), (0x1C, 0x20)] {
+        for (at, v) in [
+            (0x10, 0x8001_0000u32),
+            (0x14, 0x8001_8000),
+            (0x18, 0x8001_0000),
+            (0x1C, 0x20),
+        ] {
             data[at..at + 4].copy_from_slice(&v.to_le_bytes());
         }
         let words = [0x03E0_0008u32, 0, 0, 0, 0x2402_0001, 0x03E0_0008, 0, 0];
@@ -998,7 +1040,9 @@ mod trace_tests {
         let f = bin.symbols().function_containing(0x8001_0010).unwrap();
         assert_eq!((f.address, f.size), (0x8001_0010, 12));
         let (traced, s) = bin
-            .with_psx_trace("80010000: 03e00008 jr ra\n80010004: 00000000 nop\n0x80010010\n80010014 jr $ra\nnot a line\n")
+            .with_psx_trace(
+                "80010000: 03e00008 jr ra\n80010004: 00000000 nop\n0x80010010\n80010014 jr $ra\nnot a line\n",
+            )
             .unwrap();
         assert_eq!((s.lines, s.addresses, s.placed, s.new_runs), (4, 4, 4, 0));
         let f = traced.symbols().function_containing(0x8001_0010).unwrap();

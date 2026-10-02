@@ -32,7 +32,10 @@ fn builds_rank_best_first() {
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
     let text = String::from_utf8(out.stdout).unwrap();
     let lines: Vec<&str> = text.lines().collect();
-    assert!(lines[0].starts_with("100.0%    15 of   15 exact") && lines[0].ends_with("x86match.obj"), "{text}");
+    assert!(
+        lines[0].starts_with("100.0%    15 of   15 exact") && lines[0].ends_with("x86match.obj"),
+        "{text}"
+    );
     assert!(lines[1].ends_with("x86match-edited.obj"), "{text}");
     assert!(lines[2].contains("didn't compile"), "{text}");
 }

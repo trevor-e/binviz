@@ -380,7 +380,10 @@ impl Binary {
                 intervals.push((ps.max(lo), pe.min(hi), status));
             }
             for a in self.annotations.iter().filter(|a| a.address < hi) {
-                let matched = a.decomp.as_ref().is_some_and(|d| d.state == crate::model::DecompState::Matched);
+                let matched = a
+                    .decomp
+                    .as_ref()
+                    .is_some_and(|d| d.state == crate::model::DecompState::Matched);
                 if !a.is_note() && !matched {
                     continue;
                 }
@@ -553,7 +556,9 @@ impl Binary {
         };
         let from = start - sec.address;
         let n = (end - start).min(sec.file_size.saturating_sub(from));
-        self.data.get((off + from) as usize..(off + from + n) as usize).unwrap_or(&[])
+        self.data
+            .get((off + from) as usize..(off + from + n) as usize)
+            .unwrap_or(&[])
     }
 
     /// An unexplored run, cut where what its bytes are changes (zeros, then a table, then code).
@@ -574,7 +579,15 @@ impl Binary {
             let hint = self.gap_hint(kind, self.gap_bytes(section, at, to));
             match out.last_mut() {
                 Some(last) if last.2 == hint => last.1.end = to,
-                _ => out.push((section, Run { start: at, end: to, status: r.status }, hint)),
+                _ => out.push((
+                    section,
+                    Run {
+                        start: at,
+                        end: to,
+                        status: r.status,
+                    },
+                    hint,
+                )),
             }
             at = to;
         }

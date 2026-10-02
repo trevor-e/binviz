@@ -16,3 +16,4 @@ samples/quake2-loop/build/
 
 # Wrangler's local cache
 .wrangler
+/target-pin

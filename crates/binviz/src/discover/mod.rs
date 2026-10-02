@@ -80,7 +80,11 @@ pub(crate) fn discover(
             functions,
             tables: found.tables,
             switches: found.switches,
-            parts: found.parts.into_iter().filter(|p| !within_ranges(&covered, p.0)).collect(),
+            parts: found
+                .parts
+                .into_iter()
+                .filter(|p| !within_ranges(&covered, p.0))
+                .collect(),
             note: Some(note),
         };
     }
@@ -209,7 +213,9 @@ fn tls_callbacks(b: &Bytes, sections: &[Section], image_base: u64) -> Vec<u64> {
         return Vec::new();
     };
     let size = if wide { 8 } else { 4 };
-    (0..256).map_while(|i| word(list + size * i).filter(|&va| va != 0)).collect()
+    (0..256)
+        .map_while(|i| word(list + size * i).filter(|&va| va != 0))
+        .collect()
 }
 
 /// The exception handlers the load configuration lists as safe (`/SAFESEH`).

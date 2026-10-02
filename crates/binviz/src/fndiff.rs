@@ -245,7 +245,9 @@ impl<'a> Side<'a> {
                     b'[' | b'(' => depth += 1,
                     b']' | b')' => depth -= 1,
                     b'0' if depth == 0 && bytes.get(k + 1) == Some(&b'x') => {
-                        let end = text[k + 2..].find(|c: char| !c.is_ascii_hexdigit()).map_or(text.len(), |e| k + 2 + e);
+                        let end = text[k + 2..]
+                            .find(|c: char| !c.is_ascii_hexdigit())
+                            .map_or(text.len(), |e| k + 2 + e);
                         if let Ok(v) = u64::from_str_radix(&text[k + 2..end], 16) {
                             values.push(v);
                         }
@@ -284,7 +286,11 @@ impl<'a> Side<'a> {
             .into_iter()
             .filter(|(_, _, kind)| kind.is_call())
             .filter_map(|(site, target, _)| {
-                let callee = self.bin.symbols().function_containing(target).map_or(target, |g| g.address);
+                let callee = self
+                    .bin
+                    .symbols()
+                    .function_containing(target)
+                    .map_or(target, |g| g.address);
                 Some((site, *self.at.get(&callee)?))
             })
             .collect();
@@ -330,12 +336,7 @@ impl Matcher<'_> {
     /// side has, matched or not (a key left unique only because its other
     /// holders were paired says little), when their sizes are within
     /// `min_size_ratio` and they share that much of their instructions.
-    fn by_key_unique_overall(
-        &mut self,
-        how: MatchKind,
-        keys: &(Vec<Option<u64>>, Vec<Option<u64>>),
-        min_alike: f32,
-    ) {
+    fn by_key_unique_overall(&mut self, how: MatchKind, keys: &(Vec<Option<u64>>, Vec<Option<u64>>), min_alike: f32) {
         let count = |ks: &[Option<u64>]| {
             let mut c: HashMap<u64, (u32, usize)> = HashMap::new();
             for (i, k) in ks.iter().enumerate() {
@@ -426,7 +427,8 @@ impl Matcher<'_> {
             } else {
                 (self.a.callees_of(x), self.b.callees_of(y))
             };
-            let (sa, sb): (HashSet<usize>, HashSet<usize>) = (na.iter().copied().collect(), nb.iter().copied().collect());
+            let (sa, sb): (HashSet<usize>, HashSet<usize>) =
+                (na.iter().copied().collect(), nb.iter().copied().collect());
             for &p in &sa {
                 if let Some(q) = self.a.matched[p] {
                     total += 1;
@@ -454,10 +456,17 @@ impl Matcher<'_> {
             return;
         }
         // Positions of calls to matched functions, as the partner on b's side.
-        let ma: Vec<(usize, usize)> =
-            sa.iter().enumerate().filter_map(|(p, &f)| Some((p, self.a.matched[f]?))).collect();
-        let mb: Vec<(usize, usize)> =
-            sb.iter().enumerate().filter(|(_, f)| self.b.matched[**f].is_some()).map(|(p, &f)| (p, f)).collect();
+        let ma: Vec<(usize, usize)> = sa
+            .iter()
+            .enumerate()
+            .filter_map(|(p, &f)| Some((p, self.a.matched[f]?)))
+            .collect();
+        let mb: Vec<(usize, usize)> = sb
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| self.b.matched[**f].is_some())
+            .map(|(p, &f)| (p, f))
+            .collect();
         let (n, m) = (ma.len(), mb.len());
         let mut t = vec![0u16; (n + 1) * (m + 1)];
         for x in (0..n).rev() {
@@ -538,7 +547,11 @@ impl Matcher<'_> {
             let mut scored: Vec<(f32, usize, usize)> = Vec::new();
             for (x, y, e) in found {
                 let (lx, ly) = (self.a.funcs[x].tokens.len() as f32, self.b.funcs[y].tokens.len() as f32);
-                let ratio = if lx.max(ly) == 0.0 { 1.0 } else { lx.min(ly) / lx.max(ly) };
+                let ratio = if lx.max(ly) == 0.0 {
+                    1.0
+                } else {
+                    lx.min(ly) / lx.max(ly)
+                };
                 // Look-alikes need to look alike; a lone neighbour or a call in
                 // the same place, only to be about the same size.
                 let (min_ratio, bonus, floor) = match e {
@@ -562,7 +575,6 @@ impl Matcher<'_> {
                     continue;
                 }
                 scored.push((alike + bonus + 0.3 * agree.unwrap_or(0.5), x, y));
-
             }
             // Best first, each only as the other's best candidate, and clearly
             // better than the next: variants of one template called from the
@@ -880,7 +892,11 @@ impl Binary {
         let xrefs = self.xrefs_supported() && newer.xrefs_supported();
         let strings = |s: &mut Side, i: usize| s.strings_key(i);
         let constants = |s: &mut Side, i: usize| (s.funcs[i].tokens.len() >= 8).then(|| s.constants_key(i)).flatten();
-        let keys_strings = if xrefs { m.all_keys(&strings) } else { Default::default() };
+        let keys_strings = if xrefs {
+            m.all_keys(&strings)
+        } else {
+            Default::default()
+        };
         let keys_constants = m.all_keys(&constants);
         for _ in 0..4 {
             let before = m.pairs.len();

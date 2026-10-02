@@ -26,7 +26,8 @@ pub(crate) struct Build {
 }
 
 /// Said after a function is marked matched with no compiler on record.
-const NO_BUILD: &str = " No compiler recorded for it: pass compiler (and flags, sdk) so another project can reuse the match.";
+const NO_BUILD: &str =
+    " No compiler recorded for it: pass compiler (and flags, sdk) so another project can reuse the match.";
 
 impl Build {
     pub(crate) fn from_args(args: &Value) -> Build {
@@ -130,7 +131,8 @@ fn update(o: &mut Open, start: u64, change: impl FnOnce(&mut Decomp)) -> Decomp 
             reviewed: false,
             kind: None,
             decomp: None,
-            ctype: None, author: String::new(),
+            ctype: None,
+            author: String::new(),
         },
     };
     let mut d = a.decomp.take().unwrap_or_default();

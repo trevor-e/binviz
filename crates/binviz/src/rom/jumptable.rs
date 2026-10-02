@@ -355,12 +355,7 @@ pub(crate) fn mips_table(pc: u64, code: &Code, big: bool) -> Option<MipsTable> {
         })
     };
     // A register's value when it was built from constants (lui, addiu, ori, move).
-    fn constant(
-        writer: &dyn Fn(u32, u64) -> Option<(u64, MipsWord)>,
-        reg: u32,
-        from: u64,
-        depth: u32,
-    ) -> Option<u32> {
+    fn constant(writer: &dyn Fn(u32, u64) -> Option<(u64, MipsWord)>, reg: u32, from: u64, depth: u32) -> Option<u32> {
         if reg == 0 {
             return Some(0);
         }
