@@ -1191,3 +1191,14 @@ input paths without relaxing byte equality. Candidate preparation errors remain
 failures, and source symbol identities, types, layouts and expression order are
 preserved. Source edits invalidate downstream source-bound evidence; object
 equality does not establish a new linked-image, WASM or gameplay proof.
+
+Function-name acceptance must also retain a unit-scoped mapping between descriptive
+C identifiers and native symbol identities. FF9's first naming batch maps 27
+options-menu functions through an alias header and changes 41 affected sources;
+all objects and original-code scores remain unchanged, including one pre-existing
+partial caller. WASM preprocessing retains identical tokens. Temporary evidence
+is in `binviz/target/ff9-function-names/`; the tracked mapping is
+`ff9-decomp/docs/function-names.json`. Validate canonical identities after
+preprocessing rather than rejecting a descriptive definition in raw source.
+Scope overlay aliases by unit, retain source paths, verify all affected callers,
+and preserve partial baseline scores without granting new matching credit.
