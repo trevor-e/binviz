@@ -1224,3 +1224,23 @@ Audio-name evidence additionally follows the original executable's hashed comman
 table through dispatch normalization to handler effects; do not infer behavior
 from opcode numbers alone. A catalog/report importer is bookkeeping until it
 independently validates the source/header/tool/recipe inputs and observations.
+
+Overlay naming acceptance (BV-03/BV-08, P2): FF9 adds 86 battle-results names
+and 169 save/load and memory-card names, reaching 966 reviewed aliases. Reports:
+ff9-decomp/docs/function-names-{results,save}.json. Thin adapters reuse the native
+compiler farm, strict-relocation scorer and token checks under
+binviz/target/ff9-names-{results,save}/. All 255 complete native objects are
+byte-identical; original scores (including 15 existing partials) and WASM
+preprocessed tokens remain unchanged. No linked/gameplay proof is claimed.
+
+Acceptance for a reusable naming campaign: identity keys must include the unit
+because overlay addresses overlap; apply each overlay header only to its own
+sources. Refresh the current catalog from historical batch reports without
+relabeling old snapshot hashes as current evidence. Behavioral review must follow
+actual callees when source comments disagree: save read 801f8478 reaches BIOS
+B0:34 through fa5a4/fa5d0/fa644, while write 801f7e68 reaches B0:35 through
+fa4b8/fa4e4/fa53c. Open fa3d8 reaches B0:32 rather than formatting; format fa754
+reaches the recovered 66310 directory/broken-sector/MC-header writer. Bind these
+reviewed callee sources as evidence. Keep uncertain fields and text IDs descriptive
+without invented domain meanings. Existing campaign importers remain bookkeeping
+until their source/header/compiler/recipe checks independently validate observations.
