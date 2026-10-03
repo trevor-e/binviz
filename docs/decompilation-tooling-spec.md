@@ -140,7 +140,12 @@ definition evidence; cover K&R, typedef/pointer-to-pointer, signed-short results
 default promotions, casted calls, variadics, aggregate profiles, void casts,
 conditions/comma expressions and address-only references. The existing owned
 prototype regression must keep the real pointer declaration and callback
-identity. Audit a synthetic caller with two independent errors and return both.
+identity. Include legal multi-declarator function declarations such as
+`extern void a(void), b(void), c(void);`: early AST declarators do not end at
+the statement semicolon. Preserve declaration-group and per-symbol identities
+instead of asserting that every individual range ends with `;`. This was
+observed in the improved BOOT provider closure. Audit a synthetic caller with
+two independent errors and return both.
 FF9's guarded AEE68 rewrite must carry the correct stage identity instead of
 silently disappearing as a cache miss.
 
@@ -247,6 +252,8 @@ summary. Add explicit may-write/no-read and nonreturning outcomes with verified
 closure dependencies. FF9 D8820's A2 modes and BIOS panic frontier are the
 observed migration case; current CLI unresolved results remain valid until the
 summary model and relevant GTE/BREAK semantics can establish stronger evidence.
+Include 4AAF0's null-list preserve versus nonnull overwrite paths as a smaller
+case; never relabel a discarded endpoint as an unconditional register kill.
 
 ## BV-05: visible workflow, MCP and progress
 
@@ -273,7 +280,9 @@ failed job retains its partial coverage and never becomes a clean full report.
 Extend `queue.rs` ranking/claims with blocker dependencies, e.g. which missing
 provider or contract unlocks the most callers, and export disjoint batch work
 packages. Keep first-failure caller counts separate from all observed finding
-counts. Count matching starts/bytes, behavior fixtures and gameplay milestones
+counts. Include every known finding for a caller in its work package, labeling
+already-reviewed policies, so successive first failures do not trigger separate
+discovery and full-replay cycles. Count matching starts/bytes, behavior fixtures and gameplay milestones
 separately; there is no synthetic overall playable-game percentage.
 
 **Acceptance:** the same request has equivalent core results via CLI/MCP/WASM;
@@ -292,7 +301,9 @@ and parts of `wasm/runtime/fnptr.py`.
 Generate an edit plan from verified compiler facts and eligible policies. Use
 compiler-provided reference spans; change only intended direct calls and their
 required declarations. Refuse ambiguous macro/source spans and overlapping
-edits. Preserve every supplied argument expression's evaluation exactly once,
+edits. Handle grouped declarations through a verified whole-statement edit or an
+explicit unsupported-span diagnostic; do not corrupt neighboring declarators.
+Preserve every supplied argument expression's evaluation exactly once,
 including allowed ignored words. Preserve formal/result narrowing and signed
 extension, pointer bits, same-TU typedef declarations and original callback
 addresses. Explicitly represent native hidden-result/packed-record bridges and
