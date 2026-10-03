@@ -201,7 +201,7 @@ Run it with no arguments for the full command list: `info`, `layout`,
 `calls`, `coverage`, `globals`, `classes`, `objc`, `dwarf`, `header`,
 `attribution`, `crash`, `diff`, `patch`, `relsearch`, `text` and `labels`, and
 for a decompilation `signature`, `context`, `match`, `asm`, `m2c`, `flags`,
-`report`, `progress`, `contracts`, `splat`, `sdk`, `locate`, `counterparts`, `names`, `files`,
+`report`, `progress`, `contracts`, `register-use`, `splat`, `sdk`, `locate`, `counterparts`, `names`, `files`,
 `extract`, `blobs`, `libraries` and `fieldrefs`.
 `--debug` attaches a separate debug file, `--member` picks a slice of a
 universal binary or a file in a folder, `--notes` loads annotations (and
@@ -213,6 +213,13 @@ caller declarations, actual supplied arguments, definition signatures and report
 source identities. Filter with `--caller` or `--callee`; `--json` preserves the
 adapter evidence. Importing a report does not verify native behavior or grant ABI
 exceptions. See [call-contract inspection](docs/call-contracts.md).
+
+`register-use <file> <address> <bytes> <entry> <register>` audits an incoming
+PS1 MIPS register word over an exact extent, with read/end/frontier instruction
+paths. Unknown calls and surviving returns remain unresolved by default.
+`--batch requests.json` loads the binary once for multiple IDs, registers and
+explicit per-request policies; `--json` preserves all witnesses and assumptions.
+See [register-use examples and policy schema](docs/register-use.md).
 
 ## The MCP server
 

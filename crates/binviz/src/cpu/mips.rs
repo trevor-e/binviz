@@ -67,6 +67,58 @@ impl MipsWord {
     }
 }
 
+/// PS1 GPR effects, without any assumed ABI call clobbers. Unknown MIPS III
+/// encodings intentionally have no result. Merge loads can forward a pending
+/// load value rather than reading the old architectural destination register.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Ps1GprEffects {
+    pub reads: u32,
+    pub merge_reads: u32,
+    pub write: Option<u8>,
+    pub delayed_write: bool,
+}
+
+pub(crate) fn ps1_gpr_effects(word: u32) -> Option<Ps1GprEffects> {
+    let w = MipsWord(word);
+    let (rs, rt, rd) = (w.rs(), w.rt(), w.rd());
+    let bit = |r: u32| if r == 0 { 0 } else { 1u32 << r };
+    let (reads, merge_reads, write, delayed_write) = match w.op() {
+        0 => match w.funct() {
+            0 | 2 | 3 => (bit(rt), 0, Some(rd), false),
+            4 | 6 | 7 | 32..=39 | 42 | 43 => (bit(rs) | bit(rt), 0, Some(rd), false),
+            8 | 17 | 19 => (bit(rs), 0, None, false),
+            9 => (bit(rs), 0, Some(rd), false),
+            12 | 13 => (0, 0, None, false),
+            16 | 18 => (0, 0, Some(rd), false),
+            24..=27 => (bit(rs) | bit(rt), 0, None, false),
+            _ => return None,
+        },
+        1 if rt <= 1 => (bit(rs), 0, None, false),
+        2 => (0, 0, None, false),
+        3 => (0, 0, Some(31), false),
+        4 | 5 => (bit(rs) | bit(rt), 0, None, false),
+        6 | 7 => (bit(rs), 0, None, false),
+        8..=14 => (bit(rs), 0, Some(rt), false),
+        15 => (0, 0, Some(rt), false),
+        16 if rs == 0 => (0, 0, Some(rt), true),
+        16 if rs == 4 => (bit(rt), 0, None, false),
+        18 if word & (1 << 25) != 0 => (0, 0, None, false),
+        18 if rs == 0 || rs == 2 => (0, 0, Some(rt), true),
+        18 if rs == 4 || rs == 6 => (bit(rt), 0, None, false),
+        32 | 33 | 35 | 36 | 37 => (bit(rs), 0, Some(rt), true),
+        34 | 38 => (bit(rs), bit(rt), Some(rt), true),
+        40 | 41 | 42 | 43 | 46 => (bit(rs) | bit(rt), 0, None, false),
+        50 | 58 => (bit(rs), 0, None, false),
+        _ => return None,
+    };
+    Some(Ps1GprEffects {
+        reads,
+        merge_reads,
+        write: write.filter(|&r| r != 0).map(|r| r as u8),
+        delayed_write,
+    })
+}
+
 fn r(i: u32) -> &'static str {
     REGS[i as usize & 31]
 }

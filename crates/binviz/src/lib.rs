@@ -49,6 +49,7 @@ mod inspect;
 mod layout;
 pub mod matching;
 mod mipsflow;
+pub mod mipsaudit;
 pub mod model;
 pub mod names;
 pub mod notes;

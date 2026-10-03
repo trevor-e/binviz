@@ -123,6 +123,11 @@ COMMANDS:
                                    RGBDS, WLA DX, no$gba) as notes, JSON for --notes; or with a
                                    format (mlb, nl, sym, nocash), the --notes as that label file
   Decompilation (PlayStation, Nintendo 64; x86 where noted)
+    register-use <file> <address> <bytes> <entry> <register> [--policy FILE] [--json]
+    register-use <file> --batch FILE [--json]
+                                   Audit an incoming PS1 GPR word in an exact original extent:
+                                   read, killed/dead or unresolved, with instruction witnesses.
+                                   Returns/calls stay unresolved without explicit reviewed policy.
     contracts <report.json> [--caller NAME] [--callee NAME] [--top N] [--json]
                                    Inspect imported compiler call-contract findings: supplied
                                    arguments, actual definitions, used void results and source
@@ -649,6 +654,11 @@ fn run(
         }
         return Ok(());
     }
+    let register_audit = if cmd == "register-use" {
+        Some(parse_register_command(&args[2..])?)
+    } else {
+        None
+    };
     let path = std::path::Path::new(&args[1]);
     let mut bin = if binviz::package::is_package_path(path) {
         let mut pkg = binviz::package::DiskPackage::open(path)?;
@@ -1737,6 +1747,55 @@ fn run(
                     }
                     for e in &found {
                         println!("{} in {}, built with {}\n{}\n", e.name, e.project, e.build(), e.c);
+                    }
+                }
+            }
+        }
+        "register-use" => {
+            match register_audit.as_ref().ok_or("missing register audit arguments")? {
+                RegisterAuditCommand::Single(options) => {
+                    let policy = read_register_policy(options.policy.as_deref())?;
+                    let report = bin
+                        .audit_ps1_register(options.address, options.size, options.entry, options.register, &policy)
+                        .map_err(|e| e.to_string())?;
+                    if options.json {
+                        println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
+                    } else {
+                        print_register_audit(&bin, &report, options.policy.as_deref());
+                    }
+                }
+                RegisterAuditCommand::Batch { requests, json } => {
+                    // Validate every loaded extent before publishing any report. An invalid
+                    // request must not be mistaken for an empty or favorable audit result.
+                    let reports = requests
+                        .iter()
+                        .map(|r| {
+                            bin.audit_ps1_register(
+                                r.options.address,
+                                r.options.size,
+                                r.options.entry,
+                                r.options.register,
+                                &r.policy,
+                            )
+                            .map(|report| (&r.id, report))
+                            .map_err(|e| format!("request {}: {e}", r.id))
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
+                    if *json {
+                        let results: Vec<_> = reports
+                            .iter()
+                            .map(|(id, report)| serde_json::json!({"id": id, "report": report}))
+                            .collect();
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&serde_json::json!({"schemaVersion": 1, "requests": results}))
+                                .map_err(|e| e.to_string())?
+                        );
+                    } else {
+                        for ((id, report), request) in reports.iter().zip(requests) {
+                            println!("request {id}");
+                            print_register_audit(&bin, report, request.policy_label.as_deref());
+                        }
                     }
                 }
             }
@@ -3515,4 +3574,486 @@ fn folder_info(pkg: &mut binviz::package::DiskPackage) -> Result<(), String> {
         );
     }
     Ok(())
+}
+
+const REGISTER_AUDIT_USAGE: &str = "register-use <file> <address> <bytes> <entry> <register> [--policy FILE] [--json]";
+const AUDIT_REGISTERS: [&str; 32] = [
+    "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2",
+    "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra",
+];
+struct RegisterAuditArgs {
+    address: u64,
+    size: usize,
+    entry: u64,
+    register: u8,
+    policy: Option<String>,
+    json: bool,
+}
+enum RegisterAuditCommand {
+    Single(RegisterAuditArgs),
+    Batch {
+        requests: Vec<RegisterAuditRequest>,
+        json: bool,
+    },
+}
+struct RegisterAuditRequest {
+    id: String,
+    options: RegisterAuditArgs,
+    policy: binviz::mipsaudit::AuditPolicy,
+    policy_label: Option<String>,
+}
+fn parse_register_command(args: &[String]) -> Result<RegisterAuditCommand, String> {
+    if args.first().map(String::as_str) != Some("--batch") {
+        return parse_register_audit(args).map(RegisterAuditCommand::Single);
+    }
+    if !(args.len() == 2 || (args.len() == 3 && args[2] == "--json")) || args[1].starts_with("--") {
+        return Err("register-use <file> --batch FILE [--json]".into());
+    }
+    let path = &args[1];
+    let value = serde_json::from_slice(&std::fs::read(path).map_err(|e| format!("{path}: {e}"))?)
+        .map_err(|e| format!("{path}: {e}"))?;
+    let requests = decode_register_batch(value).map_err(|e| format!("{path}: {e}"))?;
+    Ok(RegisterAuditCommand::Batch {
+        requests,
+        json: args.len() == 3,
+    })
+}
+fn decode_register_batch(value: serde_json::Value) -> Result<Vec<RegisterAuditRequest>, String> {
+    policy_fields(&value, &["schemaVersion", "requests"], "register batch")?;
+    if value.get("schemaVersion").and_then(serde_json::Value::as_u64) != Some(1) {
+        return Err("register batch requires schemaVersion 1".into());
+    }
+    let items = value
+        .get("requests")
+        .and_then(serde_json::Value::as_array)
+        .ok_or("register batch requires requests array")?;
+    if items.is_empty() || items.len() > 4096 {
+        return Err("register batch requires 1..4096 requests".into());
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut requests = Vec::new();
+    for (index, item) in items.iter().enumerate() {
+        let request = (|| {
+            policy_fields(
+                item,
+                &["id", "address", "bytes", "entry", "register", "policy"],
+                "register request",
+            )?;
+            let id = item
+                .get("id")
+                .and_then(serde_json::Value::as_str)
+                .filter(|s| !s.trim().is_empty())
+                .ok_or("request needs nonempty string id")?
+                .to_owned();
+            if !ids.insert(id.clone()) {
+                return Err(format!("duplicate request id {id}"));
+            }
+            let mut words = Vec::new();
+            for key in ["address", "bytes", "entry", "register"] {
+                let v = item.get(key).ok_or_else(|| format!("request {id} requires {key}"))?;
+                let text = if let Some(s) = v.as_str() {
+                    s.to_owned()
+                } else if let Some(n) = v.as_u64() {
+                    n.to_string()
+                } else {
+                    return Err(format!("request {id} {key} must be unsigned number or string"));
+                };
+                words.push(text);
+            }
+            let options = parse_register_audit(&words).map_err(|e| format!("request {id}: {e}"))?;
+            let policy = match item.get("policy") {
+                Some(value) => decode_register_policy(value.clone()).map_err(|e| format!("request {id}: {e}"))?,
+                None => Default::default(),
+            };
+            let policy_label = item.get("policy").map(|_| format!("inline request {id}"));
+            Ok(RegisterAuditRequest {
+                id,
+                options,
+                policy,
+                policy_label,
+            })
+        })()
+        .map_err(|e: String| format!("request index {index}: {e}"))?;
+        requests.push(request);
+    }
+    Ok(requests)
+}
+fn parse_register_audit(args: &[String]) -> Result<RegisterAuditArgs, String> {
+    if args.len() < 4 {
+        return Err(REGISTER_AUDIT_USAGE.into());
+    }
+    let address = num(&args[0])?;
+    let size = usize::try_from(num(&args[1])?).map_err(|_| "extent size does not fit this host")?;
+    let entry = num(&args[2])?;
+    let name = args[3].strip_prefix('$').unwrap_or(&args[3]).to_ascii_lowercase();
+    let register = if name == "s8" {
+        30
+    } else if let Some(n) = AUDIT_REGISTERS.iter().position(|&r| r == name) {
+        n as u8
+    } else {
+        u8::try_from(num(&name)?).map_err(|_| "GPR must be 1..31 or a MIPS register name")?
+    };
+    if register == 0 || register >= 32 {
+        return Err("GPR must be 1..31; zero has no incoming word".into());
+    }
+    let end = address.checked_add(size as u64).ok_or("extent overflow")?;
+    if address > u32::MAX as u64
+        || end > 0x1_0000_0000
+        || address & 3 != 0
+        || size == 0
+        || size & 3 != 0
+        || entry < address
+        || entry >= end
+        || entry & 3 != 0
+    {
+        return Err("address/byte size/entry must describe an aligned exact PS1 32-bit extent".into());
+    }
+    let mut policy = None;
+    let mut json = false;
+    let mut i = 4;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--json" if !json => {
+                json = true;
+                i += 1;
+            }
+            "--policy" if policy.is_none() => {
+                let path = args
+                    .get(i + 1)
+                    .filter(|p| !p.starts_with("--"))
+                    .ok_or("--policy requires one JSON path")?;
+                policy = Some(path.clone());
+                i += 2;
+            }
+            other => {
+                return Err(format!(
+                    "unexpected/duplicate register-use option {other}; {REGISTER_AUDIT_USAGE}"
+                ));
+            }
+        }
+    }
+    Ok(RegisterAuditArgs {
+        address,
+        size,
+        entry,
+        register,
+        policy,
+        json,
+    })
+}
+fn policy_fields(value: &serde_json::Value, allowed: &[&str], context: &str) -> Result<(), String> {
+    let object = value
+        .as_object()
+        .ok_or_else(|| format!("{context} must be an object"))?;
+    if let Some(name) = object.keys().find(|name| !allowed.contains(&name.as_str())) {
+        return Err(format!("unknown {context} field: {name}"));
+    }
+    Ok(())
+}
+fn policy_word(value: &mut serde_json::Value, context: &str) -> Result<(), String> {
+    let n = if let Some(s) = value.as_str() {
+        num(s)?
+    } else {
+        value
+            .as_u64()
+            .ok_or_else(|| format!("{context} must be an unsigned word"))?
+    };
+    let n = u32::try_from(n).map_err(|_| format!("{context} does not fit 32 bits"))?;
+    *value = serde_json::Value::from(n);
+    Ok(())
+}
+fn decode_register_policy(mut value: serde_json::Value) -> Result<binviz::mipsaudit::AuditPolicy, String> {
+    policy_fields(
+        &value,
+        &["returnUse", "callees", "indirectTargets", "maxStates"],
+        "register policy",
+    )?;
+    for name in ["callees", "indirectTargets"] {
+        let Some(map) = value.get_mut(name) else { continue };
+        let object = map
+            .as_object_mut()
+            .ok_or_else(|| format!("{name} must be an address-keyed object"))?;
+        let original = std::mem::take(object);
+        for (address, mut item) in original {
+            let target = u32::try_from(num(&address)?).map_err(|_| format!("{name} address exceeds 32 bits"))?;
+            if target & 3 != 0 {
+                return Err(format!("unaligned {name} address"));
+            }
+            if name == "callees" {
+                policy_fields(
+                    &item,
+                    &["register", "effect", "evidence", "instructionPath"],
+                    "callee summary",
+                )?;
+                if let Some(points) = item.get_mut("instructionPath") {
+                    for point in points.as_array_mut().ok_or("instructionPath must be an array")? {
+                        policy_fields(point, &["pc", "word"], "reviewed instruction")?;
+                        for key in ["pc", "word"] {
+                            policy_word(point.get_mut(key).ok_or("reviewed instruction requires pc/word")?, key)?;
+                        }
+                    }
+                }
+            } else {
+                policy_fields(&item, &["targets", "evidence"], "indirect target summary")?;
+                for target in item
+                    .get_mut("targets")
+                    .ok_or("indirect summary needs targets")?
+                    .as_array_mut()
+                    .ok_or("targets must be an array")?
+                {
+                    policy_word(target, "indirect target")?;
+                }
+            }
+            if object.insert(target.to_string(), item).is_some() {
+                return Err(format!("duplicate normalized {name} address"));
+            }
+        }
+    }
+    let policy: binviz::mipsaudit::AuditPolicy = serde_json::from_value(value).map_err(|e| e.to_string())?;
+    if policy.max_states == 0 {
+        return Err("maxStates must be positive".into());
+    }
+    for summary in policy.callees.values() {
+        if !(1..32).contains(&summary.register) || summary.evidence.trim().is_empty() {
+            return Err("callee summary needs register1..31 and reviewed evidence".into());
+        }
+        if summary.instruction_path.iter().any(|p| p.pc & 3 != 0) {
+            return Err("reviewed instruction pc is unaligned".into());
+        }
+    }
+    for targets in policy.indirect_targets.values() {
+        if targets.targets.is_empty()
+            || targets.evidence.trim().is_empty()
+            || targets.targets.iter().any(|&t| t & 3 != 0)
+        {
+            return Err("indirect summary needs nonempty aligned targets and reviewed evidence".into());
+        }
+    }
+    Ok(policy)
+}
+fn read_register_policy(path: Option<&str>) -> Result<binviz::mipsaudit::AuditPolicy, String> {
+    let Some(path) = path else {
+        return Ok(Default::default());
+    };
+    let bytes = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
+    let value = serde_json::from_slice(&bytes).map_err(|e| format!("{path}: {e}"))?;
+    decode_register_policy(value).map_err(|e| format!("{path}: {e}"))
+}
+fn print_register_audit(bin: &Binary, report: &binviz::mipsaudit::AuditReport, policy_path: Option<&str>) {
+    use binviz::mipsaudit::Outcome;
+    let label = match report.outcome {
+        Outcome::Consumed => "consumed",
+        Outcome::Dead => "dead",
+        Outcome::Unresolved => "unresolved",
+    };
+    println!(
+        "PS1 register {}: {label}; exact extent {:#x}+{} bytes, entry {:#x}",
+        AUDIT_REGISTERS[report.register as usize],
+        report.extent_start,
+        report.extent_words * 4,
+        report.entry
+    );
+    println!(
+        "{} states; {} reads, {} ends, {} frontiers",
+        report.states,
+        report.reads.len(),
+        report.endpoints.len(),
+        report.frontiers.len()
+    );
+    println!(
+        "return use {:?}; {}; no ABI call-clobber inference",
+        report.policy.return_use,
+        policy_path
+            .map(|p| format!("explicit policy {p} (review assertions not verified here)"))
+            .unwrap_or_else(|| "default policy, no reviewed summaries".into())
+    );
+    let mut decoded = std::collections::BTreeMap::<u32, String>::new();
+    for (kind, witnesses) in [
+        ("read", &report.reads),
+        ("end", &report.endpoints),
+        ("frontier", &report.frontiers),
+    ] {
+        for (n, witness) in witnesses.iter().enumerate() {
+            println!(
+                "{kind} {}: {}{}",
+                n + 1,
+                witness.reason,
+                witness.target.map(|t| format!("; target {t:#x}")).unwrap_or_default()
+            );
+            for step in &witness.path {
+                let text = decoded.entry(step.pc).or_insert_with(|| {
+                    let d = bin.disassemble(step.pc as u64, step.pc as u64 + 4, 1);
+                    d.instructions
+                        .first()
+                        .map(|i| format!("{} {}", i.mnemonic, i.operands))
+                        .unwrap_or_default()
+                });
+                println!(
+                    "  {:#010x} {}{}  {}",
+                    step.pc,
+                    step.word
+                        .map(|w| format!("{w:08x}"))
+                        .unwrap_or_else(|| "--------".into()),
+                    if step.delay_slot { " [delay slot]" } else { "" },
+                    text
+                );
+            }
+            if let Some(evidence) = &witness.evidence {
+                println!("  reviewed evidence: {evidence}");
+            }
+            for p in &witness.reviewed_instruction_path {
+                println!(
+                    "  supplied callee evidence (unverified here): {:#010x} {:08x}",
+                    p.pc, p.word
+                );
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod register_cli_tests {
+    use super::*;
+    fn args(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+    #[test]
+    fn exact_inputs_and_register_names() {
+        for name in ["a3", "$a3", "7", "0x7", "A3"] {
+            let options = parse_register_audit(&args(&["0x80031718", "1108", "0x80031718", name, "--json"])).unwrap();
+            assert_eq!(options.register, 7);
+            assert_eq!(options.size, 1108);
+            assert!(options.json);
+            assert!(options.policy.is_none());
+        }
+        assert_eq!(
+            parse_register_audit(&args(&["0x80031718", "1108", "0x80031718", "s8"]))
+                .unwrap()
+                .register,
+            30
+        );
+        assert_eq!(
+            read_register_policy(None).unwrap().return_use,
+            binviz::mipsaudit::ReturnUse::Unresolved
+        );
+    }
+    #[test]
+    fn invalid_arguments_never_silently_default() {
+        for items in [
+            vec!["0x80031718", "1108", "0x80031718"],
+            vec!["0x80031718", "1108", "0x80031718", "zero"],
+            vec!["0x80031718", "1108", "0x80031718", "32"],
+            vec!["0x80031718", "1107", "0x80031718", "a3"],
+            vec!["0x80031719", "1108", "0x80031719", "a3"],
+            vec!["0x180031718", "1108", "0x180031718", "a3"],
+            vec!["0x80031718", "1108", "0x80040000", "a3"],
+            vec!["0x80031718", "1108", "0x80031718", "a3", "--policy"],
+            vec!["0x80031718", "1108", "0x80031718", "a3", "--policy", "--json"],
+            vec!["0x80031718", "1108", "0x80031718", "a3", "--json", "--json"],
+            vec![
+                "0x80031718",
+                "1108",
+                "0x80031718",
+                "a3",
+                "--policy",
+                "one",
+                "--policy",
+                "two",
+            ],
+            vec!["0x80031718", "1108", "0x80031718", "a3", "--discard-return"],
+        ] {
+            assert!(parse_register_audit(&args(&items)).is_err(), "{items:?}");
+        }
+    }
+    #[test]
+    fn reviewed_policy_representation_does_not_infer_effects() {
+        let value = serde_json::json!({"returnUse":"discarded","callees":{"0x80020000":{"register":2,"effect":"killed","evidence":"reviewed-native","instructionPath":[{"pc":"0x80020000","word":"0x3c020001"}]}},"indirectTargets":{"0x80010000":{"targets":["0x80020000"],"evidence":"whole-table-proof"}}});
+        let policy = decode_register_policy(value).unwrap();
+        assert_eq!(policy.callees[&0x80020000].instruction_path[0].word, 0x3c020001);
+        assert_eq!(policy.return_use, binviz::mipsaudit::ReturnUse::Discarded);
+        let empty = decode_register_policy(serde_json::json!({})).unwrap();
+        assert_eq!(empty.return_use, binviz::mipsaudit::ReturnUse::Unresolved);
+        assert!(empty.callees.is_empty());
+    }
+    #[test]
+    fn malformed_or_ambiguous_policies_fail() {
+        for value in [
+            serde_json::json!({"return_use":"discarded"}),
+            serde_json::json!({"maxStates":0}),
+            serde_json::json!({"returnUse":"void"}),
+            serde_json::json!({"callees":{"0x80020000":{"register":2,"effect":"killed","evidence":""}}}),
+            serde_json::json!({"callees":{"0x80020000":{"register":2,"effect":"killed","evidence":"one"},"2147614720":{"register":2,"effect":"killed","evidence":"two"}}}),
+            serde_json::json!({"indirectTargets":{"0x80010000":{"targets":[],"evidence":"unknown"}}}),
+            serde_json::json!({"indirectTargets":{"0x80010000":{"targets":["0x80020001"],"evidence":"bad alignment"}}}),
+            serde_json::json!({"callees":{"0x180020000":{"register":2,"effect":"killed","evidence":"bad address"}}}),
+        ] {
+            assert!(decode_register_policy(value).is_err());
+        }
+    }
+    #[test]
+    fn batches_preserve_ids_and_separate_explicit_policies_on_one_binary() {
+        let binary = Binary::parse_psx_overlay(
+            [0x03e00008u32, 0]
+                .iter()
+                .flat_map(|w| w.to_le_bytes())
+                .collect::<Vec<_>>(),
+            0x80010000,
+            None,
+        )
+        .unwrap();
+        let requests = decode_register_batch(serde_json::json!({"schemaVersion":1,"requests":[
+            {"id":"live-default","address":"0x80010000","bytes":8,"entry":"0x80010000","register":"a2"},
+            {"id":"reviewed-return","address":2147549184u64,"bytes":"8","entry":2147549184u64,"register":6,
+             "policy":{"returnUse":"discarded"}}
+        ]}))
+        .unwrap();
+        assert_eq!(requests[0].id, "live-default");
+        assert_eq!(requests[1].id, "reviewed-return");
+        let reports: Vec<_> = requests
+            .iter()
+            .map(|r| {
+                binary
+                    .audit_ps1_register(
+                        r.options.address,
+                        r.options.size,
+                        r.options.entry,
+                        r.options.register,
+                        &r.policy,
+                    )
+                    .unwrap()
+            })
+            .collect();
+        assert_eq!(reports[0].outcome, binviz::mipsaudit::Outcome::Unresolved);
+        assert_eq!(reports[1].outcome, binviz::mipsaudit::Outcome::Dead);
+        assert_eq!(reports[1].endpoints[0].path.len(), 2);
+        assert!(reports[1].endpoints[0].path[1].delay_slot);
+        assert!(requests[0].policy_label.is_none());
+        assert!(requests[1].policy_label.is_some());
+    }
+    #[test]
+    fn invalid_batches_never_become_empty_success() {
+        let valid =
+            serde_json::json!({"id":"one","address":"0x80010000","bytes":8,"entry":"0x80010000","register":"a2"});
+        for value in [
+            serde_json::json!({"requests":[valid.clone()]}),
+            serde_json::json!({"schemaVersion":2,"requests":[valid.clone()]}),
+            serde_json::json!({"schemaVersion":1,"requests":[]}),
+            serde_json::json!({"schemaVersion":1,"requests":[valid.clone(),valid.clone()]}),
+            serde_json::json!({"schemaVersion":1,"requests":[{"id":"bad","address":0,"bytes":8,"entry":0}]}),
+            serde_json::json!({"schemaVersion":1,"requests":[{"id":" ","address":0,"bytes":8,"entry":0,"register":6}]}),
+            serde_json::json!({"schemaVersion":1,"requests":[{"id":"bad","address":0,"bytes":0,"entry":0,"register":6}]}),
+            serde_json::json!({"schemaVersion":1,"requests":[{"id":"bad","address":0,"bytes":8,"entry":0,"register":6,"policy":{"discardReturn":true}}]}),
+            serde_json::json!({"schemaVersion":1,"requests":[valid],"policy":{"returnUse":"discarded"}}),
+        ] {
+            assert!(decode_register_batch(value).is_err());
+        }
+        for items in [
+            vec!["--batch"],
+            vec!["--batch", "--json"],
+            vec!["--batch", "some.json", "--policy", "p.json"],
+            vec!["--batch", "some.json", "--json", "--json"],
+        ] {
+            assert!(parse_register_command(&args(&items)).is_err());
+        }
+    }
 }
