@@ -1244,3 +1244,31 @@ reaches the recovered 66310 directory/broken-sector/MC-header writer. Bind these
 reviewed callee sources as evidence. Keep uncertain fields and text IDs descriptive
 without invented domain meanings. Existing campaign importers remain bookkeeping
 until their source/header/compiler/recipe checks independently validate observations.
+
+Menu and shared-card naming acceptance (BV-03/BV-08, P2): FF9 adds 332
+reviewed names across shop (88), items (41), abilities/equipment (66), card
+collection (41), name entry/party selection (40), shared card/file helpers (35),
+and status (21). Catalog total: 1298. All 387 affected native source comparisons
+are byte-identical, original strict-relocation scores retain 318 exact and 69
+existing partial observations, and WASM preprocessed tokens are identical.
+Reports: ff9-decomp/docs/function-names-{shop,items,equipment,cards,selection,
+card-runtime,status}.json. Thin scratch adapters reuse the established farm,
+scorer and token checks under binviz/target/ff9-names-<purpose>/.
+
+Behavioral review acceptance: do not promote historical comments over the code.
+Item-menu 0f50 swaps inventory id/count records rather than party members; ability
+menu efe2c toggles an enabled command and its budget rather than permanent learning
+progress. Card result counter names are supported by the win/loss/draw branches
+in ovl_0ba800/800afbe4. BIOS file first-entry wrapper 65ec0 ends in B0:42 despite
+its older open annotation. A matching native object verifies identifier-only
+change, not the correctness of a proposed behavioral name.
+
+Keep alternate relocated party-selection addresses unresolved as identities until
+ownership is reviewed: ovl_126800 definitions around 801fa7a8..801fb6fc coexist
+with recovered callees around 801f37a8..801f4704. This batch names exact existing
+definition symbols without rewriting alternate references. Any reusable campaign
+must represent that relationship explicitly rather than equating addresses by
+proximity or prose. New caller naming invalidates earlier live source hashes;
+current catalog hashes and historical batch observations retain separate roles.
+The all-functions naming campaign remains active; these batches do not establish
+that every remaining function has been reviewed. No linked/gameplay proof claimed.
