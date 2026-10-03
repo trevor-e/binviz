@@ -350,6 +350,15 @@ comparison; do not report unexecuted paths as validated. Pluggable GTE/device
 oracles should reuse recording semantics instead of extending a CPU ad hoc
 for every proof. A fuller shared native executor can be a later project.
 
+Runner interfaces must expose ordered instruction, load, store, call and return
+events, plus memory/register checkpoints at exact guest PCs. Current scene-word
+proofs specialize `Mips.run` using `inspect.getsource` and inject an entry hook
+to observe three byte loads and the subsequent cursor store. Replace that
+repeated specialization with a supported event API; preserve architectural
+load-delay and branch-delay order. Observers must not change execution or
+silently suppress unknown operations. Keep game-specific event selection and
+expected decoded arguments in the campaign configuration.
+
 **Acceptance:** reproduce 3,344 pure-LTO comparisons,448 used-return comparisons,
 349 text/sound comparisons and the preserved failing control-byte 44 text case.
 Preserve exact signed-short/pointer word fidelity, RAM and call order. Unknown
@@ -357,6 +366,14 @@ instruction/provider/MMIO operations and bounded runaways yield explicit
 failure/frontier results. A wrong returned word, changed RAM byte or extra
 device access produces a concrete diff. Fixtures with user assets remain local;
 tracked synthetic tests require no game image.
+
+Also reproduce the 1,060 D650C decoded-word histories in
+`wasm/runtime/build-file11-scene-words.py`: aliasing command/state bytes, ordered
+loads before cursor storage, live callback mutations and both opcode branches.
+Compare traced C and independent plain C on the same histories, report them as
+two configurations rather than 2,120 distinct fixtures, and retain the 1,057
+old-source missing-word refusals plus three unaffected wait paths. A trace
+observer failure or missing checkpoint must be an explicit campaign failure.
 
 ## BV-08: incremental batches and cache diagnostics
 
