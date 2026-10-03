@@ -1509,3 +1509,32 @@ These farm/scorer results remain legacy compatibility evidence. Shared readabili
 acceptance needs configured frozen namespaces/compiler inputs/actual outputs;
 this is not shared workspace acceptance or a scorer migration. Source-bound
 downstream evidence must be refreshed against the current catalog/header IDs.
+
+Battle helper naming acceptance (BV-03/BV-08, P2): FF9 adds37 names,
+33 reviewed C definitions and four native assembly entry aliases. Catalog2223
+unique unit/symbol names; ovl_065800377 named, four deferred after review of all
+41 remaining primary definitions. Evidence: docs/function-names-battle-helpers.json
+and binviz/target/ff9-names-battle-helpers/. All43 affected complete native objects
+agree, pinned strict scores stay unchanged (42 exact,1 existing partial;
+14848 matched code bytes), and43 installed WASM preprocessed token comparisons
+agree. No linked/module/gameplay proof or new original matching credit claimed.
+
+The original group0/file11 identity d8053882...5381e binds the first16 observed
+opcode handler entries at800f8d10; adjacent data is not treated as handlers or
+proof of the full dispatch extent. Concrete callees and consumers bind motion,
+render-level fade, frame VSync interval, status clearing/model masks, animation
+tracks, action dispatch and feedback-ring behavior. Source identities are recorded.
+
+Particle aliases retain raw entry labels, shared assembly interiors and GTE math.
+Position blending retains actual argument order; rendering level stays neutral
+without an RGB/brightness claim. Model extent is not guessed height/radius;
+nonparty is not inferred enemy category. Packed tag and resource-buffer helpers
+retain neutral labels. Empty hooks follow concrete frame/init call sites and
+explicitly say noop. Four flags/record-field helpers remain deferred. All types,
+ABI discrepancies, unchecked accesses, arithmetic and matching tricks stay intact.
+
+Catalog/source/header and owned commit identities are independently rechecked.
+Unrelated CLAUDE and working changes remain intact. Legacy farm/scorer evidence
+is compatibility evidence, not shared workspace acceptance or a scorer migration.
+Shared acceptance requires configured frozen namespaces/compiler inputs/outputs;
+source-bound downstream evidence must be refreshed against current catalog IDs.
