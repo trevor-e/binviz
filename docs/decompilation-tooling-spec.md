@@ -849,3 +849,21 @@ that invokes its actual writer. Promotion interruption or concurrent input drift
 must leave an explicit recoverable outcome. Game-owned inputs remain the SDK
 closure, fixture values and selected compiler/build configuration. Status:
 observed and locally reproduced, not migrated to shared tooling.
+
+### Explicit extent versus inferred extent conflict (2026-10-03)
+
+BV-02, priority P0: the C94B8/C9600 review found Binviz's inferred BOOT4BF20
+extent is 144 bytes and includes the next unnamed routine, while the game's
+tracked symbol/merge rows explicitly bound the routine at 84 bytes. Native
+register analysis must consume the verified 84-byte extent; a guessed next
+symbol must not silently supersede it. Existing register-use accepts an explicit
+span, so the temporary adapter supplies that span and pins its manifest rows
+and original bytes. No new extent finder is needed.
+
+Expose both extent candidates, their provenance and the selection/conflict in
+the function/caller inspector. Acceptance: a synthetic routine followed by an
+unnamed adjacent routine retains the explicit member extent; missing or changed
+manifest rows invalidate dependent audits. Unverified inferred spans remain
+usable for exploration with their status visible, and cannot establish a
+verified policy. Status: observed, shared explicit-span audit reused, ownership
+join and inspector migration pending.
