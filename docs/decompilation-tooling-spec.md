@@ -6,6 +6,10 @@ exceptions or establish game correctness. The FF9 goal continues separately.
 
 ## Handoff summary
 
+Use [the concise implementation handoff](decompilation-tooling-handoff.md) for
+delivery order and a prompt for another session; this document supplies the
+detailed records, observed cases and acceptance requirements.
+
 Start with the existing implementations and the implementation checkpoint below.
 Some compiler-fact/evidence/UI/MCP work is already present in the working tree;
 do not build competing versions. Availability of a backend is separate from
@@ -812,3 +816,36 @@ not a substitute for either missing generic proof. Acceptance: synthetic mixed
 kill/preserve and fixed-bound-loop fixtures, unchanged unknown/callback/return
 frontiers, refusal of fabricated kill summaries, CLI/UI/MCP parity and exact
 identity invalidation. No generic tooling implementation was changed here.
+
+### Storage correction and evidence promotion gap (2026-10-03)
+
+BV-03/BV-08/BV-09, priority P1: the EEED4/EEFA8 list-buffer correction changes
+two-byte C objects to four bytes for the actual SDK writers. The source can
+retain 100% native matching while the old object extent remains unsafe; retain
+that distinction in the object/access report. The opening-window evidence also
+pins the accepted EEED4 C, preprocessed C and object identities. Changing the
+source therefore requires an explicit transition through those stages before
+the new policy can be consumed, while preserving the historical two-byte proof
+input and its limited coverage.
+
+Temporary adapter: `ff9-decomp/wasm/runtime/build-file11-list-buffer-proof.py`
+and the local `build/agent-vm/file11-list-buffer-transition/` package reproduce
+baseline/candidate artifacts using the actual compiler flags, namespace and
+transformation stages. They do not add a new analyzer. Shared stage records
+exist, but a reproducible before/candidate promotion plan remains missing.
+
+Add a promotion plan that identifies current inputs, candidate outputs, affected
+consumers and exact replacements. Validate the baseline against accepted
+artifacts, then independently reproduce candidate outputs before publication.
+Keep candidate evidence in a separate stage namespace until its prerequisites
+are verified; never bypass an identity gate or silently seed artifacts to make
+a policy pass. Present source, object-extent and proof-scope changes together.
+
+Acceptance: a synthetic two-to-four-byte storage correction propagates through
+CPP/object/policy dependencies; an unrelated source remains cached. Changed
+flags, namespace, transformations or baseline outputs refuse the plan. Preserve
+the old artifact and distinguish a proof that registers a callback from a proof
+that invokes its actual writer. Promotion interruption or concurrent input drift
+must leave an explicit recoverable outcome. Game-owned inputs remain the SDK
+closure, fixture values and selected compiler/build configuration. Status:
+observed and locally reproduced, not migrated to shared tooling.
