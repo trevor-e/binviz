@@ -1538,3 +1538,38 @@ Unrelated CLAUDE and working changes remain intact. Legacy farm/scorer evidence
 is compatibility evidence, not shared workspace acceptance or a scorer migration.
 Shared acceptance requires configured frozen namespaces/compiler inputs/outputs;
 source-bound downstream evidence must be refreshed against current catalog IDs.
+
+Battle feedback/render naming acceptance (BV-03/BV-08, P2): FF9 adds71
+names in ovl_04e800:62 C/dual-C definitions and nine native assembly call aliases.
+Catalog2294 unique unit/symbol names. Evidence: docs/function-names-battle-feedback-
+render.json and binviz/target/ff9-names-battle-feedback/. All83 affected complete
+native objects agree, pinned strict scores remain unchanged (62 exact,21 existing
+partials;16000 matched code bytes), and83 installed WASM preprocessed token
+comparisons agree. No linked/module/gameplay or new matching credit claimed.
+
+Original full group0/file11 d8053882...5381e binds the three feedback handler
+pointers (numeric0/1 -> cc818, sprite2 -> cc9c8) and four BCD divisors. Semantic
+inputs bind primary definitions, inspected callers/callees and raw assembly.
+Names cover feedback ring/request processing, numeric/sprite/status drawing,
+message formatting and information pages, effect script initialization/rendering,
+primitive masks/depth shifts, interpolation, direction/angle helpers, scratchpad
+randomness and gradient strip/GPU packet generation. Historical comments are
+not authority: message pages are not sound/cursor routines; cf808 returns angles
+with a zero third component rather than a radius; packed local Z offsets are
+not vector pointers. Keep stat/status labels neutral where meanings are unknown.
+
+cf5f8 retains its unusual IR inputs dx, original ax, dy and unused dz, explicitly
+named a legacy distance estimate. Matrix/light scratch reads, raw division,
+integer/unsigned arithmetic, packet sizes/links, clipping, callback declarations,
+native &id+1 versus WASM varargs and matching barriers remain unchanged. Native
+assembly aliases leave all raw labels/instructions stable. cf074 is reviewed as
+the interior continuation of ceed4, not an additional independently callable
+function, and adds no naming coverage. Unit scopes remain separate.
+
+Independent audit verifies all current catalog source/header IDs and87 owned
+committed paths; unrelated CLAUDE content and working changes remain intact.
+Legacy farm/scorer fixtures are compatibility evidence, not shared workspace
+acceptance or scorer migration. Shared acceptance still requires configured
+frozen namespaces/compiler inputs/outputs; downstream source-bound evidence
+must refresh against current identities. Continue remaining animation/model,
+resource and geometry consumers before inferring gameplay-specific enums.
