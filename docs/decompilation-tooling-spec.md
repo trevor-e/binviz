@@ -1272,3 +1272,28 @@ proximity or prose. New caller naming invalidates earlier live source hashes;
 current catalog hashes and historical batch observations retain separate roles.
 The all-functions naming campaign remains active; these batches do not establish
 that every remaining function has been reviewed. No linked/gameplay proof claimed.
+
+Tetra Master naming acceptance (BV-03/BV-08, P2): FF9 adds 127 reviewed
+module-A match, battle, AI, deck, reward and rendering names; the catalog now
+contains 1425 names. Evidence: ff9-decomp/docs/function-names-tetra-core.json
+and binviz/target/ff9-names-tetra-core/. All 127 complete native objects are
+identical, all strict-relocation scores unchanged (105 exact, 22 existing
+partials), and all installed WASM preprocessed token streams identical.
+No new original matching coverage, linked-image or gameplay proof is claimed.
+
+Semantic review checks bodies and established callees rather than copying old
+comments: abc74 returns the hand to the collection, ab338 removes a selected
+collection occurrence, a986c uploads sprite data, and af100 returns retained
+player-owned cards regardless of whether they have been placed. Empty a932c
+and return-second-argument stubs abebc/b3480 remain canonical.
+
+Ownership fixture: include/ovl-lane-02.h documents three overlays concatenated
+in ovl_0ba800, each actually loading at 800a7000. Module-B/C definition addresses
+use blob offsets, while their calls retain actual load addresses. This batch
+maps only module A; do not infer a B/C semantic callee from a coincident A
+address or rename alternate identities without a reviewed module binding.
+Existing shared readability acceptance and frozen compiler namespaces were
+inspected; this batch retains the historical native scorer/farm/token adapter.
+No shared-workspace acceptance or scorer migration is claimed by these reports.
+Use this real identity/comment fixture for configured shared acceptance; a
+report import alone cannot prove its source, header, compiler or recipe inputs.
