@@ -1412,3 +1412,39 @@ readability acceptance and configured frozen/compiler inputs remain available.
 This reuses maintained legacy farm/scorer compatibility fixtures, not shared
 workspace acceptance or scorer migration. Rebind exact source/header identities
 before consuming these renamed sources in downstream proofs.
+
+Battle command/UI naming acceptance (BV-03/BV-08, P2): FF9 adds76 new
+reviewed C definitions and corrects one existing descriptive name. Current
+catalog:1998 unique unit/symbol names; ovl_065800 has152. Evidence is in
+docs/function-names-battle-commands-ui.json and binviz/target/ff9-names-battle-
+commands/. All111 complete native objects agree and original strict scores stay
+unchanged (107 exact,4 existing partials;22252 matched code bytes). All111
+installed WASM preprocessed token comparisons agree. No linked/module/gameplay
+or new original matching coverage is claimed.
+
+Semantic correction: e5f24 starts a selected CAMERA SCRIPT rather than playing
+a sound. Actual c2f9c resets camera state then c316c binds camera subscripts,
+keys and mode selection. Those exact inspected callee hashes are recorded.
+Consequently e9168/e9290/e94c4 follow camera-script permission/selection. The
+old report and unused alias remain historical; the catalog exposes one current
+corrected name, never duplicate coverage. Catalog refresh permits a correction
+only when its explicit previousName and canonical identity agree.
+
+Actual AKAO calls separately establish six positional sound slots, voice masks,
+oldest-age replacement, sound release, tagged-pointer/unit projection and pan.
+Effect command names follow emitter chains and action/move/turn/draw state
+machines without guessing event labels. Scene color command sets/holds a level;
+it does not interpolate. Shared cf588 level/opcode dispatch labels stay deferred.
+
+Battle UI names follow lifecycle, VSync callback, active requests, menu modes,
+selectable-unit queue, ability bindings, unit timers and frame submission. Pad
+repeat save/restore retains2x23 bytes at24-byte strides and input signatures,
+not sound channels suggested by old comments. SO resources keep magic/strides;
+GPU helpers keep packet order,24-bit OT links and transfer failure handling.
+All matching tricks, ABI inconsistencies, raw assembly and callback spellings
+remain unchanged. Aliases are confined to ovl_065800, not other file11 pieces.
+
+Shared readability acceptance already requires configured frozen namespaces and
+compiler inputs. These reused legacy farm/scorer results are compatibility
+fixtures, not shared workspace acceptance or a scorer migration. Regenerate
+source-bound downstream evidence against current catalog/header identities.
