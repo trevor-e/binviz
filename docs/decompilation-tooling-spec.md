@@ -1168,3 +1168,26 @@ source defect; an explicit reviewed candidate preserves supplied values and
 evaluation. A veneer-only provider displays its software-service scope and
 does not receive ROM coverage credit. The private FF9 package has not replaced
 any shared Binviz collector or been integrated into the public game builder.
+
+### Matching-preserving readability batches (2026-10-03)
+
+BV-03/08, priority P2: compose existing build-batch, matching and promotion
+interfaces into a configured readability-candidate acceptance workflow. The FF9
+pilot and follow-up cleaned 6 and 26 canonical C files respectively, preserving
+complete before/after native object bytes and original-code matching results.
+The temporary turn-local adapters and reports are under
+`binviz/target/ff9-cleanup-pilot/` and `binviz/target/ff9-cleanup-batch2/` (ignored).
+They reuse FF9's compiler farm and `binviz match --json --strict-relocs`; the
+reviewed rename choices remain game-owned. No general C refactoring engine or
+second scorer was added.
+
+Acceptance: freeze source/header/tool/recipe inputs, compile baseline and candidate
+with identical compiler-visible input paths, compare complete object bytes,
+retain original-code scores, and refuse source/header drift before publication.
+The current FF9 runner embeds worker PIDs in compiler input filenames: otherwise
+identical objects can differ only in `.strtab` when workers change. The temporary
+batch uses one persistent worker; the reusable interface should support stable
+input paths without relaxing byte equality. Candidate preparation errors remain
+failures, and source symbol identities, types, layouts and expression order are
+preserved. Source edits invalidate downstream source-bound evidence; object
+equality does not establish a new linked-image, WASM or gameplay proof.
