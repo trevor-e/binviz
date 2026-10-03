@@ -1297,3 +1297,29 @@ inspected; this batch retains the historical native scorer/farm/token adapter.
 No shared-workspace acceptance or scorer migration is claimed by these reports.
 Use this real identity/comment fixture for configured shared acceptance; a
 report import alone cannot prove its source, header, compiler or recipe inputs.
+
+Title/bonus and hardware naming acceptance (BV-03/BV-08, P2): FF9 adds 179
+reviewed names (126 title/movie/Blackjack/story definitions, 53 resident GPU/SPU/
+TIM/BIOS helpers). Current catalog:1604 names. Evidence: docs/function-names-
+{title-bonus,hardware-images}.json and binviz/target/ff9-names-{title-bonus,
+hardware-images}/. Across235 before/after source comparisons, every complete
+native object stays identical; all original strict scores stay unchanged
+(193 exact,42 existing partials), as do all installed WASM preprocessed tokens.
+No new linked/module/gameplay or original matching coverage is claimed.
+
+The concatenated-overlay fixture now includes reviewed B/C primary definitions.
+Their actual-load-address sub_/func_/cb_ references remain canonical: a blob
+address and a load address are distinct linkage symbols, not interchangeable
+spellings. No address/dispatch repair is included. Module-A empty a932c and
+identity state stubs abebc/b3480 stay canonical; title transition callbacks
+b5344/b5378/b53ac await a more precise scene-role review. Scope remains unit-bound.
+
+Semantic acceptance follows bodies and established callees: title four-handle
+operations are BIOS/card events, not audio channels; Blackjack baa28 splits a
+hand and bab34 renders hand cards. TIM1d960/1d9cc read/write CLUT and image
+rectangle origins rather than dimensions. SPU transfer branch directions must
+be checked against PIO fallback, CHCR values and existing library identities,
+not inherited prose. Keep signed GPU field extraction and unusual allocation
+conflict predicates intact. Existing shared readability/frozen namespace tools
+are available; these legacy native-scorer/farm checks do not constitute shared
+workspace acceptance or authorize a historical scorer migration.
