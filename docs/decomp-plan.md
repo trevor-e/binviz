@@ -6,6 +6,12 @@ Keep this file current: tick items as they land, and note the commit.
 Chosen first target: **Final Fantasy IX (PlayStation 1)**, Track A below.
 Track B (32-bit x86 PC) is kept for later.
 
+The [reusable decompilation tooling spec](decompilation-tooling-spec.md) is the
+current implementation handoff for compiler facts, ownership, proof provenance,
+scoped ABI policies and visible batch workflows. It distinguishes existing
+features from gaps and records the standing requirement to flag reusable logic
+as it appears during game work.
+
 ## Validated workflow additions (2026-10-03)
 
 - **have** Imported compiler [call-contract reports](call-contracts.md) in the

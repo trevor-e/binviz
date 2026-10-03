@@ -122,7 +122,9 @@ built from source,
 [samples/psx-advanced](samples/psx-advanced/README.md) adds an overlay, a memory
 image, a trace and a jump table, and [samples/psx-vm](samples/psx-vm/README.md)
 runs the whole loop through the MCP server with a script as the agent; the
-[plan](docs/decomp-plan.md) says what is next.
+[plan](docs/decomp-plan.md) says what is next. The
+[reusable tooling spec](docs/decompilation-tooling-spec.md) prioritizes gaps
+found during FF9 work, with migration targets and acceptance criteria.
 
 **Built for agents.** The MCP server loads a binary once and answers every
 question after that from memory, in milliseconds even for a 1 GB app: search,
