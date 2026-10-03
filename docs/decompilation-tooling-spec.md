@@ -1202,3 +1202,25 @@ is in `binviz/target/ff9-function-names/`; the tracked mapping is
 preprocessing rather than rejecting a descriptive definition in raw source.
 Scope overlay aliases by unit, retain source paths, verify all affected callers,
 and preserve partial baseline scores without granting new matching credit.
+
+Function-name scaling acceptance (BV-03/BV-08, P2): FF9 now has 711 reviewed
+behavioral aliases in docs/function-names-catalog.json, including all 52 recovered
+options-menu C definitions. Reports under docs/function-names-*.json bind each
+historical before/after batch; current catalog hashes bind named definitions.
+Later caller naming can change sources already present in earlier reports, so
+historical batch hashes must not be presented as current source validation.
+Temporary adapters reuse the existing FF9 compiler farm and strict-relocation
+scorer: binviz/target/ff9-names-{wide,extra,options-complete,library,gameplay}/.
+Every affected native object and original-code score stayed unchanged; WASM
+preprocessed tokens also stayed identical. No new linked/gameplay proof is claimed.
+
+Preserve macro namespaces when renaming C references. sub_800614ac uses canonical
+#define/#undef names to hide an incompatible header declaration. A naive rename
+removed the semantic alias instead and changed one native object; the complete
+object comparison rejected it before installation. Acceptance covers this case,
+unit-scoped overlapping overlay addresses, definitions/declarations/all callers,
+and existing partial scores. Inspect canonical identities after preprocessing.
+Audio-name evidence additionally follows the original executable's hashed command
+table through dispatch normalization to handler effects; do not infer behavior
+from opcode numbers alone. A catalog/report importer is bookkeeping until it
+independently validates the source/header/tool/recipe inputs and observations.
