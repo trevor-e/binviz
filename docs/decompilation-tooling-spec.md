@@ -45,6 +45,43 @@ load unit and source revision. It does not mean finding native call edges.
 Binviz already finds those edges; the missing work is joining them to actual
 compiler definitions, physical ownership and current evidence.
 
+## User workflow: make the analysis visible
+
+The first useful workflow is **Inspect caller**. From a function, graph edge or
+compiler finding, open one work package containing:
+
+1. The selected physical unit, original extent, canonical source and prepared
+   source, with verified/stale/missing identity indicators.
+2. Every known direct-call finding for this caller, including already-applied
+   policies and extraction gaps; callback/address references have their own list.
+3. For each call, supplied C arguments beside the actual definition contract,
+   the original call and delay-slot instructions, and any unmapped correspondence.
+4. Register-audit witnesses: which instruction reads or overwrites each word,
+   which paths remain unresolved, and why a policy is eligible or refused.
+5. The current preparation/compile/link outcome and the evidence supporting the
+   next proposed action. Clicking a reason opens its source, instruction or input.
+
+The second workflow is **Audit batch**. Select units or callers, preview the
+inputs and analyses, then run one job with progress, cached work and concrete
+failures visible. Export the same structured work packages for agents. Inspection
+and audit do not silently edit source or grant policies; a generated edit plan
+is a separate, reviewable artifact.
+
+Suggested operation boundaries below are requirements, not prescribed command
+names. A browser can import compiler/build outputs and run supported local
+analysis; a desktop adapter can produce those outputs.
+
+| Operation | Inputs | Inspectable output |
+| --- | --- | --- |
+| Verify unit inventory | Member manifest and supplied original bytes | Ownership, exact/inferred spans, aliases, collisions and missing providers. |
+| Import/extract compiler facts | Prepared inputs, target/compiler recipe | Definitions, calls, source spans and explicit extraction gaps. |
+| Audit caller contracts | Unit identities and compiler facts | All findings per caller, actual provider selection and unresolved joins. |
+| Audit register batch | Exact native spans, registers and explicit summaries | Ordered witnesses, path outcomes and summary dependencies. |
+| Explain a policy | Caller/site/provider identities and current artifacts | Eligibility, refusal reasons, original observations and applied stage. |
+| Plan adapters | Eligible policies and compiler spans | Exact edits, before/after artifacts and preserved expression evaluation. |
+| Run proof/build batch | Configured runners and artifact dependencies | Case diffs, stage events, cache reasons and actual compile/link outcomes. |
+| Query blockers | Findings, policy ledger and current build records | Outstanding work packages ranked by verified blocked callers. |
+
 ## Priorities and dependencies
 
 | ID | Priority | Feature | First deliverable |
@@ -135,6 +172,19 @@ missing/ambiguous definitions, same-TU conflicts and unsupported contracts.
 Give each finding stable identities and source spans. A compilation failure,
 missing cache entry or unexamined caller is an explicit extraction gap.
 
+Classify the actual selected provider as original reconstructed C, retained
+assembly, compiler runtime/libcall, external host, generated bridge or missing.
+Record its definition contract and selection reason across the linked module.
+Distinguish an available source/object from the definition actually linked:
+exclusion or substitution may select a different provider. Generated host C
+definitions require the same compiler-fact inspection as recovered C; argument
+counts in a resolver map are descriptive metadata, not definition evidence.
+A familiar library name does not prove a typed provider: file12's `abs(int)`
+calls currently encounter a generated twenty-word host bridge, while original
+`printf` and `sprintf` boundaries require separate varargs/prefix work. Add
+synthetic libcall-versus-host collisions and inspect the final linked signature;
+absence of a source file or compiler-facts record is an explicit provider gap.
+
 **Acceptance:** retain the current report-reader tests; reject declarations as
 definition evidence; cover K&R, typedef/pointer-to-pointer, signed-short results,
 default promotions, casted calls, variadics, aggregate profiles, void casts,
@@ -169,12 +219,21 @@ Before generating/compiling a provider, detect duplicate physical ownership,
 conflicting aliases, out-of-member spans, generated ASM/gap versus new C object
 collisions and ambiguous same-address unit mappings. Valid shared fragments
 remain represented without becoming independent callable definitions.
+Compare every native range, not just entry names. A new provider can contain a
+previously compiled entry with a different name; flag its canonical source,
+objects, resolver registrations and coverage records before promotion. Record
+the reviewed retirement or alias decision and preserve the previous evidence.
 
 **Acceptance:** reject a function crossing a member boundary; keep two overlays
 at `0x800a7000` distinct; preserve file11 CF074 as CEED4's fragment; preserve the
 file12 B7098 exclusion; distinguish 1CA70 from an inferred 1C8B0 merge. B0FC0's
 312-byte extent must not become 656 bytes because of a note gap. The 13,460-byte
 B44C0 analysis must not receive full matching credit from a 136-byte scored head.
+Detect BOOT 4BFB0's 312-byte extent enclosing the old 4BFB8 304-byte source:
+the latter omits two instructions that initialize incoming V0/V1 and its portable
+C uses uninitialized locals despite an exact native score. Require an ownership
+decision before retaining either resolver entry. Replacing that fragment must
+not credit two functions or double-count the 304 shared bytes.
 Provide machine-readable spans/call sites so no script parses formatted disasm.
 
 ## BV-03: evidence identity, provenance and invalidation
@@ -227,6 +286,16 @@ extra-word nonuse, recovered missing input, discarded result, return conversion,
 varargs/aggregate lowering and guarded unsupported paths. The default never
 pads missing words, truncates extra words or substitutes a return value.
 
+Enforce caller/site restrictions in the shared policy consumer and edit planner,
+not only in a game adapter's filtering code. A policy carrying an
+`allowedCallers` field must not become a global callee allowance when merged
+with another collection. Report an equivalent existing allowance separately
+from conflicting policy claims; neither may silently broaden the scope.
+The five-caller BIOS-copy contract is the observed case: the collector records
+its caller list, but the current generic rewriter requires the builder to filter
+it manually. Acceptance includes a sixth caller and a second unlisted call site
+that remain refused even when another caller has a verified policy.
+
 Represent external callee summaries and complete indirect target sets as explicit
 reviewed inputs with verifiable dependencies. A runtime-dependent guard is a
 condition with a declared unsupported frontier; absence of observed reads on a
@@ -263,6 +332,15 @@ and compiler views of a call, the applied policy, guard/frontier and stage
 lineage. Let users inspect an audit path instruction by instruction. Keep
 imported findings usable independently of a selected binary; verification is
 a separate state. Export the selected evidence with its input identities.
+
+Join observed contract findings to the current policy ledger and actual build
+outcome. Distinguish unresolved, verified-and-applied, guarded, stale/ineligible,
+excluded and unknown; include caller/site scope and the successful or rejected
+stage identity. A raw mismatch remains inspectable after a policy applies, but
+must not rank as an outstanding blocker solely because its fan-out is high.
+Acceptance: FF9 1D898's eleven and 548E8's seven observations are already
+handled, while the actual 57 rejected caller units identify the next work.
+Report raw observations and strict rejected callers as separate measures.
 
 Expose equivalent read-only structured APIs through persistent MCP sessions:
 unit/extent inventory, compiler facts import/audit, evidence verification,
@@ -309,6 +387,14 @@ extension, pointer bits, same-TU typedef declarations and original callback
 addresses. Explicitly represent native hidden-result/packed-record bridges and
 reviewed varargs; reject unsupported representations.
 
+For an indirect table, retain each target's actual definition ABI and the
+original guest callback identity. Distinguish a proved finite target set from
+an incomplete set and a runtime unknown. A mixed table of four-word handlers
+and zero-word getters must not receive a fabricated uniform C prototype.
+FF9 EF094's dispatcher is the migration case: its real four input words must
+reach consuming handlers while getter results remain discarded. Unknown/null
+targets require the configured explicit frontier, not successful substitution.
+
 Generate portable prepared C/adapters and a before/after diff by default. Keep
 canonical matching source unchanged when the issue is target portability. A
 real source bug should instead have its own separately validated candidate.
@@ -342,6 +428,14 @@ must state their exact ranges and rationale; an ABI stack exclusion is not
 permission to exclude arbitrary mismatching state. Distinguish real C/native
 provider execution from hooks and controlled GTE/MMIO outputs. Independent
 result specifications have separate results from differential comparisons.
+
+When native and WASM stacks occupy different addresses, declare narrowly
+bounded corresponding local objects and compare their identity relationships,
+initialized contents, offsets and lifetime. Preserve alias relationships and
+provider observations; a raw pointer mismatch is not automatically a behavior
+failure, and a broad stack/RAM mask is not an adequate replacement. Reproduce
+EF094's caller loops with two initialized local bytes, live count mutations and
+448 actual histories using this explicit correspondence.
 
 Results include cases executed, instruction/site/path coverage, failures,
 refused/unsupported cases, exclusions, provider profile, versions/hashes and
@@ -393,6 +487,16 @@ cache entries atomically, deduplicate concurrent identical work, and prevent
 parallel edits/promotions from silently changing inputs mid-job. Show miss and
 invalidation reasons in BV-05. Existing compile and matching caches remain
 adapters until replacing them demonstrably preserves their guarantees.
+
+Have the configured linker adapter emit a checked memory/layout certificate
+from actual object and module symbols: guest RAM placement, alias definitions,
+shared memory/table identities, data end, heap base, reserved stack and required
+imports. Reuse current `wasm/mkmod.py` helpers rather than rebuilding a linker
+inside binviz. Proof recipes repeatedly generate these aliases and link twice
+to establish guest RAM placement; turn that work into a configured shared stage.
+Refuse shifted RAM, unresolved aliases, overlapping reserved regions and wrong
+stack sizes. Retain common-symbol allocation checks from BV-03 and compare
+identical-input module hashes. Device/BIOS semantics remain runner configuration.
 
 **Acceptance:** an unchanged run reuses output hashes; changing one leaf source
 invalidates only relevant work plus links. Preserve the FF9 case where 3 BOOT
@@ -449,6 +553,33 @@ Keep each slice usable and validated before expanding. Use ordinary API/CLI/MCP
 names consistent with the repository rather than blindly adopting these IDs
 as command names. Do not delete legacy scripts until equivalence/refusals are
 accounted for. Deferred features remain explicit backlog items.
+
+## Migration and delivery checklist
+
+For each slice, the implementation session should record the affected feature
+IDs, existing entry points extended, old helpers replaced, configuration still
+owned by the game, and an independently repeatable demonstration. Run the old
+and new paths on identical frozen inputs; compare decisions, witnesses and
+refusals, including intentionally stale/unsupported cases. Differences need an
+explanation, not a relaxed check to obtain agreement.
+
+The first end-to-end demonstration needs no FF9 image: a synthetic two-caller
+fixture with an overlay collision, an actual compiler-definition mismatch, a
+scoped register policy and one changed artifact. Show the same IDs/results in
+CLI, UI and MCP; show the changed artifact invalidating only its dependents.
+Keep optional local FF9 campaigns separate from the distributable tests.
+
+Measure the work being replaced: analysis wall time, original bytes loaded,
+compiler invocations, cache reuse, peak memory, and the number of per-game
+analysis helpers needed. Compare cold and warm runs on identical inputs. Faster
+native scoring alone does not establish a faster behavioral decompilation.
+
+A slice is ready to migrate when users can inspect its inputs and reasons,
+agents can consume the same structured results, failures remain explicit, and
+the game can remove duplicated analysis while retaining its configuration and
+fixtures. Library code without UI/MCP access leaves the visibility requirement
+unfinished. Retire each old helper only after this demonstration and equivalence
+review; preserve historical evidence and reproduction recipes.
 
 ## Ongoing feature-gap reporting rule
 
