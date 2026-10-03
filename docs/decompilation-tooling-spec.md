@@ -1573,3 +1573,37 @@ acceptance or scorer migration. Shared acceptance still requires configured
 frozen namespaces/compiler inputs/outputs; downstream source-bound evidence
 must refresh against current identities. Continue remaining animation/model,
 resource and geometry consumers before inferring gameplay-specific enums.
+
+Battle animation/script naming acceptance (BV-03/BV-08, P2): FF9 adds85
+reviewed C definitions in ovl_04e800, now156 named there and2379 catalog-wide.
+Evidence: docs/function-names-battle-animation-script.json and binviz/target/
+ff9-names-battle-animation/. All88 affected complete native objects agree,
+pinned strict scores stay unchanged (83 exact,5 existing partials;11940 matched
+code bytes), and88 installed WASM preprocessed token comparisons agree. No
+linked/module/gameplay or new original matching credit claimed.
+
+Original full group0/file11 d8053882...5381e binds48 observed script handler slots
+atf72e0, including nulls/two unnamed earlier entries, and four19-halfword timing
+rows atf73a0. Each newly named wrapper binds to its actual native slot and full
+reviewed executor. Source/header identities bind observed definitions, callees
+and consumers. Names cover script slot/arena lifecycle, animation binding/frame
+counts/frame holds, unit visibility and model parts, party membership/tag timing,
+unit sound, movement/turn handlers and their sizing/initialization wrappers.
+
+Actual bc21c establishes flag68 bit21 as animation-frame hold and status3c mask
+02001103 as a separate frame-advance gate. Movement follows current/reference
+position getters and local-Z transforms, not old timed-rotation prose. Keep
+numeric animation23/25/29/30 meanings neutral. Preserve actor16 writes, native
+operand/state sizes, byte-packed globals, leading-frame waits, exact counter
+equality, signed/byte truncation, extra arguments and mismatched declarations.
+d908c still passes the counter pointer as banked-animation context. No scheduler
+slot overflow, zero division, animation clamp or interpolation-order repair.
+
+Party-byte75/mapped effect selection remains deferred until complete downstream
+renderer/loader review; do not guess weapon or character enum meaning. All alias
+edits stay confined to this unit. Independent audit verifies current catalog
+source/header IDs, both original data slices and92 owned committed paths while
+unrelated CLAUDE and worktree changes stay intact. Legacy farm/scorer proof is
+compatibility evidence, not shared workspace acceptance or scorer migration.
+Shared acceptance still needs configured frozen namespaces/compiler inputs/
+actual outputs. Refresh downstream source-bound evidence after naming changes.
