@@ -35,6 +35,15 @@ per-game copies of type/ownership/CFG logic are the duplication to remove.
 Game configuration, recovered source and expected fixture values remain in
 the game project. Shared analyses, identities and explanations belong in Binviz.
 
+For the caller-discovery concern specifically, native callers already come from
+Binviz xrefs. The missing feature is a verified join from those edges to the
+selected C definition, physical load unit and current build. Do not port an
+"owned callers" Python collector verbatim. Replace its duplicated joins with
+BV-02/BV-01 records and show the result through the BV-05 caller inspector.
+The inspector should identify which steps ran in the shared core, compiler
+adapter or game runner, with inputs, structured results and reproduction links.
+This makes a temporary orchestration script inspectable while it is migrated.
+
 Implementation handoff prompt:
 
 > Extend Binviz using this spec. Inspect the current implementation checkpoint
@@ -387,6 +396,23 @@ that fact, retain the current unresolved cycle; finite fixture success alone is
 not a general loop proof. Acceptance includes an altered step/bound, a skipped
 update and an aliased counter write that invalidate the proposed bound.
 
+Add a **used-return closure certificate** for return-contract corrections.
+Join the original caller's consumed V0 bits, the provider's path-sensitive
+return behavior, the installed indirect callback identity/contract and the
+actual compiled provider/resolver wrappers. A byte store in one caller does
+not establish a byte-return provider ABI. Show where narrowing occurs and
+whether another caller or wrapper observes the full word. Unknown callback
+targets and incomplete paths remain explicit frontiers.
+
+Concrete acceptance: FF9 BBF30 stores V0 as a byte after calling BOOT21698;
+21698 returns the installed AB810 callback's full slot word unchanged. Slots
+256 and 264 must reach a full-word caller or resolver as 256 and 264, and reach
+the original byte store as 0 and 8. The old void provider and byte declaration,
+and all three corrected sources, independently score 100% native matching;
+matching alone must not satisfy the certificate. Mutating the callback slot,
+return cast or generated wrapper invalidates it. Keep callback identity and
+actual linked definition checks separate from declaration-only facts.
+
 ## BV-05: visible workflow, MCP and progress
 
 Extend the current Call contracts screen. Add unit/caller/callee/kind/identity
@@ -602,8 +628,12 @@ The baseline C object's LLVM lifetime is 14 bytes; a private candidate reserves
 baseline overread, the candidate extent correction and the two unspecified
 bytes independently. Both matching versions and a passing register policy
 must not conceal this distinction. Separately show EEED4's two-byte C buffer
-versus its actual four-byte writer; an opening-window proof that never invokes
-that callback does not cover refresh. Preserve the finite downstream-use review
+versus its actual four-byte 2ECA0 writer and EEFA8's corresponding two-byte
+buffer versus four-byte 2F344 writer. Their native locals have four bytes before
+the next saved-register region. Record the initialized bytes and ordered writes
+of the real providers; a controlled hook that writes only two bytes cannot
+establish the actual access extent. An opening-window proof that never invokes
+these callbacks does not cover refresh. Preserve the finite downstream-use review
 as incomplete, rather than declaring the unspecified tail globally unobservable.
 
 ## Where game-specific code stays
@@ -689,6 +719,14 @@ This is a standing requirement from the user for ongoing decompilation work.
   not a reason to stop the authorized goal or automatically rewrite all tools.
   Keep implementation scope separate when the user assigns it to another session.
 
+Use a consistent gap record: date, feature ID, observed task/example, existing
+entry point, missing shared capability, temporary adapter, game-specific inputs,
+priority, acceptance/refusal cases and migration status. Link the actual helper
+or evidence package. Report a gap when discovered, then consolidate it at the
+batch checkpoint; the user should not have to request a tooling review again.
+Distinguish proposed, implemented, locally demonstrated and migrated. Record
+measured savings after equivalence, rather than promising a decompilation speedup.
+
 The deliverable is shared, observable capability. Merely renaming Python files
 or translating the same per-game scripts into Rust does not satisfy this spec.
 
@@ -718,3 +756,48 @@ dependency invalidation, corrupt outputs, cycles and physical member boundaries.
 MCP session tests cover import/query retention without a binary and single/batch
 register reports on one loaded synthetic overlay. Game-image acceptance campaigns
 listed above are still optional local migration work, not claimed completed.
+
+### Object callback work-package gap (2026-10-03)
+
+BV-04/BV-06, priority P0: the local evidence in
+`ff9-decomp/docs/file11-object-callback.md` and
+`build/agent-vm/file11-object-callback/production-inventory.json` joins the
+BBF30/4A8A4 callers, 21698 provider, installed AB810 callback, C declarations
+and generated zero-return resolver wrappers by a game-specific recipe. Existing
+compiler facts and native register audits supply parts of that evidence; a shared
+used-return certificate and linked-wrapper validation remain missing. Temporary
+adapter: the existing MIPS/WASM runners and typed AST/direct-call preparation,
+without a new type or CFG walker. Game-owned inputs: exact asset extents,
+callback installation and resource fixtures. Acceptance is the full-word versus
+byte-store example in BV-04, plus drift/unknown-target refusals and CLI/UI/MCP
+visibility. The private package reports 347 comparisons, explicit unknown/voice
+frontiers and six 100% matching rows; it does not establish general callback
+closure or migration to shared tooling.
+
+### Resident geometry work-package gaps (2026-10-03)
+
+BV-04/BV-09, priority P1: FF9's private
+`build/agent-resident-geometry/{register-requests.json,register-audits.json,status-review.json}`
+reuses six shared register-use audits rather than adding a CFG walker. The
+BACB4 -> C0ACC -> BEDBC chain exposes two missing composition capabilities:
+
+- BEDBC's incoming A2 is overwritten before its normal downstream calls, while
+  early status returns preserve it without reading it. The existing default
+  audit retains surviving-return frontiers; explicit discarded-return analysis
+  is dead with no reads/frontiers. Neither result supports a universally killed
+  or preserved callee summary. Add a reviewed no-consumption/may-kill contract
+  that conservatively retains the word across normal continuation and preserves
+  exact provider extent/hash and separate killed/discarded endpoint lineage.
+- C0ACC's native S0 loop initializes at zero, increments once per iteration and
+  compares unsigned against32. The shared first-read audit reports a live cycle
+  instead of inferring this bound. Add explicit bounded-loop evidence or a
+  native/compiler correspondence proof that makes termination assumptions
+  inspectable and keeps unproved cycles unresolved.
+
+Temporary game adapter exports only the independently proven B0060 -> C0C7C
+A1 overwrite allowance. BACB4's extra-word allowance remains review-required;
+198 finite actual native/C fixtures and200 mutation checks are separate evidence,
+not a substitute for either missing generic proof. Acceptance: synthetic mixed
+kill/preserve and fixed-bound-loop fixtures, unchanged unknown/callback/return
+frontiers, refusal of fabricated kill summaries, CLI/UI/MCP parity and exact
+identity invalidation. No generic tooling implementation was changed here.
