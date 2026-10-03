@@ -48,6 +48,14 @@ The inspector should identify which steps ran in the shared core, compiler
 adapter or game runner, with inputs, structured results and reproduction links.
 This makes a temporary orchestration script inspectable while it is migrated.
 
+For the next implementation session, prioritize **migration demonstrations**
+over duplicating the implementations now listed at the end of this document.
+The highest-value demonstrations are: replace one owned-caller collector with
+the shared caller package; reuse compiler facts after a policy-only change;
+recompute only the changed caller after a source edit; and replace one custom
+proof harness with a configured campaign. Record the helpers actually retired,
+preserved refusals and measured cold/warm cost for each demonstration.
+
 Implementation handoff prompt:
 
 > Extend Binviz using this spec. Inspect the current implementation checkpoint
@@ -929,6 +937,14 @@ Preserve an untouched unit's validated raw report; interrupted/concurrent
 promotion must report recoverable state. Status: locally reproduced transition;
 shared promotion and game collector migration remain to be demonstrated.
 
+Measured follow-up: after the BBD3C source correction, exactly one of 1,060 raw
+caller CPP inputs changed. Regenerating the legacy cached all-call report took
+133.7 seconds and produced 129 findings across 72 callees; AEE68 remained an
+explicit raw-cache gap. Before this correction it held 130 findings/73 callees.
+This is a concrete BV-08 baseline for incremental report acceptance, not a
+measured speedup. A subsequent policy-only integration should reuse these raw
+facts after validating their input/definition/producer identities.
+
 ### Provider-entry events after delay slots (2026-10-03)
 
 BV-07, priority P1: the BBD3C unit-initialization review needed to observe the
@@ -960,3 +976,195 @@ behavior remain unchanged with observation enabled. A deliberately early sample
 fails the comparison with a concrete timing/argument diff. Unknown targets or
 missing entry checkpoints remain explicit frontiers. Status: local observer
 corrected; supported shared event API and campaign migration pending.
+
+### Selected HLE providers, scheduling and DATA bindings (2026-10-03)
+
+BV-02/BV-03/BV-04, priority P0 for the provider inspector: the maintained
+compiler-facts adapter and shared workspace now expose FF9's four apparently
+missing providers as intentionally excluded native definitions with differently
+named HLE endpoints. Local evidence is
+`ff9-decomp/build/agent-resident-providers-private/{review.md,workspace-report.json}`.
+The imported workspace retains unbound calls and separate hoisted-prologue
+fragments. These providers are MoveImage, DrawOTag, ClearOTagR and CD busy.
+
+Show the native definition, selected linked HLE endpoint, alias/universal wrapper,
+actual direct-call ABI and platform-service profile together. In the CD-busy
+example, 1,024 finite original/C comparisons pass for the native busy-byte leaf
+and one caller's pending/skip paths. Yet the existing host endpoint also advances
+completion scheduling. Replacing it with the native leaf can leave two waiting
+callers stuck. A passing leaf campaign must not silently approve that replacement.
+Acceptance must include ordinary pending-to-complete waits and ordered scheduler
+effects, with device/retail timing scope explicit. A separate hidden printf
+contract remains a blocker even after the busy provider is supplied.
+
+The menu caller campaign in
+`ff9-decomp/build/agent-vm/file11-menu-next/proposed/docs/file11-menu-next.md`
+supplies a concrete DATA-binding refusal case: an omitted `g_state` guest-RAM
+alias linked without an error but produced pointer 291 instead of native
+`0x80140123`. The corrected proof explicitly binds the source symbol at guest
+`0x8006794c`. Extend the existing layout/ownership evidence to expose unmapped
+extern DATA/common allocations, actual module addresses and required guest
+bindings before declaring a closure usable. A synthetic omitted alias must
+remain unresolved or fail layout validation despite a successful link. Preserve
+unknown mappings; do not guess them from a symbol name.
+
+Status: shared facts/workspace inspection used locally; provider adaptation,
+scheduler equivalence and DATA-binding certification still require migration.
+
+Required follow-on slices for the existing implementation:
+
+- **Selected-provider chain:** extend `workspace::CallBinding` and
+  `Workspace::analyze`, plus `linkevidence::inspect`, to expose physical native
+  ownership, exclusion/substitution, the selected wrapper, the actual import
+  ABI and the service obligations in one structured chain. Import identity
+  includes module, field and signature. The same `hle.ff9_cd_busy` field can
+  legitimately have zero-input direct and six-input legacy imports, with a
+  separate twenty-word dispatcher. Name-only binding must refuse ambiguity.
+  Preserve every independent blocker, including printf, after resolving CD.
+  Surface this through the existing caller package and policy/blocker APIs.
+- **Comparison roles and authority:** extend `campaign::compare`,
+  `campaign::audit_report` and the configured runner adapter. Their current
+  `native`/`wasm` side names cannot describe a baseline/candidate comparison of
+  two WASM configurations accurately. Record role, execution architecture,
+  genuine/controlled boundaries and the obligations established. A same-host
+  scheduler comparison must not become native device-timing evidence. Retain
+  pending-to-idle waits, ordered callbacks/copies, partial-read cancellation,
+  full-word results, raw-leaf nonprogress and premature-zero negative cases.
+- **Shared-memory initialization:** extend `linkevidence::ModuleReport`,
+  `LayoutCertificate::verify` and campaign initialization records beyond DATA
+  address checks. A private module's BSS initialization overwrote live BOOT
+  dispatcher RAM despite correct aliases. Show active initialization writes,
+  ordering, imported-memory maxima and cross-module stack reservations.
+  Reject destructive initialization, incompatible maxima and overlapping
+  callback stacks. Fixture save/restore must declare its exact phase and range;
+  passing such a fixture does not establish production initialization safety.
+
+The frozen local CD package at
+`ff9-decomp/build/agent-resident-providers-private/cd-boundary/review.md`
+records 143 runtime checks, 42 baseline/direct scheduler pairs and 72 scope/drift
+refusals. It is a concrete migration target, not a public game integration.
+
+### Scoped matching-record publication (2026-10-03)
+
+BV-03/BV-08, priority P1: `ff9-decomp/tools/score.py --record sub_800bbd3c`
+scores the requested source but republishes cached note rows from other sources.
+Two unrelated nonmatching percentages and timestamps changed in this batch;
+root restored those incidental note changes and preserved them for audit.
+The corrected BBD3C remained a 100% exact match. Aggregate cached score rows
+were not used as a verified unique-function coverage percentage.
+
+Expose a publication plan containing the requested scope, actually validated
+source/extent/producer identities and exact proposed note changes. Cached rows
+outside that scope must require their own current validation/publication plan.
+Acceptance: recording one selected routine updates only its verified record;
+unrelated stale scores retain their prior notes and show their stale status.
+Distinguish per-source rows, unique physical function starts and matched byte
+coverage. This extends existing matching/evidence tooling; it needs no new scorer.
+
+### Shared tooling continuation checkpoint (2026-10-03)
+
+BV-01/02/03/04/05: shared workspace/inventory now joins physical functions,
+compiler definitions, actual selected WASM object bodies/signatures and linked
+call targets to complete caller packages. Exact call/slot correspondence artifacts
+and policy review artifacts are content-bound; scopes remain per caller/site.
+Paired audits preserve killed versus discarded endpoints. Applied findings need
+current edit/compile/link lineage. Inventory retains separate matching/analysis
+extents, collisions, fragment ownership and unknown/data gaps. Queue context joins
+require actual loaded bytes and mapping; existing claims/completion filters remain.
+CLI `workspace`, browser Contracts and MCP expose the same IDs and reasons.
+
+BV-03/06: deterministic scalar extra-word bridge plans retain exact source spans,
+before/after bytes, argument evaluation and callback references. Unsupported result
+conversion and closure cases refuse. Separate candidate publication is atomic and
+idempotent. Before/candidate promotion plans require current baseline/candidate
+producer stages, pinned recipes, prerequisites and the exact affected consumer
+closure. Historical inputs survive; publication/policy promotion is not automatic.
+
+BV-07/08: configured persistent runner pairs and shared full-word/RAM/ordered-event
+comparison are implemented, with narrow local-object correspondence, initialization,
+alias and checkpoint checks. The synthetic Windows-x64/WASM32 campaign runs actual
+compiled code; it is not a PS1 runtime proof. Build stages share frozen inputs and
+content keys, atomic/deduplicated cache publication, include-name/content snapshots,
+bounded scheduling and sampled direct-process RSS. Partial/cancelled/drifting jobs
+retain refusals. Compiler-facts producer-specific typed extraction caching is also
+implemented: cold/warm tests measure two/zero extraction subprocesses, with
+leaf-only invalidation, output-corruption recovery, header-shadow and environment
+refusals. Target discovery and preprocessing remain fresh on every run.
+
+BV-04/09: optional observable-bit audit extends the existing MIPS state/CFG for
+copies, masks, shifts, byte stores, delayed loads and locally constant bounded
+counters. Default policy consumption remains conservative. Reviewed storage records
+show object size/reservation/initialized bytes versus exact-site provider access;
+actual native SP observations and WASM stack-pointer operations are visible.
+Reviewed description identity does not prove access completeness. Complete callback
+used-return closure, mixed may-write callee certificates, external loop bounds,
+IRQ/recursive stack upper bounds and automatic compiler allocation/lifetime
+extraction remain open explicit frontiers.
+
+Reproduction and acceptance tests are documented in
+[workspaces](decompilation-workspaces.md), [build batches](build-batches.md),
+[proof campaigns](proof-campaigns.md) and [progress images](progress-images.md).
+No legacy FF9 helper is retired, and no game-source change or matching credit is
+claimed from these synthetic demonstrations. Compare frozen game collectors before
+migration; retain the concrete gap records above as acceptance targets.
+
+### Exception order and portable C transformations (2026-10-03)
+
+BV-06/BV-07, priority P1: the item/menu follow-on campaign found a real
+native-versus-WASM exception-order difference. A zero divisor reaches a native
+MIPS BREAK before the random cursor advances. The compiled C remainder traps
+after LLVM has moved the cursor store; byte `0x8007b720` changes from `0x30` to
+`0x31` before the WASM trap. The runner must compare the state at the exception,
+not merely classify both executions as failed.
+
+The temporary game-owned candidate adds an explicit WASM zero-divisor trap
+before the remainder. Its reported 315 histories include 275 complete paths,
+39 strict frontiers and one exception path. This is preliminary private worker
+evidence; root review, frozen promotion identities and shared migration remain
+pending. Locate the campaign under `ff9-decomp/build/agent-vm/`; do not treat this
+record as source-promotion approval or a universal modulo rewrite.
+
+Extend campaign results with an exception outcome: architecture/runner kind,
+guest PC or mapped source operation, ordered effects before the exception and
+the final observable memory/register checkpoint. An unknown instruction, missing
+provider or execution budget exhaustion is a separate frontier. Edit plans must
+identify native undefined-C behavior, the proposed target-specific correction,
+its exact stage and the evidence needed before applying it.
+
+Acceptance: tracked synthetic inputs make the baseline native and WASM runs
+both trap but disagree on a visible store. The campaign reports that store as
+a failure. A reviewed candidate preserves the pre-exception state and ordinary
+nonzero paths; missing exception checkpoints remain unresolved. Preserve the
+failing baseline, compiler flags and candidate lineage. Current configured
+campaigns are an implementation starting point, not evidence that this native
+instruction/exception case is already supported.
+
+### Variadic and shared-tail caller explanations (2026-10-03)
+
+BV-01/BV-02/BV-04/BV-06, priority P1: the private formatter campaign contains
+109 C call sites but only 78 distinct native JAL sites, because several recovered
+callers share native tails. The original formatter's argument-home prefix is
+also required: its complete span is 2,180 bytes, including a 12-byte prefix
+omitted by an interior entry label. Caller counts, physical call coverage and
+matching/analysis extents must remain separate in the inspector.
+
+One recovered caller omitted two meaningful inputs to a variadic call. Native
+instructions preserve the incoming index and produce a second word before the
+call; correcting the C arguments is a source candidate, not permission to pad
+every variadic call. Another printf endpoint is only a native BIOS veneer with
+an absent ROM body. Its software-console contract is explicit platform evidence,
+not an original-ROM behavioral proof. Local evidence lives in
+`ff9-decomp/build/file12-format-proof/` and `build/file12-format-package/`.
+
+Show actual fixed/promoted argument types, variadic ABI profile, argument-home
+requirements, shared physical call identities, provider selection and result
+use. Known scalar varargs profiles may produce reviewed bridge plans; unsupported
+format/type combinations and absent provider semantics remain explicit.
+
+Acceptance: a synthetic pair of C callers shares one native tail without
+double-counting physical coverage. An interior formatter entry refuses a proof
+requiring its missing prefix. A missing meaningful variadic argument remains a
+source defect; an explicit reviewed candidate preserves supplied values and
+evaluation. A veneer-only provider displays its software-service scope and
+does not receive ROM coverage credit. The private FF9 package has not replaced
+any shared Binviz collector or been integrated into the public game builder.
