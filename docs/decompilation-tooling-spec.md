@@ -1323,3 +1323,30 @@ not inherited prose. Keep signed GPU field extraction and unusual allocation
 conflict predicates intact. Existing shared readability/frozen namespace tools
 are available; these legacy native-scorer/farm checks do not constitute shared
 workspace acceptance or authorize a historical scorer migration.
+
+Controller/CD naming acceptance (BV-03/BV-08, P2): FF9 adds116 reviewed
+names:68 controller/card C definitions plus8 BIOS assembly aliases, and38 CD
+C definitions plus2 BIOS assembly aliases. Current catalog:1720 names. Evidence:
+docs/function-names-{pad-driver,cd-driver}.json; snapshots and compile observations
+are in binviz/target/ff9-names-{pad-driver,cd-driver}/. Every complete native
+object stays identical across153 source comparisons; strict original scores
+stay unchanged (105 exact,48 pre-existing partials), as do all installed WASM
+preprocessed tokens. No new linked/module/gameplay or matching credit is claimed.
+
+Semantic fixtures follow recovered bodies, not inherited prose: controller
+functions19798/197d8/19948/19aa8/19b78 configure actuators, alignment, main mode,
+state and mode-info despite old libcd labels. CD236a4 exchanges the debug level
+used by printf thresholds, despite the old CdDataCallback guess. CD213e0/21500
+read sectors with blocking/asynchronous DMA completion; naming does not adopt
+the old assertion of opposite transfer directions. Existing zero-argument
+forwarding and other ABI discrepancies are retained for separate integration
+work. BIOS assembly aliases retain literal table/number pairs and raw labels.
+
+Existing descriptive CdSearchFile/CD_* definitions and the one-argument CdRead
+retry coordinator are kept intact and excluded from this new-name count.
+Unknown command0x4b, kernel patchers, opaque state setters and unclear enqueue
+entry roles remain deferred. Shared readability acceptance and frozen namespace
+features are already available; these maintained legacy farm/scorer adapters
+provide concrete compatibility fixtures, not shared workspace acceptance or a
+historical scorer migration. Preserve canonical unit/linkage identity and
+source-bound report hashes when future batches or shared adoption touch them.
