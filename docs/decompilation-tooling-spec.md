@@ -1607,3 +1607,43 @@ unrelated CLAUDE and worktree changes stay intact. Legacy farm/scorer proof is
 compatibility evidence, not shared workspace acceptance or scorer migration.
 Shared acceptance still needs configured frozen namespaces/compiler inputs/
 actual outputs. Refresh downstream source-bound evidence after naming changes.
+
+Battle resource/model naming acceptance (BV-03/BV-08, P2): FF9 adds74
+reviewed C definitions in ovl_04e800, now230 there and2453 catalog-wide.
+Evidence: docs/function-names-battle-resources-models.json and binviz/target/
+ff9-names-battle-resources/. All81 affected complete native objects agree,
+pinned strict scores stay unchanged (70 exact,11 existing partials;14280 matched
+of20912 code bytes), and81 installed WASM preprocessed token comparisons agree.
+FF9 commit324a0497c. No linked/module/gameplay or new original matching credit.
+
+Original full group0/file11 d8053882...5381e supplies bounded byte/halfword remap
+tables atf727c/f72a0,85 selected-script IDs atf7460 and48 handler slots atf72e0;
+d84c4 binds slot0x5c. The actual interpreter establishes three-byte effect
+commands, one saved nested-script return cursor and waits; the actual streaming
+loader establishes CD sectors, alternating records, VRAM uploads, audio-driver
+block loads and draw-sync/cache-flush handshake. The previously deferred party
+byte75 now has a concrete script-selection consumer; its gameplay enum remains
+neutral. Preserve all counter, return, unchecked indexing and ABI behavior.
+
+New strong model naming evidence:27 original diagnostic function labels in the
+bounded a7d00..a81a8 span agree with complete recovered model bodies. They identify
+solid/Gouraud/textured/summon registration, sliced/morphed/bone-matrix draw,
+summon animation/frame, mesh visibility, texture animation, primitive ABR/RGB,
+offset and slice. Store original addresses, bounded slice hashes and observed
+labels, not game assets. Low-halfword bone translation copies, strict frame
+count comparison, record layout, matching pins and raw assembly stay intact.
+
+Reusable evidence collection gap (BV-03/BV-08, P2): scoped naming catalog support
+should bind a diagnostic-label observation to exact original binary identity,
+member/load offset, bounded string digest, owning unit and current recovered
+definition/consumer IDs. Reject wrong-unit/address collisions, changed binary,
+changed string or unbound source; accept descriptive names only with reviewed
+behavior. Temporary game adapter uses explicit addresses and existing shared
+batch/catalog tools, without a private AST/CFG walker or tool rewrite.
+
+Independent audit verifies all2453 current catalog source/header identities,
+five original data slices and85 committed owned paths, preserving foreign
+CLAUDE and worktree edits. Legacy farm/scorer compatibility evidence remains
+separate from genuine shared workspace acceptance; the latter still requires
+configured frozen namespaces/compiler inputs/actual outputs. Refresh downstream
+source-bound evidence against current catalog and header IDs.
