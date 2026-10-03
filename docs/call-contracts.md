@@ -35,11 +35,26 @@ an old imported report still describes old inputs. Already-reviewed policy cases
 may appear in an audit report, so its finding count is not the strict link-blocker
 count. The adapter's scope is displayed verbatim in text.
 
-This first step centralizes inspection. Follow-up work should give findings
-source/assembly locations, verify report identities against immutable inputs,
-attach them to call-graph edges in the UI, and move proven register dataflow into
-the analysis library. Clang can remain the compiler-specific type adapter.
+## Browser inspection
+
+Open a binary in binviz, select **Call contracts**, then **Import compiler
+report**. The browser uses the same Rust report reader as the CLI. Filter by
+exact caller/callee names and expand a finding to see its declarations,
+definition and full reported evidence. Uncached callers and report metadata
+remain visible. A rejected import retains the previous report. Imports are
+local, independent observations; opening a binary does not verify their source
+or native identities. Reports up to16MiB are accepted, and untrusted strings
+are displayed as text. Large integer metadata is shown without losing digits.
+
+Native register dataflow is now in the shared library and batched CLI
+[register-use](register-use.md). Clang remains the compiler-specific type
+adapter. Further work can attach verified source/assembly locations to graph
+edges and bind imported reports to immutable input identities.
 
 Validation: library tests cover contradictory count/result reports, exact-name
 filtering, retained uncached callers and retained adapter metadata. The CLI is
 also exercised against FF9's actual imported compiler report.
+Ten Chrome checks cover the real145-finding import, filtering to three caller
+findings, expanded evidence, retained results after a refused import, safe text
+rendering and exact64-bit metadata display. Type checking and frontend bundling
+also pass.

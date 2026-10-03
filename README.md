@@ -214,6 +214,9 @@ source identities. Filter with `--caller` or `--callee`; `--json` preserves the
 adapter evidence. Importing a report does not verify native behavior or grant ABI
 exceptions. See [call-contract inspection](docs/call-contracts.md).
 
+The browser's **Call contracts** view imports the same reports with exact
+caller/callee filters and expandable source, type and identity evidence.
+
 `register-use <file> <address> <bytes> <entry> <register>` audits an incoming
 PS1 MIPS register word over an exact extent, with read/end/frontier instruction
 paths. Unknown calls and surviving returns remain unresolved by default.

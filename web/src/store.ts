@@ -10,7 +10,7 @@ import type {
 import { toast } from './ui';
 import { basename, setAddressStyle } from './util';
 
-export type ViewName = 'folder' | 'crash' | 'diff' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'symbols' | 'dwarf' | 'sources' | 'text' | 'tiles' | 'patch';
+export type ViewName = 'folder' | 'crash' | 'diff' | 'overview' | 'layout' | 'hex' | 'code' | 'calls' | 'contracts' | 'symbols' | 'dwarf' | 'sources' | 'text' | 'tiles' | 'patch';
 
 /** How a navigation is recorded: a new place in history, an update of the current one, or neither. */
 export type HistoryMode = 'push' | 'replace' | 'none';

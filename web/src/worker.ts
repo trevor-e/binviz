@@ -8,7 +8,7 @@
 // game's disc, hundreds of megabytes) are read a sector at a time: their
 // folders, then the file opened.
 import init, {
-  Session, crashParse, discBoot, discLayout, discPrefix, discRecords, discRoot, discSort, packageBundle, packageDiscover,
+  Session, callContractsParse, crashParse, discBoot, discLayout, discPrefix, discRecords, discRoot, discSort, packageBundle, packageDiscover,
   packageHeader, packagePlan, zipDecompressZstandard, zipFindDirectory, zipParseDirectory, zipZip64Directory,
 } from './pkg/binviz_wasm.js';
 import type { BaselineSource, BinaryHeader, BundleInfo, DebugMapObject, DebugMapReport, DiscFile, PackageBinary, PackageInfo, PackageSource, Summary } from './types';
@@ -504,6 +504,10 @@ const packageMethods: Record<string, (memory: WebAssembly.Memory, id: number, ar
       return { kind: 'folder', diff: session!.sizeDiffFolder(top) };
     }
     return { kind: 'binary', diff: session!.sizeDiffBinary(top) };
+  },
+
+  async callContractsParse(_memory, _id, args) {
+    return callContractsParse(args[0] as string);
   },
 
   async crashParse(_memory, _id, args) {

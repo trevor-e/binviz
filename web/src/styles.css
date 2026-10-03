@@ -3848,3 +3848,8 @@ table.data td.diff-name {
   align-items: center;
   margin-top: 8px;
 }
+:root .contract-finding { margin-bottom: 10px; }
+:root .contract-finding summary { cursor: pointer; overflow-wrap: anywhere; }
+:root .contract-finding .facts { margin-top: 12px; }
+:root .contract-evidence { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+:root .contracts-page .toolbar { flex-wrap: wrap; }

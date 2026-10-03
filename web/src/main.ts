@@ -8,6 +8,7 @@ import type { PackageSource } from './types';
 import { FolderView, KIND_GROUPS } from './views/folder';
 import type { View } from './views/base';
 import { CallsView } from './views/calls';
+import { ContractsView } from './views/contracts';
 import { CodeView } from './views/code';
 import { CrashView } from './views/crash';
 import { DiffView } from './views/diff';
@@ -47,6 +48,7 @@ const NAV: { view: ViewName; label: string; key: string }[] = [
   { view: 'hex', label: 'Hex', key: '3' },
   { view: 'code', label: 'Code', key: '4' },
   { view: 'calls', label: 'Call graph', key: '5' },
+  { view: 'contracts', label: 'Call contracts', key: 'a' },
   { view: 'symbols', label: 'Symbols', key: '6' },
   { view: 'sources', label: 'Sources', key: '7' },
   { view: 'dwarf', label: 'DWARF', key: '8' },
@@ -99,6 +101,7 @@ const views: Record<ViewName, View> = {
   hex: new HexView(),
   code: new CodeView(),
   calls: new CallsView(),
+  contracts: new ContractsView(),
   symbols: new SymbolsView(),
   dwarf: new DwarfView(),
   sources: new SourcesView(),

@@ -222,6 +222,14 @@ pub fn disc_sort(files: JsValue, boot: Option<String>) -> Result<JsValue, JsErro
 
 // --- Crash reports ----------------------------------------------------------------
 
+/// Imported compiler observations, validated by the same reader as the CLI.
+/// This does not verify source/native identities or grant call ABI exceptions.
+#[wasm_bindgen(js_name = callContractsParse)]
+pub fn call_contracts_parse(text: &str) -> Result<JsValue, JsError> {
+    let report = binviz::contracts::ContractReport::parse(text.as_bytes()).map_err(err)?;
+    to_js(&report.filtered(None, None))
+}
+
 /// A crash report read from text (Apple .crash or .ips, an Android
 /// tombstone, a stack trace), or null if the text is none of those.
 #[wasm_bindgen(js_name = crashParse)]
