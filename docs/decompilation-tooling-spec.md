@@ -236,6 +236,17 @@ calls currently encounter a generated twenty-word host bridge, while original
 synthetic libcall-versus-host collisions and inspect the final linked signature;
 absence of a source file or compiler-facts record is an explicit provider gap.
 
+Do not merge definition maps with last-writer-wins semantics. A linked resident
+definition can share a symbol/address with a BOOT overlay/HLE surrogate while
+the actual direct reference resolves to the resident definition. Record all
+candidates and the link/namespace decision before choosing its contract. The
+file12 B7A14 case exposed this: its genuine `int(int)` contract was overwritten
+by a twenty-word BOOT surrogate in a private provider inventory, creating false
+caller blockers. Acceptance must join the selected resident provider, retain
+the shadowed surrogate as such, refuse ambiguous selection and independently
+verify callback/runtime registration. A caller inspector must explain the
+winner; simply reversing map-update order is not sufficient ownership evidence.
+
 **Acceptance:** retain the current report-reader tests; reject declarations as
 definition evidence; cover K&R, typedef/pointer-to-pointer, signed-short results,
 default promotions, casted calls, variadics, aggregate profiles, void casts,
