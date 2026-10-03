@@ -757,9 +757,11 @@ lineage](compiler-facts.md) for configuration, schemas, commands and limits.
 | BV-03 | SHA-256 artifacts, config/compiler/adapter/recipe identities, prepared/facts stages, raw versus normalized hashes, record-to-artifact binding, missing/stale reasons and DAG invalidation in library/CLI/WASM/MCP. | Object/LTO/link and data-allocation lineage, before/candidate promotion plans, runtime proof records, include-shadow/environment checks and FF9 drift regressions. |
 | BV-05 | Binary-independent contract screen, unit/kind/identity filters, local byte verification, prepared source excerpts, evidence export, native register witness paths; persistent `compiler_facts`, `call_contracts`, `verify_evidence`, `register_use` and `register_use_batch` MCP tools. Producer emits live JSONL stage/count/gap/cancellation events. | Full native/compiler correspondence, paired audits/policy display, batch lifecycle events for every build/proof stage, cancellation of native jobs and queue blocker/work-package integration. |
 
-BV-04 paired scoped policies, BV-06 edit generation, BV-07 campaigns, BV-08
-incremental builds and BV-09 stack/closure evidence remain backlog work. This
-slice does not approve native allowances or modify any FF9 canonical source.
+At this original slice checkpoint, BV-04 paired scoped policies, BV-06 edit
+generation, BV-07 campaigns, BV-08 incremental builds and BV-09 stack/closure
+evidence remained backlog work. See the working-tree reconnaissance below for
+subsequent implementation leads. This slice does not approve native allowances
+or modify any FF9 canonical source.
 The current MIPS core and strict per-request policies are reused; unresolved
 results and discarded endpoints retain their existing meaning.
 
@@ -771,6 +773,25 @@ dependency invalidation, corrupt outputs, cycles and physical member boundaries.
 MCP session tests cover import/query retention without a binary and single/batch
 register reports on one loaded synthetic overlay. Game-image acceptance campaigns
 listed above are still optional local migration work, not claimed completed.
+
+### Subsequent working-tree reconnaissance (2026-10-03)
+
+The checkout now contains additional, in-progress implementation. This is a
+source inspection checkpoint, not a test result or a migration claim. The next
+implementation session must examine these paths before building another version.
+They may be owned by a concurrent session; coordinate edits accordingly.
+
+| Requirements | Existing implementation lead | What still needs to be demonstrated |
+| --- | --- | --- |
+| BV-02 ownership | `crates/binviz/src/inventory.rs`; MCP `unit_inventory` | Current-byte verification, competing physical identities and exact extents surfaced in the complete caller workflow. |
+| BV-04/05 caller packages and scoped decisions | `crates/binviz/src/workspace.rs`; MCP `workspace_import`, `caller_package`, `contract_blockers`, `paired_register_audits`, `explain_policy` | End-to-end eligibility/refusal parity, actual provider correspondence and equivalence with a frozen game collector. |
+| BV-06 edit plans | `crates/binviz/src/adapters.rs`; MCP `plan_adapters` | Linked-output validation, preserved evaluation and game-adapter migration. |
+| BV-07 campaign comparisons | `crates/binviz/src/campaign.rs`; MCP `proof_campaign` | Supported runner integration and architectural event timing. Inspection of supplied observations does not itself execute a campaign. |
+| BV-03/08 link/build evidence | `crates/binviz/src/linkevidence.rs`; `Workspace::merge_build_batch` | Validated promotion plans, precise cache dependency boundaries and recovery from interruption/concurrent drift. |
+
+Do not label a feature migrated because an API or file exists. Update this
+checkpoint with an aligned producer/consumer revision, demonstration recipe,
+positive and negative results, and the actual legacy helper retired.
 
 ### Object callback work-package gap (2026-10-03)
 
@@ -867,3 +888,75 @@ manifest rows invalidate dependent audits. Unverified inferred spans remain
 usable for exploration with their status visible, and cannot establish a
 verified policy. Status: observed, shared explicit-span audit reused, ownership
 join and inspector migration pending.
+
+### Discovery-stamp transition and raw-report reuse (2026-10-03)
+
+BV-03/BV-08, priority P0 for the promotion interface: adding reviewed file-12
+preparation to the common resident builder changed its discovery recipe key.
+Eleven file-11 discovery stamp hashes changed across the GPU, queue and formation
+policy inputs. Their canonical/prepared source, preprocessed C, raw object and
+dependency outputs were unchanged. The old policy correctly refused the new
+stamp; the game session needed a one-off transition collector and three reproofs.
+
+Evidence: `ff9-decomp/build/root-resident-integration/discovery-stage-transition.json`
+records exact old/new stamps, recipe identities, policy hashes and unchanged
+semantic artifacts. Its `before/` directory preserves the verified baseline
+stamp bytes. The temporary adapter is
+`build/root-resident-integration/reseal-discovery-stages.py`; existing compiler
+and proof runners remain the authorities. This adapter is a local example, not
+a reusable dependency or a generic approval mechanism.
+
+Required shared behavior:
+
+- Show separately which recipe/metadata identity changed and which semantic
+  inputs/outputs changed. An algorithm revision remains a real dependency.
+- Produce a reviewable baseline/candidate promotion plan with exact affected
+  consumers. Verify baseline bytes and reproduce candidate stages before applying
+  replacements. Equal outputs alone do not authorize a new policy.
+- Keep old evidence accessible; publish replacements atomically and preserve
+  exact caller/site scope. A failed reproof must leave the policy unpromoted.
+- Cache raw caller observations separately from policy decisions. Report reuse
+  must validate preprocessed C, selected actual definition ABIs, extraction
+  dependencies and producer versions. A policy-only change can rerun eligibility
+  without rediscovering identical raw calls; a changed provider invalidates the
+  affected joins even when a caller's source stays the same.
+
+Acceptance: a synthetic common discovery-recipe revision changes stamp identity
+while reproducing identical CPP/object outputs. Show the transition and exact
+reproof dependencies without silently relaxing old gates. A one-byte source,
+provider, header, object or recipe change must prevent reuse where relevant.
+Preserve an untouched unit's validated raw report; interrupted/concurrent
+promotion must report recoverable state. Status: locally reproduced transition;
+shared promotion and game collector migration remain to be demonstrated.
+
+### Provider-entry events after delay slots (2026-10-03)
+
+BV-07, priority P1: the BBD3C unit-initialization review needed to observe the
+actual unit pointer delivered to C09EC. The native call sets a meaningful
+argument in its branch delay slot. The local runner's `target_kind` observation
+sampled registers before executing that slot and therefore reported an incorrect
+provider-entry value. This was an observation-timing bug, not evidence of a
+native/C behavior difference.
+
+Evidence: `ff9-decomp/build/file11-unit-init-tracked-review/` and
+`ff9-decomp/docs/file11-unit-init.md`. Temporary adapter: the existing MIPS
+executor's provider-entry observer, corrected to sample after the delay slot;
+no new instruction decoder or CFG walker. Game-owned inputs are the unit pointer,
+actual provider closure and initialization fixtures.
+
+The runner event contract must distinguish call instruction, delay-slot
+execution and provider entry. Define register/memory state at each event,
+including pending load-delay state, and identify the originating call PC and
+target. A campaign must request the relevant phase explicitly. The shared
+comparison records should reject unsupported/missing phase information instead
+of treating pre-slot arguments as provider-entry arguments. Existing trace
+records with a `delay_slot` marker need this runner guarantee; a marker alone
+does not prove that the sample was taken at the correct point.
+
+Acceptance: tracked synthetic direct and indirect calls set distinct A0 values
+in their delay slots. The pre-slot event retains the old value and provider entry
+observes the new value exactly once. Ordered stores and architectural load-delay
+behavior remain unchanged with observation enabled. A deliberately early sample
+fails the comparison with a concrete timing/argument diff. Unknown targets or
+missing entry checkpoints remain explicit frontiers. Status: local observer
+corrected; supported shared event API and campaign migration pending.

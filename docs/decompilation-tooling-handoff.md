@@ -12,6 +12,11 @@ and queue APIs. Some extensions are already in the working tree; inspect and
 validate them before adding another implementation. The full spec's checkpoint
 describes that work, but does not establish that FF9 collectors have migrated.
 
+Start by inspecting `workspace.rs`, `inventory.rs`, `adapters.rs`,
+`campaign.rs` and `linkevidence.rs`, plus the corresponding MCP operations.
+These now contain additional work beyond the original compiler-facts slice.
+Their presence is an implementation lead, not a verified migration result.
+
 For a selected caller, show one work package containing:
 
 - Its original load unit/extent, recovered source, prepared source and revisions.
@@ -45,6 +50,27 @@ Python can remain a maintained Clang adapter or game runner. Move duplicated
 analysis and decisions into shared Binviz records; translating every script to
 Rust is not the objective.
 
+## Concrete gaps from the latest decompilation batch
+
+- **Caller ownership:** native xrefs exist, but the game still has to join them
+  to physical members, prepared C and selected provider definitions. The caller
+  inspector must show the join, competing providers and every unresolved edge.
+- **Evidence promotion:** adding file-12 preparation changed eleven file-11
+  discovery stamp identities while their source, CPP, raw objects and dependency
+  outputs stayed identical. A shared promotion plan should explain and validate
+  this transition, preserving old evidence and exact policy scope.
+- **Execution observation:** BBD3C passes a meaningful unit pointer in a MIPS
+  delay slot. A provider-entry observation before that slot sees the wrong value.
+  The configured runner needs a supported event after the slot executes, with
+  its timing explicit in the proof record.
+- **Complete, incremental reports:** a compiler's first error hides later
+  blockers. Keep all call findings and reuse their verified raw-fact inputs;
+  policy changes should recompute decisions without repeating unchanged scans.
+
+The full spec records acceptance and refusal cases for these examples. Treat
+them as reusable requirements; the particular addresses and fixtures stay in
+FF9's configuration.
+
 ## Delivery sequence and definition of done
 
 1. Validate existing compiler-facts/evidence tooling on tracked synthetic inputs.
@@ -73,6 +99,12 @@ adapter and proposed feature. Update the full spec at each coherent batch with
 evidence paths, acceptance/refusal cases and migration status. Clearly separate
 proposed, implemented, demonstrated and migrated work. Do not wait for the user
 to ask for another tooling review.
+
+Use this brief flag in progress updates: **Tooling gap:** repeated task;
+existing Binviz entry point; missing capability; temporary adapter; spec ID.
+At the batch checkpoint, add an evidence-backed backlog record and state whether
+the adapter can be retired. Another session owns feature implementation unless
+the user assigns it to the decompilation session.
 
 ## Prompt for the implementation session
 
