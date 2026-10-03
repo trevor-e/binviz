@@ -6,6 +6,30 @@ Keep this file current: tick items as they land, and note the commit.
 Chosen first target: **Final Fantasy IX (PlayStation 1)**, Track A below.
 Track B (32-bit x86 PC) is kept for later.
 
+## Validated workflow additions (2026-10-03)
+
+- **have** Imported compiler [call-contract reports](call-contracts.md) in the
+  library, CLI and browser: exact caller/callee filters, actual argument counts,
+  genuine definition types, source identities and explicit uncached callers.
+  Commits `58e698d` and `e77050b`. Clang remains the compiler-specific producer;
+  a report is an observation, not permission to change an ABI.
+- **have** Shared bounded PS1 [register-use analysis](register-use.md), including
+  delayed loads, branch/call slots and read/end/frontier paths. Single and batch
+  CLI requests use the same library. Commit `57a0f11`; 183 library tests and18 CLI
+  tests pass, including original FF9 checks against user-local assets.
+- **measured** Seven native audit requests took0.4012s in one binary load versus
+  2.5315s as separate invocations in the local proof run. This is a gain for that
+  analysis step, not a claim about total decompilation time.
+
+New game proof batches already use the shared auditor instead of adding Python
+CFG walkers. Keep game-specific physical identities and reviewed boundary
+policies in data; keep compiler adaptation and original/C comparisons separate.
+The next migration target is the existing battle dead-result collector. Compare
+its frozen policies with the shared analysis before removing its native walker;
+surviving returns, unknown callees and active IRQ assumptions must stay explicit.
+The FF9 preparation/LTO caches also avoided recompiling unchanged352 engine and
+53 menu functions during the latest three-source BOOT integration.
+
 ## Why
 
 In 2026 a Halo: Combat Evolved decompilation went from nothing to 99.5 %

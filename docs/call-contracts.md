@@ -54,7 +54,7 @@ edges and bind imported reports to immutable input identities.
 Validation: library tests cover contradictory count/result reports, exact-name
 filtering, retained uncached callers and retained adapter metadata. The CLI is
 also exercised against FF9's actual imported compiler report.
-Ten Chrome checks cover the real145-finding import, filtering to three caller
+Ten Chrome checks cover a real FF9 report import, filtering to three caller
 findings, expanded evidence, retained results after a refused import, safe text
 rendering and exact64-bit metadata display. Type checking and frontend bundling
 also pass.
