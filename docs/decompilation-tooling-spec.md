@@ -1350,3 +1350,35 @@ features are already available; these maintained legacy farm/scorer adapters
 provide concrete compatibility fixtures, not shared workspace acceptance or a
 historical scorer migration. Preserve canonical unit/linkage identity and
 source-bound report hashes when future batches or shared adoption touch them.
+
+Shared UI/fade naming acceptance (BV-03/BV-08, P2): FF9 adds126 reviewed
+C definitions (72 options/UI/text/key-item helpers and54 fade/transition
+handlers). Current catalog:1846 names. Evidence: docs/function-names-
+{ui-support,fade-transitions}.json and binviz/target/ff9-names-
+{ui-complete,fade-transitions}/. Across395 source comparisons, every complete
+native object stays identical and original strict scores stay unchanged
+(328 exact,67 existing partials). All installed WASM preprocessed tokens agree.
+No new linked/module/gameplay or original matching coverage is claimed.
+
+Semantic fixtures bind names to actual bodies and consumers: key-item ownership
+at work+774 is confirmed by the item-menu collector; high bits stay secondary
+flags with no guessed story role. Play-time formatting retains the601-hour
+threshold,599-hour clamp, hundreds glyph and separator blink. Ordered OT reads,
+signed/unsigned rectangle access, extended glyph width and unaligned copies
+remain intact. UI2c4b0 overrides/restores pad input signatures/control state,
+not SPU control suggested by old prose. Repeat getters retain20-byte slots.
+
+Fade colors/modes retain exact helper arguments, dual-phase/eased hook tables,
+read-and-clear easing state and callback order. Unknown additive/subtractive
+interpretations are not baked into names; mode0/mode1 denote the existing mode
+byte. Screen32798 loads changed party portraits (group1 entry30), followed by
+party_upload_portraits at32a44, rather than intro code asserted by old prose.
+Read-done D_ spellings, zero-argument forwarding, true function heads and all
+matching hacks stay stable. Empty stubs, unknown transition/widget bytes and
+unreviewed rotation assembly/wrappers remain deferred.
+
+Existing shared readability acceptance, configured frozen namespaces and compiler
+facts are available. These maintained legacy farm/scorer observations are game
+compatibility fixtures, not shared workspace acceptance or scorer migration.
+Future migration must rebind exact current source/header identities and keep
+unit ownership, compiler flags, raw assembly and unrelated work stable.
