@@ -1448,3 +1448,33 @@ Shared readability acceptance already requires configured frozen namespaces and
 compiler inputs. These reused legacy farm/scorer results are compatibility
 fixtures, not shared workspace acceptance or a scorer migration. Regenerate
 source-bound downstream evidence against current catalog/header identities.
+
+Battle selection naming acceptance (BV-03/BV-08, P2): FF9 adds105 new
+reviewed C definitions. Current catalog:2103 unique unit/symbol names;
+ovl_065800 has257. Evidence: docs/function-names-battle-selection.json and
+binviz/target/ff9-names-battle-selection/. All149 complete native objects agree
+and pinned original strict-relocation scores remain unchanged (137 exact,
+12 existing partials;23440 matched of29360 code bytes). All149 installed WASM
+preprocessed token comparisons agree. No linked/module/gameplay or new original
+matching coverage is claimed. Current2103 source identities,25 alias headers
+and153 owned committed paths were independently rechecked.
+
+Reservation names follow queue-success increments and owned-minus-reserved
+availability, preserving byte wrapping and unchecked indices. Inventory lists
+keep neutral primary/secondary labels for ID>=0xe0 versus ID<0x58/flag4.
+Command-window open/close, row dispatch, lateral animation and strip packets
+follow recovered bodies. Help names follow mode-specific text and popup drawing,
+not old cursor-beep comments. GPU masks, linkage and matching tricks stay intact.
+
+Target names follow eligibility/selection flags, sides, visibility, single versus
+multiple targets, paired actions and marker packets. Actual widget registration
+proves f1a8c is OPEN despite its old close-callback comment. f07f0 disables pad
+repeat, not sound. Party-panel entry animation, blink and counter names preserve
+primary/secondary stat labels pending stronger field semantics; secondary color
+uses p24[1]. Unknown animation-table transition meanings remain deferred.
+
+Aliases remain exclusive to ovl_065800. These compatibility farm/scorer proofs
+reuse the frozen workflow; they are not shared workspace acceptance or a scorer
+migration. Shared readability acceptance still needs configured frozen namespace,
+compiler inputs and actual outputs. Source-bound downstream observations require
+regeneration against the current catalog/header identities.
