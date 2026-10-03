@@ -324,6 +324,18 @@ summary model and relevant GTE/BREAK semantics can establish stronger evidence.
 Include 4AAF0's null-list preserve versus nonnull overwrite paths as a smaller
 case; never relabel a discarded endpoint as an unconditional register kill.
 
+Keep physical register reads distinct from observable use of incoming bits.
+Add an explicitly validated bit/lane-sensitive mode for partial writes and
+unaligned merge loads; keep the current conservative word audit available.
+DB6B8's paired LWL/LWR paths are the observed case: an instruction reads old
+register fragments, but a later merge may replace them before a provider, store
+or return observes them. Its error/formatter paths remain separate frontiers.
+Require architecture-correct load-delay/merge behavior and exact paths; never
+pair loads merely because they are adjacent. Acceptance includes a complete
+replacement pair, an intervening observable store, a pair leaving old bits,
+aliasing memory and a branch separating the operations. Report which incoming
+bits reach each observable boundary instead of inventing a whole-word kill.
+
 ## BV-05: visible workflow, MCP and progress
 
 Extend the current Call contracts screen. Add unit/caller/callee/kind/identity
@@ -601,3 +613,30 @@ This is a standing requirement from the user for ongoing decompilation work.
 
 The deliverable is shared, observable capability. Merely renaming Python files
 or translating the same per-game scripts into Rust does not satisfy this spec.
+
+## Implementation checkpoint: 2026-10-03
+
+The first implementation slice is available; see [compiler facts and evidence
+lineage](compiler-facts.md) for configuration, schemas, commands and limits.
+
+| ID | Implemented in this slice | Remaining acceptance work |
+| --- | --- | --- |
+| BV-01 | Maintained `tools/compiler_facts.py` Clang C producer, versioned shared reader, all-direct-call audit, multiple findings, raw/desugared types, body/prototype distinction, exact prepared spans, grouped declarator identities, separate address references and extraction gaps. | Broader structured type lowering, C++ support, canonical/macro source correspondence, provider ownership joins and game collector migration. |
+| BV-02 | Shared physical unit/function and separate analysis/matching span records; exact hex addresses and member-boundary consistency tests. | Verified archive manifests, complete ownership inventory, alias/shared-fragment/exclusion and collision reports, authoritative native/compiler joins. |
+| BV-03 | SHA-256 artifacts, config/compiler/adapter/recipe identities, prepared/facts stages, raw versus normalized hashes, record-to-artifact binding, missing/stale reasons and DAG invalidation in library/CLI/WASM/MCP. | Object/LTO/link and data-allocation lineage, before/candidate promotion plans, runtime proof records, include-shadow/environment checks and FF9 drift regressions. |
+| BV-05 | Binary-independent contract screen, unit/kind/identity filters, local byte verification, prepared source excerpts, evidence export, native register witness paths; persistent `compiler_facts`, `call_contracts`, `verify_evidence`, `register_use` and `register_use_batch` MCP tools. Producer emits live JSONL stage/count/gap/cancellation events. | Full native/compiler correspondence, paired audits/policy display, batch lifecycle events for every build/proof stage, cancellation of native jobs and queue blocker/work-package integration. |
+
+BV-04 paired scoped policies, BV-06 edit generation, BV-07 campaigns, BV-08
+incremental builds and BV-09 stack/closure evidence remain backlog work. This
+slice does not approve native allowances or modify any FF9 canonical source.
+The current MIPS core and strict per-request policies are reused; unresolved
+results and discarded endpoints retain their existing meaning.
+
+Tracked synthetic fixtures live in `tests/fixtures/contracts/`; adapter
+regressions live in `tests/tools/test_compiler_facts.py`. The example joins eleven
+calls and reports six independent findings from one caller. Core tests cover
+modified records, ambiguous providers, unsupported profiles, grouped declarations,
+dependency invalidation, corrupt outputs, cycles and physical member boundaries.
+MCP session tests cover import/query retention without a binary and single/batch
+register reports on one loaded synthetic overlay. Game-image acceptance campaigns
+listed above are still optional local migration work, not claimed completed.
