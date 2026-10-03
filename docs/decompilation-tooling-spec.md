@@ -1382,3 +1382,33 @@ facts are available. These maintained legacy farm/scorer observations are game
 compatibility fixtures, not shared workspace acceptance or scorer migration.
 Future migration must rebind exact current source/header identities and keep
 unit ownership, compiler flags, raw assembly and unrelated work stable.
+
+Battle effect naming acceptance (BV-03/BV-08, P2): FF9 adds76 reviewed C
+function names in ovl_065800, bringing the catalog to1922. Evidence is in
+docs/function-names-battle-effects.json and binviz/target/ff9-names-battle-effects/.
+All103 complete native baseline/candidate objects are identical, with unchanged
+strict original scores (100 exact,3 existing partials;34484 matched code bytes).
+All103 installed WASM preprocessed token comparisons agree. This establishes
+identifier preservation, not new original matching, module or gameplay coverage.
+
+Semantic review follows complete particle/emitter bodies:48-byte particles,
+108-byte emitters, per-frame emission, child spawning, lifespan reclamation,
+owner-linked movement and combined update/render behavior. Free-slot search
+updates the high-water mark without reserving the slot. Arena rounding, wrap,
+zeroing and oversized-request behavior remain unchanged. Native signatures,
+position-pointer forwarding, raw assembly and matching hacks stay intact.
+
+Mesh names follow alternating quad/triangle vertex bytes and per-polygon vertex
+expansion rather than old stat-cost prose or deduplication assumptions. The
+surprising out+2*n result and count clamp remain. Actual frame-copy loop draws
+ten32-pixel strips; old eight-strip prose is not naming authority. Unit helpers
+retain transform masks, half-turn rotation,16.16 positions,4.12 scales, target
+height adjustment, model extent ambiguity and filtered fade case uncertainty.
+Unidentified unit flags and command roles are recorded as deferred.
+
+Aliases apply only to this legacy unit, not other pieces of group0/file11 or
+shared boot, regardless of misleading resident-code comments. Existing shared
+readability acceptance and configured frozen/compiler inputs remain available.
+This reuses maintained legacy farm/scorer compatibility fixtures, not shared
+workspace acceptance or scorer migration. Rebind exact source/header identities
+before consuming these renamed sources in downstream proofs.
