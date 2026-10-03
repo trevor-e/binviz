@@ -123,6 +123,10 @@ COMMANDS:
                                    RGBDS, WLA DX, no$gba) as notes, JSON for --notes; or with a
                                    format (mlb, nl, sym, nocash), the --notes as that label file
   Decompilation (PlayStation, Nintendo 64; x86 where noted)
+    contracts <report.json> [--caller NAME] [--callee NAME] [--top N] [--json]
+                                   Inspect imported compiler call-contract findings: supplied
+                                   arguments, actual definitions, used void results and source
+                                   identities. Importing a report grants no ABI exceptions.
     signature <file> <addr|symbol> What a function's code says about its prototype: register
                                    and stack arguments, return, frame, saved registers, the
                                    structures it walks; for x86 the calling convention too
@@ -565,6 +569,27 @@ fn run(
 ) -> Result<(), String> {
     let args = &internal(args);
     let cmd = args[0].as_str();
+    if cmd == "contracts" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let json = take_flag(&mut rest, "--json");
+        let caller = take_value(&mut rest, "--caller");
+        let callee = take_value(&mut rest, "--callee");
+        let top = match take_value(&mut rest, "--top") {
+            Some(n) => num(&n)? as usize,
+            None => 30,
+        };
+        if !rest.is_empty() {
+            return Err("contracts <report.json> [--caller NAME] [--callee NAME] [--top N] [--json]".into());
+        }
+        let bytes = std::fs::read(&args[1]).map_err(|e| format!("{}: {e}", args[1]))?;
+        let report = binviz::contracts::ContractReport::parse(&bytes)?.filtered(caller.as_deref(), callee.as_deref());
+        if json {
+            println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
+        } else {
+            print!("{}", report.describe(top));
+        }
+        return Ok(());
+    }
     if cmd == "diff" {
         let new = args.get(2).ok_or("compare with what? binviz diff <old> <new>")?;
         if args.get(3).map(String::as_str) == Some("functions") {

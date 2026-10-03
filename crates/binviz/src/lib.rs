@@ -29,6 +29,7 @@ mod binary;
 pub mod blobs;
 pub mod blocks;
 mod container;
+pub mod contracts;
 pub mod coverage;
 pub mod cpu;
 pub mod crash;

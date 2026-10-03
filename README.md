@@ -201,12 +201,18 @@ Run it with no arguments for the full command list: `info`, `layout`,
 `calls`, `coverage`, `globals`, `classes`, `objc`, `dwarf`, `header`,
 `attribution`, `crash`, `diff`, `patch`, `relsearch`, `text` and `labels`, and
 for a decompilation `signature`, `context`, `match`, `asm`, `m2c`, `flags`,
-`report`, `progress`, `splat`, `sdk`, `locate`, `counterparts`, `names`, `files`,
+`report`, `progress`, `contracts`, `splat`, `sdk`, `locate`, `counterparts`, `names`, `files`,
 `extract`, `blobs`, `libraries` and `fieldrefs`.
 `--debug` attaches a separate debug file, `--member` picks a slice of a
 universal binary or a file in a folder, `--notes` loads annotations (and
 `--types` the structures they name), and `--log` follows a ROM with an
 emulator's code/data log. A folder, zip or CD image works in place of a file.
+
+`contracts <report.json>` makes imported compiler call-contract findings readable:
+caller declarations, actual supplied arguments, definition signatures and reported
+source identities. Filter with `--caller` or `--callee`; `--json` preserves the
+adapter evidence. Importing a report does not verify native behavior or grant ABI
+exceptions. See [call-contract inspection](docs/call-contracts.md).
 
 ## The MCP server
 
