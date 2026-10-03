@@ -1478,3 +1478,34 @@ reuse the frozen workflow; they are not shared workspace acceptance or a scorer
 migration. Shared readability acceptance still needs configured frozen namespace,
 compiler inputs and actual outputs. Source-bound downstream observations require
 regeneration against the current catalog/header identities.
+
+Battle display naming acceptance (BV-03/BV-08, P2): FF9 adds83 new
+reviewed C definitions; catalog2186 unique unit/symbol names, ovl_065800340.
+Evidence: docs/function-names-battle-display.json and binviz/target/ff9-names-
+battle-display/. All97 complete native objects agree, pinned strict scores stay
+unchanged (91 exact,6 existing partials;17940 matched code bytes), and97 installed
+WASM preprocessed token comparisons agree. No linked/module/gameplay or new
+original matching coverage is claimed. Catalog/source/header and owned commit
+identities are independently rechecked; unrelated CLAUDE content remains intact.
+
+Full original group0/file11 identity d8053882...5381e binds ten callback/animation
+tables. Actual mode-help table confirms eedf0 dispatches ability/item help.
+List-kind dispatch confirms edf34/edf90/edfec open ability/primary/secondary item
+lists. Original animation done pointers bind4140/4180 to party-info opening and
+closing completion. Those five previously deferred definitions now have evidence.
+Record table offsets/lengths/digests and inspected source identities, not assets.
+
+New names cover action availability, stat costs, remembered menu cursors,
+direction input, target-list captions and helpers, party-info stat ratios/status
+icons/gauges, VRAM strip capture/queuing, message priority/rectangles/lifetime
+and menu draw/animation drivers. Preserve null-before-check behavior, repeated
+reservation calls, signed fields, ABI differences and all matching tricks.
+Primary/secondary stats, party-class masks and combined-button hold keep neutral
+labels where stronger gameplay meanings remain unconfirmed. Old comments that
+call COPY RECT packets sprites, gauges badges, or close routines open are not
+semantic authority. Aliases remain confined to ovl_065800.
+
+These farm/scorer results remain legacy compatibility evidence. Shared readability
+acceptance needs configured frozen namespaces/compiler inputs/actual outputs;
+this is not shared workspace acceptance or a scorer migration. Source-bound
+downstream evidence must be refreshed against the current catalog/header IDs.
