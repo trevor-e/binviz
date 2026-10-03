@@ -1,8 +1,50 @@
 # Reusable decompilation tooling for binviz
 
-Status: implementation handoff, 2026-10-03. This spec records gaps observed while
+Status: implementation handoff and living backlog, 2026-10-03. This spec records gaps observed while
 porting FF9 disc 1. It proposes reusable capabilities; it does not authorize ABI
 exceptions or establish game correctness. The FF9 goal continues separately.
+
+## Handoff summary
+
+Start with the existing implementations and the implementation checkpoint below.
+Some compiler-fact/evidence/UI/MCP work is already present in the working tree;
+do not build competing versions. Availability of a backend is separate from
+demonstrated migration of the FF9 collectors. Reproduce the synthetic example
+with matching producer/consumer versions before using it to replace a helper.
+
+The next useful slice is **verified ownership plus a complete caller work
+package**. For one selected caller, show every compiler finding, the actual
+linked provider, original call instructions, current policy scope, evidence
+status and build outcome in one inspectable view. Expose the same record to
+agents through MCP. Then add scoped policy consumption and incremental batch
+execution; these remove repeated discovery and full-replay cycles.
+
+| Work currently repeated in game scripts | Binviz destination | What the user should see |
+| --- | --- | --- |
+| Find which recovered callers belong to a load unit; resolve duplicate names/addresses | BV-02 verified ownership, extending native xrefs | Physical member, extent, aliases, conflicts and why a provider owns the call. |
+| Extract real definitions and inspect every C call | BV-01 maintained Clang adapter and shared contract audit | Supplied arguments, definition ABI, source spans and every finding/gap. |
+| Check extra words, return use and exact caller/site eligibility | BV-04 paired audits and scoped policy consumer | Instruction witnesses, surviving bits, eligible/refused sites and explicit frontiers. |
+| Recheck source/native/prepared/object hashes and frozen proof inputs | BV-03 shared stage/evidence validator | Current/stale/missing inputs and the exact change invalidating a decision. |
+| Generate direct-call bridges and preserve callback identities | BV-06 edit planner | Reviewable before/after edits, argument evaluation and required evidence. |
+| Build native-versus-WASM proof recipes and compare traces | BV-07 configured campaigns | Real versus controlled providers, case diffs, exclusions and reproduction recipe. |
+| Repeat preparation, compile, link and full caller scans | BV-08 stage cache and bounded batches | Reused work, invalidation reasons, progress and actual linked providers. |
+| Rank the next blockers and coordinate disjoint agent work | BV-05 existing queue extensions | Unresolved caller packages, dependencies and claims; applied policies stay inspectable. |
+
+Python itself is not the problem. A maintained Clang adapter is reasonable;
+per-game copies of type/ownership/CFG logic are the duplication to remove.
+Game configuration, recovered source and expected fixture values remain in
+the game project. Shared analyses, identities and explanations belong in Binviz.
+
+Implementation handoff prompt:
+
+> Extend Binviz using this spec. Inspect the current implementation checkpoint
+> and existing contracts, compiler-facts, evidence, register-use and queue APIs
+> first. Deliver verified ownership and one complete, visible caller work package
+> through the shared core, CLI, UI and MCP; then implement exact caller/site policy
+> consumption. Use tracked synthetic inputs for acceptance. Preserve unresolved
+> outcomes and all negative scope/staleness checks. Demonstrate equivalence with
+> one frozen legacy collector before retiring it. Keep archive/device semantics
+> configurable and do not modify FF9 canonical source to obtain a tool pass.
 
 ## Outcome
 
@@ -336,6 +378,15 @@ replacement pair, an intervening observable store, a pair leaving old bits,
 aliasing memory and a branch separating the operations. Report which incoming
 bits reach each observable boundary instead of inventing a whole-word kill.
 
+Support separately checked bounded-loop facts where a cycle alone prevents a
+post-call conclusion. Record induction initialization/update/bound, exits,
+possible writes/aliases and the incoming bits at each iteration. D7094's second
+post-call audit is the observed candidate: a slot counter progresses from zero
+to eleven, with the next active iteration overwriting A0. Until the core verifies
+that fact, retain the current unresolved cycle; finite fixture success alone is
+not a general loop proof. Acceptance includes an altered step/bound, a skipped
+update and an aliased counter write that invalidate the proposed bound.
+
 ## BV-05: visible workflow, MCP and progress
 
 Extend the current Call contracts screen. Add unit/caller/callee/kind/identity
@@ -537,6 +588,24 @@ its native 80-byte frame from the measured compiled callee frame. Reproduce
 bounded initialization/packet checks and mark unknown callees/IRQ paths. A
 bounded pool/driver test must not automatically admit an entire scene.
 
+Expose object extent and access extent separately: native stack ranges and saved
+register slots, compiler object size/alignment/lifetime, initialized byte ranges,
+and every established provider copy/read/write range. Do not infer C storage
+safety from a matching score or an ABI audit. Distinguish uninitialized bytes
+inside a valid object from accesses outside that object. Unknown dynamic access
+ranges remain explicit; this slice need not solve general C memory safety.
+
+Concrete acceptance: EE37C's native local has 16 bytes before the next saved
+register, initializes 14, and passes the local to an actual 16-byte copier.
+The baseline C object's LLVM lifetime is 14 bytes; a private candidate reserves
+16 without inventing tail values and retains native 100% matching. Show the
+baseline overread, the candidate extent correction and the two unspecified
+bytes independently. Both matching versions and a passing register policy
+must not conceal this distinction. Separately show EEED4's two-byte C buffer
+versus its actual four-byte writer; an opening-window proof that never invokes
+that callback does not cover refresh. Preserve the finite downstream-use review
+as incomplete, rather than declaring the unspecified tail globally unobservable.
+
 ## Where game-specific code stays
 
 Keep archive formats, asset ownership configuration, function names, recovered
@@ -549,18 +618,27 @@ Addresses such as GPU debug-level/byteflag locations are policy data. Device
 implementations and fixtures may be reusable across PS1 games, but that is a
 separate runtime/package concern. This avoids tying binviz to FF9 logic.
 
-## First implementation session
+## Next implementation session
 
-1. Read this spec and the existing contracts/register-use docs and core modules.
-2. Land versioned artifact/unit/compiler-fact records and consistency tests.
-3. Add the maintained compiler adapter/import path and all-call audit with
-   explicit extraction gaps. Preserve current imported-report compatibility.
-4. Add input verification/stale explanations and source spans to the current UI.
-5. Expose existing single/batch register analysis and contract queries in MCP.
-6. Demonstrate a synthetic end-to-end caller plus an optional user-local FF9
-   report, without modifying FF9 canonical source or promoting game policies.
+1. Read this spec, the implementation checkpoint and the existing
+   contracts/compiler-facts/register-use docs and core modules. Establish which
+   changes are built and usable before planning additional work.
+2. Reproduce the current synthetic compiler-facts/evidence example with aligned
+   schemas across producer, CLI, UI and MCP. Record any gaps instead of claiming
+   that game collectors have already migrated.
+3. Extend BV-02 records into a verified ownership inventory, including aliases,
+   shared fragments, exclusions and collisions. Join actual selected providers
+   to compiler findings; available objects alone do not establish selection.
+4. Deliver the complete caller package described above, using the existing
+   contracts view and queue. Keep raw observations, applied policies and current
+   build blockers distinct and navigate to their actual source/instructions.
+5. Add the BV-04 shared policy consumer with exact caller/site/provider checks;
+   demonstrate that an unlisted caller and changed artifact remain refused.
+6. Demonstrate the synthetic end-to-end workflow plus one optional user-local
+   frozen FF9 collector comparison. Record migration evidence before removing
+   the old path. Leave canonical game source and policy promotion to game work.
 
-Follow with paired policy audits and migration of one existing CFG collector.
+Follow with adapter generation, campaigns and incremental build stages.
 Keep each slice usable and validated before expanding. Use ordinary API/CLI/MCP
 names consistent with the repository rather than blindly adopting these IDs
 as command names. Do not delete legacy scripts until equivalence/refusals are
