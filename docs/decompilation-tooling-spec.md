@@ -240,6 +240,14 @@ call 1386c with no reviewed trailing words. Unlisted caller, changed site/count,
 incomplete indirect targets and surviving load-delay frontiers cannot inherit
 an allowance. Conditional-link/unimplemented ISA cases remain explicit.
 
+Support path-sensitive external effects: a callee may leave a word untouched
+on one path, overwrite it on another and terminate on a strict panic path.
+Neither unconditional `preserved` nor unconditional `killed` describes that
+summary. Add explicit may-write/no-read and nonreturning outcomes with verified
+closure dependencies. FF9 D8820's A2 modes and BIOS panic frontier are the
+observed migration case; current CLI unresolved results remain valid until the
+summary model and relevant GTE/BREAK semantics can establish stronger evidence.
+
 ## BV-05: visible workflow, MCP and progress
 
 Extend the current Call contracts screen. Add unit/caller/callee/kind/identity
