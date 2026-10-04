@@ -9685,3 +9685,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Directional vertical swing callback derived follower naming acceptance (BV-03/BV-08, P2):
+FF9 e097eadae adds two canonical ovl_1086a000 names. Catalog
+4,916 unit/symbol names, 275 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-directional-vertical-swing-callback-derived-follower.json and Binviz
+target/ff9-names-directional-vertical-swing-callback-derived-follower/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,092/1,092 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 uses savedcontext; s=n<<8,BC(globalstart,globalend,s,signeds16out),s>>=1, outputY-=cos(s)*384>>12 then directionbyte+31==1 subtractsSEPARATEcos(s)<<9>>12, ==3 addsit. BOTHextra adjustments Y only (notX); signed-halfwordnarrowing, exactshiftorder unchanged. Writesobject INTXYZ=outSIGNEDXYZ<<12 BEFOREn<16?0:-1. Terminal16stillinterpolates at4096/offsets/writes; >16extrapolates; no lowerclamp/trigdedup/returntype or pin repair. Endpoint refreshed bymain updates, not assumedfixed.
+
+785C descriptor36; phase,TWO two-INTwordvectors,THREEU16derivedpos/pad,TWOobjectpointers. Init savescontext/phase0/globaljob,200(0,0,v4),copiesBOTH32bitwords into globalstart. No object/derivedposinit. Everyupdatecapturesframe then210(16)==0 selects200(16,1,vc) else84(16,0,vc),copiesBOTHwords globalend BEFOREswitch/terminal. Phase0 writesphase1/job.frame=-1 thenload2 atglobalstart inclNULL; nullableh22=16/nestednullguard/unguardedinnerp0->hook=callback, gotozero. No p0nullguard added.
+
+Phase1 ifframe<16 return0 afterendpointquery; otherwisephase2/job.frame=-1,load6 atvc inclNULL/nullableh22=220(16,24),THEND4(vc,v4,pos),return0. Phase2 nullablefollowerh30==-1 clears/rechecks/writecurrentderivedXYZ toobjectU16positions; exact6 loads1 atCURRENTvc inclNULL/nullable220(16,24),terminal>=44 AFTERtrack/event. Unknownphase query/publication then0. No78/release/backfill/requeryderivedpos/callbacksignature normalization.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
