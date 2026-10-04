@@ -1647,3 +1647,45 @@ CLAUDE and worktree edits. Legacy farm/scorer compatibility evidence remains
 separate from genuine shared workspace acceptance; the latter still requires
 configured frozen namespaces/compiler inputs/actual outputs. Refresh downstream
 source-bound evidence against current catalog and header IDs.
+
+Battle formation/action naming acceptance (BV-03/BV-08, P2): FF9 adds45
+reviewed names (44 C definitions,1 assembly alias) in ovl_04e800, now275 there
+and2498 catalog-wide. Evidence: docs/function-names-battle-formation-actions.json
+and binviz/target/ff9-names-battle-formation-actions/. All52 affected complete
+native objects agree, pinned strict scores stay unchanged (38 exact,14 existing
+partials;9336 matched of19680 code bytes), and52 installed WASM preprocessing
+comparisons agree. FF9 commit6e9345216. No linked/module/gameplay or new matching
+credit. Independent audit verifies2498 current source/header IDs,4 original data
+slices and56 owned committed paths, preserving unrelated worktree changes.
+
+Names cover weighted encounter formation, enemy model/animation records, party
+placement, unit-action resource/slot lifecycle, action callbacks, position/yaw/
+scale tweens, mesh visibility, target selection/meanXZ, message/effect/camera
+commands, packet colors/semitransparency, mesh counts, actor resource records,
+sliced projection, sprite sheets/strips/quads and fixed-point easing.
+
+Concrete semantic refusals: actual ca5ac walks past4 occupied slots instead of
+reusing the last slot as old prose claims; actual f5858 supplies34 observed
+enter/run pairs and the next pair is data though opcode34 passes the guard.
+Preserve both unchecked boundaries. Original file11 d8053882...5381e binds the
+observed pairs, following data words and four formation-angle halfwords.
+Actual f4f04/f4f44 consumers establish cb700 MESSAGE output, not sound; actual
+c2ffc->c2f9c->c316c establishes cb884 CAMERA setup, not actor movement. Setter55
+establishes uniform model scale. The a81a8 diagnostic label suggests vertex
+splitting but the complete dd0dc->dd10c body returns model byte3 mesh count;
+behavior takes precedence over diagnostic naming as well as old comments.
+
+Preserve16-bit accumulation/narrowing before meanXZ division/color saturation,
+fixed16.16 position words, short/byte boundaries, zero division, exact counters,
+packed operands, masks, ABI discrepancies, raw assembly and matching tricks.
+The textured quad decrementsUV once for>=256 rather than true clamping. Sprite
+packet allocation/depth guards and page-change ordering remain unchanged.
+
+Shared readability/callback naming evidence should expose observed table extent
+and accepted opcode range separately, and retain explicit contradictory-label
+observations with source/consumer IDs; an original function label alone cannot
+override the actual recovered body. This extends the existing scoped-label
+evidence backlog, without adding a private walker or tooling rewrite. Legacy
+farm/scorer compatibility remains separate from shared workspace acceptance,
+which still requires configured frozen namespaces/compiler inputs/actual output.
+Refresh downstream source-bound evidence after naming.
