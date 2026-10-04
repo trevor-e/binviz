@@ -5629,3 +5629,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Timed object hooks and reversed track rising curve naming acceptance (BV-03/BV-08, P2):
+FF9 49a346b3c adds five canonical ovl_12705800 names. Catalog4,532 unique unit/symbol
+names,144 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-reversed-track-rising-curve.json and
+target/ff9-names-reversed-track-rising-curve/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+five exact,1,468/1,468 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all five sources; current catalog/source/header/object/review and9
+isolated commit paths audit. Other units remain pending.
+
+Established timed two/three-object sequences,reversed-track rising curve,host
+blend and scalar interpolation. Preserve provider arity,capturedanchors,partial
+initialization,pads,reversed copies,U16handle narrowing,post-step height increment,
+unguarded divisor and terminal ordering. Own-unit aliases retain canonical
+native/runtime identities. Exact game effect/provider identities unresolved.
+No body/type/layout/ABI/originalname claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
