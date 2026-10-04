@@ -5299,3 +5299,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Scheduled ribbon particles and sprite pulse naming acceptance (BV-03/BV-08, P2):
+FF9 f7197a8ec adds six canonical ovl_f911800 names. Catalog4,458 unique unit/symbol
+names,130 alias headers. All six complete bodies and both g08/g09 headers reviewed;
+no semantic deferrals. Evidence: docs/function-names-scheduled-ribbons-sprite-pulse.json
+and target/ff9-names-scheduled-ribbons-sprite-pulse/. Six entire native objects
+identical;exact affected/scored namespace six,unchanged pinned strict-relocation
+baselines four exact/two partial,2,140/5,316 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established ribbon/shortstrip/polyline helpers,two-phase ribbon callback,cosine
+sprite/expanding ring pulse and scheduled particle sequence. Preserve signed
+mode/table indices,three-word table strides,pads,pins,predecessorhalf,allocation
+failure/random ordering,two callback arities and terminal ordering. Definitions,
+declarations,calls,descriptor and resource callback references renamed; own-unit
+aliases retain canonical native/runtime identities. Exact game effect/provider
+identities unresolved. No body/type/layout/ABI repairs or original-name claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
