@@ -2874,3 +2874,37 @@ No private ownership/type/CFG walker or new matching credit, linked image,
 gameplay, provider or shared workspace acceptance. Historical reports/scorer
 stay pinned; use current catalog hashes for downstream source-bound evidence.
 Foreign work/index/checkpoints preserved. Full-tree naming goal remains active.
+
+Ring ribbon naming acceptance (BV-03/BV-08, P2): FF9 c0c790a2b
+adds 21 canonical ovl_13c58800 names; current catalog has 3,774 unique unit/symbol
+names and 64 alias headers. All 21 complete primary bodies directly reviewed;
+no semantic deferrals in this unit, other units pending. Evidence:
+docs/function-names-ring-ribbons.json and Binviz target/ff9-names-ring-ribbons/.
+All 21 complete native object pairs identical, exact affected/scored namespace21,
+pinned strict-relocation baselines unchanged:17 exact/four partial,3,996/9,972
+code bytes,zero failures. Installed WASM preprocessed tokens agree for21 sources.
+Current catalog/source/header/review/object bindings and25 isolated commit paths
+audit. Progress:3,774/5,812 canonical primary files named (64.9%),2,038 remaining.
+
+Names cover projected waypoint/blended ribbons, GT4 quads, five-model position
+tracks, projected-ribbon sequence, descending orbits, blend/trail spawn, position
+event scheduler and keyframe/interpolation/strip helpers. The zero-state handler
+returns a positive-frame completion predicate; no original effect subtype guessed.
+The unused stream reader gets a generic operand-reading name rather than a
+paired-track label without a local consumer. Explicit pair layout establishes
+the paired fetcher. Direct body review rather than transplant comments supplies
+evidence. Original spell/ability and selected runtime-provider identities unresolved.
+
+Preserve all bodies/comments/layouts/types/signatures,matching flags/pins,assembly
+strings,partial initialization,resources/frame boundaries,fan scale at8/A/C,
+overlapping fade decrements,halfword counters,upper-only clamps,optional outputs,
+unchecked counts/indices/denominators,target/current weight order,n packets
+reserved versus n-1 drawn,UV/depth rules and48-byte wrapping strip reservation.
+Event cursor advances per nonzero target nibble;retain exact start-time equality,
+last-triplet reuse,silent full-pool drop andno automaticfree. Existing maintained
+naming/farm/scoring/preprocessor tools andthin adapters reused;BV-08 namespace
+gate enforced. No additional shared implementation gap found;existing proposals
+remain separate. No private ownership/type/CFG walker,new matching credit,link,
+gameplay,provider orshared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence fromcurrent catalog. Foreign work/index
+preserved; full-tree goal remains active.
