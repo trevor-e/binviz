@@ -13674,3 +13674,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual direction object staged resources naming acceptance (BV-03/BV-08, P2):
+FF9 d9577c81f adds 1 selected canonical ovl_10b1e000 names. Catalog
+5,578 unit/symbol names, 381 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-direction-object-staged-resources.json and Binviz
+target/ff9-names-effect-residual-direction-object-staged-resources/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 608/608 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete remaining10B1E000 handler independently reviewed and named by direction object plus staged resource sequence. Full g17/lifecycle headers bound; own numeric timeline and raw object/vector views retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole24-byte-hex size/init/update and complete frame switch read. Resource4 object tracks cached D4 direction with minus1 drop handling; staged resources3at16/2at24/5at48/1at64 at distinct stored vectors, completion104. Preserve byte-pointer halfword writes, own initialization and provider order, no extra h22 write on final resource1. No spell/provider or body transplant claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
