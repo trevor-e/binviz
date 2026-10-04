@@ -8943,3 +8943,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Actor zero resource one load twelve frame position publish naming acceptance (BV-03/BV-08, P2):
+FF9 ee9d43e38 adds two canonical ovl_1126d800 names. Catalog
+4,862 unit/symbol names, 248 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-actor-zero-resource-one-load-twelve-frame-position-publish.json and Binviz
+target/ff9-names-actor-zero-resource-one-load-twelve-frame-position-publish/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 400/400 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor12/stateobjpointer+THREEU16position. Init savedEfxCtxcontext,200(0,0,pos),loadresource1 via198/1D4, retainobjincludingNULL, nullableh22=220(0,128). Othermodesreturntype>=50, no updates/78/release/providerrewrite or additionalpositioninitializer. Fourthhalfword/trailingpadding providerreadextent notassumed safe or changed.
+
+77EC descriptor8, initONLYsaveCtx2c context; no goto/revisedG28view. Updatecapturesjobtype into tBEFORE1FC(16,typedVec3hstate), thenTHREEU16x/y/zstores toctx.obj at+44, returnscapturedt>=12 AFTERpublication. Descriptor8 butdeclaredVec3hsize6/providerfourthhalfwordfrontier retained. Name identifieshostpositionpublication withoutprovingselector16target/camerameaning. Terminal12 DISTINCTfromframe7 copyvariant, query/initreturns0, no nullguard/clamp/restore/finish78 or otherstatework.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
