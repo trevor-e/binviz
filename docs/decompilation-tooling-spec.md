@@ -8405,3 +8405,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Ten particle fan table driven three model spread naming acceptance (BV-03/BV-08, P2):
+FF9 9eeeb4ac8 adds two canonical ovl_1035f000 names. Catalog
+4,833 unit/symbol names, 232 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-ten-particle-fan-table-driven-three-model-spread.json and Binviz
+target/ff9-names-ten-particle-fan-table-driven-three-model-spread/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+0 exact/2 partial, 0/3,700 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 mode1 sets phase/frame zero and loads resource20 at parent state+24; nullable object h22=32. It does not initialize particle index, size or centers; controller supplies some of those after allocation. Other modes index unchecked global four-U16 records. Phase0 computes frame256 angle, XY scale=(4096-sin)*size*5/2>>12, Z=cos*size>>12; copies two table words and subtracts2048 from first U16 of local v18. Loaded object tracks ORIGINAL three table lanes in this phase, not shifted local v18. Advance frame then transition at4; common draw follows after transition.
+
+Phase1 holds XY=size*5/2/Z=size and tracks loaded object using shifted v18 XYZ. Phases0/1 clear the object pointer if h30==-1, then guard again. Parent h28 nonzero transitions to2 immediately, resets frame, copies base center into both companion centers and two table words into particle rotation. Jitter uses signed rand remainder50 and a second C0 call with TWO arguments (firstRandom/50, updatedh38), masked31 for h3A. No standard zero-argument RNG prototype repair. The transition update takes the THREE-model common draw branch with phase1 scale/tint.
+
+Phase2 uses angle=(frame4096/20)>>2 and THREE separate sine evaluations for XY scale, tint weight and direction length. D8(table,q), D8(table,2q), D8(table,3q) produce motion vectors: centers all subtract X/Z; Y adjustments differ by frame-6, four times and eight times. Update U16 rotations by h38/h3A. Increment local frame; at20 return1 BEFORE common scale halving/poses/tints, so nineteen ordinary phase2 updates draw. Size and centers are INT, direction buffer only three signed halfwords; provider read extent/padding remain unresolved.
+
+Common path halves XY scale only. Phase<2 calls2E4(parentw4,2), poses w4 then w14 using TABLE pointer p as rotation and particle center as position, not shifted v18. Phase>=2 poses w10/wC/w8 at three centers using particle rotation. Weight<4000 selects268(handle,1), brightnessweight>>5; otherwise268(handle,0), brightnessweight*3>>6; tint subtract128. No clamps, releases, terminal backfill or unknown-phase initialization added; unknown phases retain uninitialized v20 and weight0 behavior.
+
+7ED8 descriptor52/10particles/68-byte records/callback. Init table70 count6, FIVE58 handles with signed-halfword narrowing: resources13/23/22/24 with154/3DC0/128/0, resource11 with186/3D40/0/128. Clear phase/index/count/trigger/textureweight. Capture host XYZ as U16, copy original XYZ to second vector then subtract512 ONLY from first Y. Load resource14 at lowered vector, nullable h22=100. Mutate TEN global table records X+=92/Y+=512 in place each init; no reset/clone added.
+
+Phase0 attempts ONE184 allocation per update, ordinary ten frames0..9; success alone increments table index, DC(lowered anchor, indexed table,-16,v20) then widens three signed lanes into particle centers and size=(signed record fourthlane*31)>>3. Pool descriptor10 is not an extra counter guard; null attempts do not consume index. Textureweight+=32 each update. Transition at>=9 AFTER attempt/weight; phaseclock=-1. Phase1 adds sine(frame1024/14)*32>>12, ordinary fifteen updates0..14. At>=14 sets phase2/frame-1/trigger=oldphase1, loads SIX resources15/16/19/21/17/18 in that order at first vector, nullable h22=64.
+
+Phase2 frame<5 calls100(ctx->p20+1,1,q>>2,q>>1,q), q=(4-frame)*250/4: a primitive/context fill call rather than an asserted sound fade. Exact7 loads resource25 and nullable h22=220(0,32). Terminal>=21 calls78/return1 BEFORE240/counter tail. Every nonterminal update, including unknown phase, calls240(textureweight,640,384,64,128,640,256), increments count. Parent trigger remains set; no particle cleanup or loaded-object release inferred. Negative frames, partial vector pads and extended job+16 view retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
