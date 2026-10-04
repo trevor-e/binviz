@@ -9409,3 +9409,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Saved vector paired track anchor staged six load naming acceptance (BV-03/BV-08, P2):
+FF9 a7a3e0f4c adds two canonical ovl_10df7800 names. Catalog
+4,896 unit/symbol names, 265 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-saved-vector-paired-track-anchor-staged-six-load.json and Binviz
+target/ff9-names-saved-vector-paired-track-anchor-staged-six-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,052/1,052 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor24; two object pointers and TWO FOUR-U16 vectors a(+8)/pos(+16). Init saves D_801E7B68, 200(16,0,a),20C(16,pos), loads3 then5 BOTH at a includingNULL. AFTERBOTHloads each nullable object gets separate220(16,128). Update capturesframe, checks each nullable h30==-1/clears/rechecks then writes current savedposXYZ into U16px/py/pz. Returnframe>=40 AFTERbothtracking. Fourthlane untouched; no provider requery, release/78, extent repair or dedup.
+
+7918 descriptor40; EIGHT pointer slots with p14/p1C unused, THREEU16pos(+32)/tailpadding. Init copies ctx.posXYZ FIRST then savescontext, loads6->p0/7->p4/12->p8. AFTERallthree, nullablep4 p14=bytehooktableD_801E7B78,h12=6,hC=96. Exact8 loads1->pC/15->p10/16->p18 at same cachedposition includingNULL; return>=40 AFTERevents. No h22 assignment/tracking/release/backfill/initializer for untouched or later slots, no new callback prototype.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
