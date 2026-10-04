@@ -13512,3 +13512,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual tracked object three resource burst naming acceptance (BV-03/BV-08, P2):
+FF9 da4153954 adds 1 selected canonical ovl_10aed000 names. Catalog
+5,572 unit/symbol names, 375 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-tracked-object-three-resource-burst.json and Binviz
+target/ff9-names-effect-residual-tracked-object-three-resource-burst/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/720 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete remaining10AED000 controller independently reviewed and named for tracked object plus three timed resources. Full g16/lifecycle headers bound; retain actual pointer-relative host view and original call/store order without provider/type repair.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole48-byte-hex handler modes and all update branches read. Host anchor advanced200 along direction and published2C; resource1 tracked via fresh D4 from host2C+54, drop marker handling. At10 resources2/3/4 use points lowered450/original/lowered200; completion50. Preserve GCC2.8.1, in-place DC operation, original byte and halfword vector views, job-as-Obj16 cast, redundant nulls and gotozero. No camera, flash geometry or spell inference.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
