@@ -12945,3 +12945,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual aimed model callback point burst sequence naming acceptance (BV-03/BV-08, P2):
+FF9 950dbad6c adds 1 selected canonical ovl_fec2000 names. Catalog
+5,551 unit/symbol names, 354 scoped alias headers. 2 selected complete primary
+bodies reviewed and bound, 1 named and 1 explicit full-body deferrals; remaining boot and overlay functions pending. 4 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-aimed-model-callback-point-burst-sequence.json and Binviz
+target/ff9-names-effect-residual-aimed-model-callback-point-burst-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 928/928 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Full FEC2000 handler independently named from aimed model and indexed point burst; own callback setup preserved. Complete12BCF800 handler also reviewed and purpose-deferred because rendering callback body is missing. Four full headers bound. No missing-source invention, overlay correspondence or provider repair.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole24byte handler independently read, including own model callback initialization absent in128EB800. Collect indexed host points, resource6 model callbackB3C/40/60, refreshed matrix-derived direction and wrapped12bit correction, optional positional1D8, resource5burst16, completion48. Preserve GCC2.8.1, pinned17, originalAEC/AFC globals and cast/precedence/narrowing. Same unit-scoped readable purpose is independently supported, no twin transplant or spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
