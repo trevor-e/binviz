@@ -11397,3 +11397,71 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot load queue cd command event helpers naming acceptance (BV-03/BV-08, P2):
+FF9 270ee92ca adds twenty new canonical names and one reviewed correction of boot names. Catalog
+5,360 unit/symbol names, 310 scoped alias headers. Twenty six selected complete boot
+bodies reviewed and bound: twenty new names, one corrected name, five explicit deferrals. Four existing descriptive bodies additionally reviewed and retained; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-load-queue-cd-command-event-helpers.json and Binviz
+target/ff9-names-boot-load-queue-cd-command-event-helpers/. 52 full native object pairs equal;
+exact affected/scored namespace 52. Pinned strict-relocation scores unchanged:
+40 exact/12 partial, 7,876/19,236 code bytes, zero failures. 52
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 56 isolated committed paths audit.
+
+Selected complete queue/CD/resource bodies and semantic providers directly read. Five complete opaque mode/work-state helpers deferred; four existing human-named CD definitions retained. BIOS DeliverEvent name generalized based on complete CD callback callers, without changing native identity or old compatibility alias. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Complete raw BIOS B0/07 entry read and preserved. Prior alias ff9_pad_bios_deliver_event was too narrow: complete2120C/21234/2125C and CdInit show same entry delivering CD sync/data-ready/readcomplete events, not pad-only. Correct descriptive C alias to general ff9_bios_deliver_event; originalheader remains historical compatibility alias, original assembler strings/labels/nops/t2jump/t1slot unchanged. No new ordinary BIOS signature or runtime policy.
+
+Whole noargsVOIDbody callsBIOSdeliverevent(F0000003,20). FullCdInit stores thisaddress inCDsync callbackWORD68250. Name command-sync event, originalnoargs vs status/response callback views unchanged.
+
+Whole noargsVOIDbody deliver(F0000003,40). FullCdInit storesaddress readycallback68254. Distinct entry from2125C despite equal bodies, no dedup or pointer replacement.
+
+Whole noargsVOIDbody deliver(F0000003,40). FullCdInit storesaddress completioncallback68618. Preserve distinct CDread completionidentity/GCC2.7.2.3/asmproviderarity, no callback result handling.
+
+Whole body/header: capture WORK2fn838 via currentstate, typedcastU32(*)(INT,U8*) despiteheaderonearg, invoke((U16obj34|20000),obj), returnFULLWORD. Tagged resource/object hook role, no lowbyte masking/signature/provider ownership admission or callback purity inference.
+
+Whole body: firstargunused, resource_lookup(4,LOW16a1|30000,0) thenUNGUARDEDsecondU16 returnINT. Type-three taggedrecord halfword name, no null/sentinel/type/property guess or bounds guard.
+
+Entire gate/providerbody read: actual g_state->pad0[8]==3 ->0,actorBYTE5!=4->0,actorU16+34==FFFF->0,else unresolvedexternal800C44F4(actorBYTE3B)result. Kind-four overlay query name describes gate/call only, no gameplay cap/job/property or specific overlayprovider claim. Retain mismatched actual State fieldview and historical hoistedhead partial.
+
+Whole body: SIGNEDrecordstateWORD1C<3 ->0 elseglobalWORD761DC. FullStreamstep/init/fullLdrheader show stream waitstate3 and loadersectorsdone offsetC. Name sectorcountwhilewaiting, preserve negative/extrastates and no completion/bytecount claim.
+
+Whole body: saveflagsU16 FIRST,storeSIGNED16x20,y22,w24, thenflags|20store BEFOREh26. Load-request fullheader/initializer tie fourhalfword geometry to queue. Preserve narrowing/interleavedflagwrite/aliassafety, no rectangle validation/reordered struct copy.
+
+Whole body GCC2.7.2.3: flags&82 mustNONzero (notallbits),busybit1zero,kind0,dirty20zero,dstnonnull->1. IfNULL matchingvolatileemptyasm thenreturn0. Descriptive direct-destination eligibility, no extra validity/ready flag checks, asm/barrier removal or flagtruth reinterpretation.
+
+Whole body: stateWORD1C->work,workWORD8C8->queuestorage,storeU32atqueue11C=value. Fullscene_initialize_archive_load_queues caller sets scene_poll_archive_loading address, othercallersclear0. Callbackword role, originalU32definition vsvoid* and extraa1declarations preserved; no functionpointertype/provider admission.
+
+Whole queuebody: capture queue,defaultNULL;ifSIGNED8n<6 selectent[n], clearviaexistinghelper, incrementn AFTERprovider thenreturne. No negative-count guard/reload/capacity expansion; fullclear/initcallers read, preserved records/matching constructs.
+
+Whole ordered calls:blockingCDcontrol(0E,0,0),VSync3,blockingcontrol(8,0,0). Describe command sequence rather than inventvalidmissing Setmode arg or repair provider policy. No retry/result checks.
+
+Whole stackCmd body: op1,a=lba,b0,c0,done=command_done,fn=data_ready,arg=completionWORD;submit&FFreturn. Fullstart_command opbit1 convertsa toBCDposition thencommand2, fullsubmit handlesqueue. Position-command name with completioncallbackword, preserve partialstackpad/uninitializedunusedwords and INT/funcptr views.
+
+Whole stackCmd:op4,arg=callbackWORD,a/b/c0,done=command_done,fnNULL;submitLOW8result. Fullsubmitop4 whenidle invokesargimmediately, elsequeuescmd. Completionbarriercallback role, no asynchronous-only claim/pointer cast/success interpretation.
+
+Whole stackCmd op1/a,b/c0,done/datahandler,arg0; ifsubmitLOW8zero ->0 elseUNBOUNDEDwhilecd_busy() then1. Fullstart_command/submit showposition behavior. No errorresult/wait timeout/retry or queued-command predicate changes.
+
+Whole stackCmd op4/a/b/c0,done,fn0,arg0; submitLOW8reject0 elseunboundedbusyloopthen1. Completionbarrier/no callbackname, retain original emptyCmdpadding/voidprovider and no timeout.
+
+Whole stackCmd op9,a=lba,b/c0,arg0,done,fn0;returnsubmitLOW8. Opbit1 leadspositionconversion/control2 in fully readstartprovider, bit8effectsnotfullyproved. Name literalop9 position command, no new read/seek/audio meaning.
+
+Whole stackCmd opB,a=lba,b/c0,done,fn=callerVOID*,arg0;submitLOW8. Opbit1 positions, data-handler pointer explicit; preserve void*/callbackviews/pads and no handlerarg/count/provider contract guesses.
+
+Whole body: ifloaderstate!=5 clearreadycallback0,storecura=a0,state5 THENloader_control_wait(9,NULL); alwaysreturn1 evenalready5. Descriptive loaderstatefive/pause sequence, no error/success/state-machine repair.
+
+Whole stackCmd identicallogic22D3C butdistinctentry:pointer op4,arg,a/b/c0,done,fn0,submitLOW8. Keepseparatealternatewrapper and pointeridentity; no dedup.
+
+Generalize previous ff9_pad_bios_deliver_event to ff9_bios_deliver_event because CdInit installs three actual CDcallback entries that invoke this BIOS provider. Keep previous aliasheader intact as compatibility/history and record semanticNameCorrections with pinned previous report. Reuse maintained token-safe renamer plus a thin mapping of the one prior descriptive identifier in forward/reverse token comparisons; no private parser/CFG/type walker or tooling implementation.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
