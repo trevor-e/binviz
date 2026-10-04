@@ -12226,3 +12226,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Record pool residual free slot helper naming acceptance (BV-03/BV-08, P2):
+FF9 97c4876c8 adds 1 selected canonical ovl_00ba800 names. Catalog
+5,524 unit/symbol names, 328 scoped alias headers. 8 selected complete overlay
+bodies reviewed and bound, 1 named and 7 explicit full-body deferrals; remaining boot and overlay functions pending. 0 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-record-pool-residual-free-slot-helper.json and Binviz
+target/ff9-names-record-pool-residual-free-slot-helper/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 72/72 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Both00BA800 primary bodies full-read, one free-slot counter named and one opaque record-word setter deferred. Also all remaining0FB000/104800/150800 bodies full-read and purpose-deferred: seven explicit deferrals total across four units. Numeric slot extent is proved but object domain remains unspecified; no same-address overlay semantic transfer.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole zero-first-WORD count over signedcount at550 and60-byte entries starting150. Name proved free-slot/pool operation without guessing card/item domain. Preserve pinned registers3/5, emptyasm barriers, copiedcount/result and original stepping/order.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
