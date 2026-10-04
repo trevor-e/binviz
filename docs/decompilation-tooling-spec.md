@@ -8231,3 +8231,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Ten curved ribbons actor vertical oscillation naming acceptance (BV-03/BV-08, P2):
+FF9 a035886f7 adds two canonical ovl_1063d000 names. Catalog
+4,823 unit/symbol names, 227 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-ten-curved-ribbons-actor-vertical-oscillation.json and Binviz
+target/ff9-names-ten-curved-ribbons-actor-vertical-oscillation/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 312/4,036 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 fiveargVOID unconditional k=0x20000000/(len*len), kinds0linear-down/1squared-remainder/2one-minus-square/other0; B4(handle,extra,w), no return. Main uses consumedreturn for modelscales andactorY; no invented returned interpolation type or fixes to zero-denominator/overflow/clamps.
+
+783C descriptor220/init clearsONLYfirst16words descending15..0/table4. TEN260byteribbonrecords life0/110resource13init. TargetZselectSIGNEDactorZ ±780, target/positionY-1536 butivY0,publishctxpoint0XYZ. ActorcountUNBOUNDED globalunsized28byterecords, life48..55,angularstepSIGNEDrand%511+256 (notmaskedrange),TWOseparate1F8capturedvectors. FOURhandlesresources8via58/11and12via18/9via58,threeprimaryzero scaleexceptthirdY256; fourthscale1024/0/1024. Pads/unknownextent remain.
+
+Exact0eightarg2F4 andtwosequencecounters1. Exact1 scalegrow16/ribbon48/fourthYgrow16 andthreepersistentflags1. Exact42scalechange8/fourthYshrink8,exact49followflag0,exact51fourthposeflag0. Grow/changes PREdecrement then THREE consumedVOIDhelpercalls pergroup; fourthY+64 and-128 pulsecounts. FollowD4(target,ctxpointbyte84,secondrot), derivefirst/thirdorientations THEN secondX-=1024,poses ordersecond/third/first/268. Colorfade checks w3 AFTERitwasdecremented inearlierscaleblock so ordinaryseven samples -32..-224,zeroendpoint skipped; no extra fullblack.
+
+Actorflag stays1. PeractorPREdecrementlife; nonzeroadvanceangle beforeYformulas. life32..47 consumedkind2param +cos*(48-life)>>10;16..31cachedY+((cos<<4)>>10)-128;1..15 consumedkind1param+cos*life>>10; life>=48 keepsinitialsecondcapturedposition. Alllive204publish, lastlife0 usesFRESH1F8/204 notforcedcachedoriginal. Angularstep maynegative dueSIGNEDrandremainder, nocountclamp/padcopyrepair.
+
+Ribboncount PREdecrements, evenfinal0updateprocesses TENrecords. LivePREdecrementlife thenangles; generate11vertices: firstspherepoint basedonhandle0scale, sameXZlastpoint butlastY0, NINE interiorcurvedXZweights pa0/pa1/pa2 fromtt=(j+1)*190650>>12 anduu512-tt. DriftU16offXZ+=INTvel, controlpoint usescos/sin ofD4-producedangle; interiorY B8(sphereY,0,j,11). Notclaimed ordinarytwo-distinct-endpoint Bezier fromtarget/follow because literalXZ endpointscoincide. Vertexpadsrecordpad,headers10/0/10; life<4weightslife1024else4096,includingzero-lifedraw. Freewhenremaining>=7 initialize life2..6/randomangles/steps/pad64..128/nineoffsetvels±96; no drawuntilnextupdate.
+
+Two134resource7/10 sequencecountersINCREMENT eachupdate from1, notdecrementedflashlifetimes. Terminalreturns t>=70 AFTERallwork/tails, no78/release/reset. Invalid/negativeframes andproviderarities/readextents unchanged; no original effect identity guessed.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
