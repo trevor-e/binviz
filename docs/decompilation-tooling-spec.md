@@ -8061,3 +8061,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Scripted stage props orbiting handle groups ribbons naming acceptance (BV-03/BV-08, P2):
+FF9 2e5ee92ec adds three canonical ovl_13a86800 names. Catalog
+4,814 unit/symbol names, 222 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-scripted-stage-props-orbiting-handle-groups-ribbons.json and Binviz
+target/ff9-names-scripted-stage-props-orbiting-handle-groups-ribbons/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 456/11,028 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 sixargVOID hostB8(c,d,a,b) then100(&INTtable[f],e,r,r,r), no bounds/clamping. 7794 fiveargVOID unconditional k=0x20000000/(len*len), kind0 linear-down,kind1 squared remainder,kind2 one-minus-squared progress,other0; B4(handle,extra,w), no returnstatement. Main declaresINT and CONSUMES return fourtimes in grayscale calls; mismatch preserved explicitly, name does not claim returned interpolant.
+
+78CC descriptor296. Init writescamera0/-24576/-16384 then savesctx/70table32. Clears ONLY first64words256bytes, leaving vectors at256andabove partly untouched. Actor count UNBOUNDED D_801ea670 table capture, forceY0. f80(16,5/9) capturespos110/118, v120 X fromfirst/Zfirst-512/Ymean (notfullmean). Sixteen firstpool110initcalls; firstEIGHTribbons write SIXTEEN pos entries despite pos declaredNINE, linksj+1 andrandomlife0..15/hCE0. Preserve record extent/link-frontier; no reinterpretation as safe9entry ring.
+
+Init creates16 stage-prop descriptors and FOUR orbiting groups of THREEhandles each, fixedinitialangles2048/3072/4096/5120,radius3072/scales4096. Exacteventframes0/45/79/95/143/159/207/255/287/319/335/399/415/423/447. Event0 loadsresource11 intoobj[1],45 loads13/14untracked plus10obj[0];95 resets firstpool thenenablesstage,143/159 armsharedfadecounts plusoppositeYresources3/4;207armsfourprops/bursts;255loads5;287loads16/17obj[2]/[3];335 movesBOTH objects via1D8WITHOUTNULLguard,setsSIGNEDY-1277 in halfwordvector andTHREEINTD_801ea600, disablesseveralcounters,armslaterburst;399resetsecondpool;415releasesbothunguarded;423armsactorbursts24. EXACT447 returns1 BEFOREeveryper-updateoperation, no>=guard/78/missedframebackfill added.
+
+Per-update D4 derivesorientation beforeprops. FourgroupXZ trig(radius) motion andrandomXYjitter; h8/h4 sharedfadecountersw44/w3C decrement INSIDEfour-group loop (up toFOUR perupdate), notonceperframe. Flags can switch midwaybetween groups. Two verticalpropsuse rz halfword sine*w4 thenw4-=4,notry. Stagerotations andtexture240literalcalls retained. Otherprop countdowns PREdecrement, pose then gated tints; fourprops rz +=U16w2C ALWAYSafterpose, orientationappliesnextupdate. w50initial104cannotreach>=113fade-inbranch in ordinaryrun. Unarmed w10stillretained, w2C/w38constantparametersnotnormalcountdowns.
+
+Fourflashcountdowns callINT-declaredVOIDeasing before100; w20 PREdecrement64→63, color2*w20 bytes andscale3*w20+4096,14arg248 withonlyTHREEcolorbytes/THREErotationhalfwords. w34 PREdecrement; scanall16freefirstpool records andspawnwhenremaining>=13: f14matrix,translationglobalhalfwords, TWO distinct GTEinputs/outputs, FLAGreadunused, (point0-point1)/9,life8..11,ninepoints randomXYZvelocities. Newlycreatedrecord stepssameupdate; PREdecrementlife thenonlylife<8 moves/narrows9points,weightslife<<9,ctx128aroundallsubmissions. No GTE restore.
+
+w4C initial95 PREdecrement. UpperEIGHTribbons life8..11 thenstep9points withactor-selected matrices/translations; transformOLDposition beforeintegratingvelocity, outputpointweight64,resource12odd/6even. LowerEIGHT use SIGNED halfword link index andnine chainedreads from16 initializedpositions despitedeclared9; life takesfirstnextlink. Context128onlyaroundlowerpooldraws. w58 PREdecrement24actor bursts: UNBOUNDEDhostactorcount indexes16secondpoolrecords, zero life respawns8/ninedivergingpoints, newrecords drawnextupdate; liveonesfadeonlyw58<8,ctx64. Verticalvelocity EXACT(-rand())&7 positive0..7 (notnegativefall). Preserve allcount/pad/index frontiers. FinalstagepropYrotation+=3, return0; no releasesotherthanexact415 or inventedproper-effectidentity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
