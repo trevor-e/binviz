@@ -6817,3 +6817,33 @@ tool implementation/private ownership/type/CFG walker, matching gain, provider
 admission, linked-image/gameplay/workspace acceptance. Refresh source-bound
 evidence and pin historical reports/tools; preserve foreign work/index. Full-tree
 naming goal active.
+
+Hooked trail and ring finale naming acceptance (BV-03/BV-08, P2):
+FF9 08a37e039 adds three canonical ovl_10493800 names. Catalog 4,692 unit/symbol
+names, 181 scoped alias headers. Three full own-unit bodies and g14 header
+reviewed and bound, zero deferrals; other units pending. Evidence:
+docs/function-names-hooked-trail-ring-finale.json and Binviz
+target/ff9-names-hooked-trail-ring-finale/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+zero exact, three existing partials, 0/5,976 scored code bytes, zero failures.
+Three installed WASM token comparisons agree; current source/header/catalog/
+object/review bindings and seven isolated committed paths audit.
+
+Names cover fading trail and camera-vector blend callback, three-phase hooked
+trail/model/sprite fade and four-phase growth/particle-ring finale. Preserve
+frame29..60 camera interpolation, buffer lookup each callback, INT declaration
+versus VOID callback definition used only as address here, halfword/word views,
+partial/uninitialized vectors and provider read-extent frontiers. Controller
+fade tail draws five sprites, not its comment's seven. Ring phase emits78 per
+update including its transition update, not once; preserve six load order and
+packed-copy Y adjustment. Repeated trig, release ordering, terminal early returns,
+matching pins/flags/wrappers and all types/layouts/bodies remain unchanged.
+
+Definitions, declarations and callback reference propagate; scoped aliases
+preserve linker/address/runtime identities. Original effect/resource/provider
+identities unresolved. Maintained naming/farm/scorer/preprocessor and thin
+adapters reused; existing BV-03 reviewed deferral prioritization/BV-06 provider
+proposals retained. No new tool implementation/private ownership/type/CFG walker,
+matching gain, provider admission, linked-image/gameplay/workspace acceptance.
+Refresh source-bound evidence, pin historical reports/tools, preserve foreign
+work/index; full-tree naming goal active.
