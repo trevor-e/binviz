@@ -8265,3 +8265,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Five phase six handle particles saved matrix fade naming acceptance (BV-03/BV-08, P2):
+FF9 d319dd2ed adds two canonical ovl_13731000 names. Catalog
+4,825 unit/symbol names, 228 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-five-phase-six-handle-particles-saved-matrix-fade.json and Binviz
+target/ff9-names-five-phase-six-handle-particles-saved-matrix-fade/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 380/4,828 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7718 event1 initializes ONLYh0=0. Otherwise a=(frame<<7)>>2, strength*((4096-sin(a)))>>12 is subtracted ONLYfrom signed positionX; positionY/Z unchanged. Uniform INT scale=((4224-cos(a))*particleScale)>>12 and shared host handle at78 passed to60. THREEseparate cosine calls produce tint (cos>>5)-128. Terminalframe>=32 checked AFTERpose/tint. Local fourthwords and vec declared4byte versus externalrecord20/readextent frontier retained, no rotation extent or initializer repair.
+
+7894 descriptor188/16particles/20record/callback. Initphase/count0/contextsaved/1CC/table70count7. Actual six resources13(flags0),15(flags1),5,1,2,16; not donor comment1/2/9/3/6/4. Copies TWOwords from global THREEhalfword vector, secondword includes adjacent storage frontier. Initialize rotation34XYZ0/scales4096/INTposition widened, hostpoint2 THREElanes, rotation5C0/1024/0. Target vectors, strength and matrixsave7C notinitialized here; pads remain.
+
+Phase0 ordinary33updates0..32: pose/tint handle13,11C resource11, hostpoint2X-=46. Transition AFTERdraw DC displacement-2408 generates target54 then widened48. Phase1 ordinary33updates: poses15/5/13,tints15and5,hostpoint2X-=sin(frame32)*46>>12,strength1024. Everythirdframe literal (FR/3)*3==FR tries184; nullable sets rotationhc/he1024/h10=0,targetXYZ,scale4096. 128resource17 underctxflag512,sizeframe64; resource11 via11C. Negative multiples retain literal gate.
+
+Phase2 ordinary25updates0..24: t=frame4096/24,poses15/5/13 plus1/2 at target withXZ(4096-cos(t>>2))/3+245/Y2048; strengtht/2+1024. Everythirdframe particle scale4096. Exact1 copies target into TWOthree-lane points then h18X-=3072; nullable resource7 loaded object gets RAWpointer+2C=&h18,h22=128, no header extent inference. Overlaygray132 withpartialcolorfourthbyte/rotpad andscales4128/4128/4096. 128resource17 size(t>>1)+2048/sinefade,11Cresource11 opaque.
+
+Phase3 ordinary25updates: XZ((4096-cos(t>>2))*245)>>12/Y2048,strength(t>>2)+3072. EveryFOURTHframe ANDframe<24 emits fading particles scale4096-t: six ordinary attempts0/4/8/12/16/20. Exact22 captures EIGHTctxrotwords into save7C. Skipped event leaves stale/uninitialized save7C; no backfill. Overlay/11C, transition afterframe24 restores hostpoint3 from v8 butY-=512.
+
+Phase4 ordinary21updates0..20: save EIGHTcurrentctxrotwords9C, restore captured7C into memory, posehandle13/268(1)/tint((4096-frame4096/20)>>5)-128, restorecurrent9C BEFOREoverlay/11C. No explicit GTE load added. 11Cresource11 usesflag1 versus earlier255. Terminal20 calls TWOarg180(pool,704),78,return1 BEFOREcommon tail. All nonterminal phases inclunknownphase do TWO240 calls using count4 and10000-count4,134resource3 thenincrementcount. Pool16descriptor not invented emission cap; partialscratch/unclamped arithmetic/provider arities unchanged.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
