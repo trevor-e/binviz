@@ -3328,3 +3328,43 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer stay pinned; refresh downstream
 source-bound evidence from the current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Actor track group naming acceptance (BV-03/BV-08, P2): FF9 8817abae4
+adds 15 canonical ovl_134b8800 names. Catalog has 3,995 unique unit/symbol names,
+76 alias headers. All 15 complete primary bodies and g30/g13 headers reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-actor-track-groups.json and target/ff9-names-actor-track-groups/.
+All 15 entire native object pairs identical; exact affected/scored namespace15,
+unchanged pinned strict-relocation baselines: 14 exact/one partial,
+2,792/3,768 code bytes, zero failures. Installed WASM preprocessed tokens agree
+for all 15 sources. Current catalog/review/object bindings and19 isolated commit
+paths audit. Progress: 3,995/5,812 canonical primary files named (68.7%),
+1,817 remaining.
+
+Names cover eight indexed offset track callbacks, limited keyframe publisher,
+two groups of eight tracked objects, four-object flash/mask sequence,
+two-stage seven-object sequence, single actor-offset object and pointer-backed
+track initializer/reader. Seven wrappers pass exact existing-lexer token equality
+after only function/table identifier normalization. Own-unit actor position,
+track consumers and object events establish roles; asset/ability labels unresolved.
+
+Wrappers remain six-int/void, discard worker return and ignore both a1/a3.
+Worker publishes clamped XYZ with unsigned offset wrap, then tests ORIGINAL idx
+against explicit limit independently of key count. Preserve this distinction,
+zero/negative indexing, old-style declarations and GCC2.8.1 marker. Track groups
+preserve eight+eight objects at0/23, differing spawn vectors/payload strides,
+resource41 at37, shared offset, register22 pin and unchecked pointers/capacity.
+Flash handler has one explicit white flash at30, then contiguous mask intervals
+31..90/91..105 with exact12-byte E6000001 packets, OT1 bitfield linkage and
+fixed/growing scales. Preserve every-update resource timeline even at end140,
+duplicate packet blocks, partial arrays, redundant null checks, signed/unsigned
+halfword narrowing, exact lookup order and existing cleanup behavior. No bodies,
+types/layouts/signatures/comments/compiler choices/matching tricks changed.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer stay pinned; refresh downstream
+source-bound evidence from the current catalog. Foreign work/index preserved;
+full-tree goal remains active.
