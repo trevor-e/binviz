@@ -11976,3 +11976,36 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Field residual operation limit walkmesh helpers naming acceptance (BV-03/BV-08, P2):
+FF9 8f7898fc0 adds 4 selected canonical ovl_009000 names. Catalog
+5,502 unit/symbol names, 320 scoped alias headers. 10 selected complete overlay
+bodies reviewed and bound, 4 named and 6 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 4 semantic-provider body hashes bound. Evidence:
+docs/function-names-field-residual-operation-limit-walkmesh-helpers.json and Binviz
+target/ff9-names-field-residual-operation-limit-walkmesh-helpers/. 4 full native object pairs equal;
+exact affected/scored namespace 4. Pinned strict-relocation scores unchanged:
+4 exact/0 partial, 204/204 code bytes, zero failures. 4
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 8 isolated committed paths audit.
+
+All ten currently uncataloged field bodies fully reviewed: four named, six status-stub/query deferrals. Four complete semantic operation/triangle/group providers and three full headers read. Distinguish statushalfword from argumenthalfword despite copy comment, exact squared operation without guessed time/distance domain. No template semantic transfer.
+
+Full selected bodies are the evidence, not transplanted twins comments or numerical resemblance. Exact timers/masks/pair bytes/first-request latches/math/indexed getters are named; opaque field/category/callback purposes have explicit full-body hash-bound deferrals. Every distinct unit/symbol identity remains separate.
+
+Whole signedHALFWORDCA05E read and int sign extension. Full scene operation request initializes h6=-1, while separate existing argument getter readsCA05C/h4. Preserve distinct statusword identity; transplanted copy comment does not mean same memory/result.
+
+Whole value==-1 sets3600 else value*value, returns1. Descriptive squared-limit operation only; no camera-distance/frame/time claim without consumers. Preserve signed multiply/overflow, special -1 sentinel and exact WORD identity.
+
+Whole actor->triangle lookup writes negative unsignedHA and signedH8 through U16outputs, returns1. Full header and triangle-plane/group-position helpers bind actor/mesh role. No guessed XY axis order, bounds validation or signedness repair.
+
+Whole signedindex into header vtx_off table of4-byte entries, returns firstU16throughout and1status. Full scene header establishes vertex-table view but no coordinate/vertex-number interpretation. Preserve negative-index behavior and original table extent/type.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
