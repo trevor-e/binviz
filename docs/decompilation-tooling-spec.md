@@ -5419,3 +5419,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Six object keyframes and scene point naming acceptance (BV-03/BV-08, P2):
+FF9 b8f6b035f adds five canonical ovl_10556800 names. Catalog4,487 unique unit/symbol
+names,135 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-six-object-scene-point.json and
+target/ff9-names-six-object-scene-point/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+all five exact,2,248/2,248 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all five sources; current catalog/source/header/object/review
+and9 isolated commit paths audit. Other units remain pending.
+
+Established six-object paired-track crossfade with first-track scene-point writes,
+mirrored pair/scale tablehelpers. Preserve upper-only clamp,signature differences,
+pads,initialanchor,handlepairs,scene-write ordering,nullablecall and terminal
+ordering. Scene receives first position before scale/pose; secondposition does
+not overwriteit. No inferred actor-follow. Own-unit aliases retain canonical
+native/runtime identities. Exact game effect/provider identities unresolved.
+No body/type/layout/ABI repairs or original developer name claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
