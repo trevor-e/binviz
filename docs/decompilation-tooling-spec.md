@@ -6847,3 +6847,31 @@ proposals retained. No new tool implementation/private ownership/type/CFG walker
 matching gain, provider admission, linked-image/gameplay/workspace acceptance.
 Refresh source-bound evidence, pin historical reports/tools, preserve foreign
 work/index; full-tree naming goal active.
+
+Fixed camera hooked actor loads naming acceptance (BV-03/BV-08, P2):
+FF9 3bfa50f36 adds three canonical ovl_13b41800 names. Catalog
+4,695 unit/symbol names, 182 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-fixed-camera-hooked-actor-loads.json and Binviz
+target/ff9-names-fixed-camera-hooked-actor-loads/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 668/668 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 reports 12-byte state, mode1 sets SIGNED Y=-7000, unsigned X=0/Z=2000, publishes three halfwords directly at ctx p2C, saves context and loads resource1. G28H3 has only three lanes; padding not initialized, no actor-relative offset arithmetic. Other modes return signed frame>=50, no per-frame pose, finish service or release. Name describes actual fixed position, not original summon identity.
+
+77D8 reports12, mode1 saves context and loads resource5 at supplied four-halfword position without initializing it. Nullable loaded object gets table p14, h12=30 and hc=104. Later modes return at frame>=40. No p0 callback assignment, position tracking, per-frame work or release added; supplied state may be host-filled, remains a frontier.
+
+7894 reports16. Initialization stores SIGNED *out index and saved context BEFORE count test; only idx>=unsigned actor-count-byte rejects, negative indices are not excluded. Valid path asks f1FC(index,pos), loads resource6 then nullable object h22=f220(stored index,32), with signed narrowing retained. Later modes return frame>=40 with no movement. No guessed meaning for index32 provider selector, no reset of stale obj on rejected init. Context global has different local pointer declarations across files, preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
