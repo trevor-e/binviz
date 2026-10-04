@@ -7447,3 +7447,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Shared position cosine arc scale naming acceptance (BV-03/BV-08, P2):
+FF9 5a1478196 adds three canonical ovl_11465000 names. Catalog
+4,758 unit/symbol names, 203 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-shared-position-cosine-arc-scale.json and Binviz
+target/ff9-names-shared-position-cosine-arc-scale/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,516/1,516 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor24: saves context, 1FC(0,pos),200(0,0,dir), loads2then3 atpos; only nullable second gets h22=220(0,128). Provider-filled dir unused here, no invented orientation transfer. Update terminal40, no movement/finish/release. All four-lane buffers and unused pads untouched.
+
+7828 sixarg INT copies THREE U16 shared lanes into SIGNED pos then dst0=pos0<<12, volatile cur read into new_var BETWEEN dst0 and dst1 stores, then dst1/dst2 shifts, volatile end read in terminal comparison. Stores occur even when cur>=end; return-1 then0. Keep negative signed shifts/volatile scheduling/unused args; no constant-vector claim or callback return ABI repair.
+
+7894 descriptor88 savesctx/table70(1),200(16,1,target) and U16Y-=80;1FC(0,start),THREE start->cur lanes, load4 nullableh22=220(0,128). Rotation/translation firstTHREE0, scales27, U16handle58(resource1,279,0,0,192). Exact10load5atglobalbytevector, nullable table/h12=18/hc=176, redundant guards and unguarded innerrec->fn=(void*)callback thenh22=220(0,16). Exact26 captures cur to v4C BEFORE that frame interpolation, loads16.
+
+For frame>=10,d=frame-10: d<17 publishes signed current cur to INTtranslation, then60pose/268visibility BEFORE scale and interpolation. First12 scale updates+1 (frames10..21); SHRINK starts d>=46/frame56, subtract8 all, resetall0 onlyifX<0. For d<17 (10..26) copycur to mutable shared vector BEFORE BC(start,target,(d<<12)/15,cur), then U16Y-=((3C(k>>1)*600)>>12). Thus17samples includes endpointd15 and extrapolationd16 with no upperclamp; hook observes prior cur, not new interpolation. Resource6 advanced with d everyframe>=10 includingterminal80;78/return1 afterwork. No releases/additional state initialization/provider fixes.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
