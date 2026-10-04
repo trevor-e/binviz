@@ -9047,3 +9047,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Actor zero resource seven load delayed second object naming acceptance (BV-03/BV-08, P2):
+FF9 76b3b19ff adds two canonical ovl_11251000 names. Catalog
+4,870 unit/symbol names, 252 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-actor-zero-resource-seven-load-delayed-second-object.json and Binviz
+target/ff9-names-actor-zero-resource-seven-load-delayed-second-object/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 596/596 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor12, objpointer+THREEU16positionhalfwords. Init savedEfxCtxcontext/200(0,0,pos),198(job.id,7)/1D4atpos,storeobjincludingNULL, nullableh22=220(0,128). Othermodesreturntype>=120 withno update/release/78/relookup. Padding/thirdlaneproviderextent preserved; resource7/terminal120 distinctiveandunchanged.
+
+77EC descriptor16,statea/bpointers+FOURU16pos. InitONLYsaveG20context/200(0,0,pos),load10/savea, nullableh22=220(0,128); b isUNINITIALIZEDbyinit. Othermodes capturet=jobtype, exactt5 lookup/load9 atSAMEsavedpos/saveb includingNULL/nullableh22=220(0,128). EVERYupdateAFTERoptional5load,134(198(job.id,1),t), thenreturnt>=50. Terminalupdate still134; no missedframebackfill/bnullinitializer/dedup/release/providerreplacement/78. Selector/resources/framevalues unchanged, originalframe-effect purpose unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
