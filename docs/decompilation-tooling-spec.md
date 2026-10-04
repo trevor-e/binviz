@@ -9489,3 +9489,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Fixed negative z load per actor two scalar fades naming acceptance (BV-03/BV-08, P2):
+FF9 cf8090b18 adds two canonical ovl_13be6000 names. Catalog
+4,902 unit/symbol names, 268 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-fixed-negative-z-load-per-actor-two-scalar-fades.json and Binviz
+target/ff9-names-fixed-negative-z-load-per-actor-two-scalar-fades/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,064/1,064 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor0/no state. Init ONLY globalSIGNEDs16XYZ=0/0/-1560 with fourthpad untouched, saveG28contextD7B74,load1 atD7B7C/discardobject. Othermodes return>=64; no78/release or new initialization.
+
+77A0 descriptor0/globalFade2a,b and unsized HP8positions; actorcountbyte+36 LIVEreloaded eachloop test. Init a=b=0/savecontext; peractor200(i,0,cachedposition[i]),load4 there; nullableh22=220(i,512),h12=30,p14=first2040bytehooktable[i],hC=156 inthatorder. No caps/snapshot/padinitializers. Update captureframe; exact16 eachLIVEactor uses CACHEDposition,load5 nullable220(i,512)/h12=30/secondtable[i]/hC156 THENload6 nullableh22=220(0,512), constantZEROactor acrossloop deliberately retained.
+
+Exact24 arma16/exact40 b16. Each NONZERO counter PREDECREMENTS then EACHLIVEactor2BC(i,a*8) or2BC(i,128-b*8). Both independently run/secondwins if externally overlap. Ordinarya24..39 sends120->0,b40..55 sends8->128. NegativeNONZERO arithmetic remains literal. Return>=56 AFTERevents/fades. No count snapshot/dedup/clamp/positionrefresh/78/release/flag/provider purpose inference.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
