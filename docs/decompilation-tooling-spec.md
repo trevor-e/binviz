@@ -12756,3 +12756,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual direction tracked model sequence naming acceptance (BV-03/BV-08, P2):
+FF9 467a1cca5 adds 1 selected canonical ovl_10dc0800 names. Catalog
+5,544 unit/symbol names, 347 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-direction-tracked-model-sequence.json and Binviz
+target/ff9-names-effect-residual-direction-tracked-model-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 1,324/1,324 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining10DC0800 controller independently full-read and named by direction-vector tracking of staged model objects. Full g18/g16/lifecycle headers bound. No cached direction reinterpreted as new world-space movement and no spell or provider correspondence invented.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole58byte size/init/update handler and every frame/resource/drop branch read. Two opposing derived vectors and two offset points; initial resources6/1 with distinct callbacks, resources4/5 at12 and7at30. Four live loaded objects receive cached direction halfwords at5C/5E/60, one uses reverse vector and three forward; dropminus1 nulls before updates, completion50. Preserve GCC2.8.1 flag, mixed original object/pointer fields, implicit untouched initialization, redundant checks and order. Name cached direction tracking only, no guessed travel/beam/spell geometry.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
