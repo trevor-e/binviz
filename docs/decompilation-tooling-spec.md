@@ -10257,3 +10257,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Nine frame radial pose tint three phase model burst naming acceptance (BV-03/BV-08, P2):
+FF9 24fee28d9 adds two canonical ovl_103b0000 names. Catalog
+4,956 unit/symbol names, 295 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-nine-frame-radial-pose-tint-three-phase-model-burst.json and Binviz
+target/ff9-names-nine-frame-radial-pose-tint-three-phase-model-burst/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,996/1,996 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 mode1 ONLYcounter0 then return0. Other modes s=((frame<<12)/9)>>1,cos(s); if frame<5 separate cos((frame<<10)>>2)*(recw4C>>1)>>12 else r=recw4C>>1; registerx=s+512 both branches,r+=x,INTscaleXY=r,Z=recw50*7>>3. TWOwordcopy recw38/w3C->local then SIGNED second halfword+=2048;DC(rec+14,packedlocal,*counter,THREEs16out),INTposition=outXYZ;counter-=24 BEFORE60(&recw38,INTpos,scale,rec.handle),26C(handle,(firstcos>>5)-128 RGB). >=9 return1 AFTER draw/tint; no negativeframe/terminal clamp/dedup/extra initialization/78/release.
+
+78B0 descriptor writes out0=84,out2=4,out5=callbackADDRESS,out1=3; other descriptorwords untouched. Init context,70(table,4);18(resource11)->SIGNEDs16->INTw4,58(resource6,279,65535,0,128)->SIGNEDs16wc,58(resource12,279,65535,0,0)->SIGNEDs16w10. phase0/counter0,200(0,0,h14),20C(0,h38),1F0(0)->w40,DC(h14,h38,r,h14) thenDC(h14,h38,384,vec24);U16h3A+=2048;SIGNED XYZh14->INTw2C/30/34; TWO packedwords h14/h18->w1C/20 incl adjacentpad. No provider-return widening or initialization repair.
+
+Update initializes only s4/s5/s6/s7=0,capturesphase/frame. Phase0 XYscale=((8192-cos((t<<9)>>2))*3072)>>12,Z0;>=8 phase1/jobtype=-1/load4 at packedw1C nullable h22=220(0,32),then oldsample tail. Phase1 qq=(t<<12)/20; t<10 s5=4096/s4=s6=(t<<12)/10 else all4096;s7=qq,XYscale=((qq*3072)>>12)+3072,Z=qq*3072>>11. Exact integer multiple of5 invokes184(raw job+16) ignoring return. If follower and h30==-1 clearpointer;else h3A+=2048/DC(h14,h38,t*18,TWOINTvec)/h3A+=2048/1D8(follower,vec). >=20 phase2/jobtype=-1 after follower work,oldsampletail.
+
+Phase2 scaleXYZ6144;qq=(t<<12)/12,s4=s6=s5=s7=4096-qq;>=13 calls78/return1 BEFORE common tail/counter. Common nonterminal and unknownphase: store w4C=scaleX/w50=scaleZ (unknownphase scale UNINIT retained),U16h3C0/60(model6)/268(handle,1)/26C RGB((s5>>5)-128,(s6>>5)-128,(s4>>5)-128);h3C=-counter*24/60(model12)/268/26C uniform(((s7*2)/3>>5)-128);h3C0;134(resource10,counter) THEN134(resource13,counter),counter++. No unknownphase default scale, followerguard expansion/clamp/backfill/resource release/dedup.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
