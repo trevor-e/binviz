@@ -13755,3 +13755,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual direction object paired resource naming acceptance (BV-03/BV-08, P2):
+FF9 3d4d53922 adds 1 selected canonical ovl_10f09000 names. Catalog
+5,581 unit/symbol names, 384 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-direction-object-paired-resource.json and Binviz
+target/ff9-names-effect-residual-direction-object-paired-resource/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 576/576 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete10F09000 controller independently reviewed and named by cached direction object plus paired resource event. Full g18/g16/lifecycle headers bound; retain own no-drop handling and all numeric API contracts.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole20hex-byte lifecycle and complete phase/frame arms independently read. Initial resource5 callback object at host vector receives cached D4 direction toward position each running frame; resources7/8 at16, second with own callback fields, completion60. Actual body has no minus1 drop check. Preserve GCC2.8.1, redundant nulls, unused phase transitions and signed/narrow fields; no transplant from related10EB0000 or spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
