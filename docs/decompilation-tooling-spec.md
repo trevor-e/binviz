@@ -7251,3 +7251,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Derived pair flash growing sprite marker naming acceptance (BV-03/BV-08, P2):
+FF9 c5418e8e2 adds three canonical ovl_fc0d000 names. Catalog
+4,737 unit/symbol names, 196 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-derived-pair-flash-growing-sprite-marker.json and Binviz
+target/ff9-names-derived-pair-flash-growing-sprite-marker/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,512/1,512 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor80. Savesctx,1FC/20C(actor16,vectors), copies THREEa14->a34 BEFORE DC(a14,a1C,1500,a34), thenSIGNEDa34Y=-200. 2C4(actor16,7,INT4local)/2B0(local,400,a24),2C4(actor16,15,INT8local)/2B0(local,400,a2C); NO+50Y adjustment unlike109B7000. Loads2ata24 then1ata2C nullableh22=220(actor16,256),D4(a24/a2C,a34,a3C/a44). Do not infer bone identities or D4normalization; preserve copied lanes, partialpads, untouchedobjectslots/level.
+
+Exact10flash128/128/128 thenloads11/12/5ata34. Exact11sameflash butNOdebugprint. Frame>=13 submits FOURTEEN-arg248 withINTscaleXYZ=(frame<<7)+2432, firstTHREErotlanes0, firstTHREEcolorbytes40. Localvectors are4INT/4SIGNEDhalfwords/8U8 here, tails uninitialized (different109B7000three-lane buffers). Eachobject clearsifh30==-1 otherwise writesTHREEderivedtracklanes; terminal40afterdraw/tracking, no78/release.
+
+7B98 descriptor16. StoresSIGNEDindex/contextBEFOREonlyuppercountbyte check, negativesallowed. Invalidindex writesbyte7=1 andreturns1 withoutclearingoldpointer; validwrites7=0,1FC(index,vec),loads3 (not109B7000resource6), nullableh22=220(index,32). Exactupdate1setsbyte7=1,terminal40,no continuousposition refresh. Shared-bytewriter VOID (*pp)->d[i]=v usespointedbuffer+16 uncheckedindex/U8narrowing; callerCtxF firstopaque word viewed asBuf10**, keepABI/layout/flagpurposefrontier.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
