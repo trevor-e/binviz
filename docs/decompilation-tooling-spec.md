@@ -9713,3 +9713,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Fixed negative z load per actor offset model tint naming acceptance (BV-03/BV-08, P2):
+FF9 17366d09b adds two canonical ovl_13baa000 names. Catalog
+4,918 unit/symbol names, 276 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-fixed-negative-z-load-per-actor-offset-model-tint.json and Binviz
+target/ff9-names-fixed-negative-z-load-per-actor-offset-model-tint/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,048/1,048 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor0/no state. Init onlyglobalSIGNEDXYZ0/0/-1560/fourthpaduntouched,savecontext,load2 atglobalposition/discardobject. Othermodesreturn>=64,no78/release/newpadinitialization.
+
+77A0 descriptor0/globalcounter/modelhandles/rotTHREEs16/scaleTHREEINT/wordpositions16byte/halfpositions8byte. Init counter0/savecontext/70(scratch,4); EACHLIVEcountbyte+36actor, INThandle=58(resource12,375,65535,0,128),200(i,0,halfposition), copySIGNEDXYZ toINTwordposition with Z+256 FIRST then U16alias halfZ+=512. No padsinitialized/cap/handlenullguard/countsnapshot. AFTERactorloop globalrot0/2048/0,scale6144each.
+
+Updatecapturedframe; exact0 sets counter32 (do-while0 wrapper), EACHLIVEactor load10 THEN5 atOFFSETcachedhalfposition/discardboth. NONZEROcounter predecrements; EACHLIVEactor60(globalrot,wordposition,scale,INThandle). Ifcounter>=25 separate26C eachRGB=(24-counter)*16; ifcounter<8 separate26C eachRGB=(counter-8)*16; no calls in8..24. Ordinaryt0..6 firstvalues-112..-16, t24..31 lastvalues-16..-128, NONEatmiddlecounter24..8; no addedzero/reset, negativecounters retainliteralbehavior. 134(resource11,capturedframe) ONLYinsideNONZEROgate AFTERactorloop evenzeroactors. Return>=48 afterallwork, no78/release/refreshpositions/flag/clamp/dedup/omittedpadrepair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
