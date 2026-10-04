@@ -14376,3 +14376,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual host anchor staged resource frame feed naming acceptance (BV-03/BV-08, P2):
+FF9 20dd03e93 adds 1 selected canonical ovl_10380000 names. Catalog
+5,604 unit/symbol names, 407 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-host-anchor-staged-resource-frame-feed.json and Binviz
+target/ff9-names-effect-residual-host-anchor-staged-resource-frame-feed/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 484/484 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete10380000 independently reviewed and named for staged resources with per-frame resource feed at copied host anchor. Full g14/lifecycle declarations bound; own resource IDs, origin and API expression retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole14hex-byte lifecycle and complete switch/feed arms independently read. Copyhostpc38threehalfwords; resource6initialcallback,8at19distinctcallback,7at39; from19resource9through134withframe-minus19 includingcompletion80. Preserve own indexedAPI, sixbytevector with allocatedpadding, load/callback/feed-before-returnorder. Repeated purpose name shared with independentlyreviewedFB92800, not merged identity; unknown134domain remains.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
