@@ -11776,3 +11776,69 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot ui character swirl remaining helpers naming acceptance (BV-03/BV-08, P2):
+FF9 4e5f23974 adds nineteen selected canonical boot names. Catalog
+5,481 unit/symbol names, 315 scoped alias headers. Twenty six selected complete boot
+bodies reviewed and bound, nineteen named and seven explicit full-body deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-ui-character-swirl-remaining-helpers.json and Binviz
+target/ff9-names-boot-ui-character-swirl-remaining-helpers/. 77 full native object pairs equal;
+exact affected/scored namespace 77. Pinned strict-relocation scores unchanged:
+57 exact/20 partial, 15,348/31,500 code bytes, zero failures. 77
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 81 isolated committed paths audit.
+
+All twenty-six selected complete boot bodies reviewed: nineteen named and seven hash-bound purpose deferrals. Two raw entries get alias include only, all assembler strings/instructions retained. Twenty-six complete semantic provider/consumer bodies reviewed. Full lane04/lane05/laneW5A/ff9 headers read. Other boot/overlay primary files remain pending.
+
+Names follow actual code: opaque index1 sprite; analog type7 without packet-validity checks; byte widget CLUT/drawability fields; sound5100 semantics unconfirmed so retain control name and high-flag distinction. Equipment code goes into flags34 bits4..8; separate ability category bits12..16 and threshold/mastery proof. Table/status getters retain partial-byte views and callback mismatches.
+
+Complete raw302D0 emits two projected GouraudG4 quads, draws mode and restores geometry/matrix. Full C swirl frame and81-vertex mesh keep pins/deadtemps/wrappers, original GTE macros, zeroZscale, integer boundary/frame behavior. Preserve all provider interpretations/types/exports; no runtime or visual readiness inference.
+
+Full wrapper forwards x/y/ordering index to complete indexed sprite builder with sprite index1 and transparency0, discards width. Preserve three incoming arguments despite notes void(void), no default coordinates or prototype repair.
+
+Full byte-mode store at UI render block77148+1 and conditional pending WORD+8 clear only when FULL u32argument==2. Complete render-buffer/pause/step consumers establish shared UI role. Preserve narrowing and comparison distinction, no enum or adjacentword consolidation.
+
+Complete indexed36-byte raw controller packet test type bits12..15==7. Full controller-port updater independently establishes analog type7 and packet extent; predicate does not check packet validity or port bounds.
+
+Whole BYTE+1D setter. Full widget decoration drawer passes this field through secondary-field CLUT wrapper, independently fully read. Preserve u8 truncation, raw pointer type, no widget-validity checks.
+
+Complete BYTE+23 setter; full drawable predicate rejects zero field before extent tests. Preserve exact byte assignment/nonboolean values and raw record pointer.
+
+Entire raw BIOS A0 table stub: t2=A0, t1=A1 in JR delay slot, with established local syscall annotation. Preserve exact stub and register-only ABI, no syscall emulation changes.
+
+Full sound dispatcher83C call command5100,id,800000,0,0. Complete existing UI sound wrapper establishes shared sound callback. Specific5100 command semantics unknown, descriptive control command with high flag only; no stop/music claim.
+
+Full D000 sound wrapper same full UI play-sound provider context but thirdargument0, last80/7F. Preserve exact constants, dispatcher return discarded, not assume ordinary native provider identity.
+
+Full callback command5100,id,0,0,0; distinct entry from high-flag variant. No guessed5100 stop/pitch/music meaning; original constants and discarded result retained.
+
+Complete raw screen effect: save geometry offset/matrix, derive radius from half display dimensions, build two four-vertex strips, RTPS project each and emit linked GouraudG4 quads with threshold-dependent colors, publish draw mode then restore matrix/offset. Full RTPS/G4/semitrans/push/pop/read-offset providers independently read. Preserve every instruction, GTE state/register/clamp/partial-view convention and 14 callsites.
+
+Full12-way class selector over character-variant pair key and first item byte8, with globalVMcounter thresholds in cases2/10. Whole equipment/party-level caller stores result into flags34 bits4..8, establishing equipment-derived code. No sound/animation class claim from stale comment, preserve -1/default/indexing.
+
+Whole two-byte row lookup in exact D6CAA4 table consumed by fully read equipment-class selector. Alternate selector uses only LOWbyte. Preserve case-sensitive external declaration and original unsigned arithmetic; no fullword truthiness normalization.
+
+Complete find/category helpers plus predicate compare progressbyte against table requirement. Whole master/add/clear ability providers establish category bits12..16, 48 pairs and per-character +58 relative +3C base. Preserve duplicated lookup, negativeactor omission, cast arithmetic, unknown returns0 and exact table views.
+
+Full record predicate rejects BYTE+A bit10 then checks flags34 category bits12..16<8. Complete class/ability/character header context establishes character record. Descriptive category/enable test only, no guessedparty eligibility or actor-control meaning.
+
+Whole BYTE77E52 getter. Full menu initializer/transition/update and lane05 manager layout bind current menu index atE50+2. Preserve u32 zero extension and original standalone global.
+
+Whole indexed16-byte table lookup at pointer77E44+12. Full menu update/header bind shared handler table; only BYTEof secondopaqueWORD is returned, no menu availability/function-pointer interpretation. Existing lane05 table/layout aliases retained unchanged.
+
+Whole callback clearsBYTE77E2C when input record firstbytezero. Full menu-loader registers callback and sets same g_mn.b4 flag on accepted CDread. Existing void(void) caller declaration vs pointer-taking definition mismatch retained; no CDstatus-width/type/ABI correction.
+
+Complete large swirl frame routine: selecttwo configs, clearbankOT, initializebrightness/angle/blend on frame0, nudge/sine-center, buildmesh/copy/texturedgrid/darkfills, updatebrightness/angle/blend, publishmode/drawenv/OTchain and first-frame sync/fills, incrementframe and return priorframe>=79hex. Preserve matching pins/deadtemps/dowhilewrappers/alltypes/provider views and 121-frame boundary.
+
+Full grid builder: nine cosine/linear blended linepoints, rotated/scaled/translating GTE81 vertices atbuf+24, returnsbuf+2AC. Whole swirlcaller/rotationwrapper/scalematrix read. Preserve zeroZscale, fixed-point truncation, deadtemporary allocation and all GTE source macros; no mesh/type/context reconciliation.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque state/callback roles explicitly deferred; protocol5100 semantics
+unconfirmed and original callback/provider/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
