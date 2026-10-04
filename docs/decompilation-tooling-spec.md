@@ -16272,3 +16272,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual fixed height resource timeout g30 naming acceptance (BV-03/BV-08, P2):
+FF9 e87831501 adds 1 selected canonical ovl_13600000 names. Catalog
+5,673 unit/symbol names, 476 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-fixed-height-resource-timeout-g30.json and Binviz
+target/ff9-names-effect-residual-fixed-height-resource-timeout-g30/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 184/184 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete13600000 lifecycle reviewed for resource at actorXZ and fixedheight with timeout. Original signedviews and unusedresult preserved.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole handler and fullg30sharedheader reviewed.8byte signedvector,actorXZ/fixedYminus400,resource1loaderreturnignored,finish32. Preserve GCC2.8.1, actualX/Z/Y store order, untouchedfourthhalfword and indexedK&Rcalls; no added retainedobject or h22write.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
