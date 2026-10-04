@@ -10633,3 +10633,81 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot sequencer note stream setup refill naming acceptance (BV-03/BV-08, P2):
+FF9 c6df42919 adds twenty seven selected canonical boot names. Catalog
+5,085 unit/symbol names, 302 scoped alias headers. Twenty seven selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-sequencer-note-stream-setup-refill.json and Binviz
+target/ff9-names-boot-sequencer-note-stream-setup-refill/. 43 full native object pairs equal;
+exact affected/scored namespace 43. Pinned strict-relocation scores unchanged:
+34 exact/9 partial, 5,928/12,460 code bytes, zero failures. 43
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 47 isolated committed paths audit.
+
+Additional complete semantic callee17830 directly read and hash-bound; its missing second argument in5652C remains unresolved. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Reset track channel with U16+B2=6E00,WORD+78=23000000,WORD0=a1; clear exact listed timers/counters/control words, U16+A0=FFFF, then default indexed preset0. Preserve ordered stores, raw casts, no memset/layout/type or preset-ABI repair.
+
+Full body: SIGNED16cur compared to U32key using original conversions; cur<key or cur255 searches using v[-11], key<cur uses v[-4], BOTH loops increment n/v by8 BEFORE zero terminator and can select record after last. Equalcur returns. No curwrite. Flag-remap note0, preset words0/4, packed controls from note3..6 with lock bits01000000/08000000/10000000 and masks unchanged, note7 pending halfword. Do not change nominal backward loop direction or bounds.
+
+Full pitch helper: note-base repeatedly+12 until nonnegative, then modulo12 table ratio. fine0 ratio<<8; fine<0 uses UNSIGNED16fine multiplication>>8; fine>0 unsigned product>>7 plus ratio<<8. sub&255 nonzero writes delta with different <128/>=128 formulas; sub0 LEAVESout initial value before octave shifts. Negative octave uses SIGNEDrightshift t0/out, positive shifts both, final signed>>8 and pitch&FFFF. No interpolation rewrite, out initialization, clamp/overflow/shift/guard or caller signature fixes.
+
+Full indexed8byte note setup: captured shared pointer/WORD10 and14, mark WORD10|mask and conditionally WORD18; extra THIRDarg to TWOarg remap retained, preset words/locks as body, signed detune to pitch helper with pitch_out byteview, pending note6, volume ((note7&127)+64)<<8, fresh sharedWORD40 set/clear from note7bit128, globaldirty100. No packed layout/signature/cached pointer normalization.
+
+Only active mask WORD3: clear transfer callback and NONvolatile809E0; budgetWORD5>4096 subtract4096, CURRENTglobalWORD0+=x, mode(fn); else mode(stop function ADDRESS), y1030, budget0. Write bounded register address y+8,keyon current83174, IRQ1. No claimed callback contract for mode, missing-argument repairs, pointer caching or budget-byte equivalence.
+
+Active mask and budget required. Sample transfer helper ZEROargs, arm ZEROargs, upload currentpointer a2bytes, IRQ0; budget>2048 decrements2048 and advances a2; else loopstartWORD1 restores pointer/budgetWORD7; else BOTH matching a3 branches separately select stop ADDRESS,a0/a1=1030,budget0. Repeat addresses firstvoice/+1, register a0+8,IRQ1. Preserve duplicate branches and K&R/missing arguments, no volume-label inference.
+
+Stop active stream with extra p arg relative to actualnoargs; start buffer helper p0,p1,p2; clear static maskWORD0 by83174 after helper. No inferred parameter record type/ABI repair or early mask clear.
+
+Noargs VOID wrapper invokes noargs stop helper only. Alias/name propagation, no body expansion.
+
+Noargs: bounded register helper(1038) then transfermode(stop FUNCTIONADDRESS). No new callback admission or IRQ/keyon added.
+
+Stop(extra p), bounded first-upload helper(p0,p1,p2,p3), staticmaskWORD0&~83174 after. Preserve rawINT argument block/VOID vs INTK&R views.
+
+Stop(extra p), loaded-song setup helper(p0,p1), staticmaskWORD0&~83174. Preserve argument/load order and no ownership/voice-allocation claim beyond callee reviewed code.
+
+Only active mask: clear callback, VOLATILE809E00 write; budget>3680 advances CURRENTglobalpointer byx and modefn; else stopADDRESS/y1030. NO decrement or budgetzero on either branch. Registery+8,keyon83174,IRQ1; distinct from four-K budget helper despite misleading comments.
+
+Active mask and magic4F414B41 at currentpointer+128; IRQ0,sample(a0),armZEROargs, ring increment(currentglobal+52), upload CURRENTpointer+208,a2-208; headerword1 ->state+32,headerword8 ->+24, compareheader8<header4. True modea3/advancea2/ifstate+52==0 pointer=state+44; false stopADDRESS/a0=a1=1030. Repeataddresses/register/IRQ thenreturna0 even inactive/badmagic. No extentguard, missingargs/budget/header lifetime rewrite.
+
+Stop(extra p),state13=-1; FOURzero stores through BYTEcasts+32/+36/+40/+56 before reading809AA4;state2=01000000,state15=809AA4>>12,state11=p0/state12=p1. Retain casts to preserve compiler ordering, no array-index substitution/caching/reorder.
+
+Freepair helper before any setup; reject -1 only. Pinned register g=$16 and matching do-while wrappers retained. Header+40 source,length+10,flags+18,halfword+1C,state+20; duplicate voiceindex/mask/keyoff stores/calls retained. Transfercontrol0/sample1100/volatilebusy1; flag2 loop pointer source+header14, flag1 selects initial8192bytes/callback6100C and loopbudget subtractheader14>>1, else2048/callback60A98 and subtractheader14. Reserve mask8 controlled a2, clear masks9/7 by83174, dirty100. Callback calls retain extra g args, no headermagic/extent guards added.
+
+Freepair gate; IRQ0/mode0 then captureoldmask, sourcea0+40/header length/flags/word20/half1C, firstvoice/currentmask, keyoff(new|old),state44=a2,transfercontrol0/samplea2/busy1/callback61624. First upload min(U32length,8192),CURRENTpointer+=actualsize, reserve mask8 by a3;clear9/7 by83174/dirty100. No reserve-size reinterpretation or additional bounds/ABI fixes.
+
+Only loadedblockWORD20 nonzero/freepair!=-1. IRQ0/mode0,newmask and keyoff(old|new),copy flags/tempo,reserve8 by a1,clear9/7 byCURRENTmask,dirty100. Registeraddress base+(size>>1)+8, mode615F8 ADDRESS; flag1 mode1/2 separateaddresses(base/base+word24), otherwise3/3 sharedbase; flag2 repeatbase+word14 else1030. Matching p3 do-while retained. a0unused, finalkeyon83174/IRQ1; no mono/pitch argument inference beyond reviewed gain/address setters.
+
+Increment globalWORD10 FIRST then *p; if *p>globalWORD15-1 set0,return*p. Unsigned length0 underflow and aliasing/order retained; no modulo/zero guard.
+
+U32address>7FFF8 returns0; otherwise align-address/register helper(0xD2,address). Callee directly read; numeric register name avoids guessed SDK identity, no alignment/lower bound inserted.
+
+VOIDU32mask writes volatile SPU_KEY_ON low16 then SPU_KEY_ON2 mask>>16. Full widths/truncation/writeorder preserved, no mask limit/IRQ/readback.
+
+Unsignedvalidity (a0-1010)>7EFE8 returns0; otherwise one-argument align/register helper(-1) despite actual TWOargs, volatileU16D67A00=returnedunits,returnD67A00<<D67A10. Missing address argument unresolved, behavioral sampling name only; does not claim setter passes address correctly. Fullcallee body read/bound, historicalpartial remains.
+
+OR static maskwords0/4; adjacent TWO-bitmask C00000 (not comment400000), descend15positions with mask>>1; firstclear returns i+7. No pair ->release_sound_channels(0,40000000), retry WHILE combinedmask changes, no fixedone-retry cap. Returns-1 when unchanged/exhausted; no out-of-range pair/owner admission.
+
+Capture streamWORD0+2048 intoINTa; sample2100, transfercallback60FA8 ADDRESS,upload(a,2048). Callback provider/signature frontiers preserved; no global cursor advance.
+
+Configure firstvoice mode1/start1100/repeat2100 THENfirstvoice+1 mode2/start1900/repeat2900, using capturedg. Four-K advance(2000,2100,6121CADDRESS). Full configurator read: arguments are addresses, not obsolete commentpitchargs.
+
+Capture U32budget n; if>8192 sample(bufferWORD11+8192),async upload(CURRENTpointer,CURRENTbudget-8192),s1=buffer+1FF8; else s1=buffer+(n>>1)+8. Configure firstvoice/+1 mode0/sharedbuffer/repeat1030; register(s1), mode615F8 ADDRESS, keyonCURRENTmaskWORD3,IRQ1. Freshglobalreads and current-vs-n distinctions retained.
+
+Full voice configuration: mono globalbit2 ->SIGNEDmaster*centergain>>16; mode1 lefthalf/right0,mode2 opposite,mode3 matching SIGNEDshift sum,other pan table uses byte+4D andWORD40, unsigned products>>16, reversedpan^FF. Volume setter(voice,S16l,S16r,0),pitchglobal831C0,starta2/repeata3, rawADS Rhelper57708(voice,0,1),attack15/sustain15/57788(voice,127,3)/577BC(voice,6,3). No invented pitch interpretation of address args, tableclamp or signed arithmetic cleanup.
+
+Switch control0 ->flag0,1 ->flag1,defaultflag0; store D67978=originalcontrol then D67A04=flag. Numeric behavioral identity avoids claiming specific SDK transfer-mode constant; duplicate switch arms/matching flags retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
