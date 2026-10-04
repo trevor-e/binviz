@@ -2549,3 +2549,49 @@ No new matching credit,portable module,linked image,gameplay,selected-provider
 or shared workspace acceptance. Refresh source-bound downstream evidence from
 current catalog;historical reports/scorer remain pinned. Foreign work/index and
 unrelated checkpoint sections preserved;full-tree review remains active.
+
+World module geometry naming acceptance (BV-03/BV-08, P2): FF9
+ab1bd0ef7 adds34 canonical ovl_08c000 names;catalog3599 unique unit/symbol
+names,55 alias headers. All42 primaries covered:31 direct complete body reviews
+and11 entire raw bodies independently token-equal pinned previously reviewed
+sources;34 named,eight explicit semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-world-module-geometry.json and Binviz
+target/ff9-names-world-module-geometry/. All34 native object pairs identical;
+exact affected manifest/scoring namespace34,pinned strict-relocation scores
+unchanged29exact/five partial,18092/27096 code bytes,zero failures. All34 installed
+WASM preprocessed token comparisons agree. Current catalog/source/header/object
+and review/donor bindings audit;38 isolated committed paths agree.
+
+Names cover spatial pan/volume,sound pack links,camera transition/target/eye/
+axis easing,actor reset/auto travel,mesh staging/group ranges,fixed interpolation,
+model relocation/arena carving,paired packet templates,skinned vertex projection,
+scaling/behind-camera flags,height-clamped projection and polygon linking,
+depth sorting and raw bent/mipped/layered triangle stages. Actual pinned consumers
+establish roles without address-only/transplant-comment inference or runtime
+provider claims. Eleven raw bodies match all tokens after removal of the donor
+naming include;B6598 freshly reviewed with screen-bit rejection,NCLIP,full depth
+sorting and mip UV/page/CLUT adjustment. Twelve native-only aliases do not claim
+portable C recovery. Original provenance prefix and asm marker positions stay.
+
+Preserve matrix/texture/packet layouts,zero/unchecked count behavior,triplet
+read-ahead,8-bit part masking,signed parent flags,volatile dead flags store,
+register pins/barriers/compiler flags,two-sided tests,packet masks/depth bias,
+clamped depth flags,culling order and FT3 dz shift before GTE store in C8950.
+No behavioral fixes or new original matching credit. Constant-address getters,
+capability predicates and opaque byte/empty hooks retain explicit deferrals.
+
+Reusable gap BV-03/P2: raw alias recognition must accept leading provenance
+comments before the asm marker. Current legacy wide.prepare skips12 such raw
+files in ovl_08c000 as already descriptive despite canonical assembler labels.
+Temporary thin adapter in target/ff9-names-world-module-geometry/run.py merges
+aliases and snapshots after the existing marker,preserves every prefix byte and
+assembler string,and refuses unsnapshotted C references. Shared acceptance must
+recognize canonical raw definitions through arbitrary leading comments without
+moving classification markers or rewriting assembler strings;cover both plain
+asm-first and provenance-first inputs,conditional C/asm B3844,reference closure,
+header collision/identity,full object equality and installed preprocessing.
+No shared implementation or broader acceptance claimed. Existing farm/scoring/
+preprocessor tools reused;no private ownership/type/CFG walker added. BV-08 exact
+namespace gate enforced. No portable module,link,gameplay,selected-provider or
+shared workspace acceptance. Refresh source-bound evidence from current catalog;
+historical reports/scorer stay pinned;foreign work/index/checkpoints preserved.
