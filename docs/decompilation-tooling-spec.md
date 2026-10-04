@@ -9461,3 +9461,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Indexed random target handle motion shared target load naming acceptance (BV-03/BV-08, P2):
+FF9 e3b682f5b adds two canonical ovl_12ccd800 names. Catalog
+4,900 unit/symbol names, 267 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-indexed-random-target-handle-motion-shared-target-load.json and Binviz
+target/ff9-names-indexed-random-target-handle-motion-shared-target-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 904/904 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor64. Init saves n=*out/context/state.n BEFOREONLYn>=16 reject; negative passes. Onlyn==0 calls70(globalbyteTable,16). 200(16,0,state), signedstartY=-2000; copy ctx.pos U16XYZ into signedtargeth8/ha/hC then separate rand_n(2000) additions to signedX/Z with narrowing. PublishTHREEtargetU16 to SINGLEsharedD_801e8764[3], overwritten eachinit. D4(start,target,&h10) writes opaque record, overwriteh10 with40(targetY-startY,startZ-targetZ) U16. ScaleZ/Y/X4096, INTposition signedstartXYZ, U16handle=338(198(job+8,11),1).
+
+7704 update capturesframe; ift<6, BC(start,target,t<<10,signeds16v[4]), copyXYZ intoINTposition; no lowerbound/clamp. 320(handle,currentY) then31C(&h10,&INTposition,&scale,handle) EVERYupdate. t>=4 returns1 AFTERdraw, ONLYn==15 calls78. Ordinary0..4 weights0/1024/2048/3072/4096; continued5 uses5120; >=6 reusesposition. No discardedD4 opaque fields/tableinit for otherindices/release/newguard/provider arithmetic rewrite.
+
+79B0 descriptor12, Ob22*+THREEU16vec/tailpad. Init copies sharedD8764XYZ FIRST then saves Ctx16context,load1 atcopy inclNULL/nullableh22=220(0,128). Othermodesreturnframe>=30 with no per-framework/78/release. Producer is own7704; shared latest-init target/ownership/lifetime remains frontier, no per-index table, padding repair or backfill.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
