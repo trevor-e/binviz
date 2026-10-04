@@ -9237,3 +9237,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Slot selected delayed load shared position track marker naming acceptance (BV-03/BV-08, P2):
+FF9 e3cf25683 adds two canonical ovl_103c4800 names. Catalog
+4,884 unit/symbol names, 259 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-slot-selected-delayed-load-shared-position-track-marker.json and Binviz
+target/ff9-names-slot-selected-delayed-load-shared-position-track-marker/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 664/664 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor28; init idx=*out/state.idx/savecontext BEFOREvalidation. ONLYidx>=ctx.pccountbyte+36 invalid, helper(ctx,7,1)/return1. Validhelper(ctx,7,0),2D8 selectors1/5/6(job.id,-1),200(state.idx,0,stateTWOintwordvec8),load7/savep0 inclNULL/nullableh22=220(idx,32). THEN20C(0,stateTWOintwordvec10),copyONLYsecondU16lane intoglobalsharedposition[1]. SharedXZ NOTinitializedhere; p4NOTinitializeduntilframe18, no addedclear/lowerbound/providerextent repair.
+
+Updatecapturetype; exact18load8 atSAMEsavedvec8/savep4 inclNULL/nullableh22=220(idx,128). ForALLt>=18 nullablep4h30==-1 clearsreference, RECHECKp4 thenwriteshostpositionh5C/h5E/h60 fromCURRENTsharedU16XYZ, no snapshot. Atframe18 performsloadTHENtracking, terminal50stilltracks. Exact12helper(ctx,7,1) AFTERload/trackblocks. Returnt>=50; missed18mayconsumeuninitializedp4 ifhostjumpsframes, preserved no backfill/nullinitializer/78/release.
+
+7988 VOIDhelper dereferenceBuf10**once, U8convertedvalue STOREbuffer+16+SIGNEDunboundedindex. d[1]notallocatedextentproof; mainG14Ctx* K&Rinterpretsctx.p0 asBuf10* despiteheaderG14Ctx0viewextent. Negativeindex/null/alias/bufferextentfrontiers unchanged. Marker7writes0/1 indicateobservedbytes only; sharedpositionexternalproducer/lifetimeunresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
