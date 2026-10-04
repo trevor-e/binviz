@@ -2177,3 +2177,48 @@ walker. Compatibility checks remain distinct from shared workspace acceptance/
 scorer migration, which require configured frozen namespaces, compiler inputs
 and verified outputs. Refresh downstream source-bound evidence against current
 catalog/header identities. Preserve unrelated runtime/adoption/tooling changes.
+
+Field command and scene-init naming acceptance (BV-03/BV-08, P2): FF9
+32c35c0bb names102 canonical ovl_009000 functions; 02bb46465 names the last
+ovl_009800 initializer. Total3168 unique unit/symbol names,46 alias headers.
+Evidence: FF9 docs/function-names-field-commands.json and
+docs/function-names-scene-render-init.json; Binviz target/ff9-names-field-commands/
+and target/ff9-names-scene-render-init/. All102+2 complete native object pairs
+are byte-identical; pinned strict-relocation scores remain100exact/2partial
+(9324/9768 code bytes) and2exact (1416/1416), with no failures. All104 installed
+WASM preprocessed token comparisons agree. Catalog/current-source/header hashes
+and isolated106/6 committed paths verify. No new matching credit, linked image,
+compiled portable module or gameplay proof.
+
+All112 canonical field-command bodies reviewed:102 named,10 explicit deferrals
+(five effect-free opcode stubs, one output1 stub and four unresolved fields).
+All159 scene-unit primaries now reviewed/named. Other canonical units remain
+pending. Complete semantic consumer review21 field inputs plus8 initialization
+inputs corroborates camera, clip/parallax/scroll layers, packet colour gates,
+background animation, actor collision radius, triangle/group controls, region
+animations, motion channels and party cursor roles. No cross-unit alias is
+applied and equal addresses/donor comments do not establish selected providers.
+
+BV-03 pitfalls: c1100 copies current bounds INTO the preset, reversing its
+comment's direction. c1c04 returns a relative offset, not a pointer. Motion
+channel c8010 changes flags18 while c808c changes the curve halfword. History
+removal keeps copying the original last entry while count falls. Preserve these,
+unchecked capacities/indexes, byte/halfword narrowing, masks and matching hacks.
+Three native-only arithmetic functions expose C aliases without rewriting raw
+assembly symbols/strings: shifted-denominator divide, fixed16 integer rounding,
+and (v+8000)>>8 HALF UNIT bias (not ordinary fixed8 nearest-value rounding).
+
+BV-08 concrete metadata gate: retain the leading /* asm */ marker BEFORE the
+alias include. tools/clang-audit.py:34, tools/hack-ablate.py:786, tools/twins.py:746,
+wasm/difftest.py:659 and portable runtime preparation/refusal gates classify
+native-only files via lstrip().startswith. The first prepared include position
+hid this marker; corrected snapshots were recompiled, byte/token verified and
+amended before batch acceptance. Reusable readability acceptance should pin
+source classification/leading metadata, alongside non-name tokens, to prevent
+format/include edits bypassing portable-source refusals. Three original marker
+bytes and raw assembly strings remain intact. No new reusable feature claimed.
+
+Maintained naming/farm/scoring adapters add no private analysis walker. Shared
+workspace acceptance/scorer migration still needs configured frozen namespaces,
+compiler inputs and verified outputs. Refresh source-bound downstream evidence
+using current catalog/header identities; preserve foreign runtime/tooling work.
