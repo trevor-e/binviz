@@ -5675,3 +5675,34 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Seven phase ripple and tumbling fragment naming acceptance (BV-03/BV-08, P2):
+FF9 8fc0d671f adds five canonical ovl_137ec800 names. Catalog4,542 unique unit/symbol
+names,146 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-seven-phase-ripple-fragments.json and
+target/ff9-names-seven-phase-ripple-fragments/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+three exact/two partial,3,552/9,288 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established RGB555 grid,14x14 ripple,actual table-distance wrapper,model growth/
+tumbling callback and seven-phase burst. Preserve GTE/cull differences,arena row
+reuse,pins,partials,pads,three/four-arg wrapper discrepancy,failedallocation/random
+order,updated-phase gate and terminaltail omission. Caller/callback references
+renamed; own-unit aliases retain canonical native/runtime identities. Exact game
+effect/provider identities unresolved. No body/type/layout/ABI/originalname claims.
+
+Existing BV-06 provider/ABI frontier (P2): src/ovl_137ec800/sub_801e8284.c defines
+a THREE-argument wrapper and calls hostDC with three words. Actual82D0/8A9C callers
+pass FOUR words including an output vector; the recovered wrapper drops word4.
+Shared caller/selected-provider inspection should surface that discrepancy and
+keep it unresolved without native/ABI evidence; successful naming compilation
+must not certify output initialization or invent a widened provider contract.
+Acceptance inputs are these three actual sources,report review bindings and
+unchanged naming object/token proof. No private ABI walker or interface repair.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
