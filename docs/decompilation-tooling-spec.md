@@ -4970,3 +4970,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Debris variable trails naming acceptance (BV-03/BV-08, P2): FF9
+fceb0432b adds seven canonical ovl_12b63800 names. Catalog 4,378 unique
+unit/symbol names,117 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-debris-variable-trails.json
+and target/ff9-names-debris-variable-trails/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines four exact/three partial,2,320/11,092 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Established horizontal radial hook,debris callback,four phase sprite/debris
+burst,variable-length strip,polyline wrapper and two independent trail variants.
+Preserve Xsign/Z-dependent spin,predecessorhalfword[-1],17/5 actual strip vertices,
+phase1 frame<<10,flag128 set only after vertex loop,unchecked size/divisor and
+INT/void declaration mismatch. Main retains four-halfword read from three-halfword
+global,signed s0 narrowed before halfscaling,halfword jitter preserving adjacentY,
+nullable f1D8 call,extra-word rand(sy),24 initial particles and two largeparticles
+at40,terminal49 before common flag/overlay/count. Spiral radius remains negative
+at29 and counter increments before allocation. No types/layouts/bounds/body fixes;
+native/runtime identities stable,exact game-effect/provider identities unresolved.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
