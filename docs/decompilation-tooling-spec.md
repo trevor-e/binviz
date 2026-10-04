@@ -9319,3 +9319,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Hooked track delayed eased host vector offset naming acceptance (BV-03/BV-08, P2):
+FF9 0bd7838ae adds two canonical ovl_ff37800 names. Catalog
+4,890 unit/symbol names, 262 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-hooked-track-delayed-eased-host-vector-offset.json and Binviz
+target/ff9-names-hooked-track-delayed-eased-host-vector-offset/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 920/920 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 readsAPIfromsavedglobalcontext. Computek=536870912/(len*len) UNCONDITIONALLYbeforekind switch, w0initial. Kind0 w=4096-(((268435456/len)*t)>>16);kind1=((k*(len-t))*(len-t))>>17;kind2 4096-(((k*t)*t)>>17);otherkindw0. ReturnliteralhostB4(handle,extra,w) RESULT, notrawweight. Signedmulorder/overflow/divide-byzero len0 INCLUDINGunknownkind, negative/out-of-rangeframes andnoclamp preserved. Comment0..4096 appliesonlyordinarydomain, no newrestriction/providersemanticproved.
+
+783C descriptor48/fiveFOURU16vectors/objpointer/countdown. Init countdown0/savecontext,84(16,0,a4),200(0,0,aC),1F8(0,a14), load5ata4/saveobjinclNULL THEN D4(a4,aC,a24), nullableobjw14=globalbytehooktable/h12=46/hC=76. Positionproviderextent/fourthlanes savedas-is; shiftedvectora1CNOTinitializeduntilcountdown. No extraobjectscale/initializer/cleanup.
+
+Updatecapturejobtype, nullableobjh30==-1 clearsreference, recheckthenSIGNEDhalfwordobject5C/5E/60 writesfromcurrentU16a24XYZ. Exact24countdown=t(24); countdownNONZEROpredecrement thenhelper(1,24,newcount,0,8192), returningHOSTB4result w. a1C.X=a14.X+(COS(SIGNEDa24.Y)*w>>12), a1C.Z=a14.Z+(SIN(SIGNEDa24.Y)*w>>12), a1C.Y=a14.Y-(w>>6), eachU16narrowing inXZ/Ystoreorder. 204(0,a1C). Fourthlanea1Cuntouched butproviderreadextent unresolved; no hand-written lerp replacement or signed-anglechange.
+
+Ordinary24activeupdatescount23..0, finalhelper/offset/204 STILLrunatcount0 beforeinactivitynexttick. NegativeNONZEROcountdowncontinuesdecrementing, no positive-only guard. Returncapturedt>=50 AFTERobjecttrack/event/countdownwork, no78/vectorrestore/release/backfill/globalprovideradmission. Namehostvectoroffset avoidsunprovedcamera/actorparameter identity; a24derivedvectormeaning andborrowedobjectlifetime remainfrontiers.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
