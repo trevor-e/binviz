@@ -9021,3 +9021,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Actor zero two resource load thirty frame twelve publish naming acceptance (BV-03/BV-08, P2):
+FF9 59f8df146 adds two canonical ovl_112c7800 names. Catalog
+4,868 unit/symbol names, 251 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-actor-zero-two-resource-load-thirty-frame-twelve-publish.json and Binviz
+target/ff9-names-actor-zero-two-resource-load-thirty-frame-twelve-publish/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 496/496 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor16, stateTWOobjectpointers andFOURU16positionhalfwords. Init savedG20context/200(0,0,pos); TWOseparateloads4then8 atSAMEposition happenBEFOREany h22update; nullablea gets220(0,128), nullableb getsSEPARATE220(0,128). BothstoredpointersinclNULL, providerpositionread/writeextent notnormalized tothree. Othermodesreturntype>=30, query/init0, no tracking/finish78/release/extra fourthlane initializer.
+
+784C descriptor8, initONLYsaveCtx2ccontext, othermodes capturejobtypeBEFORE1FC(16,typedVec3hstate), copyTHREEU16x/y/ztoctx.obj+44 inXYZorder, capturedt>=12 AFTERpublication. OriginalVec3h6extent versusdescriptor8 retained. No inferenceofcamerapurpose/actor16identity, nullguards/restore/frameclamp/finish78 or branchrewrite. Allborrowedcontext/objectfrontiers preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
