@@ -8691,3 +8691,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Twenty rising pulse particles layered fade naming acceptance (BV-03/BV-08, P2):
+FF9 979714da2 adds two canonical ovl_12a6c000 names. Catalog
+4,849 unit/symbol names, 240 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-twenty-rising-pulse-particles-layered-fade.json and Binviz
+target/ff9-names-twenty-rising-pulse-particles-layered-fade/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 376/2,300 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 seven-argument callback mode1 clears ONLY h0, returns0. Other modes compute a=frame<<6, scaleXY=((4096+(COS(a>>2)>>1))*w4)>>12, scaleZ1024; h14 subtracts unsigned h2 modulo16bits, ha increases62 modulo16bits. Position lanes sign-extend h8/ha/hc separately. Slot60 receives v10 rotation, INT position/scale, ent+74 handle. Three independent SIN(a>>1) calls yield tint=((sin>>2)+3072)>>5 minus128; no deduplication or arithmetic regrouping. Frame>=64 returns1 AFTER placement/tint, no entity cleanup; other modes/negative frames retained.
+
+787C descriptor128 state/20 and24 outputs/callback in out5, leaves other slots untouched. Init zero phase/counter, save context, calls1CC then70(table,5), constructs FIVE handles in order resources7/11/5/10/2 through198/338. Handle resource2 is stored but not placed by this body; do not infer its future use. Main p28=(0,-8192,0), scalesXY819 Z3072, rotation(1024,0,0); second p48 initially same thenY-=20480, scales3072 andsame initial rotation.
+
+Init v8 ONLYXYZ=0, TWOwordcopy into v18 includes uninitialized pad, then v18.Y-=4096 and stores THREE host position halfwords. v10 is NOT initialized before198(resource3)/1D4(&v10); retain that frontier. Nullable loaded object h22=128 andp7C saved, no synthesized initialization or cleanup. Twenty allocation ATTEMPTS via184(job+w10), failure skips writes only; wv409+160*i, h14=768*i, h2=16-2*i, ha=-8192-(-1024+320*i), XZ0, rotationX-1024/Y0. h2 producer is SIGNED but callback consumer UNSIGNED; preserve modular behavior including negative late values. Progression advances on failed allocations too.
+
+Other modes read job.type as frame. ONLY phasew0==0 executes effect work: s=(t<<12)/60; secondrotationZ+=2 then60(handle7), p28.Y+=70;2E4(handle11,128), place/tint11 with((4096-s)>>5)-128. RotationZ TEMPORARILY subtractt*12 for handle5 placement/tint(s>>5)-128 thenrestore. CopyXYZ p28 to v10, placehandle10 with all scales=s/5+819. Flag256 around128(resource1,v10,NULL,2730,0,1,-1), thenflag0.
+
+Draw two240 calls with t*10/t*7 andfixed other arguments, two11C layers resources8/9 with opposite t/3 screen shifts and final parameter -1 versus4096-s/2. col ONLYRGB132 initialized, fourthbyte untouched; sc ONLYXY=(t>>1)+4096 before248, rotationTHREE halfwords0; sc.Z assigned4096 AFTER248. Preserve uninitialized scaleZ/colourPad read frontier and all arities. Nullable object pointer first checks h30==-1 then clearsp7C, rechecksbefore writingh5C/h5E/h60 from h40/h42/h44; no position update inferred.
+
+Frame>=60 finish AFTER all phase0 placement/draw/object work:180(job+w10),78(),return1 BEFORE common flagclear/counterincrement. Nonzero phase performs NO effect drawing/finish, onlyflag0 andw4++, returns0. Negative frame arithmetic, externally changed phase and borrowed object lifecycle remain literal. Callback termination64 is distinct from controller60. No count cap, missed-frame backfill, missing-handle release, padding cleanup, null guard change or provider replacement.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
