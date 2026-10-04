@@ -3512,3 +3512,38 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Target waypoint naming acceptance (BV-03/BV-08, P2): FF9 ea1aff550
+adds13 canonical ovl_12e13000 names. Catalog4,063 unique unit/symbol names,
+81 alias headers; all13 complete primary bodies reviewed, no semantic deferrals
+in this unit. Evidence: docs/function-names-target-waypoints.json and
+target/ff9-names-target-waypoints/. All13 entire native object pairs identical,
+exact affected/scored namespace13, unchanged pinned strict-relocation baselines
+13 exact,3,544/3,544 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all13 sources; current catalog/review/source/header/object bindings
+and17 isolated commit paths audit. Progress4,063/5,812 canonical primary files
+named(69.9%),1,749 remaining. Full-tree naming goal remains active.
+
+Names cover four target callbacks, origin/offset target blend, primary/delayed
+keyframe callbacks and evaluators, four-target and six-model sequences, track
+initialization and halfword key read. Own-unit full bodies, data layouts and
+actual consumers establish roles. Declarations/direct calls and explicit
+callback-table assignments use readable names; aliases preserve native/runtime
+symbols and own-unit scope. No original ability or provider identity inferred.
+
+Preserve per-call cumulative X offsets-150/+150/-50/+50, globalframe blend weight
+without clamp, output narrowing/fixed12 before original t0/t1 completion test,
+primary indexframe*3 and delayed(frame-5)*3 with negative-index hazard. Initializer
+skips TWO halfwords; reader unsignedcount upper-only clamp remains. Four-target
+initializer subtracts target0Y twice (net-400), preserves callback blocks384 bytes,
+repeatedNULL tests and partialpadding. Six-model events0/3/5/8 retain exact
+resources/positions, signed constants added as unsignedhalfwords, uninitialized
+fourth waypoint fields, independent published positions and upper-only blend cap.
+Finish40 remains after updates without extra host finish/release calls.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
