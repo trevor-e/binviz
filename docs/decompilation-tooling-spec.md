@@ -4519,3 +4519,31 @@ gameplay,provider or shared workspace acceptance. Historical reports/scorer pinn
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved. Current release executable observed externally changed this turn;
 the naming checks retain their existing scorer/compiler selection without rebuild.
+
+Threshold mesh breakup naming acceptance (BV-03/BV-08, P2): FF9
+c91a1aef4 adds seven canonical ovl_13522800 names. Catalog4,263 unique
+unit/symbol names,101 alias headers. All eight complete primary bodies reviewed;
+seven named,unknown slot354 wrapper deferred with source-bound reason.
+Evidence: docs/function-names-threshold-mesh-breakup.json and
+target/ff9-names-threshold-mesh-breakup/. Seven entire native object pairs
+identical,exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines six exact/one partial,1,920/3,588 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review/deferred bindings and11 isolated commit paths audit.
+
+Complete own-unit reviews establish1800-slot pool,seven record runs,unused
+triangles above second-vertex depth threshold,fragment transform/update,
+two-phase breakup and raised camera target roles. Preserve actual Yvelocity>>5
+despite older /16 comment,uniformscale3712,host motion kind11,no floor retirement,
+age60 and matrix call order. Main state100,threshold durations24/60,cutoff49,
+seven handles,cursoroffset0xC5A8,exactscratchSP switch around spawn/update,
+word vector/padding copies and partial initialization stay. Preserve original
+global symbol casing,legacy caller/return mismatches,types,flags and asmstrings.
+Identifiers/declarations/calls map through own-unit aliases to canonical exports.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active and other units pending.
