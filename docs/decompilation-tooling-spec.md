@@ -6667,3 +6667,37 @@ BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained.
 No new implementation/private ownership/type/CFG walker, matching gain,
 linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Host vector delta steps naming acceptance (BV-03/BV-08, P2): FF9
+f0364e713 adds four canonical ovl_1092e800 behavioral names. Catalog 4,675
+unit/symbol names, 176 scoped alias headers. All four complete own-unit bodies
+and g16/ff9 headers reviewed and bound, zero deferrals; other units pending.
+Evidence: docs/function-names-host-vector-delta-steps.json and Binviz
+target/ff9-names-host-vector-delta-steps/. Four complete native object pairs
+identical, exact affected/scored namespace four; unchanged pinned strict-reloc
+scores four exact, 1,620/1,620 code bytes, zero failures. Four installed WASM
+token comparisons agree; current catalog/source/header/object/review bindings
+and eight isolated committed paths audit.
+
+Names cover hooked stored-vector object/frame12 companion, fifteen-step host
+delta controller, signed delta fraction stepping and object-pair derivation.
+Controller copies a saved target, but actual step helper ignores target argument
+and controller never initializes delta. Avoid inferred toward-target movement.
+Preserve unused host1FC result, duplicate step0 host20C, integer division/narrow
+stores and completion AFTER vector writes, even outside normal step range.
+Pair helper's signed Y correction >=2048 becomes4096-Y; below-2047 adds4096.
+That asymmetric reflection is not conventional angle normalization; later+2048
+has no second normalization. Hooked object uses init-derived stored vector,
+frame12 companion uses current actor coordinates; no fabricated refresh/release.
+
+BV-06 provider/representation frontiers retained: actual host20C/2A8 vector
+interpretation unresolved and VOID object pointer reaches K&R host1FC. No
+portable/provider admission or guessed visual beam/flash identity. Definitions,
+declarations and actual helper caller propagate; own-unit aliases preserve native
+symbols/address/runtime exports. No body/layout/signature/pad initialization fix.
+
+Maintained naming/farm/scorer/preprocessor and thin adapters reused. Existing
+BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained;
+no new implementation/private ownership/type/CFG walker, matching gain,
+linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical reports/tools, preserve foreign work/index; full-tree goal active.
