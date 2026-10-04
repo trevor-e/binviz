@@ -13863,3 +13863,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual twelve frame resource track naming acceptance (BV-03/BV-08, P2):
+FF9 79369e9de adds 1 selected canonical ovl_109f8800 names. Catalog
+5,585 unit/symbol names, 388 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-twelve-frame-resource-track.json and Binviz
+target/ff9-names-effect-residual-twelve-frame-resource-track/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 596/596 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete109F8800 controller independently reviewed and named for twelve-frame resource-track submissions with rise/fall parameter. Full g16/lifecycle bound; preserve actual unsigned frame window and all original numeric fields/calls.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole20hex-byte handler all init/event/draw/range arms read. Initialresource1 callback, resource10at18 and8at20, resource7 through138 during unsigned frame-minus37<12, value rises819 first6 then clamps falling585; index saturates5, completion50. Preserve GCC2.8.1, job-as-Obj16 views, byte vectors, integer object field, gotozero and exact halfword arithmetic. Unknown138 parameter domain remains unspecified; no alpha/scale claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
