@@ -12282,3 +12282,43 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot event opcode dispatch naming acceptance (BV-03/BV-08, P2):
+FF9 eb01f400b adds 1 selected canonical boot names. Catalog
+5,527 unit/symbol names, 330 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 1 semantic-provider body hashes bound. Evidence:
+docs/function-names-boot-event-opcode-dispatch.json and Binviz
+target/ff9-names-boot-event-opcode-dispatch/. 1 full native object pairs equal;
+exact affected object namespace 1, scored fragment namespace 62. Pinned strict-relocation scores unchanged:
+28 exact/34 partial, 33,908/111,268 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+
+BV-03/BV-08, P1: this source is src/boot/sub_8003cab4.c, but its real C
+entry is sub_80039c38; 3CAB4 is an interior assembler scoring fragment. The
+maintained publisher/selection driver assumes one filename equals one entry.
+Temporary adapter binds explicit sourceIdentityOverrides and expectedScoreSymbols
+in target/ff9-names-boot-event-opcode-dispatch/ over existing tools, without a
+new parser/CFG/type/provider compiler. Acceptance: shared FunctionId accepts a
+reviewed entry/source binding, preserves fragment roles/addresses/literals and
+separately reports object and scored-symbol namespaces; rejects missing mappings,
+duplicate entry ownership, source drift and changed fragments. Future publisher
+calls must use this batch's publish.py until the shared path supports mappings;
+otherwise earlier source-override reports would fail. Naming remains source-only;
+no ABI repair, import-variant rename, matching gain, link or gameplay promotion.
+One large remaining canonical BOOT source completely reviewed and its real event-opcode C entry39C38 named. Full actor-list runner confirms dispatch caller and wait/request status handling; two full layout headers bind argument/object/state views. Its canonical filename3CAB4 is an interior fragment. All fragment addresses, offsets, sizes and assembler strings stay original; full native object equality and full fragment scoring namespace required. Other boot and overlay bodies pending.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Complete source read across all3057lines, including inline argument readers, owner/model lookups, all opcode and extended-opcode branches, wait/retry/status returns, mode fallbacks and every assembler fragment label. Entry39C38 consumes one event opcode plus flags; literal/variable arguments advance shared scriptPC. It is not the actor-list loop or expression evaluator. Preserve pinned registers, all signatures/casts/field views, masks/shifts/narrowing, emptyasm/order workarounds, unsupported-mode return1, retained aliases and partial original matches. Filename3CAB4 denotes an interior scoring fragment, not this C entry; bind explicit source mapping and preserve every assembler literal.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
