@@ -10711,3 +10711,79 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot sequencer interpreter mixer buffer handlers naming acceptance (BV-03/BV-08, P2):
+FF9 a6efcc475 adds twenty five selected canonical boot names. Catalog
+5,110 unit/symbol names, 303 scoped alias headers. Twenty five selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-sequencer-interpreter-mixer-buffer-handlers.json and Binviz
+target/ff9-names-boot-sequencer-interpreter-mixer-buffer-handlers/. 33 full native object pairs equal;
+exact affected/scored namespace 33. Pinned strict-relocation scores unchanged:
+26 exact/7 partial, 4,076/13,808 code bytes, zero failures. 33
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 37 isolated committed paths audit.
+
+Resident names also propagate into two existing overlay callers (009800 and146000); aliases retain resident addresses and are compiled in those actual unit namespaces too. Native scores aggregated across all affected units; per-unit exact source/object/scoring namespaces retained in report. No overlay-specific alias or original extent changes.
+
+All selected definitions directly read in full, including interpreter/mixer and their selected helper callees; additional naming dependencies verified through token-preserving aliases. Provider and omitted/extra-argument contracts remain unresolved. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Full mixer body: busy=staticw0|w10|83174; refresh slots iff either current/second playerw4&w10 active. Optionalsecond scaling controlled flagsWORD4bit100; maskpartition/reassign/keep first andsecond with CURRENT sharedplayerpointer swaps, preserve wrappers/pinnedregisters19/20/18/16, pendingw10clears and secondvolume restore. Aux16-channel-style traversal actually maskdriven startingbit100/stride134, updates/flushes if flags;clear80A74. SnapshotdirtyflagsWORD8 before master80/control10/effect100 updates, exactmask collectors outputindex0/-1/+1 and setterorder reverb/noise/pitch; clearsdirtybits before finalconditionalkeyon. Unguardedsecondplayer dereferences in effectbranch and all freshglobals/ownership-frontiers retained; no caching/guards/provider promotion.
+
+Full interpreter: cursoradvance beforedispatch; FE extendedbyte handler/cursor+2, F0..FD rewritesop=(op-F0)*11/h96operand, FF->A0 orCAloopdisabled->A0 plusstaticmask3, otherwise opcode-A0 tablecall. ticks++EVERYiteration, loopwhileop>=A1. A0 onlytype0mask18 thenreturn. Peek&FF, signedhFAoverride, durationtableop%11/gate-2 unsignednarrowing and legato/status rules retained; op>=8F resetsmodulation/masks thenreturn. Note<84 indexedpresetorordinary control-lock/keyrange+THIRDextraarg, type-selected masks, legato/tuning/pitch helper, optional wavedelta/SIGNED shifts, modulo/unsigned products; dirty13, modulationdivision bycurrentrate WITHOUTguards, matchingwrappers. FinalhCCcarrybit, h10C targetSUM stored/re-read SIGNED16 beforepitchtarget, q<<16/divideSIGNEDhc2,nozero guard; updateprevnote/detune. Preserve ALLstructpads, layout/comment drift, unsigned/signed/narrowing/traps and wrong-symbol-address-expression &dword7F970; naming only.
+
+Capturedstreamg,configure firstvoice/+1 BOTHmode0/start1100/repeat2100; fourKadvance(1000,2100,611BC ADDRESS). Shared rather than split addresses; preserve noargs/INTK&Rcallee views.
+
+Noargs wrapper uploadchunk(1100,1100,800,611ECADDRESS). Oppositehandler actualVOIDnoargs external; keep declaration implicit calleeABI. Firstshared buffer.
+
+Noargs wrapper uploadchunk(2100,2100,800,611BCADDRESS), alternating secondshared buffer.
+
+Noargs wrapper uploadchunk(1100,1900,1000,6124CADDRESS), alternating firstsplit buffer. Chunkparameter4096 distinct from helperbudget2048decrement retained.
+
+Noargs wrapper uploadchunk(2100,2900,1000,6121CADDRESS), alternating secondsplit buffer; no arithmetic/argument/ABI repair.
+
+Freepairgate FIRST, IRQ0/mode0 before header fromstate44+128; header40nonzero/state72zero capturesgainstate64,zeros64,dispatchE5(header40,gain>>8). Reloadstate, pointer=state44, headerlength16/data32/flags24/tempo28,newmask,index52zero,keyoff;control0/sample1100/volatilebusy1/callback61EE4. Flag400 uploads(source+208,16384) then FOURringincrements andtwo precedingvoicebits; else8192/TWOincrements. Clearstaticmask8/9/7 by83174/dirty100. No magic/extents/voiceownership/negative shifts guard, freshglobals and calls/storeorder retained.
+
+Capturedg; flag400 configure modes1/2 firstvoice,+1 then-2/-1 with starts1100/1900/2100/2900,repeats3100/3900/4100/4900; thresholdadvance(4000,3100,62118ADDRESS). Elseonlyfirstvoice/+1 starts1100/1900,repeats2100/2900;advance(2000,2100,sameADDRESS). No callback/provider reinterpretation or extra voice bounds.
+
+Flag400: ringincrementstate13 BEFOREheaderupload(1100,1900,2000,621D4ADDRESS); result1030 ->r/t1030 else2100/2900; repeataddressesCURRENTfirstvoice-2/-1. Elseupload(1100,1900,1000,621D4ADDRESS) discardedresult. No volume interpretation or return/prototype fixes.
+
+Flag400: ringincrementstate13 THENupload(3100,3900,2000,62118ADDRESS); result1030 ->r/t1030 else4100/4900; repeatactualfirstvoice-2/-1. Elseupload(2100,2900,1000,62118ADDRESS). Preserve asymmetric first/second modeaddresses and discarded result.
+
+Complete primaryextent214 includes overlapping separatelycompiledfragments; no fragment naming/credit. Localcursor/localdepth only, NEVERstoreback, but DOES mutatechannelcc. <9A return*pc with8F..99clearcc&FFFA;9A..9F returnsA0 WITHOUTclear. Skiptable n advancespc byn, F0..FB83/FC84/FD8F. FE usesextskiptable or relativeSIGNED16pc+=offset(noextra2),conditionalcount+1 canlocaldepth--&3, statecomparisonvolatilehalfword36,returnpointer; C9loopcounter/CAdisable/stkdepth control; CB/CD/D1/DBccclear+pc++; defaultclearcc/A0. No bounds/infinite-loop/depthrepair or pure-peek claim; all matchingflags preserved.
+
+Write globalarg0=a0,arg1=(a1&127)<<8 thenalready-nameddispatch(E5). No commandsemanticguess, args/INTK&R/prototype/global ownership unchanged.
+
+Allowed=~(staticw0|w10|83174),output startskeyoff0; optionalsecondmaskw4&a1splitbyVOLATILEw8 with postcallrereads; currentmaskw4&a2 same, thenresidualsecond/currentcalls; *out=collected|a3,dirty100. Underlying58F34 accumulatesVOICEbitsandappliesallowedEACHcall, not providerkeyoff. Preserve postcallee global reload/volatile/namingcomments/rawtypes.
+
+FullGCC2.7.2.3function: matchingemptyasm copy,clampSIGNEDt below0->0,>=64->63; U16registerblock+1AA old&C0FF OR(v&63)<<8,returnv. Numericcontrolfield name avoids false reverb-depth claim in callercomment; nonvolatilepointer and flagsunchanged.
+
+S16args; registerblock+184/+186 first left/right thenshadowleft/right. Exactnarrowing/signature/mno-split-addresses retained, no SDK originalname claim.
+
+ReadSIGNEDpWORD50,storeD80A18[3],inplaceSIGNED>>16 thenmultiply((SIGNEDsharedgain>>7)>>1),SIGNEDdivide127 then<<8,pWORD50store. Preserve splitshift matching, overflow/negative arithmetic/no bounds; callers extraunusedchannel arg retained.
+
+ONEINTpointer: pWORD50=D80A24. Sharedword restoration behavioralname; callers retainextraunusedchannelarg/VOIDviews, no additionalstate/cursor.
+
+ONEU32formal vs callerextra83174; busy=(currentw4&wc)|a0 plusoptionalsecondw4&wc; exact24slots, busyslotSIGNED16v7FFF else getter(i,&v), zero->detach(initialarray,i). Slotsincrement each; no cachedglobals/extraarg/prototype repair.
+
+Completebody mask-driven do-while executesatleastoneevenmask0. Capturemask&currentw10 BEFOREloop; selectedchannel update, ifdirtywordnonzero andglobalmaskbit cleartwohalves exactorder. Pending selected usesa2 keepbit->keyonbitINDEX/voiceidx; elsefreezero thenlowest helper with flags2/1 and sentinel24, occupiedslot7FFF. Voice<24 writesattrs/ownercurrentplayer/dirty100, nonpendingflush instead. Registerpin23, EW/EHrawcasts/strides/r[idx], GNUtypeof/currentglobalreacquisition retained, no guard/dedup/clamp/provider admission.
+
+No GCC2.7.2.3 guard; *U16out=SPUblock[INDEXSIGNED].halfword6 (stride16,+12), currentenvelopefield confirmed slotrefresh/zero-release usage. CallerSIGNEDshort*out mismatches actualUNSIGNED retained; no hardwarepointer initialization claim.
+
+Maskdriven do-while selectedchannelvoice<24 ORbitvoice into*out, clearbitfrommask EVERYiteration,ch++/bit<<1; afterwholetraversal*out&=allowed. Mask0 still advancesonce/appliesallowed, no dereferencevoice inunsetbitcase; no earlyreturn/cachedoutput/bounds change.
+
+Exact32channelrecords frompassedarray: matchingvoice ->24 none; increment each. If global7F790nonzero, capture secondarray7F71C andscan32same. Does notclearvoiceowner/providerregister/masks; namingdetachonly, no release side-effects invented.
+
+If argnonzero start0 elseSIGNEDcurrentWORD38; pointertable+start BEFOREtestinghalfword; whilev!=0 index++ thenif>=24break elsepointer++. Returnindex; no preboundscheck/start24repair, no guaranteed24 oninvalidstart or firstzero.
+
+If argnonzero start0 elseSIGNEDcurrentWORD38. bestSIGNED16=7FFF/idx24; do-while at leastONEreads evenstart>=24, strict< preservesfirsttie;advanceindex/pointeruntilindex>=24. best7FFFreturns24 elsedetach(initialarray,idx) thenreturnidx. No unsigned min/guards/rangeclamp/ownership changes.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
