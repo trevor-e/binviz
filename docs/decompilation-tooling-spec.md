@@ -5583,3 +5583,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Seven phase camera sprite and keyframe trail naming acceptance (BV-03/BV-08, P2):
+FF9 ee0bf7659 adds five canonical ovl_12aee000 names. Catalog4,522 unique unit/symbol
+names,142 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-seven-phase-keyframe-trails.json and
+target/ff9-names-seven-phase-keyframe-trails/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+two exact/three partial,544/8,188 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established tagged two-point strip,three-layer keyframe trails,track/radial burst,
+three offset instances and seven-phase camera/sprite/trail sequence. Preserve
+flags,pins,provider arity,sharedscratch,pads,halfword stores,previouspoint collapse,
+inclusive ring gates,partial initialization,repeatedtrig and terminal ordering.
+Caller references renamed; own-unit aliases retain canonical native/runtime
+identities. Exact game effect/provider identities unresolved. No body/type/ABI claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
