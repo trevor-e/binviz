@@ -10077,3 +10077,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Phase gated pulse staged load three phase paired draw naming acceptance (BV-03/BV-08, P2):
+FF9 286c12ca3 adds two canonical ovl_11730000 names. Catalog
+4,944 unit/symbol names, 289 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-phase-gated-pulse-staged-load-three-phase-paired-draw.json and Binviz
+target/ff9-names-phase-gated-pulse-staged-load-three-phase-paired-draw/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,764/1,764 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor20 phase/TWO signedFOURhalfwordpositions. Init phase0/context/1FC(0,vec4)/200(0,0,vecc),load1 atvecc inclNULL/nullableh22=220(0,32). Update capturejobtype; ANYnonzero phase returns0 immediately includingterminal. phase0/n<44 includingnegative q=(n<<12)/44; n<23 a=cos(n<<6)/4+2048 elsea=(cos(((n-23)<<10)/21)<<1)/3+3072. Signedrotation1024/0/0/pad1,lookup13 THEN v=cos(q>>1),128(resource13,vec4,rot,(a<<1)/3,12,1,v). No ctxflagwrappedaroundthisdraw.
+
+Exact5load2 atvecc nullable220(0,32); exact18load6 atvec4 nullableLITERALh22=128/hookbyteD7E40/h12=21/hC172,THENload4 atvecc nullableliteral128,THENload18 atvec4/discard. Exact23load5 atvecc nullable220(0,32). Return>=50 AFTERdraw/events. Phase neverchangeshere/no78/release/backfill/clamp/flags/providerdedup.
+
+7AA8 descriptor16 phase/counter/FOURs16vec; init context/phase0/counter0 ONLY. Update zeroa/d/c/b,capture n,2B8(16,1,vec) BEFOREphasework evenNULL/terminal. Phase0 a=(n<<12)/3,b512,d=cos(a>>2)>>1,c=((4096-a)>>1)+2048; n>=3 setsphase1/jobtype=-1 THENdrawoldsample. Phase1 q=(n<<12)/9,c=parity256+4096,u=(q>>1)+2048,a=parity256+u,b=(q>>3)+512,d=c; >=9 phase2/jobtype=-1 thendraw. Phase2 q=(n<<12)/9,t=q>>2,b1024-t,a=sin(t),d=cos(t)+4096,c=SEPARATEcos(t)*3/2+4096; >=9 returns1 AFTERquery/trig BEFOREdraw/flag/counter.
+
+Nonterminal/unknownphase signedrot0/0/b/pad0; ctx.w28=128 around128(resource14,vec,NULL,d/3,0,1,a/2) THEN128(resource15,vec,rot,c/2,0,1,a*2/3),clearflag0/counter++. Unknownphase drawszeros/increments; unusedcounter independent ofjobtype. No dedup/clamp/newinitializer/78/release/terminalflagclear.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
