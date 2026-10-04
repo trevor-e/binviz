@@ -9381,3 +9381,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Index selected offset paired load actor zero hook naming acceptance (BV-03/BV-08, P2):
+FF9 2b42958ff adds two canonical ovl_122fb000 names. Catalog
+4,894 unit/symbol names, 264 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-index-selected-offset-paired-load-actor-zero-hook.json and Binviz
+target/ff9-names-index-selected-offset-paired-load-actor-zero-hook/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 808/808 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor28, TWOobjpointers/FOURU16origin/FOURU16offsetorigin/INTn. Initn=*out/savecontext/state.n BEFOREguard; ONLYn>=3 returns1. Negativeindices passguard andswitchNONEcase, leavingp0UNINITIALIZEDbeforelaternonnullcheck. Valid0/1/2:1FC(0,v8), copyONLYXYZtov10/fourthpadNOTcopied. Case0offsetX+100/Y-400/load2,case1X-50/Y-50/load3,case2Y-200/load4 atv10, U16narrowingretained. Allcases includingnegative thenload5atv10/storep4 inclNULL.
+
+Afterload5, ifp0nonnull h22=220(0,128), thenifp4nonnull separate220(0,128). No NULLinitializer/nlowerbound/resource-arithmetic switchreplacement/vectorpadcopy/additionalguards or dedup. Othermodes returnjobtype>=40 withno per-framework/78/release/backfill; invalidinitreturns1, ordinaryquery/init0. Sourceownership/uninitializednegativeindexfrontier documented notfixed.
+
+7910 descriptor12, objpointer+FOURU16position. Init savecontext/200(0,0,v),load1/savep0 inclNULL. Nullablep0p14=globalbytehooktable/h12=13/hC=80, REDUNDANTnestedifp0 beforeh22=220(0,128); explicitreturn0insideinit retained. Othermodesreturntype>=40. No impliedcallbackprototype/newproviderpurpose/objecttracking/78/release or stateinitializer, fourthlaneproviderextent unchanged. Actualhookfields/gates/storeorder preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
