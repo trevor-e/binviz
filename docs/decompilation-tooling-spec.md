@@ -9573,3 +9573,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Same origin paired load variant delayed cosine swing naming acceptance (BV-03/BV-08, P2):
+FF9 28e7493de adds two canonical ovl_10029000 names. Catalog
+4,908 unit/symbol names, 271 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-same-origin-paired-load-variant-delayed-cosine-swing.json and Binviz
+target/ff9-names-same-origin-paired-load-variant-delayed-cosine-swing/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,108/1,108 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor24 twoobjectpointers/TWO FOURU16vectors. Init savescontext,1FC(0,a8),200(0,0,a10); loads7 then8 BOTH at a8 inclNULL. a10 queriedbutunusedlater; nullableSECONDobjecth22=220(0,128),firstno h22. Othermodesreturn>=40, no tracking/release/78/providerquerydedup.
+
+7828 descriptor36 twoobjects/THREEFOURU16vectors/SIGNEDvariant. Init statevariant=*out/savecontext BEFOREONLYvariant>=3 reject; negativepasses and laterindexes arrays negatively. 210(16) selects84(16,0,a8) else200(16,0,a8);1FC(0,a10),load10 ata10 inclNULL/nullable220(0,128). p0 and a18 NOTinitializeduntilframe10. Exact10load9 atGLOBALrowD_A0D0[variant],nullablew14=byteTable+variant*3168,h12=18,hC176,nestedredundantnullguard/h22=220(0,16).
+
+Updates10..25 ONLY(t>=10 andt-10<16) w=((t-10)<<12)/15,BC(a10,a8,w,a18). Variant1 X-=cos(w>>1)*1200>>12 elsevariant2 X+=same; allvariants Y-=SEPARATEcos(w>>1)*600>>12, U16narrowing each. Nullablep0 h30==-1 clears;1D8(p0,a18) UNCONDITIONAL evenNULL AFTERclear. Name does not claim nullsafeprovider. Return>=40 AFTERevents. Retain separatecoscalls/negativevariant/raw hook extents/no eventbackfill/nullinitializers/release/78/clamp.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
