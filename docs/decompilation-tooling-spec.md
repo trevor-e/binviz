@@ -5179,3 +5179,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Actor jitter anchors naming acceptance (BV-03/BV-08, P2): FF9
+e79b0ec28 adds six canonical ovl_10130800 names. Catalog4,428 unique unit/symbol
+names,125 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-actor-jitter-anchors.json and
+target/ff9-names-actor-jitter-anchors/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+six exact,1,940/1,940 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all six sources; current catalog/source/header/object/review and10
+isolated commit paths audit. Other units remain pending.
+
+Established four anchorX-/+200/400 jitter callbacks,shared jitter/fixed-point
+output blend and60-frame actor offset object sequence. Preserve six-byte locals,
+unused callback args,VOID wrappers without return forwarding,signed randommodulo,
+two-stepdivision,unsignednarrowing,partialfields and terminalwork-before-return.
+Only identifiers/header change;native/runtime symbols and dataword callbacks stable.
+Exact original game/provider identities unresolved;no body/type/layout/ABI repair.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
