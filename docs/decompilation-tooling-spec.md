@@ -6369,3 +6369,39 @@ BV-03 reviewed-deferral prioritization and BV-06 provider frontiers retained.
 No new reusable implementation or private ownership/type/CFG walker, matching
 gain, linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Position shake flash emitter naming acceptance (BV-03/BV-08, P2): FF9
+296412207 adds four canonical ovl_12ea7800 behavioral names. Catalog 4,639
+unit/symbol names, 167 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-position-shake-flash-emitter.json and Binviz
+target/ff9-names-position-shake-flash-emitter/. Four complete native object pairs
+identical, exact affected/scored namespace four, unchanged pinned strict-reloc
+scores four exact, 1,652/1,652 code bytes, zero failures. Four installed WASM
+token comparisons agree; source/header/catalog/object/review bindings and eight
+isolated committed paths audit.
+
+Names cover cross-axis 2D displacement, absolute-event-row position offset,
+two-phase shake/flash/emitter sequence and single object with published position.
+Preserve both old-coordinate host lookups before stores, X/Z/Y offset order,
+baseline copy each update, exact table flash interval, phase/job reset without
+fallthrough, two distinct sine-like calls, partial color/vector/state pads,
+register pin, fourteen-argument emitter and emitter before terminal return.
+No original quake/spell or selected camera/provider identity claimed.
+
+BV-06/P1 frontier example: shared D_801e7e04 has pointer-to-24-byte-record-array
+declaration in callback, INT in controller storing frame<<6. Callback passes
+record ADDRESSES to host38/3C, unlike controller angle calls. Retain actual
+representation and argument contracts; do not silently convert to angles or
+repair globals. VOID callback/offset definitions versus INT K&R declarations
+also retained: direct offset result discarded, host callback result consumption
+unresolved. Shared provider/ABI admission must distinguish these concrete
+source-bound conflicts; naming object equality grants no linked/portable proof.
+
+Definitions/declarations/directcalls/callback reference propagate; aliases
+retain canonical linker/address/runtime identities. Maintained naming/farm/
+scorer/preprocessor and thin adapters reused; existing BV-03 reviewed-deferral
+prioritization retained. No new reusable implementation/private ownership/type/
+CFG walker, matching gain, linked-image/gameplay/workspace acceptance. Refresh
+source-bound evidence, pin historical reports/tools, preserve foreign work/index;
+full-tree goal active.
