@@ -3442,3 +3442,38 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from the current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Keyed burst trail naming acceptance (BV-03/BV-08, P2): FF9 8afd30c7b
+adds14 canonical ovl_111c5800 names. Catalog4,038 unique unit/symbol names,
+79 alias headers; all14 complete primary bodies reviewed, no semantic deferrals
+in this unit. Evidence: docs/function-names-keyed-burst-trails.json and
+target/ff9-names-keyed-burst-trails/. All14 entire native object pairs identical,
+exact affected/scored namespace14, unchanged pinned strict-relocation baselines:
+ten exact/four partial,4,920/20,040 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all14 sources; current catalog/review/source/header/
+object bindings and18 isolated commit paths audit. Progress4,038/5,812 canonical
+primary files named(69.5%),1,774 remaining.
+
+Names cover horizontal gradient, three-phase handle fade, randomized25-point
+trail, four-phase ring ribbon scene, lowered pair tracks, keyed particle trails,
+adjacent-key front end, particle update/spawner, random trail point, fading
+trail callback, ring cursor reset,17-vertex particle spawn and jittered angle
+emitter. Actual cursor consumer establishes the tiny reset function purpose.
+Own-unit full bodies and headers reviewed; no original spells/abilities/provider
+or transplant equality inferred from comments.
+
+Preserve differing random-table strides, selected spawner phase rather than
+invented transitions, uninitialized kind2 alternate-origin Y/unknown-kind return,
+unsigned rejection-loop predicate, random/allocation order, count1 division,
+16384 blend extrapolation and all partial padding. Preserve cursor%5 and reverse
+17-vertex fixed12 stores, explicit zero velocities, empty asm barriers, pins,
+compiler flags and wrappers. Scene counters stay distinct from reset job frame;
+duplicate draws, possibleNULL destroys, raw unchecked key reads, seam duplication,
+phase3 second key-vector doubled as SCALE and exact flags/events remain untouched.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from the current catalog. Foreign work/index preserved; full-tree goal remains active.
