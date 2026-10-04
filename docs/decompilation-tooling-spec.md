@@ -5771,3 +5771,32 @@ shared implementation introduced. No new original matching credit,linked image,
 gameplay or sharedworkspace acceptance. Refresh downstream source-bound
 evidence; historical scorer/reports stay pinned. Foreign work/index preserved;
 full-tree naming goal active.
+
+Stored point direction and timed object naming acceptance (BV-03/BV-08, P2):
+FF9 17bcbcaa3 adds five canonical ovl_10e44000 behavioral names. Catalog4,557
+unique unit/symbol names,149 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-point-direction-hooks.json and Binviz
+target/ff9-names-point-direction-hooks/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged five exact,1,580/1,580 code bytes,zero failures. All five installed WASM
+preprocessed token comparisons agree. Current catalog/source/header/object/
+review bindings and nine isolated committed paths audit.
+
+Names establish two stored-point callback wrappers,host direction helper with
+n<<9 angle and XYZ<<12 output,a frame4 four-object callback-hook sequence ending
+at30,and a captured-anchor five-object sequence loading at0/4/6 and ending40.
+Preserve return-1 threshold after output writes,ignored callback arguments,
+hook assignment before endpoint publication,endpointX overwrite after actor
+copy,partial fields and actual nullable-object guards (no nested table guard).
+Existing uppercase/lowercase data symbols are unchanged; selected data alias/
+link identity and exact game effect/provider meanings remain unresolved.
+Readable definitions,declarations,calls and callback references propagate;
+own-unit aliases retain canonical linker/address/runtime identities.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. No new reusable tooling logic or private
+type/ownership/CFG walker introduced. No body/type/layout/ABI repair or new
+original matching credit,linked image,gameplay or sharedworkspace acceptance.
+Refresh downstream source-bound evidence; historical scorer/reports stay
+pinned. Foreign work/index preserved; full-tree naming goal active.
