@@ -9825,3 +9825,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Small scale four history point trail actor zero load naming acceptance (BV-03/BV-08, P2):
+FF9 e36e7f3ce adds two canonical ovl_12396800 names. Catalog
+4,926 unit/symbol names, 280 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-small-scale-four-history-point-trail-actor-zero-load.json and Binviz
+target/ff9-names-small-scale-four-history-point-trail-actor-zero-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,132/1,132 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor164; all Vec3hFOURU16 includingpad/Vec3wFOURINT includingpad; FOURhistoryrotations/positions. Init savesD7BB8,70(D7BC8,2),200(16,0,v0),200(0,0,v8),80(16,23,v10),D4(v10,v8,v18),scaleZ/Y/X=256,v18X+=2048 U16. InitialINTXYZ usesEXPLICITsigneds16casts fromU16v10XYZ. TWOSEPARATE338(198(resource5),1) create headha0/trailha2, no dedup even same resource/service.
+
+Update capturedtype; type<8 includingnegative s=(type<<12)/6,BC(state,v8,s,locals16l18[4]),INTXYZ=l18XYZ thencos(s>>1) RESULTDISCARDED. No Ydip or spin. FOURhistorysamples use -(i*20) RGB (not16). Terminaltype>=6 AFTERallwork despitecomment5steps, ordinary6endpoint4096/continued7weight4778. Head60 precedes historyloop; for each history i ifframe>=i+1,60(rotation[i],position[i],scale,SAMEtrailhandle),268(trailhandle,3),26C(trailhandle,negative repeatedRGB). ONLYXYZ history shifts from oldest highindex down then currentXYZ->history0 AFTERdraw; FOURTHlanes/pads/history not initialized byinit or shifted. Terminal78/return1 occurs AFTERhead/historydraw/shift; no release/clamp/eventbackfill/padinitializer/historyrepair/trig/providerquery dedup.
+
+7A88 descriptor12 objectpointer+THREEU16position/tailpad. Init saveEfxcontext,200(0,0,pos),load4 inclNULL/nullableh22=220(0,128). Othermodesreturn>=30; no tracking/release/78/newpadinit. Own copied body reviewed directly.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
