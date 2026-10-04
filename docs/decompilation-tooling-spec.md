@@ -5967,3 +5967,39 @@ No new reusable tooling implementation or private type/ownership/CFG walker.
 No new original matching credit,linked image,gameplay or sharedworkspace
 acceptance. Refresh source-bound evidence;historical scorer/reports pinned;
 foreign work/index preserved;full-tree naming goal active.
+
+Scaled six particle ripple naming acceptance (BV-03/BV-08, P2):
+FF9 086717e5c adds five canonical ovl_10bad000 behavioral names. Catalog4,587
+unique unit/symbol names,155 scoped alias headers. All five complete own-unit
+bodies reviewed;zero deferrals in this unit. Other units remain pending.
+Evidence: docs/function-names-scaled-six-particle-ripple.json and Binviz
+target/ff9-names-scaled-six-particle-ripple/. Five complete native object pairs
+identical;exact affected/scored namespace five;pinned strict-relocation scores
+unchanged three exact/two partial,3,776/9,672 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish RGB555 Gouraud grid/texture transfer,14x14 ripple grid,
+scaled-table-distance host wrapper,model growth/tumbling callback and seven-phase
+six-initial-particle burst. Actual bodies independently reviewed,not inferred
+from transplant comments or donor equality. Preserve grid row arena reuse,
+partial colour/pad writes,GTE/cull/link ordering,pinned registers/wrappers,
+2218 model growth,7678/4948 main scales,200 angular offset,actual resource ids,
+success-only random rolls/allocation count,p84 lifecycle and updated-phase
+common tail/terminal ordering. Wrapper computes -((signed table*1109)>>9),
+forwards FOUR words and RETURNS host result;VOID K&R callers ignore result.
+Do not transplant three-word dropped-output facts or tripled-distance constants
+from other units. G17_SetRotMatrix macro writes both rotation and translation
+despite its label. Preserve selected-provider/output initialization and transfer
+direction as unresolved. No body/type/layout/ABI repair.
+
+Readable definitions,declarations,calls and callback references propagate;
+own-unit aliases retain canonical linker/address/runtime identities. Maintained
+naming/farm/scorer/preprocessing interfaces and thin adapters reused;BV-08 exact
+namespace gate enforced. Existing BV-06 caller/provider frontier must preserve
+actual four-word forwarding and distinct caller return declarations. Existing
+BV-03 reviewed-deferral versus unreviewed prioritization proposal retained.
+No new reusable tooling implementation or private type/ownership/CFG walker.
+No new original matching credit,linked image,gameplay or sharedworkspace
+acceptance. Refresh source-bound evidence;historical scorer/reports pinned;
+foreign work/index preserved;full-tree naming goal active.
