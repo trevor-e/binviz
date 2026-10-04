@@ -9073,3 +9073,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Slot selected two stage resource load buffer marker naming acceptance (BV-03/BV-08, P2):
+FF9 4d4066a58 adds two canonical ovl_11437000 names. Catalog
+4,872 unit/symbol names, 253 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-slot-selected-two-stage-resource-load-buffer-marker.json and Binviz
+target/ff9-names-slot-selected-two-stage-resource-load-buffer-marker/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 516/516 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor20; initreadsSLOTfrom*out, writesstate.slot, savescontext BEFOREvalidation. Onlyslot>=LIVEcountbyte(ctx.info+36) invalid; negative slotpasses thisliteralguard. Invalid pathcallhelper(ctx,7,1) thenreturn1 BEFOREproviders/position/objectsetup. Validcallhelper(ctx,7,0), THREE2D8calls selectors4/6/7(job.id,-1) inthatorder,1FC(state.slot,statefourU16position),loadresource5 via198/1D4/storea inclNULL; nullableh22=220(slot,32). b isNOTinitializedhere; no cap/lowerbound/addedzeroing.
+
+Othermodes capturejobtype, exact18 loadsresource8 atSAMEsavedposition/storeb inclNULL, nullableh22=220(slot,128); exact12callhelper(ctx,7,1). Returnt>=60 AFTERbotheventchecks. Descriptorquery/init0exceptinvalidinit1, no78/release/restore or missedframebackfill. Jobtype captured BEFOREpossibleproviders, sourceorderloadcheckthenmarkercheck preservedevenmutuallyexclusiveordinaryframes.
+
+78F4 helperargumentsBuf10**/INTindex/INTvalue; dereferenceppONCE thenSTOREconvertedU8 at(*pp)->d[i], dataoffset16. Declaredd[1] doesNOTproveallocatedextent; signedindex/unboundedindex/valueconversion/nullfrontiers remainliteral. MainpassesCtxI* throughK&Rdeclaration, whichviewscontextfirstwordasbufferpointer despiteitslocalfirst12opaque bytes; no cast/typefix/layoutreconstruction/newboundarycheck. Markermeaning notnewlyproved asspecifichostflag orcompletionownership.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
