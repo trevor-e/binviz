@@ -13026,3 +13026,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual four paired model waves naming acceptance (BV-03/BV-08, P2):
+FF9 3e7b38c5a adds 1 selected canonical ovl_12df6000 names. Catalog
+5,554 unit/symbol names, 357 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-four-paired-model-waves.json and Binviz
+target/ff9-names-effect-residual-four-paired-model-waves/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 940/940 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining12DF6000 controller independently full-read and named for four timed waves of paired model objects. Full g28/g16/lifecycle headers bound. Cached vector-field writes remain unchanged; no missing initialization repair or provider admission.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole74byte handler lifecycle and all wave/update branches read. Two host templates and direction vectors, four signed/unsigned offset records, paired resources2/1spawnat0/18/36/54; offsets amendedonceperwave, both liveobjectsreceive samecached record at5C/5E/60, droppedminus1cleared. Resource4at15, completion96. Preserve GCC2.8.1, mixed union/word widths, original untouched recZ initialization and own stepping, unbounded currentn/indexing and gotozero. No spray/spell geometry or dynamic motion claim beyond actual writes.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
