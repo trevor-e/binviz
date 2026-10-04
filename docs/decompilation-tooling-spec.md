@@ -14430,3 +14430,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual two anchor five resources naming acceptance (BV-03/BV-08, P2):
+FF9 8c277ea4b adds 1 selected canonical ovl_115a3000 names. Catalog
+5,606 unit/symbol names, 409 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-two-anchor-five-resources.json and Binviz
+target/ff9-names-effect-residual-two-anchor-five-resources/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 580/580 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete115A3000 controller independently reviewed and named for five resources at two host anchors. Full g20/lifecycle declarations bound; actual resource/parameter/timeline identities preserved.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole24hex-byte lifecycle all timed arms read.200positions16/0;resources13/14initialfirstanchor h22via220(16,128),resource4at36secondanchor h22=256,9/7at56secondanchorh22=256,finish80. Preserve literal256 versus API-derived h22, two-load-before-store ordering, partial late slots and independent frameifs. No callback/tint/scale ownership inferred.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
