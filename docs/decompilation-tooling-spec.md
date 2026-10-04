@@ -2513,3 +2513,39 @@ verified. No portable module,linked image,gameplay,selected-provider or shared
 workspace acceptance. Refresh source-bound downstream evidence from the current
 catalog; historical batch reports/scorer stay pinned. Foreign work/index and
 unrelated FF9 checkpoint sections remain preserved.
+
+Blackjack/intro naming acceptance (BV-03/BV-08, P2): FF9 f4c0d7aaa
+adds12 canonical ovl_0cc000 behavioral names; catalog3565 unique unit/symbol
+names,54 alias headers. All33 recovered primary bodies in this unit reviewed;
+21 deferrals cover nine empty/zero hooks,nine unknown byte accessors and three
+timer records whose subsystem purpose is not established. Other units pending.
+Evidence: docs/function-names-blackjack-intro.json and Binviz
+target/ff9-names-blackjack-intro/. All12 complete native object pairs identical;
+exact manifest/scoring namespace12,pinned strict-relocation scores unchanged:
+10exact/two partial,988/3508 code bytes,zero failures. All12 installed WASM
+preprocessed token comparisons agree. Current catalog/source/header/object and
+all33 review bindings audit;16 isolated committed paths agree.
+
+Recovered code contradicts old line/column/selection-marker comments: six
+52-card rows,card/4 rank scoring2..10/face10/ace11or1,soft-ace adjustment and
+two-card21 predicate establish blackjack hand/deck helpers. Card-face sprites
+use suit texture columns,rank corners,pip layouts,picture ranks and central ace
+pip. Preserve six-deck initialization without introducing shuffle;shoe threshold
+249,22 stored-card words,numeric rank classes0/2/3,ace flag handling,sprite page
+pool/CLUT/UV/tag writes,q+2 pip loop,matching do-while/typeof wrapper and distinct
+fixed background sprite palette. No back-design or wager/player/coordinate guess.
+
+Intro text/bit helpers measure encoded text,emit packed glyph sprites,resolve
+byte-offset entries,find the lowest of four mask bits and test unmatched low
+nibble bits. Retain one/two-byte encoding,FF terminator,duplicated width branch,
+zero-mask index0,register pins/asm barriers,packet masks/advance/optional output.
+Shared header/transplant comments are reviewed evidence,not semantic authority.
+Byte/timer roles stay deferred without opaque address-shaped replacement names.
+
+Maintained naming/farm/scoring/preprocessor workflow and thin audit adapters
+reused;no new ownership/type/CFG walker or tooling rewrite. Previously flagged
+BV-08 exact namespace gate enforced again;no new reusable tooling gap found.
+No new matching credit,portable module,linked image,gameplay,selected-provider
+or shared workspace acceptance. Refresh source-bound downstream evidence from
+current catalog;historical reports/scorer remain pinned. Foreign work/index and
+unrelated checkpoint sections preserved;full-tree review remains active.
