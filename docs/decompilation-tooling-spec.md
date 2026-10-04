@@ -7419,3 +7419,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two handle y descent settling growth tint naming acceptance (BV-03/BV-08, P2):
+FF9 50362e9a9 adds three canonical ovl_132b5800 names. Catalog
+4,755 unit/symbol names, 202 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-handle-y-descent-settling-growth-tint.json and Binviz
+target/ff9-names-two-handle-y-descent-settling-growth-tint/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 156/1,396 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+77C4 descriptor136, gcc2.8.1. Save context/table70(count2), captures U16 host three lanes. First rotationXYZ0/scales1024,2048,1024; first position hostX/Z but Y overwritten1200 after redundant initial hostY write. Second rotationXYZ0/translation signed hostXYZ, scales all0, w60/64/68=0. U16 handles resources2then1 via338(resource,1). Keep uninitialized k branch with identical arms, new_var assignments and all pads/unused fields; countdowns=-1, tint not initialized but gated until countdown. No invented geometry/provider contract.
+
+Exact0 resource4, exact8 resource3 at captured v70; exact15 count3; exact32 copies three lanes to signed v78 then overwrites Y=-600 and loads8; exact47 count16. Draw15..62 exactly48 updates: 320(handle0,firstY),31C(first pose),60(second pose), all BEFORE tint/position/scale updates. First tint computes four samples15..18 including0 endpoint; second16 samples47..62 elapsed0..15, missing -128 endpoint63 outside window. Tint applied to both handles only while either count nonnegative; if both externally active second overwrite wins.
+
+FirstY-=325 for first8 updates, then +=20; first scaleY shrinks64 while >1024, no lower guard beyond literal condition. SecondXZ+=64 each update, secondYscale+=170 first8 then-=8; literal ternary upper clamp1024 using new_var=1025 retained, no lower clamp. Every update advances resources5/7/6 in that order including terminal100 then78/return1. Helpers directly reviewed: VOID host48(a,b,4096-w,w,n) and INT exact weighted arithmetic consumed by main; no overflow/divide-zero/return-type repairs.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
