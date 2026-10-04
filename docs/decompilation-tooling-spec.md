@@ -8333,3 +8333,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Eight row textured swirl band paired orbiting sprite naming acceptance (BV-03/BV-08, P2):
+FF9 ddeb336be adds two canonical ovl_11e90800 names. Catalog
+4,829 unit/symbol names, 230 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-eight-row-textured-swirl-band-paired-orbiting-sprite.json and Binviz
+target/ff9-names-eight-row-textured-swirl-band-paired-orbiting-sprite/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+0 exact/2 partial, 0/4,852 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 reserves5504primitivebytes unconditionally: GT4 poolfirst1664bytes (32maxrecords52bytes),FT4 at+1664 (96maxrecords40bytes). Eightrows/sixteensegments, first/lastrowsGT4 with black edge andcolored interior; sixmiddleFT4. Rejected nc==0 doesnotadvance localrecordpointer; colorwritesoccur BEFOREclipgate andreserved cursorstilladvancesfullsize. nc!=0 accepts BOTHsigns, notclaimed standardfrontface-only cull. No capacity/clipping/depthgate/GTErestore added.
+
+Drawer loadsctxmatrix/position, literalRTV0TR_X then14(m1,m)/20(m,m2), storesGTEthreeINTtranslation/matrix27C/loadsderivedmatrix. Outerrotation/translationreadextents and partialmatrixpad preserved. Colors pal0 setsRGBONLY; pal!=0 masks globalindex31, calls238 TWICEwithSAMEindex into separatecolors, multipliesbycol>>7, thenincrementsindex. Blackcbword0 thencode,cf code2E/2C,cg/cb3E/3C selectedsemi!=255; flagsOR((semi&3)<<5) even255. No invented paletteadvance or lowerclamp.
+
+Eachrow s5+=sweep/ph+=phstep BEFOREradiuscalls B4(la,lb,j512) andnextrow512. Segment then s5+=sweep andinneredgeposition r0/8 atph,outer(r0+spin)/8 atph+phstep, eachsin/cos s5 /s5+256; s5-=sweep beforeinnercoords thenloopincrement256. Rowsdepth0..1152 by144, spinr0 increments eachrow. Partial fourthhalfwordofEVERYvv leftuninitialized. UVtile32 withlasttile31 narrowing. RTPT/NCLIP/readMAC0 thenliteralG24_AVSZ4 opcode0x158002d/readregister19>>2 BEFOREloading/projectingfourthvertex; host234(09000000FT4/0C000000GT4,depth,record) BEFOREfourthscreenstore, thenpointerincrement. Retain macro labels/opcodes/order without semantic normalization.
+
+7F28 descriptor36. Init table70count1/resource9spriteflags1/phase0/tick0, TWOwords copyhost+38/+3C intoanchor8/C includesadjacenthalfword beyondHost0c declared3lanes,angle18XYZ1024/32/0,partialpaduntouched. Perupdate radius=(tick<<9)/72, angle4096-sin((tick<<10)/72), signedorbitpointanchor+sin/cos*radius>>12,Yanchor. v60XYZ0/tick32/0 withpaduninitialized. No actualspell/vortexidentityorprovideradmission inferred.
+
+Phase0 ordinary13updates0..12: normalizedprogressframe4096/12,outerXZ? actual scaleXYZ(fp,fp,8192); inner(8192,8192,cos(fp>>2)*2),twodraws brightness128 andfp>>5,spinfp>>6,phase tick40,step300,sweeps200/128. Sprite scale(fp,4096-sin(fp>>2),fp),tint(fp>>5)-128 AFTERpose; >=12transition1/frame-1. Phase1 ordinary13: outer(fp+4096,fp+4096,8192),inner8192all; radiiinner456-(fp>>5),spin(fp>>5)+64, sprite4096all no tint. >=12transition2/frame-1 thennullableloadresource7atliveorbit,h22=49.
+
+Phase2 ordinary33updates0..32 (commentends31wrong): fp=frame128,uniformdrawscale(fp>>1)+8192 bothbands,outerradius200-(fp>>6),spin(fp>>5)+192,sweepouter(fp>>5)+160/inner128. Sprite4096all. Transition AFTERdraw>=32phase3/frame-1. Phase3 ordinary17updates0..16 (comment15wrong): bothbandsuniform10240,brightnesssin(frame64)>>5,spin320,outerradius136/384 andsweep288,innerradius328/640 sweep128; spriteXZ4096/Ysin(frame64),tint((4096-frame256)>>5)-128. Terminal>=16 calls78 andreturns1 AFTERdraw/tint BEFOREangle/texture/ticktail.
+
+Nonterminaltail EVERYphase includingunknownphase subtracts16+tick2 fromSIGNEDangle18Z (commentmistakenh1C),THREE240 calls weights10000-tick12/10000-tick6/tick8 thenincrementsglobaltick. Phaseclockresetswithoutresetingglobaltick, no camera writes/release added. Partialvectors/scales fourthwords, repeatedsin/cos/phaseargumentcalculations, unclampedarithmetic andboth-viewABIfrontiers retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
