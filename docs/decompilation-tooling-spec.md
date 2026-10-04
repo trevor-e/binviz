@@ -5131,3 +5131,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Random ribbon ring sequence naming acceptance (BV-03/BV-08, P2): FF9
+56fa3009a adds six canonical ovl_12ee2000 names. Catalog4,416 unique unit/symbol
+names,123 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-random-ribbon-ring-sequence.json and
+target/ff9-names-random-ribbon-ring-sequence/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+four exact/two partial,1,560/11,044 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established randomized12/56-segment ribbon builders/submission,three-row
+textured band,word-position rotation evaluation and three-phase ribbon/ring
+sequence. Preserve phaseIDs0/4/5,random overwritten values and extra arguments,
+partial/uninitialized vector words,VOID/INT declarations,link before fourthSXY,
+nonzeroNCLIP guard,pins/do wrappers and terminal return before common tail/count.
+Exact game/provider identities unresolved;no body/type/layout/signature repair.
+Readable references alias to canonical native/runtime symbols within the unit.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
