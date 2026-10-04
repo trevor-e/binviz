@@ -12133,3 +12133,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Party selection residual setup query helpers naming acceptance (BV-03/BV-08, P2):
+FF9 d0a8f7d1f adds 3 selected canonical ovl_128000 names. Catalog
+5,517 unit/symbol names, 325 scoped alias headers. 3 selected complete overlay
+bodies reviewed and bound, 3 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 3 semantic-provider body hashes bound. Evidence:
+docs/function-names-party-selection-residual-setup-query-helpers.json and Binviz
+target/ff9-names-party-selection-residual-setup-query-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 384/384 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+All three primary128000 bodies completely reviewed and named. Three independently full-read richer126800 counterparts and full lane19/g06 headers bind party selection behavior; older unplaced report is historical and current128000 binary/notes exist. Distinct canonical definitions/offsets remain, no merging or type/layout fix. Repeated readable names in different unit-scoped headers are intentional.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole selection setup: count, four party ids, eight candidate ids and eight fixed flags. Full richer126800 counterpart and lane19 selection layout establish role. Preserve current raw byte views and all loop widths; do not substitute richer source/types.
+
+Whole selected phase cursor x+8*y maps character id; FFempty returns0else raw fixed flag. Full richer counterpart independently reviewed. No bool normalization, bounds guard or type repair.
+
+Whole four party slots count filled and records with nonzero H4C and noBYTE74 bits0/1, then filled>=required and at least one ready. Full counterpart and lane19 identify party role. Current original offset view retained even though richer source spells chrbase3C and H10/B38. No HP/status labeling or source replacement.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
