@@ -7363,3 +7363,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Offset hooked pair staggered records naming acceptance (BV-03/BV-08, P2):
+FF9 67f8ea3df adds three canonical ovl_12442800 names. Catalog
+4,749 unit/symbol names, 200 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-offset-hooked-pair-staggered-records.json and Binviz
+target/ff9-names-offset-hooked-pair-staggered-records/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 2,008/2,008 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor24: saves context, f200(16,0,v8), copies exactly three U16 lanes to v10, Y+=300/Z-=300 with narrowing. Loads resources6 then2 at v10 before either nullable configuration; each gets its own table, h12=13/hc=144. Context extern uses G25Ctx while other bodies use unit Ctx, preserved. No pad initialization, callback replacement, movement or release; terminal40 only in update modes.
+
+7888 descriptor40, host three-halfword anchor, saves context, loads3/9/10. Five shared records reset started/age, start=2*i, copy three lanes to BOTH positions, randomize only second X/Z with separate branch-selection and magnitude fc0 calls, signed modulo800 and U16 wrap retained. Resource fields and pads left untouched. Exact start frames0/2/4/6/8 load into p[1+i] using pointer to entire record and mark started; ELSE age++ only when already started, so no age increment on birth update. No interpolation performed here; downstream record use unknown. Pin18 and do/while single store kept. Later return frame>=50 after processing, allowing repeated/skipped frame behavior as written.
+
+7C40 descriptor48, repeatedly reads host anchor for three separate vectors rather than copying snapshots; X offsets -400/+400 only, U16 narrowing. Saves context then resources11/14 at central anchor; nullable first object table/h12=8/hc=144. Exact5 loads12/13 centrally, exact13 loads13 at both X-offset positions. Terminal50 after scheduled work, no f78/release/camera publication. Partial pads/unused slots/provider extents stay unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
