@@ -5054,3 +5054,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+History ribbon mesh burst naming acceptance (BV-03/BV-08, P2): FF9
+587df0dcd adds six canonical ovl_13147800 names. Catalog 4,398 unique
+unit/symbol names,120 alias headers. All six complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-history-ribbon-mesh-burst.json
+and target/ff9-names-history-ribbon-mesh-burst/. Six entire native object pairs
+identical; exact affected/scored namespace six,unchanged pinned strict-relocation
+baselines three exact/three partial,1,408/8,408 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all six sources. Current catalog/source/
+header/object/review bindings and10 isolated commit paths audit. Other units pending.
+
+Established segment-history ribbon,130-triangle fragment initialization/update,
+ten-cycle arc particle callback,five-phase ribbon mesh burst and slot16 scalar fade.
+Preserve history count before head publication,MAC0 guard without addedNCLIP,
+link before fourthSXY/colors,initializer/update signedness,relativevertices before
+delegate and translation afterdelegate,partialfields and predecessorhalf writes.
+Actual sequence timings93/11/12/29/final100 are retained despite different comments.
+RandomY overwritten later remains called; terminal cleanup returns before framecount.
+Provider34C at75 has no invented role; slot16 scalar may turn negative,not clamped.
+Readable definitions,declarations,calls and callbacks map to canonical native/runtime
+symbols via own-unit alias header. No provider identity or original spell guess.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
