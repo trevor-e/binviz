@@ -3852,3 +3852,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Capped point pairs naming acceptance (BV-03/BV-08, P2): FF9
+52b030655 adds10 canonical ovl_131ef800 names. Catalog4,176 unique unit/symbol
+names,91 alias headers; all10 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-capped-point-pairs.json
+and target/ff9-names-capped-point-pairs/. All10 entire native object pairs
+identical, exact affected/scored namespace10, unchanged pinned strict-relocation
+baselines ten exact,2,872/2,872 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all10 sources; current catalog/review/source/header/
+object bindings and14 isolated commit paths audit. Progress4,176/5,812 canonical
+primary files named(71.9%),1,636 remaining; full-tree goal active.
+
+Names cover three point-pair callbacks, capped position worker, full variant
+jittered four-object sequence, timed single-resource handler and four host-kind
+helpers. Own primary bodies and local consumers reviewed; no original ability/
+provider labels asserted. Definitions, declarations, direct calls and callback
+references use readable C names; alias preprocessing retains native/runtime
+identities. Opaque address-valued data remains unchanged.
+
+Preserve upper-only weight cap, negative weights/signed shifts, completion after
+publication and distinct8-byte point records. Variant check has no lower bound;
+p18-4 writes state padding. Exactly two random sign calls; jitter magnitude uses
+signed FUNCTION POINTER remainder200, not a call. Halfword narrowing, partially
+initialized vectors, all table row strides/integer hooks, redundant guards,
+frame6/8 resource/marker order, variant-dependent host-kind calls, ended-pointer
+clears and completion40 after updates stay unchanged. No host-provider meaning
+or original missing-jalr assembly claim independently established here.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
