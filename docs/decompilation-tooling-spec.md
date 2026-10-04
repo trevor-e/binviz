@@ -12810,3 +12810,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual scaled rotating model fade sequence naming acceptance (BV-03/BV-08, P2):
+FF9 7270e75b1 adds 1 selected canonical ovl_10504000 names. Catalog
+5,546 unit/symbol names, 349 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-scaled-rotating-model-fade-sequence.json and Binviz
+target/ff9-names-effect-residual-scaled-rotating-model-fade-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 964/964 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining10504000 controller independently full-read and named for scaled rotating model with delayed fade. Full g14/lifecycle headers bound. Host readings stay offset-named and their domain unspecified; retain own arithmetic, resource order, signed widths and matching pins.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole48byte handler initialization and all update branches read. Scale155 optionally augmented by two host readings above400/800, cap400 after lowered auxiliaryY uses uncappeddelta; resource10 modelhandle, start transform25 with Yrotation64, tintfade45 and completion60. Auxiliary resource9at25, resource7frames and eight screen-color steps. Preserve register16/5, original mixed signed/unsigned fields, uncapped position-adjustment ordering, repeated fnindex calls and unsigned eight-frame range test. No input-stat/spell identity or prototype claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
