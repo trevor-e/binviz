@@ -9517,3 +9517,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Cosine dipped two history trail actor zero load naming acceptance (BV-03/BV-08, P2):
+FF9 c6cb7a7bb adds two canonical ovl_12250000 names. Catalog
+4,904 unit/symbol names, 269 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-cosine-dipped-two-history-trail-actor-zero-load.json and Binviz
+target/ff9-names-cosine-dipped-two-history-trail-actor-zero-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,064/1,064 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor116; signedp0/p8/m10 FOURlanes, U16h18 FOURlanes, INTv20 FOURlanes/scalethree, TWO U16rotation/INTposition history records eachwithunusedfourthlane, TWO U16handles. Init context,70(table,2),200(16,0,state),200(0,0,p8),80(16,23,m10),D4(m10,p8,h18),scales4096,h18X+=2048 U16narrowing,initialINTXYZ=m10signedXYZ,handles338(resource5,1) then58(resource12,151,15680,0,0). History/fourthlanes not initialized; no repair.
+
+Update capturesframe; ifframe<8 (no lowerbound) ang=(frame<<12)/6,BC(state,p8,ang,locals16t[3]),INTXYZ=tXYZ, then Y-=cos(ang>>1)*200>>12. DrawHEAD60(h18,v20,scale,h70), then i0..1 ifframe>=i+1 draw cachedhs/hv with SAMEtrailhandleh72,268(h72,3),26C(h72,-(i<<4) repeatedRGB). OnlyXYZ shift olderhistory0->1 then current->0 AFTERdraw, fourthlanes retaincontents. frame>=6 calls78/return1 AFTERhistory. Ordinaryframe6 endpointweight4096, continuing7 uses4778 no clamp; no historybackfill/providerextent/release/change to provider argument order.
+
+7A44 descriptor12; object+THREEU16pos/tailpad. Init context,200(0,0,pos),load4 inclNULL,nullableh22=220(0,128). Othermodesreturnframe>=30; no per-framework/78/release/initializer. Name reused for same observed actor-zero load behavior only.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
