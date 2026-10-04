@@ -9185,3 +9185,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two derived key points anchor three load hook naming acceptance (BV-03/BV-08, P2):
+FF9 4a6d7bdf7 adds two canonical ovl_1215d000 names. Catalog
+4,880 unit/symbol names, 257 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-derived-key-points-anchor-three-load-hook.json and Binviz
+target/ff9-names-two-derived-key-points-anchor-three-load-hook/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 680/680 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor32 althoughdeclaredSt20 hasobj/pad4/twofour-halfwordvectors ending24; preserveallocation/viewfrontier. Init savecontext,2C4(16,18,local32byte_m1) then2B0(m1,200,v8), SECONDindependent2C4(16,18,local32byte_m2) then2B0(m2,800,v10). v10computedbutnotusedlaterthisbody, cannotdedup/discardsecondquery. Loadresource1 atv8/saveobj inclNULL, nullableh22=220(16,128). Othermodes returntype>=40, no perframework/78/release/providerextent/extrainitializer changes.
+
+7840 descriptor20, stateTHREEobjectpointers+THREEU16position/trailingpadding. Init copyanchorctx.p0C+56/+58/+60 intoXYZ FIRST, then savecontext. THREEseparateloads3/4/5 atSAMEpos/storeobj0/1/2includingNULL BEFOREhookconfiguration. Onlynullableobj0 cb=globalbytehooktable/h12=16/h0C=96; otherobjectsno h22setup or hook. Othermodesreturntype>=40. No addedscale, tracking/release/78, fourthlanecopy/providerextent repair/nullguard or descriptor filling.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
