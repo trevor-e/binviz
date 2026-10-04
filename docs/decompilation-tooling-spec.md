@@ -7109,3 +7109,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Table offset xy jitter tint naming acceptance (BV-03/BV-08, P2):
+FF9 2a1be7f32 adds three canonical ovl_12509800 names. Catalog
+4,722 unit/symbol names, 191 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-table-offset-xy-jitter-tint.json and Binviz
+target/ff9-names-table-offset-xy-jitter-tint/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,424/1,424 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor80. Mode1 saves context, clears UNKNOWNbyte52 of ctxp2C, fetches1FC(0,v30)/20C(0,v38), rotationX/Z0 andY=v38Y+2048 withU16narrow, scaleXYZ8192. If210(0), gets1F4(0) keyX then1F0(256) keyZ and scans17 records in order. Firstmatch cbit15 selects originalZ-(c XOR32768), otherwise originalY-c; copiesoriginalotherlanes. No matching record and (keyX>=600 ORkeyZ>=750) subtracts keyX fromY, NOTZ despitecomment; otherwise unchanged. No lower-key clamp. BaseY storedSIGNEDhalfword, directcameraXYZpublished onlyinit. Counters-1,table70(count1), resource1handle338U16; pads/unusedp0/h2C remain.
+
+Everyupdate poses BEFOREjitter/tint/events. Only25<=frame<40 jitterX andY; Z unchanged contrarycomment. Oddframe first draws conditionalrandom-bit call; even skipsit. Signbranch then distinct signed random%4 magnitude, Y=SIGNEDbaseheight+separaterandom%4. Preserve short-circuit/random call count/order and negative remainder semantics; jitter may replace table-adjustedX withoriginalX. Camera vector notrepublished bythisbody.
+
+Exact0 armsSIGNEDcount8; exact64 arms16. First tint -128->-64 computed BEFOREdecrement gives9samples0..8; when NEWcount==0 normalframe7 captures THREE currentpositionlanes toU16spawnvector, Y-=200, loadsresource5 andnullableh22=220(0,128). This is before tintendpointframe8, not comment40/64 spawn. Second40->-128 starts64, ordinaryterminal79 occurs elapsed15 withcount becoming0, stops before80endpoint. Activeboolean set BEFOREdecrement, therefore both endpoint samples tint ifreachable. Both counters can overwrite in originalorder. Finish78/return1 AFTERpose/jitter/tint atframe>=79. No positional hop orrelease claimed.
+
+Host48 wrapper four-argVOID/discardedresult; integerhelper four-argINT consumed via agreeing INT K&R declaration, exact weighted expression retained. Keep casts/partial vectors/arithmetic/flags/matching assignments and provider unknowns.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
