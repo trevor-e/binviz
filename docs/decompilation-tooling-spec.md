@@ -8027,3 +8027,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Twisted textured tube spiral sprite particles naming acceptance (BV-03/BV-08, P2):
+FF9 93c6b1a20 adds three canonical ovl_1297e000 names. Catalog
+4,811 unit/symbol names, 221 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-twisted-textured-tube-spiral-sprite-particles.json and Binviz
+target/ff9-names-twisted-textured-tube-spiral-sprite-particles/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 364/9,132 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7718 twelveargVOID reserves0x3200 bytes unconditionally (320 FT4s), transforms center with context matrix, f14/f20/27C then own GTE matrix. Twenty axial bands z0/z1 spaced2150, sixteen angular segments step256 with extra per-band twist. RGB col*k>>12 narrowsbyte,code2Copaque255else2E,tpage OR semi lowbits evenopaque. Texturefour32wideblocks/16eight-highrows,lastwidth31/height7. nc initially UNINITIALIZED used in identical ternary arms and identical store guards; preserve matching branch frontier. Actual NCLIP>=0 gate; average depth computed then discarded/replaced4095. f234 length9 BEFORE fourthXY store; q advances ONLY accepted cells despite fullreservation. No GTE matrix restore or pad writes added.
+
+7BC0 fiveargINT init clears h2/h18/w24/w20, four RANDOMcalls settwoangles and two parameters with SIGNED remainder thenU16narrow. Otherfields host supplied. Only noninit kind4 decrements U16 X at hc by128+unsignedha, then draws resource2 via114 using pointer hc and signed h4*3>>1; frame>=17 returns1 AFTERmovement/draw. Otherkinds neverterminate here. No assumed lifetime fade/velocity reuse of otherwiseunused initialization fields.
+
+7D2C descriptor180/48particles/40record/callback. Initphase2/counter0/table6/four58handles10/7/8/9, anchorTWOwords includespad, rotateTHREEhalfwords0, capturedthree-lane vectors offsetZ9557/7168 andINTtranslation. sc/rotpads/e/pb0 untoucheduntilphaseevents. Five phases2..6, ordinary framecounts19/25/11/52/17; transitions afterphasework, terminalphase6 returns AFTERcamera/sprite/flash BEFOREcommoncounter.
+
+Phase2 publishanchor camera fields18/1A/1C, rotatinghandle10 two poses withZ1024offset restored, shrinking8192scale/cosinetints,resource3 context256. >=18 initializeFOUR eXYZ rotations(no pad), load19nullable128. Phase3 decreasinghandle10 n12..19, growingfourposesSAMEhandle7 fromn11 withperpose9*2>>4 scaling, resources1n15..20/4n>=12/12n>=17 and13event12,blueflashthenwhiten21; >=24 copiesanchorword0 thenY+=1024 BEFOREword1, publishescamera, loads13 trackedpb0. Preserve repeatedtrig/order and unsignedrange gates.
+
+Phase4 anchorcopy plus diminishingY=(4096-n4096/10)>>2, pairedsprites3/1context256,handle10first16althoughphaseends10. Flashfirst6 thenchannel2n>=7; >=10 releasespb0 WITHOUTNULLguard, preparesrotY1024 andscales,loads19/15nullable128,fullchannel2white. Phase5 allupdatesfourlarge sprites,resource5pairfirst32. Fulltwistedtube radius7168/color6144/flags23/clut16000/step cosine88+64, table238 colors into partiallyinitializedvector; rotateZ24 andtexture240.
+
+Phase5 128 resource14 sprite draws fromFF0 everyupdate with per-loop angles, two64entry historyrecords halfwords decremented64 beforetwo110 submissions; initial110calls only n0. Three184allocation ATTEMPTS eachupdate n>=8, successfulkind4 TWOword position copies at hc andh10 (secondwritesfollowingpad), randomX±256/circularYZ/randomSIGNEDha%70/size4096..8191. Tablebuffers/pads/no-clamps frontier preserved. Event43load13; n>=44overlayquad grows/clampsgray255; >=51 releasesparticlepool180,loads15,phase6/frame-1 AFTERallwork. Common248 overlayonlyia (phases2/3/4), literalfourteenargcall,sharedunion/pads unchanged. Phase6 cameraanchor/resource3/sineflash n>=16 calls78 return1. No new releases/provider/resource identity guessed.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
