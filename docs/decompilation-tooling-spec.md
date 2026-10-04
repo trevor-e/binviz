@@ -3718,3 +3718,36 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Jittered shared position naming acceptance (BV-03/BV-08, P2): FF9
+69fd1ab43 adds11 canonical ovl_10c6e800 names. Catalog4,135 unique unit/symbol
+names,87 alias headers; all11 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-jittered-shared-positions.json
+and target/ff9-names-jittered-shared-positions/. All11 entire native object pairs
+identical, exact affected/scored namespace11, unchanged pinned strict-relocation
+baselines11 exact,2,544/2,544 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all11 sources; current catalog/review/source/header/object
+bindings and15 isolated commit paths audit. Progress4,135/5,812 canonical primary
+files named(71.1%),1,677 remaining; full-tree goal active.
+
+Names cover five sharedposition callbacks, fixedposition/completion copier,
+indexed jittered-object track sequence and four hostkind/index helpers. Complete
+own-unit bodies/consumers establish roles; suffix0..4 denotes sharedchannel only.
+No original star/ability/provider labels or donor equality inferred. Readable C
+references retain native/runtime identities through own-unit aliases.
+
+Preserve wrapper void/int callee mismatch, bothunusedformal slots, sourceglobal
+case/spelling and copier volatilelimit late-load matching trick. Preserve exact
+independent jitter randomcalls/halfwordwrap, index>=5 upper-only rejection,
+partialfourthvector/transform fields, integercallbacktable/custombuffer1064stride,
+resource/id order and redundantguard. Event2 offset-200,4 groundY0 models,6 marker
+kinds19/20/21,8 unconditional destroy retained. Allvariants complete40; onlyindex4
+calls host78, otherindices applyhostkind2 at5 without earlyreturn. Helper context
+case differs from sequence; no provider/link closure claim and no spellingfix.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
