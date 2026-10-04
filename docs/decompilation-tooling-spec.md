@@ -12783,3 +12783,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual four model anchor tracking sequence naming acceptance (BV-03/BV-08, P2):
+FF9 9e033ffef adds 1 selected canonical ovl_ff28000 names. Catalog
+5,545 unit/symbol names, 348 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-four-model-anchor-tracking-sequence.json and Binviz
+target/ff9-names-effect-residual-four-model-anchor-tracking-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 1,300/1,300 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remainingFF28000 controller independently full-read and named for four loaded models tracking separately recomputed anchor points. Full g11/lifecycle headers bound. Actual byte selectors remain opaque and no host-provider correspondence or attachment anatomy is invented.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole58byte handler lifecycle and all four tracking branches read. Host byte25/26 plus halfword42 select matrix-derived points; four models from resources1/2/1/3 created4, points recomputed and1D8updated from5 unless h30minus1. Initial host2C vector publication and resources4/5at16, completion40. Preserve GCC2.8.1, eight separate32byte stack matrices, repeated provider calls, original state initialization frontier and null checks. Name four-model anchor tracking only, no anatomical anchor or spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
