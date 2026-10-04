@@ -7167,3 +7167,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Clamped position hook delayed companion naming acceptance (BV-03/BV-08, P2):
+FF9 845774aff adds three canonical ovl_1316c000 names. Catalog
+4,728 unit/symbol names, 193 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-clamped-position-hook-delayed-companion.json and Binviz
+target/ff9-names-clamped-position-hook-delayed-companion/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,208/1,208 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 six-argINT callback weight=(n-4)<<9, uppercap4096ONLY, BC(sharedstart,sharedend,w,vec). Calls3C(w>>1) and DISCARDSreturn: unlike1221A000 NOcosineYoffset. Retains vecY=(vecY<<16)>>16 native no-op and shift frontier; widens threeSIGNEDlanes<<12 BEFOREreturn-1 ifn>=lim. Negativeweights/nframes notclamped; globalsu8[]decl here versusU16[3]controller retained.
+
+77EC reports40. Mode1 savesCtx24context,20C(16,a),200(0,0,b), THREEb->sharedend;84(16,0,c),DC(c,a,400,d), THREEd->sharedstart. Distance400 differs1221A000zero. Loads1atconstant9404 then2atd BEFOREhookscales. Nullable1 getscbtable/h12=35/hc32, repeatedguard, unguardedinnerhdrw8=(void*)INTcallback, repeatedguardthen220(0,128)scale; nullable2scale220(16,128). INTcallback declaration agrees with definition butuntypedhookreturnconsumption unknown; Ctx24/W29Ctxcrossfileviews unchanged. Terminal40,no per-frame camera update/finish/release.
+
+7A1C reports28. Captures1FC(0,a), copies THREElanestob then unsignedY-=400; resources3atb/4ata, nullablefirsttable/h12=51/hc32. Exactframe4resource5ata thirdpointertable/h12=30/hc112. Terminal40afterload, no eventbackfill/actorrefresh/release. Preserve own-unit tableaddresses, partialpads/thirdpointer initialization andprovider vectorread/writeextents.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
