@@ -4859,3 +4859,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Drifting threshold fragment naming acceptance (BV-03/BV-08, P2): FF9
+c8a1c9315 adds six canonical ovl_1357c000 names. Catalog4,350 unique
+unit/symbol names,113 alias headers. All seven complete primary bodies reviewed;
+slot354 handler8734 semantically deferred because actualproviderpurpose unresolved.
+Evidence: docs/function-names-drifting-threshold-fragments.json and
+target/ff9-names-drifting-threshold-fragments/. Six entire native object pairs
+identical; exact affected/scored namespace six,unchanged pinned strict-relocation
+baselines five exact/one partial,1,956/4,144 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all six sources. Current catalog/source/header/
+object/review/deferral bindings and10 isolated commit paths audit. Others pending.
+
+Actual1700slot pool/eighttriangle runs,Ythreshold vertex1spawner,drifting32frame
+GTE mesh update and44/130two phase eight-handle sequence established. Preserve
+UPPERCASEglobals versuslowercaseexterns,W29Pool1980typeusedonlyprefix,centroid
+signedshift/randomorder,host08 vectorprovider/deriveddrift (no directvelocity
+integration claim),uniformscale3968,triangleXYZclear butpadflagsretained. Main
+identicalifarms on uninitializedt,partialvectors,Yoverwrites,resourcecallorder,
+threshold2200/signedshift,SCRATCHSP0x1F8003F8 aroundspawn/update andterminal130
+beforecountertail remain. Slot354numericpurpose insufficientforsemanticname;
+bodyunchanged/hashbound. Unit aliases retain canonical linker/runtime identities.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
