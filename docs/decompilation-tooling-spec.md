@@ -1689,3 +1689,42 @@ evidence backlog, without adding a private walker or tooling rewrite. Legacy
 farm/scorer compatibility remains separate from shared workspace acceptance,
 which still requires configured frozen namespaces/compiler inputs/actual output.
 Refresh downstream source-bound evidence after naming.
+
+Battle strip/model rendering naming acceptance (BV-03/BV-08, P2): FF9
+adds20 reviewed names (10 C definitions,10 callable assembly aliases), bringing
+the catalog to2518. ovl_04e800 has295 named callable functions; the remaining
+primary-looking file cf074 is an interior continuation of the already-named
+ceed4 polygon walker. All296 primary source files in this unit are accounted
+for without counting the continuation twice. FF9 commit ff5772911; report
+docs/function-names-battle-strip-model-render.json and compatibility scratch
+binviz/target/ff9-names-battle-strip-model-render/.
+
+All17 affected complete native objects agree; pinned strict scores remain
+unchanged (7 exact,10 existing partials;2748 matched of18740 code bytes). All17
+installed WASM preprocessing comparisons agree. Ten original assembly sources
+stay byte-identical. Independent audit verifies2518 current source identities,
+32 alias headers,21 committed owned paths and4 bounded original code slices.
+No linked/module/gameplay proof or new original matching credit.
+
+Names cover transformed sprite sheets/tiles/quads, keyed textured/Gouraud mesh
+strips, layered screen effects, bone-driven sprite figures, inherited-register
+color fading, packet emitters, depth-offset/sliced model packet construction
+and morphed vertex projection. d4a08 performs DPCS color fade, contrary to old
+linear-vector prose. d597c is a callable triangle linker, contrary to its old
+fragment comment: two original d59d0 jal instructions plus its jr ra establish
+the boundary. Bounded original file11 code and complete caller/source hashes
+bind this observation. cf074 instead shares the ceed4 frame and return path.
+
+Preserve allocation/count/depth order, frame clamp/modulo, signed remainder
+quirks, inherited registers, fixed-point narrowing, UV/palette ordering, raw
+assembly, MAC0 tests, unchecked divisions, existing uninitialized paths and
+extra projected vertices. No backface label is inferred from a MAC0 test after
+RTPT without actual NCLIP. Behavioral names take precedence over stale comments.
+
+Shared readability inventory should distinguish callable inherited-register
+helpers from split interior continuations using explicit caller/control-flow
+evidence and observed original ranges. This extends the existing naming-evidence
+backlog without a private walker or tooling rewrite. Reused legacy farm/scorer
+checks are compatibility fixtures; shared workspace acceptance still requires
+configured frozen namespaces/compiler inputs/actual outputs. Refresh downstream
+source-bound evidence after names change. Preserve unrelated session changes.
