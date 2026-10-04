@@ -14322,3 +14322,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual delayed shared vector object naming acceptance (BV-03/BV-08, P2):
+FF9 8b7ce242d adds 1 selected canonical ovl_fc56000 names. Catalog
+5,602 unit/symbol names, 405 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-delayed-shared-vector-object.json and Binviz
+target/ff9-names-effect-residual-delayed-shared-vector-object/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 400/400 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFC56000 handler independently reviewed and named by delayed object tracking a shared vector. Full g10/lifecycle and own local object declarations bound; no initializer ownership or spell inference.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole10hex-byte lifecycle and full delayed/drop/update arms read. Initialresource8callback at1FCanchor; resource2at20sameanchor, from20 liveobject receives sharedglobal x/y/z halfwords untilminus1drop;finish50. Sharedvector initializer mentioned in comment not independently established, so name sharedvector not constant vector. Preserve gate preventing pre20 uninitializedpointer read, unsigned stores and negativeframe completion behavior.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
