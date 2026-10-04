@@ -8513,3 +8513,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Ten particle fan three model spread typed resource variant naming acceptance (BV-03/BV-08, P2):
+FF9 14cdcc1b0 adds two canonical ovl_f8da000 names. Catalog
+4,839 unit/symbol names, 235 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-ten-particle-fan-three-model-spread-typed-resource-variant.json and Binviz
+target/ff9-names-ten-particle-fan-three-model-spread-typed-resource-variant/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 1,692/3,696 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 op1 initializes phase/frame0 and loads resource14 at parent+24; nullable h22=64. Remaining state externally supplied. Other modes use unchecked Pt8 table index. Phase0 angle=frame256,XY=(4096-sin)*scale*5/2>>12,Z=cos*scale>>12,lum4096. Two-word local copy first U16 minus2048; loaded object tracks ORIGINAL tableXYZ. Clear dropped pointer h30==-1 and guard again. Advance localframe then transition>=4; common draw after transition.
+
+Phase1 holds XYscale*5/2/Zscale, object tracks shifted localXYZ. Parenth28 triggers immediatephase2/frame0. First zero-argument RAND signed%50 adjusts U16h38 by-25; SECOND zero-argument RAND&31 adjusts U16h3A by-16 (distinct from1035F000 extra-arg C0). Companion center copies orderX/Z/Y with matching wrappers; copytable two words to SIGNEDx30/x32 andw34. Transition update draws THREEmodels using prior phase1 scale/tint.
+
+Phase2 angle=(frame4096/20)>>2, THREE independent sine calls forXYscale/lum/directionq. D8(table,q/2q/3q) updates three INTcenters subtractXZ; Y subtractvY+6-frame, vY-4*(frame-6), vY-8*(frame-6). Signed x30/x32 +=U16 increments narrowed, directionbuffer FOURhalfwords unlike related three-halfword local. Updateframe BEFOREfinalcenterZstore; terminal>=20 AFTERallcenterupdates BEFOREcommon poses, nineteen ordinary drawupdates. No reordering or unsigned rotation-view substitution.
+
+Common halves ONLYXYscale. Phase<2 calls2E4(handleA,2),60 with TABLE pointer asrotation/basecenter, GLOW(handleA), then60handleF withoutGLOW. Phase>=2 posesD/C/B at threecenters using particle rotation; GLOWeach. Lum<4000 visibility1/brightnesslum>>5 elsevisibility0/brightness((lum<<1)+lum)>>6; subtract128. FourthINTscale word remains uninitialized; unknown phases keep uninitializedscale/lum0. No object release, extra tint, clipping/clamps or callbacks on terminal added.
+
+7ED8 reports56-byte state/10particles/68-byte record; declared EfSt is52 bytes, trailing requested extent remains unknown. Init context/table70count6; FIVE58 short handles resources19/21/22/23 with154/3DC0/128/0,resource11 with186/3D40/0/128. Zero phase/index/frame/trigger/scroll. TWO separate providers200(firstvec) and1FC(secondvec), not manual anchor/Y-512 copy. Loads resources13 and20 at firstvec, each nullable h22=220(0,70). Mutates TEN global table records X+=92/Y+=512 each init.
+
+Phase0 ordinarytenupdates0..9 (commentnine wrong): one184attempt/update; only success consumesindex,DC(firstvec,table[index],-16,v20), widensSIGNEDXYZ, size=signed fourthtablelane*3 (not related31/8). Scroll+=32; transition>=9 AFTERwork/frame-1. Phase1 ordinaryfifteenupdates0..14, scroll+=sin(frame1024/14)*32>>12; transition>=14 trigger1 thenFOURloads resources17/18/16/15 atfirstvec, each nullable h22=220(0,32). Related unit six-load sequence not copied.
+
+Phase2 firstfiveupdates F100(ctxbytebuffer+4,1,(4-frame)*250/4 shifted RGB). ExactZERO loadsresource25/h22=220(0,32), distinct fromrelatedunit frame7. Terminal>=21 calls78/return1 BEFORE240/frametail. All nonterminalupdates including unknownphase call240(scroll,640,384,64,128,640,256), frame++. No active-particle based finish, retry after phasewindow, extra cap/reset/cleanup or originalspell/light identity inferred. Uninitializedpads/providerextents and literal negative/overflow arithmetic retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
