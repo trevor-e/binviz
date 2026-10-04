@@ -6187,3 +6187,35 @@ proposal retained. No new reusable implementation or private type/ownership/
 CFG walker. No original matching credit,linked image,gameplay or sharedworkspace
 acceptance. Refresh source-bound evidence;historical scorer/reports pinned;
 foreign work/index preserved;full-tree naming goal active.
+
+Paired rise tilt fade naming acceptance (BV-03/BV-08, P2): FF9
+615f83457 adds four canonical ovl_11c64800 behavioral names. Catalog 4,615
+unique unit/symbol names, 161 scoped alias headers. All four complete own-unit
+bodies reviewed; zero semantic deferrals. Other units pending. Evidence:
+docs/function-names-paired-rise-tilt-fade.json and Binviz
+target/ff9-names-paired-rise-tilt-fade/. Four complete native object pairs
+identical; exact affected/scored namespace four; pinned strict-relocation scores
+unchanged, four exact, 1,836/1,836 code bytes, zero failures. All four installed
+WASM preprocessed token comparisons agree. Current catalog/source/header/object/
+review bindings and eight isolated committed paths audit.
+
+Names establish delayed shrinking sprite sequence, paired-handle rise/tilt/fade
+sequence, complementary host weights and integer-by-step interpolation. Actual
+own-unit bodies and typed helper calls reviewed. Sprite draws before scale/step
+updates, only frames 35..47. Paired sequence snapshots positions before motion,
+has seven rise samples and nine tilt samples; fade only applies steps 0..15
+because the outer unsigned frame gate ends before its final interpolation
+sample. Preserve that timing, unreachable nested negative-frame branch, partial
+state/pads, unclamped weights, signed division/multiply order, resource events
+and terminal thresholds. The scalar helper explicitly returns its computed
+value; do not transfer prior VOID host-wrapper used-return mismatch assumptions.
+No original game effect or selected-provider identity claimed; no body/type/
+layout repair, matching credit, linked-image, gameplay or workspace acceptance.
+
+Readable definitions, declarations and callers propagate; own-unit aliases
+retain canonical linker/address/runtime identities. Maintained naming/farm/
+scorer/preprocessor interfaces and thin adapters reused. Existing BV-03
+reviewed-deferral versus unreviewed prioritization proposal and BV-06 provider
+frontier retained. No new reusable implementation or private type/ownership/CFG
+walker. Refresh source-bound evidence; historical scorer/reports pinned; foreign
+work/index preserved; full-tree naming goal active.
