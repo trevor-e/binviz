@@ -10347,3 +10347,57 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot script control operands naming acceptance (BV-03/BV-08, P2):
+FF9 b0c3d525d adds sixteen selected canonical boot names. Catalog
+4,976 unit/symbol names, 298 scoped alias headers. Sixteen selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-script-control-operands.json and Binviz
+target/ff9-names-boot-script-control-operands/. Sixteen full native object pairs equal;
+exact affected/scored namespace sixteen. Pinned strict-relocation scores unchanged:
+5 exact/11 partial, 264/1,500 code bytes, zero failures. Sixteen
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and twenty isolated committed paths audit.
+
+Read current cursor byte0 unsigned<<16, save shared pointer, store WORD+20 FIRST; OR cursorbyte1<<24 and SECOND WORD+20 store; then cursor+=2 and shared HALF+68=0. Preserve separate writes/current-cursor reload, no shared dirty bit or bounds guard.
+
+Capture shared pointer/cursor; store count U16+68 from byte0,cursor+1,zero sentinel256. Reload record cursor, target byte0<<16|byte1<<24,cursor+2; reacquire shared pointer after cursor update, currentWORD+20&FFFF0000; step=(SIGNED32 wrapped(target-current))/SIGNED32 U16count; write rounded current+20 then WORDstep+24. No clamp/dedup/reordered pointer acquisition or signed-count conversion.
+
+Capture shared/cursor; target=((U32)(S32)(S8)byte1<<20)|(U32byte0<<12),cursor+=2,shared U16+66=0,globalWORD+8 OR128,sharedWORD+48=target. Preserve sign extension before unsigned shift/store order and aliasing.
+
+Capture differently capitalized shared external symbol; duration U16+66=byte0,cursor+1; SIGNED16 zero-test/sentinel256. Target signed byte1 extended then UNSIGNEDshift20|unsignedbyte0<<12,cursor+2; reacquire shared pointer,startWORD+48&FFFFF000; SIGNED32 wrapped target-start divided by SIGNED16count,store current+48 then step+4C. Preserve macro definitions, unsigned wrap, signed divisor and distinct external symbol spelling.
+
+Read current flagsWORD+11C BEFOREunsignedbyte0/cursor+1; write flags|3 then U16+B2=byte<<8. No clearing count or signed-byte conversion.
+
+Count U16+B4=byte0/cursor+1/zero->256,then reload cursor; current U16+B2&7F00; delta=(UNSIGNEDbyte<<8)-current then SIGNED division by U16count;cursor+1,current U16+B2=masked current,U16+FC=delta narrowing. Unlike biased control mask only7F00, no flag update or clamp.
+
+Read flags before SIGNEDbyte/cursor+1; U16+B8=0,flags|3,U16+BA=0,WORD+78=(U32)SIGNEDbyte<<23. Preserve negative conversion to unsigned prior shift and exact store order.
+
+Count U16+B8 byte/advance/zero256; currentWORD+78&FFFF0000 before cursor reload; U32delta=((U32)(S32)(S8)byte<<23)-current wraps; reinterpretSIGNED32divideSIGNED32U16count;cursor+1,currentWORD+78,U16+BA0,WORD+7Cdelta. No total-sum or signed subtraction rewrite.
+
+Advance cursor BEFORE start store WORD+8C=(U32)(S32)(S8)oldbyte<<23;reloadcursor/advance BEFORE U16+BAcount and zero256;reloadcursor/targetSIGNEDbyte<<23 minusWORD+8C in U32,castSIGNEDdelta/divideSIGNED32U16count;advance thenWORD+90step. Explicit start/count/target uses different fields from current-value ramp; no current+78 or flags writes.
+
+Flags loaded before unsignedbyte/advance; U16+C00,flags|3,U16+BE=((byte+64)&255)<<8. Preserve low-byte wrap before shift, no signed interpretation.
+
+Count U16+C0 byte/advance/zero256,reloadcursor,currentU16+BE&FF00;delta=(((unsignedbyte+64)&255)<<8)-current SIGNEDdivideU16count;advance thencurrentU16+BE/deltaU16+104. Mask differs from B2-ramp, zero sentinel256 not257, no flags update.
+
+Read byte UNSIGNED intoSIGNED32local,advancecursor,storeU16+C4=(U32)value<<0 unchanged literalshift. No sign extension/count/reset/dirtyflags.
+
+Capture shared/cursor/read unsignedindex/advancecursor BEFOREtable pointer read shared+30/nullreturn. Indexed U16 tableentry atindex*2; entry>32768 ONLY clears U16+12E andWORD+34bit4096. Entry==32768 still valid: U16+10A255,pointer+18=table+entry+32,flags=(WORD+34&E6FFEFF7)|4096. No table bounds guard, >= change, missing-table activeflag clear, cursor rollback, or count initialization.
+
+Presetentry=global+U16record+9A*16;writeU16+12A=entry+12 FIRST then readotherU16entry+14; flagsWORD+11C|FF00,flagsWORD+34&E6FFFFFF,writeU16+12C=other LAST. Does not consume cursor. No preset bounds checks or reordering when memory aliases.
+
+Read SIGNED8 byte intoS32/advancecursor;storeU16+106=(U32)value<<0 narrowing. No dirtyflag, count or saturation.
+
+Read SIGNED8 byte intoS32/advancecursor;U16+106+=signed delta with narrowing/wrap, no clamp/dirty bit update.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
