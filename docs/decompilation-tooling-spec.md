@@ -12009,3 +12009,32 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+World residual upper buffer accessors naming acceptance (BV-03/BV-08, P2):
+FF9 07c60ad21 adds 2 selected canonical ovl_08c000 names. Catalog
+5,504 unit/symbol names, 321 scoped alias headers. 24 selected complete overlay
+bodies reviewed and bound, 2 named and 22 explicit full-body deferrals; remaining boot and overlay functions pending. 0 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-world-residual-upper-buffer-accessors.json and Binviz
+target/ff9-names-world-residual-upper-buffer-accessors/. 2 full native object pairs equal;
+exact affected/scored namespace 2. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 24/24 code bytes, zero failures. 2
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 6 isolated committed paths audit.
+
+All eight residual08C000 bodies fully reviewed: two buffer accessors named, six deferred. Also all six residual08D800 bodies and all ten bodies of0E8800/102000 fully read and purpose-deferred. Twenty-four selected complete bodies across four units; alias transformations scoped only to08C000. No lifecycle/state domain guessed from template comments.
+
+Full selected bodies and complete bound semantic providers are the evidence; transplanted template comments do not transfer purposes. Known buffer/scene/command/bitfield behavior named, unresolved field/category/callback purposes explicitly hash-bound and deferred. Every distinct unit/symbol identity remains separate.
+
+Complete pointer-valued accessor returns801EDF00. Local annotation establishes helper overlay buffer; no guessed extent/ownership or pointer conversion. Distinct from same-address integer accessor.
+
+Complete independent int-valued accessor returns801EDF00. Retain int result and separate entry despite same constant; do not merge or repair its type based on pointer-valued sibling.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
