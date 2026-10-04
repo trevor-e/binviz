@@ -4486,3 +4486,36 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Mesh fragment breakup naming acceptance (BV-03/BV-08, P2): FF9
+a6f31eb30 adds seven canonical ovl_13387800 names. Catalog4,256 unique
+unit/symbol names,100 alias headers. All eight complete primary bodies reviewed;
+seven named,one explicit semantic deferral for the unknown slot354 wrapper.
+Evidence: docs/function-names-mesh-fragment-breakup.json and
+target/ff9-names-mesh-fragment-breakup/. Seven entire native object pairs
+identical,exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines seven exact,5,460/5,460 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all seven sources. Current catalog/source/header/
+object/review and deferred-source bindings,11 isolated commit paths audit.
+Other units remain pending; full-tree goal remains active.
+
+Names cover1980-slot triangle fragment pool,object record runs,first-free-slot
+finder,triangle-centroid spawning,fragment motion/transformation,cosine-scaled
+particle path and two-phase mesh breakup sequence. Actual caller/layout evidence
+binds roles without guessing the original ability label or host provider.
+Preserve unsigned size/24 and signed halfword totals,unchecked runs/indices,
+centroid division before fixed shift,partial slot initialization,random order,
+old-relative vertices before host motion update,new-Y floor test,GTE write pipeline,
+triangle flags on release and retirement at128. Path Xvelocity grows17/16 while
+Y decays7/8; output sampling precedes particle motion and terminal return.
+Main state92,phase thresholds90/128,eight handles,partial colours/padding,
+legacy int/void declarations,extra stepper argument,empty asm barrier and all
+matching wrappers remain. Slot354 purpose deferred with source-bound reason.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved. Current release executable observed externally changed this turn;
+the naming checks retain their existing scorer/compiler selection without rebuild.
