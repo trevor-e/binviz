@@ -8197,3 +8197,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Eight phase model pair actor points loaded objects naming acceptance (BV-03/BV-08, P2):
+FF9 e489130fc adds one canonical ovl_12a8c800 names. Catalog
+4,821 unit/symbol names, 226 scoped alias headers. One full own-unit
+body reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-eight-phase-model-pair-actor-points-loaded-objects.json and Binviz
+target/ff9-names-eight-phase-model-pair-actor-points-loaded-objects/. One full native object pair equal;
+exact affected/scored namespace one. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/9,480 code bytes, zero failures. One
+installed WASM token comparison agrees; current source/header/catalog/object/
+review bindings and five isolated committed paths audit.
+
+EC724 descriptor128/initphase/counter0/savedctx/1CC/table5. FOUR338handles131flags0/129flags1/130flags0/128flags0, nestedhostp4/p54unguarded68selector. ThreezeroINTposition stores/reloads have emptyasmbarriers, scales6144 thensecond2048,three-halfword rotations0; secondtranslationY=-512. Actorpoint/tempvectors/objectpointers notinitializeduntilphases. No semantic sound claim solelyfrom68comment.
+
+Eightphases ordinary framecounts25/25/22/22/25/22/22/33. Common64 firsttransformargument is THREEINT jitteredcopyofposition whiletranslationalso&w48; preservesunresolvedvectorABI/meaning. Three rand_ncallsranges14/14/8/6/2/1/1 inphases0..6, no randominphase7. 254writesactorpoints, publishTHREEU16 toctxbyte24/16. Phase0/1 providerread Ythen+700-frame12, two-wordcopyincludingpad/qY+=768,exact0load2nullabletable/h12=16/hc204/h22=64; symmetric±X twin28Cposes onSAMEhandle130 withselectors1/2 and handle128/fadeweight. Resource131model/texture240two/screen248 THREEcolorbytes/pads retained.
+
+Phase0>=24 next1/1CC AFTERdraw,phase1>=24 next2/1CC/cleartwopointers/68s[2]. Phase2 first10/last>=20 host1900/10, exact0pointpublicationsetsXZfromzerotranslation. TWO254reads fromselectorsD30[0]/[1]; fullscalehandle131 plus129XZquarter/Yhalf. Exact12 loadsTWOresource1 withdistincttables/h12=50/hc28/h22=32. ROTmacro writesconstant2560/0/0 toPOSITIONfields5C/5E/60 (not actual rotation despiteoldcomment), clearsendedh30. >=21 next3/pointersNULL WITHOUTreleases/Ytranslation-=100/68s[4].
+
+Phase3 host1900first10/7from17, selectorsD2C0/1, first18 Y+=sin(frame1024/18)*41>>12/publishpoint. Pairscaleshalf;exact12TWOresource6/constantposition2560;>=21 next4/pointersNULL/68s[5]/translationY-=3096,254selector33,Y-=70,publishbyte16. Phase4 exact0 1CC,selectorsD34[0]/[1],exact6tworesource6/constant1024position,>=24 next5/1CC/pointersNULL/translationY-=900/19024.
+
+Phase5/6 jitterrange1 makesTHREErand_n(1) calls retained. D38[0]/[1] pointsY-=170,publish24, two-wordqx→rxincludespad thenrY-=70/rZ-=128. Exact11loadresource4nullabletable/h12=50/hc28/h22=-128 thenresource14untracked, guardedrepeat h22=-128; exact0resource6atrxothertrack. Positionmacro1024/0/0, model129XZthird/Yhalf. >=21 nextphase/pointersNULL/1CC/19024 (phase5) or68s[6](phase6), selectorD38[1] or4 withY-170/-896,publish24. No automaticrelease or movementunmentionedinbody.
+
+Phase7 no jitter,host19023 fromframe23,selector4point: beforeframe16 Y+=128-((4096-cos(frame64))>>2),elseY+=128. Publish24;qxZ+=550;exact10resource9w78nullable128. PositionmacroSIGNED-624/0/0 convertedU16 intohostposition. Modelpair/scalesandtwo240calls EVERYphase2..7. Terminal>=32 calls1CC/78 AFTERallphasework BEFOREctxflagclear/counter; otherupdatesclearf28=0/counter++ evenunknownphase. Partialvectors, overwrittentrackedreferences, K&R/providernull frontiers and no added ownership cleanup preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
