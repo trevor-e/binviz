@@ -9157,3 +9157,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Slot selected hooked two stage load buffer marker naming acceptance (BV-03/BV-08, P2):
+FF9 a3871d7f9 adds two canonical ovl_10456000 names. Catalog
+4,878 unit/symbol names, 256 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-slot-selected-hooked-two-stage-load-buffer-marker.json and Binviz
+target/ff9-names-slot-selected-hooked-two-stage-load-buffer-marker/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 604/604 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor20; initreadsidx=*out/savesstate.idx/globalctx BEFOREvalidation. ONLYidx>=((Cnt79A8*)ctx.pc).b24 invalid, helper(ctx,7,1) thenreturn1; negativeindicespassliteralguard. Validhelper(ctx,7,0),2D8 calls1/5/7(job.id,-1),1FC(state.idx,TWOINTwordvectorstate8),loadresource8/saveobj inclNULL. Nullableobjw14=(INT*)(globalbytehooktable+idx*1440),h12=10,hC=144, NESTEDrepeatifobj beforeh22=220(idx,32). Preserve redundantguard/order andsignedunboundedtableoffset, no inferredtableextent.
+
+Statep4 NOTinitializedbyinit. Othermodes capturejobtype; exact15load6 atSAMEsavedtwo-wordvector/savep4 inclNULL/nullableh22=220(idx,32). Exact10helper(ctx,7,1). Returnt>=50 AFTERloadcheck/markercheck; sourceorderliteral. No78/release/restore/missedframebackfill/vectorinitializer/hookcaller inference or automaticcleanup.
+
+794C VOIDhelperBuf10**/SIGNEDINTi/INTv, dereferencepp thenU8store(*pp).d[i] atbuffer+16+i, no bound/nullguard. d[1]notallocatedextentproof. MainG14Ctx* passedthroughK&Rdeclaration interpretsctx.p0 asBuf10* whileheaderdeclaresG14Ctx0 first18padbytes+b12; unknownactualextent/alias/frontierretained. HeaderdoesNOTprovesafetyofbyte23/marker7orcompletebufferpurpose. No newtypecast/schema repair/provider admission; namesdescribeactualbytewrite/hookedloadbehavior.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
