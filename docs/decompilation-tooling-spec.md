@@ -11635,3 +11635,63 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot geometry line effect helpers naming acceptance (BV-03/BV-08, P2):
+FF9 683ab9064 adds eighteen selected canonical boot names. Catalog
+5,439 unit/symbol names, 313 scoped alias headers. Twenty selected complete boot
+bodies reviewed and bound, eighteen named and two explicit full-body deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-geometry-line-effect-helpers.json and Binviz
+target/ff9-names-boot-geometry-line-effect-helpers/. 31 full native object pairs equal;
+exact affected/scored namespace 31. Pinned strict-relocation scores unchanged:
+21 exact/10 partial, 7,416/17,260 code bytes, zero failures. 31
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 35 isolated committed paths audit.
+
+Ten complete matrix/drawmode/RNG/vertexstrip and actor-consumer bodies read/hash-bound. Actual count/step/XYZ/free-list/GTE/two GP052line packets establish effect role; specific weather/environment identity unknown. No ambientvolume meaning inferred from stale comments. Scalar square root retains signed comparisons, radial square helper checks only first two squares, primary/secondaryinitializers have DIFFERENTreturn reservations. Full-tree naming remains active.
+
+Entire raw x/y signed square products reject nonzeroHI/negativeLO, pair sum negative->INTMAX, then subtract UNCHECKEDthirdsquare LOWword. Full actorlookat uses X/Z,third0. Behavioral radialdistance role, not ordinary length or fullysaturatingthree-term claim; exact signed/overflow/sentinel/delayslots retained.
+
+Whole raw three signed squares, eachHI/LOcheck and signednegative sums->7FFFFFFF. Full camera target caller compares squaredXZthird0. Preserve wrapping sums/no ordinarysqrt/fullunsigned domain claim, exactnops and branch delays.
+
+Whole portable scalar32bit root iteration: signedSLT comparisons of U32radicand/trial;rootbit4,shift30..0 step2,finalSIGNED>>2. No vector/GTE role, unsignedcomparisonfix or domain-normalization; priororiginalrange note retained.
+
+Entire raw all eightoctant table branches, specialzeroresult0, signedratioDIV from shifted10bitnumerator,tableEAD0 U16 and offsets400/800. Fullmovement/lookat/relativebearing callers establish XZangle role. Keep divide/shift overflow and missing tablebounds, negativeorientation and returnrange, allinstructions/strings; no libmatan2 replacement.
+
+Whole destructiveinitializerraw: writeWORD0zero/halfword4=-a3 BEFOREnulltest, thenframe/matrixbuild/GTErotation/translationzero andshortXYZstores. Original overlaps530A8sharedsequence but independentcanonicalrawsource retained. No null safety, padding/angle/stack/zero-sizedvector repair, exact delay-slot stackdecrement retained.
+
+Entire portable existingvectorentry: nullreturnsuntouched; partialframeX/Yangles/zeroWORD1, CPUmatrix/setrotation,zeroGTEtranslation,rawWORDvector loads,RTV0 andshortstores. Fullmatrixwrapper/setrotation read. No destructive5309Cinitializer, vector extent/type/GTE state abstraction changes; native/WASMconditionalmacros remain.
+
+Entire raw convexpolygon signededgecross products viaGTE, allnonnegative ORallnonpositive includingboundary. Fullinteraction caller uses kind3 resourcepolygon. Originalcount0stilldo-firstedge, packedhalves/subtraction/narrowing/GTEcommands remain, no genericconcavepolygon/bounds claim.
+
+Whole raw actorXZdelta,targetbearing via52F24, a2-bearing LOW12 signextended20/20. SAVEDreturnt2 and a2survivescallee rawABI, no Csignature/regsave rewrite. Fullmove/lookat/interaction roles establish relativeheading, originalorientation/truncation preserved.
+
+Whole primaryeffectframe: bufBC18+22B0ifbanknonzero; seedwhenstate9<2; incrementstate9ifnonzero; list->overlaybracket/GTEcurrentmatrix/projectemitnodes returncursor. Entire linked raw lineemitter establisheslineeffectdomain, no assumedrain/weather effect or overlay provider identity.
+
+Entire222twelve-byte free-nodepool, GP0drawmodecur/saved, listedcounterzero andBC18nextbuffer. Return p+4560/12; withNULLp remainsNULL andpointerarithoriginal; q+222stillwritten. No doublebuffer/rainextent/NULLfix or alternateinitializerreturn conflation.
+
+Whole onlybothnonzero countclamp upper82 (negativeallowed), ALWAYS U32step*16 store; state9=a0==0&&a1>0 else0. Entireseed/projectproviders tie count and vertexstep, distinctprimaryblock retained, no unsignedcount/speed unit assumptions.
+
+Whole secondaryeffectframe: same seed/counter logic, currentbank/matrix and list->secondaryemitter, returns callerprovidedcursor. UnlikeprimaryNO overlaybrackets/bankbufferaddition. Originalmatching calls/stateordering/prototypeviews retained.
+
+Whole secondary222nodepool anddrawmodepair, BC48bufferend, returns p exactly (notprimaryp+4560/12). PreserveNULLarithmetic and fullblockwidth, twoidenticalconceptualinitializers staydistinctaddresses.
+
+Whole distinctsecondary count/step/seed setter with signedcountupper82 only, U32step*16 andseedflag; fullsecondaryrawprovidersread. Originalmissingcountupdatewhenzeroargs retained, no ambientvolume meaning from stalecallercomment.
+
+Entireraw primarypool: alignRNGcursor-4, count*4endcheck/refill, signedpackedrandomXYZ withargumentYoffset; moveavailablefreechain toactivelist/updateexhaustflag/state andglobalRNGcursor. Preservecalleeclobber/specialtregisterassumptions, no exhaustionlimit/failedRNGrepair or randomizedrainidentity.
+
+Complete raw primary active-node RTPT/GTE pipeline: advancevertexstrip, recycle nodespositiveheight, distancecolor clamp40..FF, two linked20byte GP052Gouraudlines pernode thenbankdrawmodeOTlink/currentcursor. Fullvertexstep read, initialnonnulllist precondition unchanged. Retain hand-schedulednextnodeGTEbeforepreviouspacketfinish/t-regcontracts, no ordinary ABI or node/packet extent admission.
+
+Entireraw secondarytwin usesBC50 withitsownfree/activelist, RNGpackedwords/signedshifts/Yoffset/exhaustflag. Allbehavior readindependently, not assumed identicalfromcomment. No dedup or preservation of guessedsceneeffectownership.
+
+Entireraw secondaryBC50twin, full53728vertexstep, 2x20byte GP052linepackets/GTEcolor/listrecycle/OTpublish returnedcursor. Exact callee andstateidentitiesstaydistinct, instructions/delayslots/registers/uninitializedcontractviews preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
