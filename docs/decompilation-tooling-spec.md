@@ -5491,3 +5491,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Slot16 sprites and twelve point spark trails naming acceptance (BV-03/BV-08, P2):
+FF9 5a9d000b0 adds five canonical ovl_120e4800 names. Catalog4,502 unique unit/symbol
+names,138 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-slot16-twelve-point-sparks.json and
+target/ff9-names-slot16-twelve-point-sparks/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+three exact/two partial,3,092/3,756 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established slot16 sprite/model timeline,eight-frame callback,emission-ring reset,
+twelve-point spark trail and jittered emitter. Preserve negativeheader offsets,
+provider arity,pins,failedallocation/random ordering,partials,pads,phase-gated
+transition,nullablecall and terminaltail omission. Callback/caller references
+renamed; own-unit aliases retain canonical native/runtime identities. Exact game
+effect/provider identities unresolved. No body/type/layout/ABI/originalname claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
