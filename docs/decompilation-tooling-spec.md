@@ -1955,3 +1955,39 @@ Legacy farm/scorer compatibility evidence is not shared workspace acceptance
 or scorer migration. Shared acceptance needs configured frozen namespaces and
 compiler inputs. Refresh downstream source-bound evidence against current
 catalog/header identities. Preserve unrelated runtime-adoption work.
+
+Battle hit/script-helper naming acceptance (BV-03/BV-08, P2): FF9 commite624dc9ba
+adds77 reviewed C definitions, reaching2845 unique unit/symbol names. Unit
+ovl_02d800 now has77/151 primary definitions named;74 remain, including five
+reviewed but uncertain roles. Evidence: docs/function-names-battle-hit-script-
+helpers.json and binviz/target/ff9-names-battle-hit-script-helpers/. All77
+complete native objects and installed WASM preprocessed tokens agree; original
+strict scores stay unchanged (76 exact,one existing partial;7436/7780 matched
+code bytes). No new matching credit, linked image/module or gameplay proof.
+
+Complete82 primary bodies,19 semantic inputs and three shared-header identities
+establish command slots, hit/damage calculations, unit lookup, weapon anchors,
+model colors and action-script commands. Four original code ranges plus35
+native enter/run handler pairs are pinned without provider/index-safety claims.
+Catalog/current-source/header and isolated committed-path checks pass across
+2845 names and39 alias headers. Five deferred source identities remain explicit.
+
+Shared field labels are not semantic authority: bit0 is SET for party units,
+CLEARED for enemies;20-byte effect slots are COMMAND entries with six party and
+three enemy slots. Keep fields/layouts and conditions unchanged. Entity1e is a
+model id used by enemy construction, not a script id; entity62 is a sound id.
+The percentage calculation uses target MAX HP, not current HP. Retain signed
+costs/modifiers, chance narrowing before clamping, modulo/zero-duration hazards,
+null-target unlink behavior, unguarded packet traversal and hidden-part cursor
+asymmetry. Unconfirmed status masks stay explicit instead of enum guesses.
+
+Actual script consumers establish delayed effects/sounds, uniform scale and
+position tweens, texture animation and model fading.7270 pauses texture deltas,
+not primitive-type masking. Getter pointer declarations for raw type/angle-step
+words remain ABI inconsistencies, not valid object-pointer assertions. Particle
+count31 is a count, not merely an enable boolean. Native aliases stay unit-scoped.
+
+Legacy farm/scorer compatibility evidence is not shared workspace acceptance
+or scorer migration. Shared acceptance needs configured frozen namespaces and
+compiler inputs. Refresh downstream source-bound evidence against current
+catalog/header identities. Preserve unrelated runtime-adoption work.
