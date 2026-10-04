@@ -9657,3 +9657,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Spinning cosine dipped three history trail actor zero load naming acceptance (BV-03/BV-08, P2):
+FF9 c7e9e25a4 adds two canonical ovl_12297800 names. Catalog
+4,914 unit/symbol names, 274 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-spinning-cosine-dipped-three-history-trail-actor-zero-load.json and Binviz
+target/ff9-names-spinning-cosine-dipped-three-history-trail-actor-zero-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,120/1,120 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor140; THREErotationU16fourlane/positionINTfourlane historyrecords. Init context,70(table,2),200(16,0,state),200(0,0,p8),80(16,23,m10),D4(m10,p8,h18),scales4096,h18X+=2048 U16,INTpositionXYZ=m10signedXYZ. U16head338(resource2,1),U16trail58(resource12,151,15680,0,0). Fourthlanes/history untouched/uninitialized.
+
+Update frame<10 includingnegative ang=frame<<9,BC(state,p8,ang,locals16t[3]),INTXYZ=tXYZ,Y-=cos(ang>>1)*400>>12,h18X+=512 U16. Drawhead then i0..2 ifframe>=i+1 drawhs/hv sameh8A,268(handle,3),26C(handle,-(i<<4) RGB). ShiftONLYXYZ 1->2 then0->1 thencurrent->0 AFTERdraw, unusedfourthlanes retained. frame>=8 calls78/return1 AFTERallwork. Ordinary8weight4096 withNINTHspin increment; continuing9weight4608/tenthincrement. No clamp/historyinit/providerextentrepair/release/dedup.
+
+7A7C descriptor12 object+THREEU16pos/tailpad. Init saveEfxcontext,200(0,0,pos),load1 inclNULL/nullableh22=220(0,128). Othermodesreturn>=30, no per-framework/78/release/backfill/padinit. Name describes actual actor-zero load, not resource/spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
