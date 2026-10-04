@@ -7477,3 +7477,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Grey derived pair flash growing sprite marker naming acceptance (BV-03/BV-08, P2):
+FF9 85ac932d7 adds three canonical ovl_fcf3000 names. Catalog
+4,761 unit/symbol names, 204 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-grey-derived-pair-flash-growing-sprite-marker.json and Binviz
+target/ff9-names-grey-derived-pair-flash-growing-sprite-marker/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,556/1,556 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor84, savesctx,1FC/20C actor16,A three lanes->E,DC(A,B,1000,E) thenSIGNEDY=-200. Selectors13/29 via2C4 into two32byte locals;2B0 offsets500 intoC/D. Loads13then14 nullableh22=220(16,256);D4(C,E,F)/(D,E,G). Exact10flashRGB128 at U8p20+4 (byteoffset4) thenFOURloads15/16/11/12 atE;exact11flashonly. Frame>=13 FOURTEENarg248, scale frame*128+2432 (multiplication retained), zero3U16rotation andRGB8 (not relatedRGB40). Scratchunion reuses first matrix, pads/tailsuninitialized, no extent assumptions.
+
+Each nullable object clears on h30==-1 then guarded THREE tracklanes intoU16h5C/5E/60; SIGNED sourceY converts aswritten. Terminal !(frame<40) afterdraw/tracking; no78/release. Context p20 U8pointer plus4 differs INTpointer variants, unchanged.
+
+7BC4 descriptor16, n=*io SIGNEDfullword, storedbefore p0C/contextsave/uppercountguard; negative indices notexcluded. Invalid byte7=1/return1leavesoldptr. Valid clear7 then1FC(n,vec),resource7,nullableh22=220(n,32). Exactupdate1setsbyte7, terminal!(frame<40). Localctx pointer declaration in bytehelper differs Buf10** definition; preserve opaque firstwordview/ABIfrontier. Writer (*pp)->d[i]=v, data+16, unboundedindex/U8narrowing; no flag-purpose guess.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
