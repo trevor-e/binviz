@@ -8657,3 +8657,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Fixed negative z load twelve group inward spiral naming acceptance (BV-03/BV-08, P2):
+FF9 d75624e39 adds two canonical ovl_13bd2000 names. Catalog
+4,847 unit/symbol names, 239 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-fixed-negative-z-load-twelve-group-inward-spiral.json and Binviz
+target/ff9-names-fixed-negative-z-load-twelve-group-inward-spiral/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 156/2,448 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor0. Init writes ONLYfirstthree lanes ofglobalSIGNEDfour-halfwordposition0/0/-1560, savescontext,loadresource30 anddiscardreturn. Fourthlane untouched. Othermodes returnframe>=64, no per-frame work/finish78/release or state allocated. Resource ID identified but original resource purpose unresolved.
+
+77A0 descriptor0, all effect state in globals. Initcountdown0/contextsaved; FORTYEIGHT separate198 resource lookups in twelve groups: (3,18),(8,15),(21,16),(22,13),(24,14),(25,11),(26,12),(27,9),(28,10),(1,6),(4,7),(17,5). In each pair first record resolvesfirstresource and EACHofnextthree resolvessecond independently; calls not deduplicated.
+
+Twelve groups ofFOUR20-byte records. Groupg angleorigin=-681*g; recordk angleorigin+192*k,radius16+16*k,delayg-(k-4)=g+4-k,life8. Init each actualrecord throughbyte offsets andmatchingwrappers. Capture THREE unsignedcenterlanes fromhostp2C+24,globaldeclaredTHREEhalfwords; no assumed fourthlane read extent or extra provider initializer.
+
+Exactframe0 setscountdown32. Exact8 loadresource19 atcenter andnullableh22=128. Exact24 EACHactor countbyte drivesunboundedunsizedglobalpositionarray:200(actor,0,position),THREE loadsresources20/2/23 inthatorder, eachnullableh22=220(actor,128). Actorcount maychange whileloop runs; no snapshot/cap/release added.
+
+While countdownNONZERO, predecrement thencontextflag512 aroundall48 records. DelayNONZERO decrements ONLY, doesnotdraw when it reaches0 thisupdate. Else lifeNONZERO angle-=64,radius-=2,life-=1 THENdraw114(resource,center,NULLrotation,(newradius<<8)+16384,0,1,newlife512,cos(newangle)*newradius>>12,sin(newangle)*newradius>>12). Literalradiusdecreases, not oldcomment outwardspiral. Life0endpoint STILLdrawn onlastactiveupdate; last recordstartsradius16andends0, othersstart32/48/64 andend16/32/48.
+
+Draw order nestedgroup/record preserved, width dependsnewradius andfade newlife512, offsets explicitly passed aslasttwoarguments rather thanmutatingcenter. Afterallrecords clearcontextflag0. Negative externallysupplieddelay/life/countdown continue literalNONZERO arithmetic; no positiveonlyguard or extra cap. Ordinaryallrecords finishbefore32-countdown expires but globalstate remains external. Returnframe>=96 AFTERevents/countdownwork, no78 or cleanup. No missedframebackfill and sharedglobals remain unresolved lifecycle frontier.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
