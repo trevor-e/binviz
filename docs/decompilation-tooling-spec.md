@@ -10137,3 +10137,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two phase slide resource callback ten scatter spawner naming acceptance (BV-03/BV-08, P2):
+FF9 bd07a0c4e adds two canonical ovl_114d8000 names. Catalog
+4,948 unit/symbol names, 291 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-phase-slide-resource-callback-ten-scatter-spawner.json and Binviz
+target/ff9-names-two-phase-slide-resource-callback-ten-scatter-spawner/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 464/1,360 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 mode1 phase0/load9 at&state.p4 inclNULL/nullableh22=0 ONLY. Othermodes phase0 TWOwordcopy state.w10/w14 intos16w[4],step=(frame<<12)/20,Y-=4096 thenY+=step,Z+=(4096-step)>>1;s16narrowing. CopyBOTHwords to state.p4/pz includespad0A. SIGNEDXYZ->INTpos,scale455each,s16rotframe*24/frame*40/0 withFOURTHrotlaneUNINIT.60(rot,pos,scale,rec.h10),ctxflag128/114(resource7,pos,NULL,4096,0,1,-1,0,0)/clear0. >=20 AFTERdraw phase1/PRECEDINGstatehalfword=-1; nullableobj h38=*(s16*)(*(pointeratobj+36)+6) withnestedpointerunguarded;stateY0/100(ctx.p20+4,1,32,0,0),return0.
+
+Phase1 rot1024/0/frame<<5/phase1; TWOwordcopy statep4/pz via matchingwrapper,localY-=frame*4. ctxflag16/114(resource3,localpos,NULL,12288,frame,phase,-1,0,0). Ifframe<16 ctxflag100/128(resource2,localpos,NULL,-1,frame,phase,-1),clear0/114(resource12,statepos,rot,4096,frame,phase,-1,0,0). Finalclear0;>=24returns1 AFTERdraw. Unknownphase0return/no newflagclear. Negativeframes/raw recordextent/phaseclockresetexternal, no clamp/78/release/backfill/newpadinit.
+
+7A84 mode0 descriptorwritesORDERsize20,d8=24,fncallback,d4=11,dc/d10untouched. Init done0/count0/context,70(table,1),INThandle338(resource15,0),readPACKEDwordactorX/Y thenPACKEDwordactorZ/pad beyonddeclaredTHREEU16extent,clearONLYstatepackedY,storeZword. Updatecapturedt/done==0 gate; ODDt andcount<10 incrementscount BEFORE184(job.w10),failureconsumesattempt; nullableallocationwritesSIGNEDs16X=(U16packedbaseX)+rand_n(2048),THENZ similarly withSEPARATErandom,THENY0. Existingallocator recordoffsets+16/18/20 retained.
+
+When count>=10 returns1 immediately irrespectiveframe; calls78ONLYt>=41 (literal0x29, notcomment40) first. Ordinaryodd1..19 tenATTEMPTS thenreturn1 at19 without78; ifcalledlater>=41 calls78again because done never sethere. done!=0 returns0. Do not change attempts tosuccessfulobjects/doneflag/earlyfinish/scheduling/reset/randomorder/providerextent. Borrowedcallbackhandle record contract unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
