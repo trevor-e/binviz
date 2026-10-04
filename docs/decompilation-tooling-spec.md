@@ -6989,3 +6989,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two handle growth fade texture rect wide state naming acceptance (BV-03/BV-08, P2):
+FF9 36390b7a4 adds three canonical ovl_f832800 names. Catalog
+4,710 unit/symbol names, 187 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-handle-growth-fade-texture-rect-wide-state.json and Binviz
+target/ff9-names-two-handle-growth-fade-texture-rect-wide-state/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,540/1,540 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7798 state descriptor 112, rotation20/translation28/scale38, fade48, counts64/68, handles6C/6E. Initialization saves context, captures200(0,1,firstvector)/1FC(0,secondvector); copies THREE second-vector lanes to offsetvector with unsignedY-=450. Loadsresource6 atsecondvector, rotationXYZ0, scale2048/4096/2048, SIGNED-widens three inputXYZ intoINTtranslation. Pin ta to native $5 and f70(table,2,tb,tc) FOURarguments retained. Creates resources14/15 U16handles, counts=-1; all untouched vectors/pads/objectslots/fade kept. No extra init or cross-unit type/layout repair.
+
+Exact events: frame6 resources7 then5 atsecondvector; nullable7 gets table/h12=9/hc160. Frame22 resources3 then16 atsecondvector and count18; frame28resource1 atoffsetvector; frame42resource13 atfirstvector; frame36count24. Counters compute fade BEFOREdecrement. First normally19 samples22..40; second25samples36..60, second overwrite wins36..40 though both interpolatecalls retained. Tint draw ends55 even though secondcount continues through60, no endpoint clamp or backfill.
+
+Unsigned frame-22<10 draws first handle at22..31 with scaleY=((frame-22)*4096/10)/2, endpoint omitted. Unsigned frame-32<24 transitions two handles32..55 with weight4096-(frame-32)*4096/24; no zero endpoint at56. Onlyfirst handle receives268/26C after28C. Table rectangle submitted EVERYframe>=22 INCLUDINGterminal>=70: tableindex signedframe%15, x/yU16, width32/height128,298(rect,704,256). Terminal calls78/returns1 AFTERcountdowns/draw/rectangle. No invented screen flash or optional light-pillar semantics, no releases.
+
+7D00 four-argVOID calls host48 with4096-w andw, discarded hostreturn; 7D44 four-argINT weightedratio arithmetic unchanged. Typed INT main declaration matches consumed helper return. Preserve division-zero/overflow/unclamped weights and all expression/store ordering.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
