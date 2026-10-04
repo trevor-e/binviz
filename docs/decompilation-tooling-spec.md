@@ -7335,3 +7335,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four companion tracked pair flash marker naming acceptance (BV-03/BV-08, P2):
+FF9 f30de5815 adds three canonical ovl_10200800 names. Catalog
+4,746 unit/symbol names, 199 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-companion-tracked-pair-flash-marker.json and Binviz
+target/ff9-names-four-companion-tracked-pair-flash-marker/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,516/1,516 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor84. Savesctx,1FC/20C actor16 two-WORDvectors, copiesTHREEhalfwords to v38 thenDC(distance1000)/SIGNEDY=-200. 2C4(actor16,28,INT3local)/2B0(local,800,two-WORDvec28),2C4(actor16,54,INT8local)/2B0(local,800,two-WORDvec30). Loads3then4, nullableh22=220(actor16,256),D4outputsdeclaredTHREEU16tracklanes pluspad. Keep providerread/writeextent frontiers and repeatedcopy/order, not guessed geometry.
+
+Exact10 loadsFOURresources5/6/1/2atv38 and DOESNOTflash. Exact11onlyflashRGB128/128/128 atctxp20+1 INTpointer (byteoffset4). Frame>=13 FOURTEENarg248 firstTHREEscales(t<<7)+2432,threeSIGNEDrot0,threeU8RGB40, buffersdeclared3notpaddedlarger. Eachobject clearsifh30==-1 elseTHREEtracklanes toh5C/h5E/h60; terminal40afterdraw/tracking, no78/release. Preservepartialstate,pointer/wordvectors,unusedlocals.
+
+7B9C descriptor16, SIGNEDindexstored andctxp0C readbeforecontextsave/countcheck; onlyindex>=unsignedcountrejects. Invalidwrites7=1andreturns1; validclears7/1FC(index,vec)/resource7/nullableh22=220(index,32). Update1sets7=1,terminal40. Helper declaredVOID(Efx3Ctx*,INT,INT) atcaller versus definitionVOID(Buf10**,INT,INT), retains opaque firstword view/frontier. Bytewriter(*pp)->d[i]=v atbuffer+16 unboundedindex/U8narrowing; unknownflagrole/type mismatch not repaired.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
