@@ -3818,3 +3818,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Mesh burst naming acceptance (BV-03/BV-08, P2): FF9
+682dac2bf adds10 canonical ovl_11d1e000 names. Catalog4,166 unique unit/symbol
+names,90 alias headers; all10 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-mesh-burst.json
+and target/ff9-names-mesh-burst/. All10 entire native object pairs identical,
+exact affected/scored namespace10, unchanged pinned strict-relocation baselines
+nine exact/one partial,3,740/8,524 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all10 sources; current catalog/review/source/header/
+object bindings and14 isolated commit paths audit. Progress4,166/5,812 canonical
+primary files named(71.7%),1,646 remaining; full-tree goal active.
+
+Names cover fadingimpact callback, rotatedgroundimpact allocation,112particle
+burst init/bouncing update,300particle arena init/load/free/spawn/update and
+fourphase meshburst sequence. Complete own-unit bodies/GTE/lifecycles reviewed;
+no original ability/provider labels asserted. Calls/callbackcasts retain own-unit
+native/runtime identities through aliases.
+
+Preserve mode1-only callback no-op, allothermodes draw, allocator NULLguard/pins/
+barrier, packedhalfword input versusint*formal and savedjob id+16/id+8 view mismatch.
+Bothpool loops derive relativevertices beforeintegration, but112 bounces/diesbelow
+speed60/life71,300 diesfirstfloorhit/life32. Preserve randomcall evenwhenage>=8,
+usedtriangle flags/deadstores/headern[2]/ptr[3]/signedcounts andzero-coordinate
+stores excludingpadding. Sceneinit loads withuninitializedv20, fullresource/
+texturebitfield/strength arithmetic, fourphasejobcounter resets/cumulativecounter
+distinction, threeindependent cosinecalls, GTE/pins/hitpoint order, spawn<47,
+300-before112 updates andfinish71 beforecommonresource/counter stayunchanged.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
