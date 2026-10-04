@@ -8797,3 +8797,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Six sliding curve ribbons twelve staggered sparks screen flash naming acceptance (BV-03/BV-08, P2):
+FF9 2ac7ffecf adds one canonical ovl_13b8c000 names. Catalog
+4,853 unit/symbol names, 243 scoped alias headers. One full own-unit
+body reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-six-sliding-curve-ribbons-twelve-staggered-sparks-screen-flash.json and Binviz
+target/ff9-names-six-sliding-curve-ribbons-twelve-staggered-sparks-screen-flash/. One full native object pair equal;
+exact affected/scored namespace one. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,964 code bytes, zero failures. One
+installed WASM token comparison agrees; current source/header/catalog/object/
+review bindings and five isolated committed paths audit.
+
+Mode0 ONLYout0=20. Initw0/w4/w8=0, savecontext,200(0,0,pos). SIXglobal280-byte ribbon records:110(198(resource3),0,0,-1,4096,4096,1,record,0) thenlives4/window32/delay2*i. InitTWELVE20-byte sparks viaTWOseparateRAND_N2 calls(0,47)/(-16,16), delay3*j,lives2/frame0; exactorder preserved. Thenw0/w4=1; neverautomaticallyclearflagswhenrecordscomplete. No heapallocation/particlecallback inferred.
+
+Update exact24 loadsresources1then2 atsavedposition, eachnullableh22=220(0,512); exact25 flashcount4. No missedframebackfill/objectcleanup. Ifw0NONZERO visitall6 records. OnlylivesNONZERO predecrementdelay thenifnegative draw; reachingzeroWAITstilldoesnotdraw, initialzero draws onfirstupdate. Negative delaykeepsdecreasing with noreset betweenlives; negative externallysuppliedlives retainsNONZERO behavior.
+
+For eachdue ribbon build64 interpolated samples from17keyindices: segment0 uses2C4(16,*tp,vc) then2B0(vc,1024,va); segments1..15 use80(16,key[k],va); allsegments80(16,key[k+1],vb). EachsegmentfourBC(va,vb,m*1024,sample[k*4+m]), retainsfourthlane/providerreadextent. Tabletp+=17/toff+=68 afterEACHrecordincludinginactive; no hoisting/dedup/substitution.
+
+Headerwritesrec0=rec2=32 thenrec1=0, pad3untouched. s0=4096 unlesswindow<16 thens0=window<<8. Copy33XYZ samplesstartingwindow intohalfwordrecord+4; wlane128 stored BEFOREZ; ppadvancewrapper preserved. Normalinitialwindow32 accesses sampleindex64 for j32 althoughonlyindices0..63 populatedthisbody, unsizedglobalextent/providerstate unresolved; no clamp, repair, endpoint extrapolation or initializer. Flag512 around110(resource3,0,0,jobframe,4096,s0,1,rec,0) thenflag0. AFTERdraw window-=4; ifnegative reset32/lives--. OrdinaryeachlifehasNINEwindows32,28,24,20,16,12,8,4,0, lastdraws0 fade, FOURlives=36draws perribbon; delay not rearmed.
+
+Ifw4NONZERO resamplebothsparkcurves EVERYupdate evenwhenall12liveszero: TWOcurves ofSEVENkeys, SIXsegments each, fourBCsamples persegment, total48samples. Separate80 keycalls(vc/vd), BCm*1024. ForEACHspark livesNONZERO predecrementdelay, ifnegative flag512 then114(resource5,samples[startkey],NULL,16384,localframe,1,4096,randomoffset,0),clearflag0. Localframe++ AFTERdraw; >=6 rerandomizesstartkey/offset evenonFINALlife, resetslocalframe0,lives--. Ordinary2lives*6=12draws each; delay onlyinitial, no perlife rearm. RAND_N2 endpoint contract not newlyproven; numericalarguments preserved.
+
+FlashNONZERO predecrement then100(ctx.p20,1,0,0,newcount<<6); ordinary4 draws192/128/64/0 beginningexact25. Returnsjobframe>=64 AFTERobjectevents/allribbon/spark/flashwork; no78/release or idle-counter update. Readextents ofprovider-writtenfourhalfwordvectors, boundarysample64/globalrecordlife andmultiplecontexts lifecycle remain unresolved andunchanged. Name recordsvisiblecurves/counts/flashbehavior only.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
