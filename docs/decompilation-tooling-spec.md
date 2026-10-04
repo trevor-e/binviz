@@ -8129,3 +8129,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Orbiting trail staged impact fan ring spread naming acceptance (BV-03/BV-08, P2):
+FF9 16f59842c adds two canonical ovl_12b16000 names. Catalog
+4,818 unit/symbol names, 224 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-orbiting-trail-staged-impact-fan-ring-spread.json and Binviz
+target/ff9-names-orbiting-trail-staged-impact-fan-ring-spread/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+0 exact/2 partial, 0/7,640 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+C704 event1 initializes ONLYh4=24 andreturns0. Kind0 resource5 bufferinit atframe0 then signed-halfword radial/angular updates withuppercaps2000/2450. Firstform D4/E4 direction, cosine/sine jitter uses UPDATEDh10 insecondargument,DCmutatesposition,110width frame12clamped245 then*16+320. stw0>0 switchesformAFTERdraw/marks precedinghalfword-1; no explicitframe reset. Secondform frame4clamped128 angularjitter,context255around110 width h22-frame570; particleindexh6==1 publishesposition intohostpoint1 then subtracts s16(frame<<5) Y/Z. Kind0 neverterminates here.
+
+Kind1 BOTH Y/Z +=768 everyupdate,resource9 trail width6144 or20480 ifh10==2; atframe>=7 AFTERdraw transitionskind2 andprecedingmarker-1, thenselector2whiteflash/kind3, nonzero randomgrayflash, zero loads10nullable128; all setY0. Kind2 computes one(frame4096)/24,resource9first8,128resource4nonzero else114resource8/context320; nonzero modelw88 cosinegrowth/sineTHREEtintcalls,terminal24 AFTERdraw. Kind3 resource9first8/flashfirst6,resource4/context1024,THREE60poses w90/w94/w8C,terminal32 AFTERdraw settingkind2. Partialrotpad/scalefourthwords retained.
+
+D218 descriptor152/57particles/36record/callback. Initphase/counter/emissioncount0,1CC/table5, FIVE338handles resources133/135/136/155/145, camera68/190via nestedp4unguarded. Position/scales/rotations partly initialized, UNINITIALIZEDlocalfr testedin identicalarms (matching frontier). Capturespoint3frominitial0/-1994/0. h24/h26/h28 not initializedhere butconsumedatfirsttransition; global3halfwordvector readasTWOwords includingadjacenthalfword. Do not repair extent/initialization.
+
+Phase0 ordinary0..65: camera64thenhandle133 pose/visibility/tint, exact31load2h22=-240/exact27load3h22=128,138resource13frames32..47,fade31..38,overlayfrom49. Three184ATTEMPTS/update from33 untiln57; countincrements BEFOREallocation sofailuresconsumeindex, buffersstartindex1*204 notzero. Kind0 allsuccessful withselector/indexmotion fields, width10240; elsebranch incrementscenterY12 evenbeforeemissionwindow/aftercap. >=65transition1 AFTERdraw,point3copiesuninitializedh24..28, resetcount/rot/scales,shiftcenterYZ8192.
+
+Phase1 ordinary0..16 fasterrotatinghandle133; >=16transition2/camera3globalcopy THEN h24..28 global offsetYZ-20480/copyfirstorigin, D4intoTWOINTwords, point2offset512, goto sharedset10 resetsn. Phase2 exact0 releasepool then32allocationATTEMPTS; ACTUALkind0/h14=1 (oldcommentkind1wrong), index-one buffers, sine/cosine*5/2 addedWITHOUT>>12 narrowinghalfwords, h10=32bitSWnarrows16. Per-update Y/Z accumulate TWO separatecosine600 calls, publishpoint2,resource11fromn!=0. >=32transition3AFTERwork,positioncopiesbeforeY-128/pointX+2048/Y-32/Zglobal,resetn.
+
+Phase3 ordinary0..72, exact0releasepool thenone184ATTEMPT/update untiln32, first30randomspreadselectorparity, lastTWOselector2largerspread. Countbeforeallocation, bufferindexn*204. Eachupdate basecopythenX+2048-progress/Y-32/Zglobalunsignedalias; shakeframes9..48 includesrand_n(0) at45..48 (not skipped), resource11first16,texture240always,fadefrom56. >=72 resetsstate/point3,1CC/180/78 thenreturns1 BEFOREoverlay/resource1/countertail. Commonoverlay onlyphase0positiveweight, shared40bytescratch partialcolor/rotpads,134resource1counter incrementsallnonterminalupdates. No missedframebackfill/providercleanup added.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
