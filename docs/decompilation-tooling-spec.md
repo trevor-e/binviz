@@ -6701,3 +6701,33 @@ BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained;
 no new implementation/private ownership/type/CFG walker, matching gain,
 linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Scheduled quadratic spin naming acceptance (BV-03/BV-08, P2): FF9
+6e9ce6993 adds four canonical ovl_131a5800 names. Catalog 4,679 unit/symbol names,
+177 scoped alias headers. All four full own-unit bodies and g29/g13 headers
+reviewed and bound, zero deferrals; other units pending. Evidence:
+docs/function-names-scheduled-quadratic-spin.json and Binviz
+target/ff9-names-scheduled-quadratic-spin/. Four full native object pairs equal,
+exact affected/scored namespace four; unchanged pinned strict-reloc scores
+four exact, 2,588/2,588 code bytes, zero failures. Four installed WASM token
+comparisons agree; current source/header/catalog/object/review bindings and
+eight isolated committed paths audit.
+
+Names cover scheduled tracking/quadratic offsets, flag-gated three spinning
+handles/tint, complementary host blend and integer-ratio interpolation.
+Preserve pre-decrement offsets versus post-decrement tint, extra >=0 countdown
+tick, unconditional moves after null-clearing, dormant second offset countdown,
+partial object/vector initialization and unsigned frame<66 draw gate. Spinning
+poses precede spin/scale updates; Y scale stays after frame12, X/Z shrink.
+Actual spin increments128/128/64 differ from old comment. Context saves before
+flag earlyreturn. Original effect/provider/byte26 meanings remain unresolved.
+
+Definitions/declarations/direct calls propagate; aliases preserve canonical
+linker/address/runtime identities. INT interpolation definitions/declarations
+and consumed returns agree here; no inherited VOID-return conflicts or
+provider admission. Keep exact signed/unclamped arithmetic and zero division.
+Maintained naming/farm/scorer/preprocessor and thin adapters reused, existing
+BV-03 reviewed-deferral prioritization/BV-06 provider proposals retained.
+No new implementation/private ownership/type/CFG walker, matching gain,
+linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical tools/reports, preserve foreign work/index; full-tree goal active.
