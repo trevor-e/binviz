@@ -10197,3 +10197,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Easing weight staggered four piece pose tint load naming acceptance (BV-03/BV-08, P2):
+FF9 05a56c264 adds two canonical ovl_1277b000 names. Catalog
+4,952 unit/symbol names, 293 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-easing-weight-staggered-four-piece-pose-tint-load.json and Binviz
+target/ff9-names-easing-weight-staggered-four-piece-pose-tint-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 312/1,704 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 saves api then computes k=0x20000000/(len*len) unconditionally before switch, including linear/unknown kinds. Default w0; kind0 w4096-(((0x10000000/len)*t)>>16); kind1 ((k*(len-t))*(len-t))>>17; kind2 4096-(((k*t)*t)>>17. Invoke slot B4(handle,extra,w), discard return, VOID function. No clamp, len-zero guard, division rearrangement, overflow fix or kind-default skip. Definition/declaration and TWO direct helper calls propagate.
+
+783C descriptor40. Init context; clear ONLY first EIGHT state INT words indices7 down0, leaving a20 pad untouched;70(table,4); a20X=hostU16h38,a20Z=h3C,a20Y0. Mark only FOUR pieces w18/w1C=-1; w20 and other inactive fields uninitialized. If live b24 nonzero, iterate i<fresh live b24 without four-entry cap:1FC(i,piece),20C(i,v8),SEPARATE20C(i,v10),w18=i*6,w1C32,w20=i*6,338(resource1,1) INT handle, SIGNED piece XYZ->INTposition, rotation THREE U16 lanes0/scales Z/Y/X4096. No pad initialization or duplicate-query elimination.
+
+Update capture pinned frame. Exact0 loads5 then4 at a20, each nullable h22=-256. Exact8 sets w0=56 (literal0x38, comment8 incorrect),w4=32. Exact42 loads2 nullable -256. If w0 nonzero predecrement then loop ALL FOUR: w18==0/w1C!=0 predecrement life,60(current rot/pos/scale/handle) BEFORE rotationY+=128, ease v8Y using kind1(16,life-16,0,8192) for life>16 else kind2(16,life,8192,16384), mask4095; if life==0 overwrite v8Y=v10Y.2A8(i,D812C+i*80) then life>24 X/Z=B8(4096,0,life-24,8)/tint -((life-24)<<5); life<8 X/Z=B8(0,4096,life,8)/tint -((8-life)<<5). ScaleY never changed here; pose precedes scale/tint update. w18!=0 always decrements even -1 inactive states; do not normalize/free-skip.
+
+If w4 nonzero predecrement then loop ALL FOUR; exact piece.w20==0 load3 at piece incl NULL discard, then w20-- regardless allocation/active status. State w0/w4 gates are nonzero tests, not positive tests. Return frame>=80 AFTER staged loads and both loops; no78/release/clamp/backfill/ownership or inactive-state repair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
