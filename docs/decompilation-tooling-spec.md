@@ -6875,3 +6875,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Directional z growth tint naming acceptance (BV-03/BV-08, P2):
+FF9 873a49e7d adds three canonical ovl_11e20800 names. Catalog
+4,698 unit/symbol names, 183 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-directional-z-growth-tint.json and Binviz
+target/ff9-names-directional-z-growth-tint/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,076/1,076 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 reports92. Mode1 saves context, registers table70(count1), copies THREE halfwords from pc+56 without pad, selects f210(0) flag into mode50=1/0. Nonzero1 sets step200 and zeroXYZrotation; zero sets step-200/Yrotation2048. Translation0/0/500, scale2730 each, create resource2(handle U16), copy THREE translation lanes to v40, resource8 loaded at captured v38, two signed tint countdowns=-1. Retain uninitialized pads, fade, obj1 and unused w2C; no camera publication in this controller.
+
+Exact frame17 captures current translation into v48 BEFORE movement, loads resource9 and arms first count3; exact21 arms count16. Unsigned frame-17<20 permits exactly17..36 ordinary frames, excludes negative/outside frames. Pose/visibility happen BEFORE tint and Z updates. First countdown computes before decrement and normally emits four samples elapsed0..3 at17..20, including0 endpoint. Second normally emits16 samples elapsed0..15 at21..36, stops before -192 endpoint at37. If both externally active, second overwrite wins; preserve both calls/order and signed gates. Translate Z by +/-200, grow scaleZ by256, resource3 f134(frame-17), finish f78 only frame>=60. No added release/clamp/event backfill.
+
+7A9C four-argument VOID calls host f48(a,b,4096-w,w,n), host result discarded. 7AE0 four-argument INT exact (a*(d-w)+b*w)/d; controller consumes return via INT K&R declaration, agrees with definition. Preserve overflow/division-zero/unclamped arithmetic and expression order.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
