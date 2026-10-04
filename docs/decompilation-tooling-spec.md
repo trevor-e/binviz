@@ -7195,3 +7195,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Early two handle growth fade texture rect naming acceptance (BV-03/BV-08, P2):
+FF9 9e5946688 adds three canonical ovl_10abc000 names. Catalog
+4,731 unit/symbol names, 194 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-early-two-handle-growth-fade-texture-rect.json and Binviz
+target/ff9-names-early-two-handle-growth-fade-texture-rect/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,712/1,712 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor116. Copies THREE rawctxp0C+56 halfwords separately into THREEpositionvectors; v58Y-=800/v60Y-=1200 U16narrowing, v60unusedlater. Savesctx, loads5then14 atv50; nullable5hooktable/h12=12/hc160, nullable14h22=384. THEN rotationXYZ0 and re-reads hostposition SIGNEDXYZ intoINTtranslation AFTERloaders (do not hoist freshreads), scaleXYZ4096, table70(count2), handles11/13 U16, counters-1. Preserve otherobjectslots/partialpads/fade and job Obj16cast+8.
+
+Exactframe18 loads12then15 atv50, nullable12h22=384, count18;22loads3then2 atv58;39loads16atv58, notunusedv60;28armscount26. First interpolation -128->0 emits19 computedvalues18..36; second0->-128 emits27computedvalues28..54 and overwrites first28..36 while both calls retained. Countdown math occurs outside drawingwindow, no negative-frame guards added.
+
+Unsignedframe-18<6 growth18..23 scaleY=k*4096/6, omittedendpoint24. Unsignedframe-24<26 handleblend24..49 weight4096-k*4096/26, omittedzeroendpoint50. 268/26Conlyfirsthandle after28C. Tintcountcontinues to54 afterlastposed49. Everyframe>=18 rectangle from signedframe%15 table, U16x/y32x128 to298(rect,704,256), INCLUDINGterminal70+ before78/return1. No audio/flash/beam identity inferred. Helpers VOIDhost48discardsresult, INTweightedratio agreesusedINT K&R declaration; unchanged arithmetic/layout/partialproviders.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
