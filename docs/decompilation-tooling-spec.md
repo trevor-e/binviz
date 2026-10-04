@@ -4915,3 +4915,30 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Bone sparks vertical fade naming acceptance (BV-03/BV-08, P2): FF9
+15e6859f1 adds seven canonical ovl_129bd800 names. Catalog 4,364 unique
+unit/symbol names,115 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-bone-sparks-vertical-fade.json
+and target/ff9-names-bone-sparks-vertical-fade/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines five exact/two partial,2,316/7,268 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Established vertical center gradient,radial spark initialization,projected spark
+lines,21-bone keyframes,advancing Z callback,four-phase bone/spark sequence and
+three host-point tracks. Preserve actual spark wrap bounds and projection before
+Z motion,current/previous XY history,sentinel seeding,only screen-H restoration,
+upper-only track bounds and bone16..18 skipping after lookup. Main scratch vectors
+overlap; common tail uses new phase after transitions,particle counters/random
+advance only on success,terminal169 returns before common draw/count. Exact
+game-effect/provider identity unresolved; comments,types,layouts,pins,partial
+state and oldstyle calls preserved. No sibling body substitution or body repair.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
