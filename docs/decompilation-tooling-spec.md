@@ -6405,3 +6405,32 @@ prioritization retained. No new reusable implementation/private ownership/type/
 CFG walker, matching gain, linked-image/gameplay/workspace acceptance. Refresh
 source-bound evidence, pin historical reports/tools, preserve foreign work/index;
 full-tree goal active.
+
+Hooked decaying orbit naming acceptance (BV-03/BV-08, P2): FF9
+f84d0dc80 adds four canonical ovl_11caa000 behavioral names. Catalog 4,643
+unit/symbol names, 168 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-hooked-decaying-orbit.json and Binviz
+target/ff9-names-hooked-decaying-orbit/. Four whole native object pairs identical;
+exact affected/scored namespace four, unchanged pinned strict-reloc scores four
+exact, 1,456/1,456 code bytes, zero failures. Four installed WASM token comparisons
+agree; source/header/catalog/object/review bindings and eight committed paths audit.
+
+Names cover decaying radial orbit callback, hook owner with delayed frame80
+object, complementary host weights and explicit integer interpolation. Actual
+trajectory uses cos-like X/sin-like Z, one chosen angular direction without
+reversal, signed reads of U16 state and decaying radial oscillation. Preserve
+first16 host-DC path, partial pads, state/output updates before callback -1
+termination, signed random remainder and exact delayed-load behavior. Do not
+assume selected B0 sqrt contract or original pendulum/spell identity.
+
+BV-06 frontier retained: meaningful INT six-argument callback is installed through
+VOID K&R declaration and VOIDf8 table pointer. Hostweight wrapper result ignored;
+integer helper explicitly returns scalar and its actual caller consumes it.
+Distinguish these contracts, no type/cast/body repair or provider admission.
+Readable declarations/calls/hook reference propagate; aliases preserve canonical
+linker/address/runtime identities. Existing naming/farm/scorer/preprocessor and
+thin adapters reused, BV-03 reviewed-deferral prioritization retained. No new
+implementation/private ownership/type/CFG walker, matching gain, linked-image/
+gameplay/workspace acceptance. Refresh source-bound evidence, pin historical
+reports/tools, preserve foreign work/index; full-tree naming goal active.
