@@ -4887,3 +4887,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Ring ribbon history naming acceptance (BV-03/BV-08, P2): FF9
+070864119 adds seven canonical ovl_fb5e000 names. Catalog4,357 unique
+unit/symbol names,114 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-ring-ribbon-history.json
+and target/ff9-names-ring-ribbon-history/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines four exact/three partial,1,740/9,604 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Actual threephase29/2/50ring/spark burst,14segment ribbon/twosegment strip,
+polyline wrapper,paired samebuffer callback,random ribbon vertex hook and three
+independent radial/history emitter variants established. Preserve mainv60second
+word read froma8+4halfwords (followingphaseword,notZ/pad),alternatingspark6144/2048
+size andfp&7 beforeincrement,partialvectors/pins/repeatedtrig/resources. Emitter
+variant2 incrementscount twice beforefirstactualallocation,computesradialpoint
+beforeallocation,historypublishes evenfail,extraobject<19,terminaloddflash31.
+Signedbiases/INTpoolstride/wordcopies anddifferentvariantconstants remain.
+No siblingbody substitution/type/layout/boundsrepair; unit aliases retain
+canonical linker/runtime identities, gameeffect/provider purpose unresolved.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
