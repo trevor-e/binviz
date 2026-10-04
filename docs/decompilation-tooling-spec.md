@@ -13971,3 +13971,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual cosine modulated resource sequence naming acceptance (BV-03/BV-08, P2):
+FF9 bb501db27 adds 1 selected canonical ovl_f86c800 names. Catalog
+5,589 unit/symbol names, 392 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-cosine-modulated-resource-sequence.json and Binviz
+target/ff9-names-effect-residual-cosine-modulated-resource-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 932/932 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteF86C800 handler independently reviewed and named by cosine-modulated resource submissions plus staged loads. Full g08/lifecycle bound; own piecewise math and original explicit API arities retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole14hex-byte lifecycle all animation/math/gate/event arms read. Captures1FC/200 points, initialresource4; whileflagzero andframe<44 computes piecewisecosine parameter and angle, submitsresource13 through128 with vector1024/0/0/1 and cosinehalfangle. Resources5at5,9/7/14at18 with owncallback,8at23; finish50. Preserve GCC2.8.1, signed shifts/division, exact repeatedcosine and stackvector store order. Slot128 parameter/render shape unknown; no geometry/spell label.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
