@@ -4637,3 +4637,32 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Cosine position path naming acceptance (BV-03/BV-08, P2): FF9
+b08424c49 adds eight canonical ovl_11cd1800 names. Catalog4,295 unique
+unit/symbol names,105 alias headers. All eight complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-cosine-position-path.json and
+target/ff9-names-cosine-position-path/. Eight entire native object pairs identical;
+exact affected/scored namespace eight,unchanged pinned strict-relocation baselines
+eight exact,1,776/1,776 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all eight sources. Current catalog/source/header/object/review
+bindings and12 isolated commit paths audit. Other units pending.
+
+Bounded roles cover four indexed destination callbacks/shared cosine-lowered
+position worker,indexed object path,delayed object sprite fade and generic
+buffer-data-byte store. Actual indexed position producers establish descriptors
+without original actor labels. Preserve frame/18 independent of passed limit,
+cosineY800/sign division,fixed publication before completion,void/int legacy
+callback declarations and unchanged data callback table. Delayed sequence draws
+before fading/clamping,keeps u16 arithmetic and partialvectors. Indexed rejection
+short-circuits host2F8 calls,only checks upper index,storesbyte7 and returns early;
+bufferflag meaning remains unresolved. Names retain canonical linker/runtime
+identities through own-unit aliases; no type/layout/padding/bounds repair.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
