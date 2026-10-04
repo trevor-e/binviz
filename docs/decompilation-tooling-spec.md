@@ -1991,3 +1991,39 @@ Legacy farm/scorer compatibility evidence is not shared workspace acceptance
 or scorer migration. Shared acceptance needs configured frozen namespaces and
 compiler inputs. Refresh downstream source-bound evidence against current
 catalog/header identities. Preserve unrelated runtime-adoption work.
+
+Battle render/UI-access naming acceptance (BV-03/BV-08, P2): FF9 commit
+ee7c4e910 adds32 reviewed definitions, reaching2877 unique unit/symbol names.
+Unit ovl_02d800 now has109/151 primary definitions named;42 remain. Four newly
+named sources retain raw assembly default branches with C alternatives.
+Evidence: docs/function-names-battle-render-ui-access.json and binviz/target/
+ff9-names-battle-render-ui-access/. All32 complete native objects and installed
+WASM preprocessed token comparisons agree; original strict scores unchanged
+(31 exact,one existing partial;2916/3220 matched code bytes). No new matching
+credit, linked image/module or gameplay proof. Catalog/current-source/header
+and36 isolated committed-path checks pass across2877 names and40 alias headers.
+
+Complete32 primary bodies,19 semantic consumers and four shared-header
+identities establish random/math helpers, model blending/projection, particle
+state stepping, effect render setup and battle menu/queue/panel/message access.
+Consumer evidence establishes purpose without selecting cross-unit providers.
+Three reviewed uncertain roles remain explicitly deferred. Names do not repair
+matching quirks, ABI inconsistencies, unchecked accesses or compiler inputs.
+
+Concrete semantic corrections to transplanted comments: f3eb4 returns PARTY
+PANEL ACTIVE byte, not selected row; f4fc8 returns text-box DURATION word at+84,
+not a picker pointer, retaining its pointer declaration. Queue entries are
+selectable units rather than messages. Visible-party count does not test HP or
+living status. Keep cf5f8 legacy IRs(dx,a.x,dy) and unused dz, signed square-root
+division, raw remainder paths, saturation, origin axis permutation in particle
+stepping and gravity update that does not reload IR before GPL. Model blending
+retains next-vertex preloads and triplet projection; panel backgrounds retain
+OT16 linking, unchecked row and count-minus-one arithmetic. Unit-scoped aliases
+preserve native strings, linker identities, source filenames and body tokens.
+
+Reused maintained naming/farm/scoring interfaces need no new private analysis
+walker. Legacy compatibility evidence remains distinct from shared readability
+workspace acceptance and scorer migration; shared acceptance needs configured
+frozen namespaces/compiler profiles and verified outputs. Refresh downstream
+source-bound evidence against current catalog/header identities. Preserve
+unrelated runtime-adoption and tooling work.
