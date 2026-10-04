@@ -3886,3 +3886,36 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Starfield ribbons naming acceptance (BV-03/BV-08, P2): FF9
+9a30dc1c3 adds10 canonical ovl_1219b000 names. Catalog4,186 unique unit/symbol
+names,92 alias headers; all10 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-starfield-ribbons.json
+and target/ff9-names-starfield-ribbons/. All10 entire native object pairs
+identical, exact affected/scored namespace10, unchanged pinned strict-relocation
+baselines five exact/five partial,8,796/13,196 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all10 sources; current catalog/review/source/
+header/object bindings and14 isolated commit paths audit. Full-tree goal active.
+
+Full main event sequence and history/particle/keyed-strip/GTE bodies reviewed,
+including bounded rereads after initial main-body truncation. Names identify
+point-track channels from actual halfword vector reads and host/unit point stores;
+historical comment calling these sounds retained, no speculative sound meaning.
+Other names cover history ribbon, full-width gradient band, camera-offset streak
+particles,17/64-key textured strips and full starfield/ribbon sequence.
+
+Preserve history live count before insertion, MAC0 gate without NCLIP, GTE depth
+before fourthRTPS, early packet linking and partially initialized colors/vectors.
+Sixteen channels consume vectors only for enabled nibbles, decrement before
+publication and do not automatically free/rearm atzero. Gradient band firstlink
+has TWO arguments. Particlewrap fixed8192;17/64 renderers project allkeys even
+nzero, reserve fixedpacketbytes independentn,64 depth has no freshdepthcommand.
+Main clears33flags via n1032, retains exact timers/events/NULL calls/stale pointers/
+camera bounds/star random overwrites and steps point channels LAST.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
