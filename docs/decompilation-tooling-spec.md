@@ -6466,3 +6466,34 @@ BV-06 provider frontiers retained. No new reusable implementation/private
 ownership/type/CFG walker, original matching gain, linked-image/gameplay/workspace
 acceptance. Refresh source-bound evidence, pin historical reports/tools, preserve
 foreign work/index; full-tree naming goal active.
+
+Four phase paired trails naming acceptance (BV-03/BV-08, P2): FF9
+485e87150 adds four canonical ovl_11d4b800 behavioral names. Catalog 4,651
+unit/symbol names, 170 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-four-phase-paired-trails.json and Binviz
+target/ff9-names-four-phase-paired-trails/. Four complete native object pairs
+identical; exact affected/scored namespace four, unchanged pinned strict-reloc
+scores two exact/two partial, 1,236/5,388 code bytes, zero failures. Four installed
+WASM token comparisons agree; source/header/catalog/object/review bindings and
+eight isolated committed paths audit.
+
+Names establish fading quad history, host-matrix vector transform/GTE restore,
+four-phase model/paired trails and camera path polling/intensity ramp. Preserve
+history count AFTER shift but BEFORE newest points, seventeen flag-only clears,
+projection MAC0 gate with NO NCLIP instruction, rejected output cursor advance,
+link before final SXY/colors, unsigned fades/division and partial packed fields.
+Camera setup has asymmetric third-block Y, quantized inclusive direction range,
+partial pads and typed pointer differences. Keep ordinary trail draws after
+phase2 transition but terminalphase3 return before trails/counter, signed Y
+decays, unbounded -2/-1 polling, decreasing wait limit and flag completion.
+Retain -fno-rerun-cse-after-loop/-fno-force-mem, pins and empty asm barrier.
+No original effect/provider identity or body/type/layout repair claimed.
+
+Readable declarations/definitions/callers propagate; aliases preserve canonical
+linker/address/runtime identities. Maintained naming/farm/scorer/preprocessor
+and thin adapters reused, existing BV-03 reviewed-deferral prioritization and
+BV-06 provider frontiers retained. No new reusable implementation/private
+ownership/type/CFG walker, original matching gain, linked-image/gameplay/workspace
+acceptance. Refresh source-bound evidence, pin historical reports/tools, preserve
+foreign work/index; full-tree naming goal active.
