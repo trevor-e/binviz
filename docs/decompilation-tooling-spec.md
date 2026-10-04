@@ -4998,3 +4998,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Countdown gradient strips naming acceptance (BV-03/BV-08, P2): FF9
+70bf420f7 adds seven canonical ovl_1110e800 names. Catalog 4,385 unique
+unit/symbol names,118 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-countdown-gradient-strips.json
+and target/ff9-names-countdown-gradient-strips/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines three exact/four partial,796/12,156 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Established linear/quadratic decay,byte-countdown sprite-strip/gradient timeline,
+8x4XZgrid,three tiledgradients/fill,fullscreen warmgradient,hostgrayscale and
+recorded-point fixed-target callback. Preserve unconditional squared-divisor,
+void definition consumed through int declaration,initial next-strip pointer
+submission,t12 next-entry color reads,unsigned particle velocities,byte timers
+and extra-word hostcalls. Grayscale helper makes one call with three equal RGB
+arguments despite oldcomment. Main returns>=308 after fulltail; path publishes
+before terminal. Source scene labels are not accepted game identity claims.
+Partial vectors,pins,casts,redundant scales,flags and call/random order untouched.
+No body/type/layout/bounds/ABI repair; unit aliases retain native/runtime symbols.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
