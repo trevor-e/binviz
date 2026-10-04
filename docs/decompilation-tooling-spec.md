@@ -4012,3 +4012,30 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Blended strip fountain naming acceptance (BV-03/BV-08, P2): FF9
+14e4a91f6 adds9 canonical ovl_130ae000 names. Catalog4,224 unique unit/symbol
+names,96 alias headers; all9 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-blended-strip-fountain.json
+and target/ff9-names-blended-strip-fountain/. All9 entire native object pairs
+identical, exact affected/scored namespace9, unchanged pinned strict-relocation
+baselines six exact/three partial,2,692/12,968 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all9 sources; current catalog/review/source/
+header/object bindings and13 isolated commit paths audit. Full-tree goal active.
+
+Complete four-phase blended-strip sequence and fountain, curve/ribbon builders,
+particle callback, camera tracks, centered gradient and random vertex selector
+reviewed; bounded main rereads coverinitialtruncation. Actualfivehandles and
+thresholds15/9/43/20 retained despiteoldercomments. Preserve partialstate/union/
+color/headerbytes, legacyint/voidprototype mismatch, random order/count, signed
+remainders/INT-versusTRIPLE strides, upper-onlycamera clamp/Y-100 andnoaddedcleanup.
+Fountain counters advancebeforeallocation;kind0 secondspawn starts11,kind1
+secondpair starts13. Fullrecord28bytes, callbackpositioncopiedeachkind0frame.
+Main stripseams/lowerclamps/hostcallorder/NULLdestroy/flags/pins/asmbarriers stay.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
