@@ -7789,3 +7789,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Seven band funnel interpolated particle strips naming acceptance (BV-03/BV-08, P2):
+FF9 ae578d582 adds three canonical ovl_10fad000 names. Catalog
+4,790 unit/symbol names, 214 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-seven-band-funnel-interpolated-particle-strips.json and Binviz
+target/ff9-names-seven-band-funnel-interpolated-particle-strips/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 504/6,484 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 elevenargINT computes D4(a,b,&vb), writes buffer typebytes24/0/24 leavingbyte3 untouched, loops exactly25 eightbyte entries atbuf+4. Weight4096-(i<<12)/24+rand_n(256), BC(a,b,w,&va), cos(w>>1)*rand_n(160)>>12 plusB4(p4,p5,w), F0(&va,entry,0,&vb,m,p6); entryU16+6=p10. p6+=p7+rand_n(128). All25 iterations callrandom evenlast; local6byte vectors/pads retained. Returns110(resource4,0,0,p8,4096,p9,1,buf,0), though controller declaresVOID and discardsresult; no clamping or bufferextentfix.
+
+78FC sixteenargVOID reserves2*n*52 GT4bytes then5*n*40 FT4bytes before size check. Load ctxmatrix/projectv, buildlocalrotation via14(INTrot,&m), scale20, GTE translation resultstoredm.t,27C(&m),loadmatrix. Seven outerbands j0..6 always run even n<=0 (radius B4 calls etc); inner onlyn>0. B4(p3,p4,j4096/7 and(j+1)4096/7), accumulatingphases/ph0 centers, 144 Zspacing, fourhalfwordpoints withpaduninitialized; division4096/n onlyinsidepositive loop. Circlecenters fromph1, ph1+dph1 and accA/7,accB/7; angular b has originalincrement/decrement/repeatedlookuporder. No matrixrestore or frame-independent phase normalization.
+
+First/last bands GT4 gradientgray-to-black and reversed, five middlebands FT4gray. Colorcodeopaque2C/3C ifmode255 else2E/3E; blackword explicitlyzero, graycodes set, tpageOR(mode&3)<<5. UV(i/j&3)*28 tiles, everyfourthcell end27 not28, byte narrowing retained. RTPT thenNCLIP acceptANYnonzero MAC0 (notpositive-only), XYfirstthree and averagedZ/4, RTPSfourth;234 length9or12 BEFORE storefourthXY andadvance ONLYacceptedprimitive pointer. Reservation remains fullcapacity, tags/pads/providerlinkbounds unchanged. Emptybarriers and assignedconstant kept.
+
+8178 descriptor32/initphase/tick0, captures TWO hostv38 words includingpad,rotation1024/32/0 withh1E untouched. Everyupdate beforephase: radius=tick*768/72, tw=4096-sin(tick*1500/72),point=base+(sin/cos(tw)*radius)XZ/sameY. Eachphase drawsTHREE funnel meshes atsegments16/8/8 withdifferenttextures andscales plus114resource1 atBurstrot1024/0/tick90/1. Exactcase constants and chainedwrites/order retained; no claim actual rain effect identity.
+
+Phase0 usesk=t4096/12, firstmeshXYk/Z8192, othermeshSINradius/COSZ andthirdXY*3/2;transition>=12 afterphasework stilltail. Phase1 XYhh+4096 andothermesh8192;>=12 afterdraw switchesphase2/frame-1 andloads5nullableh22=88. Phase2 hh=t128, uniform8192+hh/2 withthirdXY*3/2, k stays4096;>=32 switchesphase3/frame-1 afterdraw. Phase3 fixed10240, sinegray and114fade4096-t256; k-=t256 beforethirdmesh,terminal>=16 returns1 AFTERthreemeshes/114 butBEFOREcommonrotation/trails/tick++. Actualnormalphase0/1 frames0..12, phase2 0..32, phase3 0..16; no truncated count fromcomments.
+
+Common tail decrements ROTATIONv18Z by16+tick*2 withU16narrow,134resource2, TWO240screenbars. Ifk!=0, three stripbuilds into separate204byte rows, 25points each; v50THREEhalfwordsfrompoint/Y-=1600, v58TWOwordcopyincludingpad, randomangles/radii/Zpositions plus sin/cos, row+=204 notsymbol indexing. Allrandom calls/order preserved, no newpadinit. Atphase0frame0 k0skipstrips;terminalphase3 skipsentiretail. No78/release added.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
