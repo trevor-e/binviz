@@ -8095,3 +8095,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four phase pixel grid spiral handle finale naming acceptance (BV-03/BV-08, P2):
+FF9 f31529e1e adds two canonical ovl_102a6800 names. Catalog
+4,816 unit/symbol names, 223 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-phase-pixel-grid-spiral-handle-finale.json and Binviz
+target/ff9-names-four-phase-pixel-grid-spiral-handle-finale/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+0 exact/2 partial, 0/6,128 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 fifteenargVOID reserves (W+1)*(H+1)*36 up front. out serves rotation INPUT, NULLfallbackTWOwords0;f14/f20/27C,centerdepthsameforallcells. Pixel5-5-5RGB scaledwithTWOleftshiftsby2,partiallyinitializedcolorcodebytes/edgeblack. Eachrow resets pk SAMEpool despitefullreservation,notcorrectrowstride. GTEZEROZ/XYloads,RTPT thenMAC0 WITHOUTNCLIP/nonzerogate/fourthRTPS,234length8peracceptedcell andlength1end. No GTErestore. Unconditionaldivisiona6/a5+remainder andf4(rect,tex);skip keepsincomingdimssoW-1/H-1samplewindow. f4 direction/providerunknown, do not adopt historical uploadcomment.
+
+7CA0 descriptor56. CapturesU16hostXYZ atpc38, Ynarrowminus512; TWOwordcopyorigin intoh8/ha/hc/pad thenFORCESha0 (secondposition Y=0, notcopiedloweredY). Savesctx/table6; FOUR338resources12/9/11/2, TWO58resources10/14;17atsecondpositionnullabletable/h12=18/hc36/h22=32. phase0/counter0/objectsNULL, originpad uninitialized copiedintosecondpad. Createdw28 notusedlater, no cleanup.
+
+Phase0 ordinary0..24 (25updates) draw16context512,gridfadeprogress/3,gridsize6144thencommon2/3;>=24transition1 AFTERdraw/load5nullable256. Phase1 ordinary0..8 (9updates), RED100screen-table notsound,exact4loads20/21/22,twosinecalls,grid size(2*progress)/3+1365;transition>=8 AFTERwork. Literalformula differsfromthreephase sibling, no copied resource/formula identities.
+
+Phase2 ordinary0..46 (47updates), first4screenflash/first32randomred. First29pillarresource19atY-1024 withcos*2+6144,sizeprogress+4096;ring16allupdatesliteral(sin/2)*3+8192. Modelw24 priorcosscale writes overwrittenbycos/2+512 and((sin*3/2+4096)*3)/2, repeatedtrig retained. Events2resource4/14resource23/3trackedresources24and25nullable256. Trackedh30 clearsendedelsePOSITION5C/5E/60 getsconstant1024/0/0, notrotation repair.
+
+First36 phase2 updates spiral18poses reuseFOURhandles byG14Obj pointer view of INTstatehandlearray. Negate-firstshift -t<<7 and -t411, base1250/oscillation185,Ybase3584,heightcos2950first6then2600-angle; signedroundtowardszero t1250/16 correction retained. Threepositiveoffsetrandomsparkresource18drawsmaximum, RANDOMcalledall18iterations evenwhenlimitreached. Pad/partialscaleandU16narrowing unchanged. >=46transition3 AFTERallwork.
+
+CommongridonlyspA8nonzero, rotation1024/0/t256/pad1, fifteenargcall page279/two columns/counter&7/step256/input16x16/scale(spAC*2)/3/colorfade/fl1. Actual17x17 reservation10404/tail16x16, allphase0nonzero gridupdates included. Phase2>=29fade0nogrid;phase3nodraw. >=16phase3 calls78/returns1 BEFOREcounter, otherwisecounter++. Source matching registerpins16/18, wrappers, signed shifts/overflows and parameter order retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
