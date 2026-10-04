@@ -6034,3 +6034,47 @@ or private type/ownership/CFG walker. No new original matching credit,linked
 image,gameplay,selected-provider or sharedworkspace acceptance. Refresh source-
 bound evidence;historical scorer/reports pinned;foreign work/index preserved;
 full-tree naming goal active.
+
+Timed model flash grid naming acceptance (BV-03/BV-08, P2): FF9
+8400dd421 adds five canonical ovl_1367c000 behavioral names. Catalog4,597
+unique unit/symbol names,157 scoped alias headers. All five complete own-unit
+bodies reviewed;zero semantic deferrals. Other units pending. Evidence:
+docs/function-names-timed-model-flash-grid.json and Binviz
+target/ff9-names-timed-model-flash-grid/. Five complete native object pairs
+identical;exact affected/scored namespace five;pinned strict-relocation scores
+unchanged three exact/two partial,924/6,196 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish eased host vector blend,eased host weight action,timed model/
+spark/flash-grid sequence,eight-by-four gradient textured patch and eased
+indexed-ring-point callback. Actual own-unit calls and installed hook establish
+roles. Preserve unconditional division/unclamped weights,64 random XZ endpoints
+with centerZ1048/Y0,byte decrement timing,old camera position publication before
+schedule,exact frame172 termination with no host78,partial vectors/pads,random/
+host call order,UV64..159/all32packets depth0/GTE and matching flags/wrappers.
+No donor comment treated as game effect identity. No body/type/layout/ABI repair.
+
+Concrete existing BV-06 used-return frontier (P1): canonical
+src/ovl_1367c000/sub_801e7840.c defines VOID five-argument eased hostB4 weight
+call with no return expression. sub_801e7978.c declares that same callee INTK&R
+and uses results for b1position,b3scale,spark-scale and b12speed. Native object
+equality and preprocessing success do not establish meaningful return or portable
+caller/provider ABI. Current thin adapter preserves the mismatch and names the
+explicit hostweight action,not a pure scalar interpolator. Shared existing
+caller/callee/used-result certificates should retain definition-return type,
+caller declaration,actual native return register/continuation and selected host
+provider identity at each real callsite. Reject unsupported return contracts;
+never infer a scalar result from constant arguments,donor labels or native
+matching score. The six-argument VOID vector blender has a separate INTK&R
+declaration with ignored result;do not conflate the two use classes. No new
+admission,compiler repair or provider contract claimed here.
+
+Readable definitions,declarations,calls and installed callback references
+propagate;own-unit aliases retain canonical linker/address/runtime identities.
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. Existing BV-03 reviewed-deferral versus
+unreviewed prioritization proposal retained. No new reusable implementation
+or private type/ownership/CFG walker. No original matching credit,linked image,
+gameplay or sharedworkspace acceptance. Refresh source-bound evidence;historical
+scorer/reports pinned;foreign work/index preserved;full-tree naming goal active.
