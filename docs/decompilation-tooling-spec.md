@@ -9965,3 +9965,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Typed staged live binding shared derived indexed load naming acceptance (BV-03/BV-08, P2):
+FF9 31827d1e9 adds two canonical ovl_11186000 names. Catalog
+4,936 unit/symbol names, 285 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-typed-staged-live-binding-shared-derived-indexed-load.json and Binviz
+target/ff9-names-typed-staged-live-binding-shared-derived-indexed-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,096/1,096 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor40 TWOobjects/FOUR THREEU16vectors withpads. Initcopyctx.sys.v38XYZ ALLbeforecontextsave, noobj/othervectorinit. Exact10load2 atv8 inclNULL/nullablehookbyteD7BA4/h12=130/hC24. Exact40 84(16,0,v10),sharedXYZpublish,load1 atPREVIOUSv18 BEFORElaterrefresh,nullableD87D4/h12=160/hC24,THEND4(v10,v8,v20). Everyt>=10 84(16,0,v18) AFTERswitch/nullableobj0 h30==-1 clears/rechecks POINTERBINDw2C=&v18. Everyt>=40 nullableobj1 clears/rechecks thenCOPYderivedXYZ toh5C/E/60. Return>=100 AFTERwork, no h22/78/release/earlyrefresh/querydedup/backfill/providerextent repair.
+
+79B8 descriptor24 object/THREEU16pos+pad/THREEU16derivedv+pad/SIGNEDn. Init n=*out/storen/savecontext BEFOREONLYn>=LIVEcountbyte reject; negativepasses.1FC(n,pos),U16Y-=200,load3 inclNULL/nullableh22=220(STOREDn,128),THEND4(sharedbyteDeclD7B9C,pos,v). Updatecapturedtype,nullableobjecth30==-1 clear/recheck COPYcurrentvXYZ,return>=60 AFTERtrack. Sharedpoint exact40producer/lifetime/ordering external; no extent/initialization repair/requery/release/78/invalidinitclear.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
