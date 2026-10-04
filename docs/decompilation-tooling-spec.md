@@ -2988,3 +2988,37 @@ found;existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit,link,gameplay,provider orshared workspace acceptance.
 Historical reports/scorer remain pinned; refresh downstream source-bound evidence
 fromcurrent catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Radial preset naming acceptance (BV-03/BV-08, P2): FF9 b339ee5c2
+adds 22 canonical ovl_1320f000 names. Current catalog has 3,839 unique unit/symbol
+names and 67 alias headers. All 22 complete primary bodies directly reviewed,
+including every wrapper; no semantic deferrals in this unit. Evidence:
+docs/function-names-radial-presets.json and Binviz target/ff9-names-radial-presets/.
+All 22 entire native object pairs identical, exact affected/scored namespace 22,
+unchanged pinned strict-relocation baselines: 22 exact, 4,444/4,444 code bytes,
+zero failures. Installed WASM preprocessed tokens agree for all 22 sources.
+Current catalog/source/header/review/object bindings and 26 isolated commit paths
+audit. Progress: 3,839/5,812 canonical primary files named (66.1%), 1,973 remaining.
+
+Names distinguish nine expanding and nine jittered radial presets by their
+actual angle/radius halfword pairs and array indices, plus the two position
+interpolation helpers and two effect handlers. Alternate-endpoint helper keeps
+the different globals despite identical arithmetic. Expanding handler updates
+angle/radius deterministically after scheduled starts; jittered handler advances
+angle deterministically and jitters radius using separate random calls. The old
+comment suggesting angle jitter does not supply naming evidence. No original
+asset/spell names or callback-table ownership inferred from transplant comments.
+
+Preserve ignored callback arguments, exact host arities, gcc 2.8.1, signed random
+remainders, halfword wrapping, unsigned vector narrowing then signed widening,
+unchecked shifts/divisions, completion after output writes, partial state setup,
+duplicate endpoint writes, resources/frame boundaries, redundant pointer tests,
+unchecked header pointers and host calls with potentially NULL ended objects.
+Only identifiers and the unit-scoped alias header change; every other source
+token/comment/type/layout/signature remains stable. Existing maintained naming,
+farm/scoring/preprocessor tools and thin adapters reused; BV-08 namespace gate
+enforced. No additional shared implementation gap found; existing proposals
+remain separate. No private ownership/type/CFG walker, new matching credit,
+linked image, gameplay, provider or shared workspace acceptance. Historical
+reports/scorer stay pinned; refresh downstream source-bound evidence from the
+current catalog. Foreign work/index preserved; full-tree goal remains active.
