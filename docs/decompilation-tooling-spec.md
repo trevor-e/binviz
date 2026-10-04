@@ -5800,3 +5800,34 @@ type/ownership/CFG walker introduced. No body/type/layout/ABI repair or new
 original matching credit,linked image,gameplay or sharedworkspace acceptance.
 Refresh downstream source-bound evidence; historical scorer/reports stay
 pinned. Foreign work/index preserved; full-tree naming goal active.
+
+Eleven vertex trail naming acceptance (BV-03/BV-08, P2):
+FF9 978d7892a adds five canonical ovl_10e1e000 behavioral names. Catalog4,562
+unique unit/symbol names,150 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-eleven-vertex-trails.json and Binviz
+target/ff9-names-eleven-vertex-trails/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged four exact/one partial,1,508/2,060 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review/RAMpolicy bindings and nine isolated committed paths audit.
+
+Names establish resource3 timed placement,eight-frame sprite callback,trail
+slot reset,reverse eleven-vertex trail/particle builder and two-trails-per-frame
+sequence. Preserve all vertex generation before allocation,success-only
+velocity random rolls,age/index order,halfword narrowing,partial fields,
+four-argument host8,variant resource1/4 and frame24 pulse before completion.
+Reset body uses D_801e8528 and builder D_801E8528: actual wasm/mkmod.py address
+regex,integer parsing and .set emitter map both spellings to the same RAMoffset.
+That inspected policy plus the actual own-unit init/builder establishes the
+cursor role; source data names remain unchanged. Relevant policy blocks were
+inspected,not a whole-tool review or fresh linked/runtime acceptance.
+
+Readable definitions,declarations,calls and callback references propagate;
+own-unit aliases retain canonical linker/address/runtime identities. Exact
+game effects/providers unresolved. Maintained naming/farm/scorer/preprocessing
+interfaces and thin adapters reused; BV-08 exact namespace gate enforced.
+No new reusable tooling logic or private type/ownership/CFG walker introduced.
+No body/type/layout/ABI repair or new original matching credit,linked image,
+gameplay or sharedworkspace acceptance. Refresh source-bound evidence;
+historical scorer/reports pinned; foreign work/index preserved;full-tree goal active.
