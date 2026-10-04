@@ -13458,3 +13458,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual lowered anchor resource sequence naming acceptance (BV-03/BV-08, P2):
+FF9 8990d3602 adds 1 selected canonical ovl_fc3a000 names. Catalog
+5,570 unit/symbol names, 373 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-lowered-anchor-resource-sequence.json and Binviz
+target/ff9-names-effect-residual-lowered-anchor-resource-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 524/524 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remainingFC3A000 controller independently full-read and named for staged resources at lowered anchor. Full g10/lifecycle and own narrowAPI declarations bound. No matching-barrier removal, body/local cleanup or provider repair.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole0Cbyte size/init/update and complete local API/union declarations read. Original8bytehostvectorcopiedandYlowered384; resources1/12initialhalfword160, resources3/4/11at24halfword200, resource13framefeed, completion60onlyenabled. Preserve twoemptyasmbarriers, split c2/currentctxloads, unsignedvectorwrap, original done-flag behavior and allresources/calls. No spell/visualshape or ABI/typeclaim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
