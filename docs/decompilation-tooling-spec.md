@@ -12405,3 +12405,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual three model scale tint sequence naming acceptance (BV-03/BV-08, P2):
+FF9 2eed60dc0 adds 1 selected canonical ovl_13b6f800 names. Catalog
+5,531 unit/symbol names, 334 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 4 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-three-model-scale-tint-sequence.json and Binviz
+target/ff9-names-effect-residual-three-model-scale-tint-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,672 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining13B6F800 controller full-read and named by three-model timed scale/rotation/tint behavior. Four full headers bind host/object/job/lifecycle views without typed-provider repair. Preserve original counter-array spill into padded words and all compiled register choices.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole B4byte handler size/init/update and all frame events/countdown branches read. Three distinct handles use countdowns32/48/24, Yrotation+=128, per-axis blended scales, staged tints and frame128 completion. Numeric lifecycle and model transforms established; visual/spell identity unproved. Preserve eight-word clear via cnt[3] view, register copies9/10/11, wrapper, asymmetric scale/tint formulas, load order and K&R host contracts.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
