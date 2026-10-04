@@ -4547,3 +4547,33 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active and other units pending.
+
+Ribbon paired strips naming acceptance (BV-03/BV-08, P2): FF9
+d75bb0319 adds eight canonical ovl_11813000 names. Catalog4,271 unique
+unit/symbol names,102 alias headers. All eight complete own-unit primary bodies
+reviewed,including both main handlers; no semantic deferrals in this unit.
+Evidence: docs/function-names-ribbon-paired-strips.json and
+target/ff9-names-ribbon-paired-strips/. Eight entire native object pairs identical;
+exact affected/scored namespace eight,unchanged pinned strict-relocation baselines
+five exact/three partial,2,676/10,044 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all eight sources. Current catalog/source/header/
+object/review bindings and12 isolated commit paths audit. Other units pending.
+
+Bounded roles cover two-phase rotating ring sparks,14-segment ribbon,two-segment
+strip and polyline wrapper,paired strip callback,random ribbon vertex,
+three-variant radial emitter and three-phase9-frame pulse. Actual headers/vertex
+counts used rather than older segment comments. Preserve paired submissions at
+the same destination,unchecked resource/point indices,done-after-builder callback
+behavior,signed byte widths and remainders,INT-stride random table slices and
+partial records. Variant2 advances counter twice before its first allocation,
+updates history on allocation failure and retains terminal odd-frame random flash.
+Keep independent trig calls,resource IDs,legacy declarations,flags,pins/wrappers.
+No original game label/provider identity guessed. C references use readable
+names while own-unit aliases retain canonical runtime/linker identities.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
