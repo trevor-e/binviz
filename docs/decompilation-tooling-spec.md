@@ -13647,3 +13647,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual four timed resource tracks naming acceptance (BV-03/BV-08, P2):
+FF9 d96b31ddd adds 1 selected canonical ovl_11ec5800 names. Catalog
+5,577 unit/symbol names, 380 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-four-timed-resource-tracks.json and Binviz
+target/ff9-names-effect-residual-four-timed-resource-tracks/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 640/640 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete remaining11EC5800 handler independently reviewed and named for four timed resource tracks. Full g24/lifecycle headers bound; preserve existing table initialization ownership and unknown138 parameter domain.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole18-byte-hex modes and entire four-record track loop read. Anchor copies and resource13 initially; each unfinished timed record in start-inclusive/end-exclusive window submits138 with resource/counter/value, decreases unsigned halfword value4096/(end-start), marks last frame and increments counter. Resource14at20, completion60. Preserve global table state and no reset at init, modulo-halfword arithmetic, short-circuit bounds, exact call/update order. No alpha/scale claim for opaque138 parameter or division guard.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
