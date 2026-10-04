@@ -11207,3 +11207,95 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot hint card bios rotation helpers naming acceptance (BV-03/BV-08, P2):
+FF9 71243d57c adds thirty three selected canonical boot names. Catalog
+5,304 unit/symbol names, 308 scoped alias headers. Thirty three selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-hint-card-bios-rotation-helpers.json and Binviz
+target/ff9-names-boot-hint-card-bios-rotation-helpers/. 123 full native object pairs equal;
+exact affected/scored namespace 123. Pinned strict-relocation scores unchanged:
+98 exact/25 partial, 28,552/53,908 code bytes, zero failures. 123
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 127 isolated committed paths audit.
+
+Selected complete C and raw assembly bodies directly read. Full semantic consumers/entry30874/hint_draw/hint_set_callback/hint_toggle/options_open read and bound; original BIOS/formatter/register conventions and runtime policy unchanged. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Entire raw register-tail body read: checked ADDI t4,-64 then index<<1; signed HALF lookup at8006BD34+index, variable LEFT shift by caller t1 then UNSIGNED>>12 return. Alternate jr-ra returns0 after main tail, all assembler labels/slots unchanged. Full prior30874 entry read: LZCS/LZCR/normalized table index and exponent branches into this entry; square-root lookup/register-tail name only, not ordinary C argument ABI or inverse-square-root-table claim.
+
+Full C wrapper: original INTa,b passed to31284 thirdarg0; result discarded and VOID return preserved. CPU role derives fully read raw core, no return type/prototype repair.
+
+Full C wrapper:31284(a,b,1), VOID/discarded result; GTE-selected branch grounded in full raw core. All comments/signatures unchanged.
+
+Entire raw primary rotation builder read: SHORT angle triple maskedFFF, folded quadrant sin/cos table8006C1C4, sign-bit800 negation. Captures backend a2 in t6 before arithmetic. CPU path uses SIGNED16 products/low-word and arithmetic shifts with intermediate halfword truncation, output9 halfwords. Nonzero backend uses four GPF198003D command sequences mixed with CPU products and exact interleaved stores. Returns output pointer and restores saved s0/s1. Distinguish primary versus alternate order without claiming SDK function name or mathematically equivalent rounding. Every instruction/string/label/HI-LO/GTE/delay slot unchanged.
+
+Full C wrapper31718(a,b,0), original VOIDsignature/discarded core result retained. CPU backend and alternate order from full raw core.
+
+Full C wrapper31718(a,b,1), original VOIDsignature/discarded result retained. GTE branch from full raw core; no typed matrix or SDK identity repair.
+
+Entire alternate raw builder read: same folded angle/sine-table family but different product placement/order and saved s0/s1/s2; backend tests a2. CPU output e.g HALF+A=-sin(firstangle), differs primary +C=-sin(secondangle); GTE backend four GPF198003D sequences mixed with CPU products and exact interleaved stores. Return output pointer, preserve all variable rounding/truncation/register/stack/HI-LO/GTE/asm labels. No claim that CPU/GTE branches match each other.
+
+Whole empty callable body read; options_open actual full caller passes this address to existing hint_set_callback. Existing setter fully read stores callback into shared windowWORDC. Name hint empty callback, no guessed return/lifecycle behavior added.
+
+Whole getter returns U8global77E00 zero-extendedU32. Full lane05 WinState base77DE8 ->offset18; fully read hint_toggle uses b18 as open state. Return raw byte, no boolean normalization/global alias or width change.
+
+Whole getter U8global77E03 zero-extendedU32 ->hint WinState offset1B. Purpose beyond auxiliary control unresolved, name explicit control-byte offset within known subsystem, no stronger behavior inferred.
+
+Whole setter U8global77E03=value narrowingU32 ->hint control byte1B. No guessed flag mask, validation or boolean conversion.
+
+Whole getter U8global77E04 rawzero-extendedU32; full hint_draw body checks same WinState offset1C to draw animation. Descriptive animation visibility, no boolean coercion.
+
+Whole setter U8global77E04=value narrowingU32; same hint animation-visibility byte1C. No frame/playback/callback behavior added.
+
+Whole getter U8global77E05 zero-extendedU32, WinState1D; full hint_draw zero selects stored priority, nonzero also invokes background helper. Background mode descriptive, no guessed binary-only/priority value semantics.
+
+Whole setter U8global77E05=value narrowingU32, same hint background mode byte1D. All typed globals and actual inputs preserved.
+
+Entire empty body read; full hint_draw invokes this immediately after optional animation drawing and before ready-dependent popup content. Name empty draw hook; no future callback policy or effect identity guess.
+
+Entire body stores shared WinState BYTE1A=1 THENBYTE19=0. Full hint_toggle installs address as animation done callback. Name marks animation ready; existing noargs definition versus Anim* caller declaration preserved, no ABI repair.
+
+Entire raw BIOS stub read: t2=B0,jr t2,t1=09 delay slot. Existing provenance identifies CloseEvent in libspu neighborhood; all asm labels/instructions/slots stay, descriptive SPU BIOS entry alias only.
+
+Entire raw BIOS stub read: B0,t1=0D. Existing DisableEvent provenance retained, descriptive SPU BIOS alias, no new ordinary C signature/host policy.
+
+Entire raw BIOS stub read: B0,t1=20 UnDeliverEvent provenance. Preserve original jump address/delay slot/rawsymbol/register conventions.
+
+Entire raw stub B0,t1=38; fully reviewed prior GPU packet wrappers invoke(-1) on merge failure. Numeric BIOS error hook name avoids guessing exit/abort semantics or introducing failure policy. Raw labels and delay slot unchanged.
+
+Entire C delegation body read: pinned bios_t2=A0,bios_t1=27,emptyasm constraints, bios_call(A0,27,a,b,c,d) return U32. Secondary library identity and numeric service preserved; no bcopy/memcpy argument-order/length or host-contract claim.
+
+Entire raw formatter body read: stack250 frame, destination s4/counts2; parse format signed chars/flags(-,+,space,#,0), decimal/star width and precision, negative star-width left-align, local spec bits. Dispatch table125A0 spans L..x; signed/unsigned decimal,octal,hex/pointer/character/string/count families with halfword modifier and prefix/precision/padding. Word arguments advanced stack+220 cursor initiallysp+258, no inserted a2/a3 register saves; string length/findbyte delegated to64524/64534, content memmove, NULtermination and bytecount return. Keep exact unknown table mappings/caller argument save conventions/stack ABI and all native labels/instructions; no software printf admission or portable C claim.
+
+Entire raw A0,t1=1B stub read. Fully read formatter invokes string pointer and uses returned count. Descriptive formatter string-length delegation; raw labels/return/args untouched, no new libc or host implementation.
+
+Entire raw A0,t1=2E stub read. Formatter invokes(string,0,precision), returned pointer delta or fallback precision selects string count. Name find-byte-with-limit; no bounded-memory service/provider admission.
+
+Entire C body read: pinned B0/5D regs and emptyasm constraints; delegate allfour U32args to bios_call(B0,5D,...) and return U32. Local library-map excerpt only places it in card wait/status family; exact BIOS name/mode meaning unresolved. Numeric card status-service alias, no invented synchronous wait or query contract.
+
+Whole raw BIOS A0/AC stub read. Local library-map excerpt identifies card-load family, existing exact native provider unchanged. No extra args/host implementation.
+
+Whole C body: reset-operation661D0() then write661C0(a,3F,0); original VOIDdecl of both stays. Fixed sector3F/nullbuffer call in current code, no allocating/repairing buffer/provider args.
+
+Whole raw BIOS B0/4E stub read; full661E0 write path uses(chan,sector,buf) before poll. Sector-write role with actual caller, preserve raw instructions, no typed declaration/return or card protocol repair.
+
+Whole raw BIOS B0/50 stub read; full66180/661E0 invoke before read/write. Descriptive reset-operation role, exact BIOS originalname unresolved; no inferred event or storage ownership.
+
+Full gcc2.7.2.3/-fill-delay-slots body read. XOR FIRST127buf bytes, store checksumbyte127 BEFORE retry loop. Up to8iterations; reset,write result!=1 ->immediate0. Busy poll status(chan>>4)&1 unbounded. Bzero128localtmp then reset/read; pollonlyifreadreturn==1 but ALWAYS checksumtmp evenfailedread. tries++ and compare onlybufchecksum vsreadback FIRST127 XOR, return1 onagreement; no byte-by-byte equality. Preserve failed-read zero-buffer falseaccept frontier/checksum collision/unboundedwait/no retryonwrite failure, no protocol or compiler fixes.
+
+Whole raw BIOS B0/4F stub read; full661E0 readback call(chan,sector,tmp) returncheck==1. Descriptive sector-read alias only; no ABI/card-host contract changes.
+
+Whole raw BIOS B0/5C stub read; full661E0 polls(chan>>4)&1 until nonzero. Descriptive channel-status poll, no successful I/O interpretation/timing or bitfield guess.
+
+Reuse the maintained wide renamer and established raw-entry include-only snapshot pattern from target/ff9-names-world-module-geometry/run.py. Raw selected definitions contain assembler labels in strings; expose C aliases and add only alias includes at their canonical sources while preserving the asm marker and all strings. Every caller follows normal token-safe renaming. This is a thin naming adapter; BV-03 public raw-prefix/readability review support remains a proposal, not a new tooling implementation.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
