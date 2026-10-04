@@ -10019,3 +10019,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Six selected host key path pulsing hooked handle naming acceptance (BV-03/BV-08, P2):
+FF9 31d4cc1dc adds two canonical ovl_132ff000 names. Catalog
+4,940 unit/symbol names, 287 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-six-selected-host-key-path-pulsing-hooked-handle.json and Binviz
+target/ff9-names-six-selected-host-key-path-pulsing-hooked-handle/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,492/1,492 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 t=(n<<12)/lim FIRST,idx=(U8selector-1)%6 signedremainder;selector0 givesnegativeidx,lim0 remainsdivisionfrontier. t*=U16path[idx][0],frac=t&4095,k=t/4096 (signeddivision,notshift). TWO80(16,path[idx][k+1/k+2],locals16vectors),BC(a,b,frac,out),COPYTHREEs16dst thenSIGNEDXYZ<<12 intoobjectINTcoords BEFOREn>=lim?-1:0. Sixrows9U16 each NOTproofvalidendpointsegments; no clamp/zero guard/negativeidx repair/boundschecks/tablepadding/dedup/terminalearlyexit.
+
+78EC descriptor40 done/frame/FOURs16v8/EIGHTs16vec/object/INThandle. Init done0/frame0/context,70(table,1),200(0,0,vec),handle=SIGNEDs16truncated338(resource2,1) thenINTsignextension. Everyupdatecapturedjobtype then80(16,15,v8)/SIGNEDXYZ->localINTv BEFOREdonegate. done==0 first240(counter<<2,512,256,32,64,((counter&3)<<5)+576,((counter<<4)&192)+256),134(resource1,COUNTER). Exactjobtype0 load5 nullablefirstbytehook/h12=72/hC60/h22=64/nestedguards/unguardedp0hook=callback,THENload4 nullable secondbytehook/h12=16/hC108/h22=128.
+
+done0/jobtype>=12 q=((type-12)<<12)/57,r=sin((type*82+512)&1022),scaleZ6144,X=Y=r/3+6144;2C4(16,16,localMATRIX),2B4(matrix,s16rot[4]),60(rot,currentv,scale,SIGNEDhandle). q>>=1; THREESEPARATEcos calls RGB=(cos(q)>>5)-128 order c0/c1/thirdinside26C retained. type>=69 done1/78/return1 AFTERdraw BEFOREcounter++. Ifdone!=0, querystilloccurs thencounter++/return0 eventerminal; unknownnonzero done behaviorretained. No counter/jobtype consolidation/querydedup/padinit/release/innernullguard/clamp.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
