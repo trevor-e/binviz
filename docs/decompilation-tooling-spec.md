@@ -2262,3 +2262,46 @@ walker or tooling rewrite. Existing BV-03/BV-08 readability acceptance proposals
 still need shared frozen namespace/compiler-input/output gates. Refresh
 downstream source-bound evidence using the current catalog; preserve other
 sessions' runtime work. No new shared feature or workspace acceptance claimed.
+
+Movie streaming naming acceptance (BV-03/BV-08, P2): FF9 1c60ad9a0
+names74 canonical ovl_146000 functions, including five native-only assembly
+C aliases. All78 primary bodies reviewed; four explicit opaque cross-overlay
+deferrals. Total3323 unique reviewed unit/symbol names,48 alias headers.
+Evidence: FF9 docs/function-names-movie-streaming.json and Binviz
+target/ff9-names-movie-streaming/. All74 complete native object pairs identical;
+pinned strict-relocation scores unchanged:66exact/8partial,12372/18692 code
+bytes, zero failures. All74 installed WASM preprocessed token comparisons agree.
+Independent current catalog/header/primary snapshot/object hashes and78 isolated
+committed paths verify. No new matching credit, portable module, linked-image,
+runtime selected-provider or gameplay proof. Other canonical units remain.
+
+Complete producer/consumer review establishes movie start/pump/finish, frame side
+data, metadata/payload rings, pause/resume, display and pixel modes, callbacks,
+MDEC input/output and waits, VLC table/decode/version3 blocks, pixel-mask runs
+and disc-prompt CD shell/probe/panel behavior. Five shared release Binviz native
+disassembly observations independently corroborate direct stream field aliases:
+DE20 selects sector+14 versus+38 header variant; DE2C is the start sector;
+DE4C is terminal group. Capture pins CLI545beb01...44b6e, executable, overlay,
+notes and each actual output. No private ownership/type/CFG walker added.
+
+Consumer evidence contradicts several comments: D110 sends MDEC input DMA,
+not SPU data; sprite97A54 is194by168, not78by28. Descriptor1000 means available
+for writing;8000 is ready for fetching. C884 still divides before its zero-unit
+guard, C1B0 ignores its first argument, CF34 remains a no-argument output thunk
+despite argument-bearing callers, and CE20 retains existing copy/command-table
+pointer arrangement. Flags, polling bits/timeouts, register pins, compiler
+selection, narrowing, callback sequencing and signature mismatches unchanged.
+
+Raw assembly aliases preserve every instruction/string/shared continuation
+label/custom register ABI/external epilogue jump and the FIRST leading asm
+marker. Native97B68 probe role is established by its CD command/status checks;
+opaque98278 return-bearing external801f6368 remains deferred because a different
+canonical unit at that address defines a void flag setter. Equal addresses and
+donor comments do not establish runtime provider correspondence. Also defer
+97DA4's three opaque calls and97EAC/97EF4's unresolved table lifecycle roles.
+
+Maintained naming/farm/scoring and classification adapters reused. Existing
+BV-03/BV-08 shared readability acceptance remains a proposal requiring frozen
+namespace/compiler/input/output identities; this batch grants no shared workspace
+acceptance. Refresh downstream source-bound evidence from current catalog;
+preserve foreign runtime work and the historical scorer selection.
