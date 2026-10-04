@@ -8369,3 +8369,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Five curved ribbons actor zero vertical vector pulse naming acceptance (BV-03/BV-08, P2):
+FF9 bf2ccc620 adds two canonical ovl_10614000 names. Catalog
+4,831 unit/symbol names, 231 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-five-curved-ribbons-actor-zero-vertical-vector-pulse.json and Binviz
+target/ff9-names-five-curved-ribbons-actor-zero-vertical-vector-pulse/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 312/4,084 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+77F0 computes k=0x20000000/(len*len) UNCONDITIONALLY. Kind0 4096-((0x10000000/len)*t>>16),kind1 squaredremainder*k>>17,kind2 4096-(k*t*t>>17),otherweight0. CallsB4(handle,extra,weight),discardsresult andreturnsVOID. No clamp/overflow/divisionzero/prototype repair.
+
+7928 descriptor212. Init ONLYfirst16counterwords cleareddescending15..0/table70count4/FIVE284byterecordslife0/110resource13. Captures1F8actor0sixbytevector/2A0threeINTvector/1F4selector/200derivedeightbytepoint. Publishes ONLYX/Z intoctxpoint/oINTposition (Ynotinitializedhere). FOURhandles8via58/11and12via18/10via58; firstrotation2048/0/0 allthree scales0, fourthrot0/scale585/0/585/ivY0 andcapturedSIGNEDactorX/Z. 2E4fourth32. Pads/unknownproviderreadextents retained.
+
+Exact0eightarg2F4 atcapturedactorX/Z withweight-4096. Exact1 follow1/growth16/ribbons48/firstoscillation16. Exact9fourthpose1/Ygrow8;exact17middleoscillation25;exact42shrink16/restoreoscillation16/Yshrink8;exact58follow0/fourthpose0. Counterspredecrement; scalegroupsTHREEconsumedVOIDhelpercalls to uniformscales withextras368/323/409thenreverse. FourthY+=64or-=64. Events notbackfilled/guarded againstnegativeframe.
+
+Firstoscillation16 predecrements; ifcapturedselector>=513 THREEINTvector pulse usesCONSUMEDhelper fromsavedvectorYtoY/2,uniformXYZ and2A4(0,iv). Actor0position X/Zcaptured, Ycaptured+CONSUMEDhelper(0,-512)+cos(frame256)*(16-remaining)>>10,204then200refreshderivedpoint. Middle25setsYcaptured+cos(frame256)*16>>10-512/204ONLY (no200refresh inthatblock). Restore16 predecrements; nonzero selector>=513 pulsesreverse vector andYhelper(-512,0)+cos*remaining>>10. Lastzero performsFRESH1F8(0,sp28) and2A4savedvector UNCONDITIONALLY regardlessselector, then204/200. No forcedcachedactorpositionreset or reconstructedcamera/fovidentity.
+
+Everyupdate publishes derivedpointY tooctxpoint/oINTpos evenwithoutfollow; X/Zremaininitfixed. Follow D4(derivedpoint,ctxpointbyte84,secondrot),firstX=secondX+2048,thirdX=secondX+1024,sharedY; THENsecondX-=1024. Posessecond/third/first,268first1,134resource7frame. Fourthposeconditional with134resource9frame. No colorfade block unlike sibling1063D000, no allactorsloop.
+
+Ribboncountpredecrements; FIVErecords eachlivepredecrements andstilldrawsatlife0. Header10/0/10,angles+=steps; spherepointca fromhandle0scale/liveINTpos, cbXZ=pos+(sphereoffset>>4),cbY0. Elevenvertices endpointsca/cb andNINEmiddlepoints. tt=((j+1)*190650)>>12,uu512-tt,weightsuu2>>6/(tt*uu+uu4)>>6/tt2>>6; Yweightedca/cb/(posY>>1), XZmixedsignedhalfwords andD4angle-derivedcontrol expressions with literalmultiplication placement. U16offsetsaccumulate signedvelocitynarrows, then applied TWICE: onceinside sp48 andonceagainvpXZ. Preserve doubleoffset/halfwordwrap/partialca-cbpad rather than normalize to standardBezier.
+
+Eachlive110resource13 usesweightlife512 WITHOUTclamp, including0 onexpiry. Free record initializesonlyifremainingribboncount>=9: lifeC4(2,8),anglesC4(640,1536)/RAND&4095,stepsC4(-96,96),padC4(8,32),nineoffsetXZ0 thenvelsC4(-32,32),notdrawnuntilnextupdate. Unknownrangeproviderendpoint semantics notassumed. Finalreturnframe>=70 AFTERallwork, no78/release/explicitactorrestoreterminal. Partialvectors/storeorder/pin17/matchingwrapperand consumedVOIDresults preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
