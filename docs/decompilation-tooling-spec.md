@@ -9937,3 +9937,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Staged hooked live binding derived track indexed load naming acceptance (BV-03/BV-08, P2):
+FF9 651aab83b adds two canonical ovl_1030e800 names. Catalog
+4,934 unit/symbol names, 284 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-staged-hooked-live-binding-derived-track-indexed-load.json and Binviz
+target/ff9-names-staged-hooked-live-binding-derived-track-indexed-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,096/1,096 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor40 obj0/4+THREEU16v8/pad+THREEU16v10/pad+TWOINTvec18+THREEU16v20/tailpad. Init copiesanchorX/Y fromctx.pc+56/58, SAVEScontext BETWEENY/Z, thenZ+60. Noobj/vectorinit. Exact10load2 atv8 inclNULL/nullablew14=firstINTtable/h12=130/hC24. Exact40 84(16,0,v10),publishTHREEU16to sharedD7B9C,load3 at PREVIOUSvec18 BEFORElaterrefresh (includingunknowninit ifframesmissed),nullablew14=secondtable/h12=160/hC24,THEND4(v10,v8,v20).
+
+EVERYt>=10 84(16,0,vec18) AFTERswitch includingNULLobj/terminal; nullablep0 h30==-1 clears/rechecks POINTERBINDS p2C=vec18. EVERYt>=40 nullablep4 h30==-1 clears/rechecks COPYScurrentderivedU16XYZ to h5C/E/60. Returncapturedt>=100 AFTERproviders/events/tracking. No h22/78/release/querydedup/earlyrefresh/providerextent/backfill/newinitializer; sharedXYZ publishedONLYexact40.
+
+79B8 descriptor24 obj/TWOINTvec4/THREEU16derivedhc/he/h10+pad/SIGNEDidx. Init idx=*out/storeidx/savecontext BEFOREONLYidx>=LIVEcountbytectx.pc+36 reject; negativepasses.1FC(idx,vec4),U16aliasY-=200,load1 inclNULL/nullableh22=220(STOREDidx,128),THEND4(sharedINTdeclD7B9C,vec4,&hc). Sharedsource maypreexist/load40producerordering external; no new scheduling guarantee/fourthlaneinit/extentrepair. Update cachesobjBEFOREcapturesjobtype, nullablecachedobj h30==-1 clearsstate/rechecksstate thenCOPYXYZ; return>=60 AFTERtrack. No requery/78/release/invalidinitclear.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
