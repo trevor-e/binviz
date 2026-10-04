@@ -7957,3 +7957,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Sampled tiles wobble particle actor vectors naming acceptance (BV-03/BV-08, P2):
+FF9 7fbf93b97 adds three canonical ovl_12cea000 names. Catalog
+4,805 unit/symbol names, 219 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-sampled-tiles-wobble-particle-actor-vectors.json and Binviz
+target/ff9-names-sampled-tiles-wobble-particle-actor-vectors/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+0 exact/3 partial, 0/5,792 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 fiveargINT initphase0,random%1000-400amplitude,THREErotationhalfwords0/speeds0;positionhc/he/h10,handle,otherfieldsnotinitializedhere. Everyupdate beforephase snapshotsXYZposition intoINTvec,scale8192 each withWuninit, addsorientationh14/h16speeds. Phase0 Ywobble cos(frame32)*amp plusalternatingframe;at>=32 phase1,halfwordBEFOREstate=-1,positionhc-=amplitude, randomangularspeeds0..7,velocitieshc/4+RAND128,h10/4+RAND128, verticalamp=RAND256-700+B0((hc/7)^2+(h10/7)^2,20)/2. FrameargNOTreset bycallback;transitiondrawusesOLDsnapshotandphase0lum.
+
+Phase1 updatesSIGNEDhalfwordXZ usingvelocity>>2, velocities*=7>>3, Y+=amp/5,amp+=12;fade4096-frame4096/40. f60uses OLDposition snapshot takenbeforeupdates, notfreshpositions. Terminal>=40 aftermovement BEFOREpose/tint;rotationalreadyadvanced. Ifs<4096,visibility1onlys<2048,tint(s>>5)-128;identicalarmsbyframe kept. No invalidframe/clamps/padinit added.
+
+7B30 descriptor76/particle40/count10/callbackINTaddress,reg3/4untouched;initkind3/cnt0,70table12,THREEXYZ0,handles11/27, publishctxpoint3Y-256. Actualinitialupdatekind3 runs2F4(448,256,256,256,buf,X,Z,3072),kind0/frame-1,stillcnt++. Kind0frame1 fills96SIGNEDhalfwordarray-1, f4THREE4x4rects at512/384,636/384,576/492 withdestoffset0/32/96HALFWORDS. ThirddestinationstartsBEYONDdeclared96length, preserveunknownextent; zero-selectionscanreadsONLYfirst96.
+
+Kind0 publishedYwobble-256-(frame*2)*parity, sixposesSAMEhandle11 withprogress/cosines repeatedlookups,tint,rotation+=600eachpose. >=-4handle27fixedposition0/1454/0 withcosYscale,2681/tint/240;>=9sprites30/31. >=16 afterdrawkind1/frame-1whiteflash,scan96anyzero picksoneofTWO10resourcearrays forall10handles338mode0. No per-tile resource selection invented.
+
+Kind1 publishedYwobble16. Exact0 TWOwordpositioncopy(c14containspositionZ+pad) thenhalfword c10Y-=384;resource26nullable256. Twenty-five184allocationATTEMPTS;successfulrecord copieshandlefromstatebyte28+i4 (only10declaredhandles, readscontinuepaststate) andTHREEpositionhalfwordswithY+1454. Failuresstilladvanceindex. Clearendedobject,first4whiteflash,first24sixposeshandle11,first16resource31/context256. >=32 switcheskind2/frame-1 releasesobj EVENNULL andleavespointer. Otherworkstilldrawtail.
+
+Kind2 gray137,exact1resource29nullable256,publishYdiminishingwobble. Exact0 f100FOURargs(ctx+8,2,128,128),frames1..8 FOURargs(ctx+8,1,w,w), preservemissingchannel K&R ABI, notinsertblue. >=40kind3/return1 BEFOREcommon248/cnt++. Earlierkind2 fourteenarg248 withgray137,scales4128/4128/4096 andpartialrotationword0/0/-8;overlaid64bytescratch/macros preserved.
+
+8880 descriptor268/init savesunsignedhostcount UNBOUNDEDdespitefour8entryarrays,phase0. Peractor1F8A/20CB,copyTWOWORDBtoD includingpad, three independentC halfwordsteps8192/(40*(randbit+1)), firstbitSIGNEDrand%2 (negativepossible), sharedamplitude overwrittenEVERYactor/lastwins, count0leavesuninitw108. Phase0 everyframeCOPYcachedA thenY-=frame8+RAND127,204;>=32phase1/frame-1 AFTERpublish. Phase1 copycachedA/Y+=sharedamp*cos(t4096/40>>1)>>12 then204;DTHREEhalfwords+=C then2A8. >=40 AFTERwrites restore2A8B, FRESH1F8/204 (notrestorecachedA),phase2/frame-1. Phase2 peractor128resource15 atcachedA/rotation1024/0/0/1,sine(frame4096/7>>2),terminal>=7 AFTERdraw; no78/newcountclamp/provideridentity guessed.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
