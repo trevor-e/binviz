@@ -9853,3 +9853,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Spinning cosine dipped four history trail actor zero load naming acceptance (BV-03/BV-08, P2):
+FF9 b4bc9a796 adds two canonical ovl_1222c000 names. Catalog
+4,928 unit/symbol names, 281 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-spinning-cosine-dipped-four-history-trail-actor-zero-load.json and Binviz
+target/ff9-names-spinning-cosine-dipped-four-history-trail-actor-zero-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,160/1,160 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor164; FOUR U16fourlane rotations/INTfourlane positions inhistory. Init context,70(D7BE4,2),200(16,0,state),200(0,0,p8),80(16,23,m10),D4(m10,p8,h18),scale4096each,h18X+=2048 U16,initialINTXYZ=SIGNEDm10XYZ. U16head338(resource1,1),trail58(resource12,151,15680,0,0); no history/pad/fourthlane initialization.
+
+Update frame<10 includingnegative ang=frame<<9,BC(state,p8,ang,locals16t[3]),INTXYZ=tXYZ,Y-=cos(ang>>1)*400>>12,h18X+=512 U16. Head60 then FOURhistorysamples ifframe>=i+1:60(hs/hv,scale,SAMEtrailhandle),268(handle,3),26C(handle,-(i<<4) RGB). ONLYXYZ shifts2->3,1->2,0->1,current->0 AFTERdraw. frame>=8 calls78/return1 AFTERdraw/history, ordinary8weight4096/NINTHspin increment, continued9weight4608/tenthincrement. No clamp/extentrepair/release/historybackfill.
+
+7AA4 descriptor12 obj+THREEU16pos/tailpad. Init saveEfxcontext,200(0,0,pos),load5 inclNULL/nullableh22=220(0,128). Othermodesreturn>=30, no tracking/release/78/padinit. Own canonical representative fullyread; original resource identity unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
