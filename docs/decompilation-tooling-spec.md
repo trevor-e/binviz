@@ -11465,3 +11465,95 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot actor scene animation input helpers naming acceptance (BV-03/BV-08, P2):
+FF9 c6e462f2c adds thirty four selected canonical boot names. Catalog
+5,394 unit/symbol names, 311 scoped alias headers. Thirty five selected complete boot
+bodies reviewed and bound, thirty four named and one explicit full-body deferral; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-actor-scene-animation-input-helpers.json and Binviz
+target/ff9-names-boot-actor-scene-animation-input-helpers/. 76 full native object pairs equal;
+exact affected/scored namespace 76. Pinned strict-relocation scores unchanged:
+49 exact/27 partial, 23,532/50,320 code bytes, zero failures. 76
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 80 isolated committed paths audit.
+
+Six additional complete allocator/input/file-record/scene-slot/world-camera/battle-enemy provider or consumer bodies read and hash-bound. Saved16FC word is a party-list tail snapshot, not a count; held/pressed input globals established by actual edge writer despite stale address-field comments. Packed four-entry category predicate4B85C full-body deferred. All caller signatures, existing defects and matching constructs preserved; every propagated source receives native/CPP proof. Full-tree goal remains active.
+
+Complete movement body and full scene tick caller. Analog type7/dead-zone signature, squared-axis speed and D-pad/run-toggle heading, 12bit heading smoothing, rotation/collision sliding and movement counters. Actual body reads t->flags BEFORE t!=NULL check; retain this defect, all extra caller args, register pins/wrappers and signed arithmetic. No collision fix or new input contract.
+
+Whole actor script push and full look-at caller: flags400 inhibit; nonranged/f6e=A7/f4>0 saves pointer relative to scene base and packed current-script-id/FF/state word in next two-word stack slot, sets f70=arg>>4, script cursor actor+6E and depth+2. Always1 even skipped. No stack bounds/return success repair.
+
+Full GTE helper and look-at caller: original sparse rotation matrix, actor translation and local (0,height,-500); length floor100, clears flags0700 only closer than100, narrows focus halfwords and outputs48/4A/4C with bit1. Preserve exact matrix values, register pin and unsigned output views; do not replace with textbook Y rotation.
+
+Entire body including cam_project/cam_ease helpers: pinned target or kind4 masked vertical/cone search, actor turn-script push, focus interpolation and flags100/200. Full scene tick is caller in mode1. Preserve anomalous ((s16*)vp)[8] write, partially initialized matrix and ang49 on flag400 branch, typeof matching outlines, saved-heading/flag ordering, provider signatures and no camera matrix/target-null repair.
+
+Whole original hoisted entry: active context timer subtracts positive only; at zero selects current-id kind4 actor at lastframe, resets random idle timer, applies pending animation only !(flags84). Original volatile byte reread, new_var assignment and unreachable nested flag80 branch retained. No pending-field clear/logic simplification.
+
+Entire body and both static resource/actor find helpers: filtered newly pressed mask A0000/20000, kind4 angular target commands8/3 and kind2/kind3 resource fallback commands2/3/8. Original no-button automatic fallback, goto and short circuit preserved. No talk-only label, trigger range fix or extra-argument ABI change.
+
+Whole mode2 tick hook: work8E4 byteD80 gates overlayBEC64(1) mask; slots4..7 state1->3 when bitclear and3->1 when set. Mask tests10 after each shift and signed short storage unchanged. No voice/enemy ownership assumption or specific overlay provider admission.
+
+Complete large loop and scene initialize caller: kind4 movement/animation, mode2 slot synchronization/script dispatch, world scripted camera actors, dialogue anchors, collision/encounter accumulation, timers and event3/7 rollback/backup. Original mode2 variable REUSED for animation flags in later loop, list-node cast fallback to52870, extra args and unguarded overlay views remain; no state machine repair or runtime admission.
+
+Whole range completion: flag8 path stops at previous frame; otherwise requested/default animation, RNG speed variant, dirty forced animation and file-record flag10/endframe cleanup. Preserve one-arg definition vs two-arg caller, RNG order, duplicate frame reset, truncation and raw file-record dereference.
+
+Whole range end handler: countdown zero invokes restore helper, loop restarts startframe, ping-pong shifts by2 and swaps endpoints/toggles direction. Empty volatile asm barrier and extra second restore arg preserved. Counter0 means indefinite behavior, no repeat count reinterpretation.
+
+Full fixedpoint tick: stopped gate, leader-driven ranged id remap/frame copy, forward/reverse fraction and bounds through range-end handler; plain overflow resets and optionally samples default speed variant. Preserve no plain reverse lower-bound wrap, fresh flags reads and signed fraction arithmetic; no generic animation rewrite.
+
+Whole last-nine table compaction: party id mask plus active entries; relative offsets updated after memmove, globals publish base/count/mask. Body advances by size&FFFC (round DOWN), not comment four-byte rounding up. Count<9 still forms pre-table p; original register pins, reloads, narrowing offset and memmove unusual return retained.
+
+Complete scene initialization: resources/strings, mode selection, 12/8-byte free-list setup, id0 and mode2 party actors, context backup restoration and script-pointer relocation; final base/mode/scene identity. Preserve provider VOID/U32/Actor* mismatches, extra calls, mode switches, partial clears and exact 17C8 raw context copy, no allocator/scene policy fix.
+
+Whole one-shot restore flag logic: kind4 valid animation group invokes work hook and stores LOW8 slot; mode1 calls overlay per-slot and copies signed-byte/halfword parameters. Scene mode1/3 or g_state byteA9 gate retained, overlay setter occurs even NULL record, clear flag at original end. No inferred sound/provider ABI.
+
+Whole restart: release dialogue/reset cursor timer; mode3 choose zero-terminated string pair via gamevalueC0*2&7F, store80C/810, select actorid0 orNULL and gosub(1,4,0). Preserve absent actor call/string scanning order and no table extent guards.
+
+Whole optional-context list scan: countkind4 where byte resource index < SIGNED(totalcount-9). Full scene initialization/compaction establishes resource table and lastnine slots. Preserve U32 subtraction then signed cast, no negative/count threshold normalization.
+
+Whole record byte6+9-totalresourcecount, full scene actor-slot resource loader consumes <9 as fixed slots else dynamic. Signed return vs U32/int/pointer caller views retained, no input type/slot clamping or guessed text offset.
+
+Whole eight-slot bit scan, command2F state handling,35/36 globalshort and kind/op setup, other commands default2/7, then gosub. Preserve signed mask shift, only FIRST selectedslot, no NULL slot check, globalarg ordering and -fno-schedule-insns.
+
+Whole exact four global clears: active context, statewordAE54, byte7954E, restoreflagAD1E. Full scene initialization/tick/restore establishes context lifecycle; no extra timers or global clearing.
+
+Whole GTE RTPS projection with height offset and mode1 overlay brackets; packet restore/setposition/save in exact order. Source reads actor x/y/z as U16 narrowed to S16 despite Actor7 full INT fields. Preserve 2D offset and partial vectors, no transform/type repair.
+
+Whole optional-context id scan thenkind4 check, elseNULL. Full tick/context init establish currentactor16ED and list. No narrowing input/id fallback or duplicate lookup consolidation.
+
+Whole unguarded U8context16EC getter. Full tick gates player movement/interaction with this flag; headers also use encounter interpretation so neutral control flag role retained, no BOOL conversion or NULLguard.
+
+Whole optional context returns rawWORD16D8 or0, full lane07/05 and allocator prove linked list head. Keep U32 return/prototype views rather than pointer type repair.
+
+Whole optional context returns rawWORD16FC or0. Full initialize in mode2 stores16DC tail after creating party actors; allocator establishes tail, full battle enemy builder dereferences saved tail to obtain following actor nodes. Descriptive saved-tail-word role only, no false actor-count label/pointer normalization.
+
+Whole optionalactor and group!=FFFF gate, record lookup byte3B, optionalrecord thenWORD8 returnINT else0. Full file-record provider exposes20byte tableentry. Raw payload-word avoids claiming pointer validity/animation object ABI.
+
+Whole unguarded context list scan with FULLU32id comparison to BYTEid; kind4 returnsBYTE3B else-1. Full hook refresh tiesBYTE3B to resource slot. No id LOW8mask/contextNULL fix.
+
+Whole tableBYTE16E4+a0 +9-totalcount, unsignedresult<9 gate otherwise0. Full scene setup storesparty-derived tailresource indices. Retain no a0bounds, ambiguous zero fallback, original pointer-to-int views.
+
+Whole raw globalWORDAEB8 getter; full tick stores actor flagged40, full world camera suppresses automaticeye update when nonzero. Preserve U32vsINTpointerviews and exact globalidentity, no bool cast or actualpoint return.
+
+Whole raw globalWORDAEBC getter; full tick stores actor flagged80, full world camera nonzero copies currentlookat point into actor position. Keep rawWORDreturn and pointeridentity, no directpoint/automaticfollow label.
+
+Whole nonnegative timer only: consume RNG byte after refill, (byte+200)*(a0?2:4) toSIGNED16timer. Full tick/idle-step confirm idle animation timer; no generic command-stream label, clamp, freshcontext reacquisition or RNG call reorder.
+
+Whole calls field allocator(a,b,38,10), thenkind3/flags1 withoutNULLguard. Full allocator body shows sizes roundtoWORDS and appended script/stack; keep originalVOIDdefinition/return view of provider, no allocation-size or signature correction.
+
+Whole f52LOW12 heading copy, requestedf5A vs currentf36 switches animation and resets frame/fraction/framecount/speed, thenflags&7F. Full Actor7 and animation callers establish role but local framecount is SIGNED8 vs sharedU8; retain actual localtypes and narrowing.
+
+Whole getter low26bits739A0; full input edge-update provider captures same heldmask and comparesprevious, full movement uses direction/run bits. Stale comment address-field interpretation not propagated into name. Keep all26bits/U32 vsINT declarations.
+
+Whole getter low26bits7B97C; full input edge-update explicitlywrites cur&~prev BEFORE repeat event logic, fullinteraction uses press bits. Newlypressedmask does NOT include synthetic autorepeat event bits; preserve rawgetter/type views.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
