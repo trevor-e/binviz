@@ -11557,3 +11557,81 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot dialogue window font packet helpers naming acceptance (BV-03/BV-08, P2):
+FF9 93ccfc92f adds twenty seven selected canonical boot names. Catalog
+5,421 unit/symbol names, 312 scoped alias headers. Thirty selected complete boot
+bodies reviewed and bound, twenty seven named and three explicit full-body deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-dialogue-window-font-packet-helpers.json and Binviz
+target/ff9-names-boot-dialogue-window-font-packet-helpers/. 51 full native object pairs equal;
+exact affected/scored namespace 51. Pinned strict-relocation scores unchanged:
+41 exact/10 partial, 13,300/21,788 code bytes, zero failures. 51
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 55 isolated committed paths audit.
+
+Eleven additional complete input/bank/widget/counter/formatter/drawmode/packet-save provider or consumer bodies read and hash-bound. All four relevant full headers bound. Raw five selected entries receive alias include only, preserving every instruction/string/global/special-register contract. Full4ED3C/51600/51830 bodies deferred with precise semantic or original-linkage limits. Actual counter table defeats stale text-record comment; actual releasedbuttons defeat stale address-field comment. Remaining tree/VM review pending; full naming goal active.
+
+Whole ordered packetinit/dialogueclear/inputeventreset/RNGseed(rootcounter2)/actorcontextclear sequence. Actual five calls contradict comment twoinit sequence. Preserve nested counter read, all original prototypes/results/order, no reset consolidation.
+
+Whole hoisted original entry, freezeglobalB718 returns0 else dialoguecallbacks, idle timer, fullactor tick event, blinkscript/morearrow. Return originalevent; no startup label, state normalization or reordered callbacks.
+
+Whole U16index<3 gate and single NONvolatileU16store through pointer6E660+index*16;return1 else0. Full neighboring root_counter_set/read establish sameaddress6E660 hardware counter table/countoffset0. Stale text-record comment retained but not used as evidence; no volatile/type/SDK signature repair.
+
+Whole setup: one-shotkeepflag skips clearwidgets otherwiseclears; fontheader7D4 word/range/number/glyphbase+12; mode1/3/2 selects own 8E4 pointerchains for bank, initflag and embedded-banksetup. No othermode fallback, preserved unrelated state fields/signatures; directmessagebank/fontlookup consumers fullyread.
+
+Entire text measurement including MEASURE macro, name remapping, card/item/bank substitution, decimaldigits,biticon and terminal9width. Full fontlookup establisheswidth packedtopnibble. Preserve missingmsgNULL dereference incode6, unguardedtable indices, escape iteration, INTMIN arithmetic, registerpins/typeof and parser cursor consumption; no grammar/bounds repair.
+
+Entire large message renderer, skip-lines and ADVANCE macros, centering measurement, expandedname/number runs, colors/icons/remappedbuttons and glyphescapes. Preserve signed scroll shifts, zero-mask scan, all block-local functionptr calls and cursor aliases/reveal counter narrowing. No text escaping, layout fix or draw-callback ABI admission.
+
+Entire reveal-budget interpreter: code/control cursor, waits, reveal rate, signatureoverride/menu activation, substitution waits and inline measurement. Waiting stores PREcode s3 offset, terminalwaitFF clears skip and alwaysaccumulatesU16budget. No stale sound label for pad-signature calls, new grammar/timeouts or narrowing fixes.
+
+Whole postwait interpreter: FE advances drawn cursor,F9sub41 skipsdelay,0 advancesdrawn/clearsflag8,1 orFF duplicates original widgetclose/UIunlink logic. Reads window cursor before nulltest; duplicate closes and callback/prototypeviews retained, no consolidation/null repair.
+
+Whole banklookup/mode strides, penpush/renderrevealedmessage, reveal vswait state step and penpop/colorreset. Full widget_text drawer establishesupdate role. Preserve render BEFOREadvance, countdownFF only decrementedifnotFF, skip flags, signed cursor behavior and INT-vs-pointer provider declarations.
+
+Whole windowcallback: mode-dependentconfirm stopswaitor skip whenpermitted; active menu up/down wrap/cancelpreset and original67/65sound calls. Preserve return1 onlywhenhandled, no consumed flagguess or zeroselection guard, pinned dowhilereturn matching.
+
+Entire createbody: modebankmessagevalidity, releaseexisting slot inline, records/callback/revealsetup, modalhead/menu state, widgetkind/layout/text labels and generationcounter. Preserve no slotbounds guard, windowscreate originalsignatures/padding, registerpins, specialflags4/40/8 and nonmodalhead behavior.
+
+Entire init: selection0,mask/menu-1, firstfour bankentries with F9/04 prefix cachedata+2, stopFIRSTbadentry thenpreset/generation0. Full lookup/measurer establish embeddedsubbanks. Do not clear remaining stalecacheentries, guess soundbank type or rewrite strides.
+
+Whole work byte8 selects tablepointer10+bank*4 thenentryindex*4 storesBCA4. Full widget_text drawer sets sameglobal from bank/styleword beforepacketrestore; laneasmshows aliasesrawOT-head pointer. No stylebounds/typed bankpointer or pointer-width repair.
+
+Whole threezero stores: previousbuttonwordB978/eventkindB988/eventargB98C. Full edgewriter independently establishes all three globals. Newlypressed/releasedmask and repeatcounter intentionally untouched in source; no expandedreset.
+
+Whole low26bitsB980 getter; full edgewriter stores ~current&previous. Stale address/offset comment retained, exact U32mask/provider type views remain.
+
+Complete empty callback, sole actual Ccaller full packet_printf invokes afterdirectcursorcommit. Name describes observed postformatter hook without arbitrary subsystem/body implementation or removing emptyentry.
+
+Whole ten-record forwardscan, flagNONzero andBYTE28bit2 (value2) capturesLASTmatch. Full revealmenu control code8 sets samebit2; preserve signedflagtruth, pointerintegercompare and no firstmatch/currenthead shortcut.
+
+Whole unsignedindex<8 storesINT substitutiontableBBA8. Complete measure/render code reads samewordtable for names/messages/numbers/bitmasks. No negativeindex/type/bounds changes.
+
+Whole rankscan i=-1, whilei<15 andn>=0 subtractbit/increment/shiftright. Body canconsume SIXTEENbits, notcomment15. Full menu renderer scroll/selection consumers bind role; original negative selection returns-1, insufficientmask yields15, signedshift untouched.
+
+Whole storemask first, popcount inclusive lowlimit+1 whilemasknonzero, count-1 clamped0 ->presetBB94. Full windowopen moves preset into currentselection. Keep signedrightshift/masknegativebehavior and inclusive limit, no genericpopcount substitution.
+
+Whole setsB950=1. Entire4BFB0 consumes nonzeroflagandclearsit to skipdialogue/widgetclear once. Preserve exactINTstore/unsignedreadview; no general preserve-all-state claim.
+
+Whole Cinlineasm value<<7 +3827 via trappingADDI then<<16 storesBCB4 andbarrier. Full glyphdrawer consumesupperpackedpalette/pageword; renderer colorcodes20..28 pass0..8. Retain -mno-split-addresses, signedshifts/trappinginstruction/registerword, no clamping.
+
+Entire rawassembly: pendingescaped highbyte combines nextcode, specialcode>=FA storespending andreturns0; range/table globals mapglyphword. Full measurer/drawer establishesglyphwidthtopnibble. Preserve pending clears, signedrange checks, overflow behavior, tableextents/ra/delay slots; no Cconversion/provider admission.
+
+Complete rawassembly: RA savedt3, fontlookup; nonzero emits20byteSPRTheader/color/xy/uvclut/dimensions,low24link/cursoradvance andv0topnibble+1 horizontaladvance; evenzero finalt5+=v0. Fixedpacketregister/return conventions preserved, no ordinary Csignature/zero-width reinterpretation.
+
+Entire raw8byte descriptor indexedmultiplication, drawmode1E prefix,20byteSPRT, widthhorizontaladvance, descriptorhalfword6 taildrawmode. t2savedRA, signedLH/multu/no bounds, cached descriptor andall nops/strings unchanged. Full modeprovider/renderer establishing indexedicons read.
+
+Whole rawentry savesRAint6, emitdrawmode1F thentailjumpto51610save. Both entirecalleesread; literalmodenamingavoids guessingtexturedepth. Exact t6/RA/delay slots preserved, no ordinary callback/body rewrite.
+
+Entire rawentry ift4nonzero emitmode1F, savecursorBCAC,storeOTlinkthroughBCA4,positionBC9C;NULLcursor earlyreturn. Full formatterandlaneasm establishdirectcursorcommit, distinctfrom51610whichstorescursorviaBCA8. Keep t6RA/specialregisters,no input/outputtypes/runtimepolicychanges.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
