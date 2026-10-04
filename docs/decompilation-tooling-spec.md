@@ -15510,3 +15510,36 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Retained readable SDK review accounting proposal (BV-03, P2):
+FF9 f93ad982d has5,645 cataloged canonical source identities of5,812;
+105 current hash-bound whole-body purpose deferrals and62 remaining source
+review/accounting inputs. Four of the62 are now independently full-read scratch
+candidates: boot/sub_8001f7fc.c (CD_cw),sub_8001f534.c (CD_ready),
+sub_8001ed50.c (CD_intr),sub_8001f2b4.c (CD_sync), including every static helper,
+MMIO branch, callback/timeout path and main function arm. The candidates remain
+uncommitted and excluded from completion counts pending maintained ledger
+admission. Evidence: target/ff9-names-effect-residual-anchor-resource-timeout-r1-key1-short/
+retained-readable-cd-review-candidate.json and remaining-review-inventory.json.
+
+Current wide.prepare records alreadyDescriptiveDefinitions as canonical filename
+stems after failing to find that stem's C definition; publisher creates current
+catalog identities only from names. This loses full-body review status for source
+files whose actual definitions already carry SDK/readable names. Temporary adapter
+is a manually reviewed four-record dataset with current source hashes; no parser,
+ABI inference or semantic transplantation. Shared BV-03/P2 proposal: admit a
+retain-existing-readable-name decision alongside named and purpose-deferred,
+binding canonical source path, actual existing definition name, complete-body
+purpose review, source/header input hashes and review provenance. Invalidate when
+any bound input changes; preserve all original SDK/linker/caller identities and
+keep new-name counts separate from source review completion.
+
+Acceptance: canonical sub_ filename with actual CD_cw/CD_ready/CD_intr/CD_sync
+names can be fully reviewed without an unnecessary alias/header/source edit;
+all four complete bodies and their static helpers are accounted for only after
+fresh binding checks, while changed source/header/definition inputs become stale.
+Retained-name records must not imply compiled object/link/gameplay proof from a
+report import. Keep separate renamed/native-verified, retained-reviewed,
+purpose-deferred and pending counts against all5,812 canonical source files.
+Shared feature remains proposed; existing naming/farm/scorer/preprocessor and
+isolated-index commit adapters stay maintained and no tooling rewrite is added.
