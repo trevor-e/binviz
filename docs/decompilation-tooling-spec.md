@@ -5202,3 +5202,28 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Keyed ribbons actor fades naming acceptance (BV-03/BV-08, P2): FF9
+a01c8af53 adds six canonical ovl_139f0000 names. Catalog4,434 unique unit/symbol
+names,126 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-keyed-ribbons-actor-fades.json and
+target/ff9-names-keyed-ribbons-actor-fades/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+five exact/one partial,1,772/5,200 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established16-channel track reset/queue/update,decay blend,keyed paired ribbons
+and per-actor resource/two-scalar-fade sequence. Eachownbody completelyread;
+actualresources20/19/21 and18ribbon retained despitetransplantcomment differences.
+Preserve p2/e1pins,bufferordering,VOID/INT mismatch,nullable submission,partial
+vectors and terminalchannelstep. Actorfade resource13 scaleswithslot0 rather
+thani;twoindependentcounters decrementbeforeloops andterminalreturnwhileBpositive.
+No body/type/layout/ABI repair or exactgame/provideridentity guess. Readable
+references alias to canonical native/runtime symbols within the unit.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
