@@ -8477,3 +8477,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Scheduled three particle rise spin model sprite burst naming acceptance (BV-03/BV-08, P2):
+FF9 f73b648e4 adds two canonical ovl_1000c000 names. Catalog
+4,837 unit/symbol names, 234 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-scheduled-three-particle-rise-spin-model-sprite-burst.json and Binviz
+target/ff9-names-scheduled-three-particle-rise-spin-model-sprite-burst/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 696/2,984 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 mode1 resets ONLYphase0, loads resource3 at current particle position and nullable h22=16. Position/rotation/base words/index are not initialized by this branch; controller sets base and random rotations after184 returns. Phase0 s=frame4096/15; exact0 initializes resource4 140-byte buffer selected by unchecked particleindex. Copy two base INTwords to SVec (including pad), Y-=2*(4096-s), Z+=4096-s then copy bothwords to particle. Signed lanes widen to INTposition; rotations+=70/64/8 with narrowing. Shared handlep10 posed at uniform409 scale; fourthINTwords uninitialized.
+
+Phase0 contextflag256 surrounds110resource4 at local offsetY+320/Z-160 withscale24576 and sine weight2/3+1365, then114resource1 at particle position. Particleindex0 publishes THREE position lanes to hostpoint. Loaded resource3 pointer clears if h30==-1; atframe>=15 AFTERdraw, phase1/precedingparticlehalfword=-1, guarded oldobject h38=UNGUARDEDnestedw24->h6. Reset positionY0, primitivefill100 atctxp20word1, replaceobjectresource9/h22=70, rotations0/random/0; returns0. No added phaseclock reset, nested-null guard or object release.
+
+Phase1 s=frame4096/18. Firstfour frames fill grayscale70-frame70/4;114resource1 at size2s+6144 with sine fade. Local offsetvector computed but110resource4 uses ORIGINALparticleposition, not that local vector. RotateY+=sin(s>>2)>>7. Firsteight updates pose sharedhandlew14 with cosineXZ=(cos(frame128)/2+2048)/3,Y9/8 and tint(2sin-4096)>>5-128. Everyupdate pose sharedw18 withXZ=(cos(s>>2)/3+2730)*3/4,Ysin*2/3+2048,tint((4096-s)>>5)-128.
+
+Phase1 resource13 sevenarg128 uses explicit SVec rotation1024/0/0/pad1,cosine size+2730 andremainingweight4096-s. Beforeframe12 extra114resource5 at sine(frame4096/6>>2)*3, with TWO independent sine evaluations. Terminal>=18 returns1 AFTERall applicable draws/tints. Does not update/drop-check resource9 pointer during this phase. Unknown phases return0, all negative/overflow/division/arithmetic and partial scratch initialization retained.
+
+7FF4 descriptor28/3particles/36bytes/callback. Init flag/count0, savedcontext,1FC captured four-U16 point,table70count3. Create resource2 via58(151,3C80,0,0),resource11 via58(311,FFFF,-64,128),resource10 via18. No callback state/position initialization added to controller.
+
+Update only ifflag0. Signedframe<24 reads external byte schedule WITHOUT lower-bound check. Nonzero byte andcount<3 increments count BEFORE184; NULL still consumes attempt. Successful record baseX=capturedX+C8(600),baseZ=capturedZ+C8(600),baseY0,indexcount-1 and THREE separate C0 calls into rotation halfwords. No centering of random600 range or invented schedule bytes/endpoint semantics. State index2 remains maximum via controller count but callback index has no independent guard.
+
+134resource12 getsframe every flag0 update, even failed allocation. Finish requirescount>=3 ANDframe>=62, then78/return1 AFTER134. If schedule produces fewer than3 attempts it continues; externally nonzero flag bypasses work and terminal test. No completion based on live particle count, no retry afterthird failed attempt, no handle/object cleanup. External schedule/buffer extents remain unresolved and all original runtime/linker identities stable.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
