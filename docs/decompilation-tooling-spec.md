@@ -6497,3 +6497,33 @@ BV-06 provider frontiers retained. No new reusable implementation/private
 ownership/type/CFG walker, original matching gain, linked-image/gameplay/workspace
 acceptance. Refresh source-bound evidence, pin historical reports/tools, preserve
 foreign work/index; full-tree naming goal active.
+
+Paired hooked position paths naming acceptance (BV-03/BV-08, P2): FF9
+715a23edb adds four canonical ovl_1246f000 behavioral names. Catalog 4,655
+unit/symbol names, 171 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-paired-hooked-position-paths.json and Binviz
+target/ff9-names-paired-hooked-position-paths/. Four complete native object pairs
+identical; exact affected/scored namespace four, unchanged pinned strict-reloc
+scores four exact, 1,568/1,568 code bytes, zero failures. Four installed WASM
+token comparisons agree; source/header/catalog/object/review bindings and eight
+isolated committed paths audit.
+
+Names cover primary/secondary four-entry path hooks, host-key-pair position
+helper and hooked-pair/delayed-object controller. Primary/secondary come from
+actual first/second companion roles, not uninspected table constants or address
+labels. Preserve clamp BEFORE completion comparison (large index becomes3),
+unguarded negative index, output halfword readback/alias order, twelve-bit
+fixedpoint shifts (old16.16 label wrong), exact0/12/30 events, partial state and
+nested hook access. Controller repeats host220 and assignment to pc twice;
+do not dedup or fix second store to p10. INT callback/helper definitions and
+INT hook declarations stay distinct from earlier VOID return frontiers.
+Original effect/path/provider identities unresolved, no body/type repair.
+
+Definitions/declarations/calls/hook references propagate; aliases retain
+canonical linker/address/runtime identities. Maintained naming/farm/scorer/
+preprocessor and thin adapters reused; BV-03 reviewed-deferral prioritization
+and BV-06 provider frontiers retained. No new implementation/private ownership/
+type/CFG walker, matching gain, linked-image/gameplay/workspace acceptance.
+Refresh source-bound evidence, pin historical reports/tools, preserve foreign
+work/index; full-tree naming goal active.
