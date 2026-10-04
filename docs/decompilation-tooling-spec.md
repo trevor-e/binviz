@@ -2101,3 +2101,41 @@ and scorer migration; shared acceptance still requires configured frozen
 namespaces, compiler inputs and verified outputs. Refresh source-bound evidence
 against current catalog identities. Preserve unrelated runtime/adoption/spec
 changes and continue purpose review of remaining canonical functions.
+
+Scene render/stream/menu naming acceptance (BV-03/BV-08, P2): FF9 commit
+a03672218 adds 86 reviewed canonical ovl_009800 definitions, reaching 3037
+unique unit/symbol names and 43 alias headers. Evidence: FF9
+docs/function-names-scene-render-stream-menu.json and Binviz
+target/ff9-names-scene-render-stream-menu/. All 95 complete native objects are
+byte-identical; pinned strict-relocation original scores retain 81 exact and
+14 partial baselines, 24540/46208 exact code bytes, with no failures. All 95
+installed WASM preprocessed token comparisons agree. Catalog/current-source/
+header hashes and 99 isolated committed paths independently verify. No new
+matching credit, linked image/module or gameplay proof.
+
+Canonical unit progress is 130/159 named definitions (29 remain). Selected
+complete bodies establish actor resource loading, parent-ordered collection,
+eight-pass rendering, four ground-shadow quads, colour/shadow tables, sprite
+records, animated VRAM textures, seven-phase movie playback, audio commands/
+streamed banks, two archive-request queues and the operation-menu handler loop.
+Eight actual semantic consumers/services and two shared headers are pinned.
+Cross-unit consumers corroborate roles without claiming selected provider
+resolution. Specific menu choices and fixed resource1000b purpose stay unnamed.
+
+Concrete stale-comment pitfalls for BV-03: b2528 allocates and loads sound BANK
+slots rather than live voices; complete b0124 and b29f8 establish class3/kind7
+loading and sound-slot selection. b2c80 returns ramp STILL PENDING, not elapsed.
+ae68c checks active movie playback, not CD busy: actual resident12ad4 packs MBG
+initialization and frame count. b3378 compares FOUR packed key bytes against a
+signed16 load through a byte pointer, despite the three-byte comment. Third
+shadow quad omits centre depth; A-queue removal swaps the last entry and changes
+order. Preserve all these behaviors, ABI inconsistencies, capacities, masks,
+register pins, scratchpad stack changes and matching tricks. Generated headers
+and comments remain unchanged. Identifiers only, scoped to this canonical unit.
+
+Maintained naming/farm/scoring adapters introduce no private analysis walker.
+Compatibility results remain distinct from shared workspace acceptance/scorer
+migration, which require configured frozen namespaces, compiler inputs and
+verified outputs. Refresh downstream source-bound evidence against current
+catalog/header identities. Preserve unrelated runtime/adoption/tooling work;
+remaining scene model/primitive and other canonical functions still need review.
