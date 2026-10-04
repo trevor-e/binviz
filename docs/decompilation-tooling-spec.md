@@ -6254,3 +6254,33 @@ reusable implementation or private type/ownership/CFG walker. No matching gain,
 linked-image, gameplay or sharedworkspace acceptance. Refresh source-bound
 evidence; historical tools/reports pinned, foreign work/index preserved;
 full-tree naming goal active.
+
+Delayed paired tracking naming acceptance (BV-03/BV-08, P2): FF9
+4c4ea6949 adds four canonical ovl_12679000 behavioral names. Catalog 4,623
+unit/symbol names, 163 scoped alias headers. All four full own-unit bodies
+reviewed, zero deferrals; other units pending. Evidence:
+docs/function-names-delayed-paired-tracking.json and Binviz
+target/ff9-names-delayed-paired-tracking/. Four complete native object pairs
+identical, exact affected/scored namespace four, unchanged pinned strict-reloc
+scores four exact, 1,968/1,968 bytes, zero failures. Four installed WASM token
+comparisons agree. Current source/header/catalog/object/review bindings and
+eight isolated committed paths audit.
+
+Names cover delayed paired-object tracking, actor-position object timer,
+indexed target object with completion flag and host-buffer byte setter. Targets
+computed ONCE at init; actor X overwritten and Y changed asymmetrically. Preserve
+untouched pads/delayed pointers, exact frame6 loads/skipped-frame behavior,
+ended-object pointer clearing before tracking, tracking before terminal return.
+Indexed target compares signed index only against byte upperbound, signals flag7
+at init/frame4 separately from frame40 completion; no lowerbound added. Setter
+stores narrowed byte through first context pointer at buffer+16+index. Its VOID
+definition/INT K&R caller discarded-result mismatch remains; no type/return
+repair or meaningful used-return admission. Original effect/provider identity
+unresolved. No matching gain, linked-image/gameplay/workspace acceptance.
+
+Readable declarations/calls/definitions propagate; aliases retain canonical
+linker/address/runtime identities. Existing naming/farm/scorer/preprocessor and
+thin adapters reused; BV-03 reviewed-deferral prioritization and BV-06 provider
+frontiers retained. No new reusable implementation or private ownership/type/
+CFG walker. Refresh source-bound evidence, pin historical reports/tools,
+preserve foreign work/index; full-tree naming goal active.
