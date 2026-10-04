@@ -11695,3 +11695,84 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot vm expression script render helpers naming acceptance (BV-03/BV-08, P2):
+FF9 0920c31d6 adds twenty three selected canonical boot names. Catalog
+5,462 unit/symbol names, 314 scoped alias headers. Twenty three selected complete boot
+bodies reviewed and bound, twenty three named and zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-vm-expression-script-render-helpers.json and Binviz
+target/ff9-names-boot-vm-expression-script-render-helpers/. 39 full native object pairs equal;
+exact affected/scored namespace 39. Pinned strict-relocation scores unchanged:
+34 exact/5 partial, 10,540/17,860 code bytes, zero failures. 39
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 43 isolated committed paths audit.
+
+All twenty-three selected complete VM/dialogue/script bodies reviewed; sixteen raw entries receive alias include only. Seven complete semantic consumer/decoder/draw-selector bodies reviewed plus ONLY the mode-selection callsite excerpt in 3CAB4, whose whole-source hash is bound without a full-body review claim. Three included headers read in full. No selected deferrals.
+
+Preserve expression/actor VM shared internal entries and register-based calling conventions. 5205C public prefix pushes object/property tag; other opcode handlers remain internal. Raw 51CFC/51DF4 combined fragments stay intact. Resolve prior 51830 deferral by complete evaluator/termination/operand context. No grammar, bounds, arithmetic/trap, type or provider repair.
+
+Existing func_80050068/50080/500A8/50410/50744 imports in 3CAB4 differ from canonical sub_ linker symbols. Canonical-token propagation deliberately retains these separate imports and their symbol identities. Flag BV-03 reusable support for evidenced per-source identifier variants with identity-preserving aliases; do not silently coalesce different provider symbols. Mode-two/mode-three record names do not assert additional subsystem identity.
+
+Full raw wrapper saves RA and t4..t9 around 51F54 evaluation, restores exact stack and delay slots. Complete evaluator and termination handlers establish expression role; prior opaque deferral resolved. Preserve special packet-register ABI.
+
+Full raw script-cursor loop emits quoted literal bytes through selected t8 routine, other tokens evaluate and pop through 51830/51D4C then decimal formatter. Argument zero adds newline and commits cursor; nonzero skips both. Preserve unterminated-quote behavior, register assumptions and all instructions.
+
+Full raw quoted-format loop handles d/x/b/c, optional zero padding and one/two-digit width, n/t escapes and encoded color selection. Script cursor first advances past the quote, s0 formats its contents, expression operands follow; zero argument commits. No printf ABI, bounds, grammar or color-policy rewrite.
+
+Complete raw byte/halfword/bit/24-bit dispatch from a2 tag. Halfword and bit/24-bit entries are shared internal jumps. Unsigned byte return delay slot adds offset to a0 a SECOND time; preserve this observable register behavior and every original instruction.
+
+Complete raw combined file reviewed: public prefix loads little-endian signed/unsigned halfword according to incoming v0. Following unlabeled bit/pop fragments include incomplete 51D98 continuation; true canonical portable 51D4C independently read. Name public entry only, preserve combined fragments and separate internal addresses without repair.
+
+Full raw tag-dependent memory-base selector chooses actor locals BCF8, scene AECC, or global AEF0 and tails into packed reader with LOW16 offset. Inputs include incoming a0/a2/t0 registers, not ordinary C arguments; preserve all tail jumps.
+
+Complete raw public packed store entry: tag selects byte/LE halfword, bit set/clear or LE three-byte value. Combined later operand-pop assignment fragment selects actor property/shared halfword/memory regions. Name public prefix only; retain all unlabeled/internal fragments and original register dependencies.
+
+Complete raw evaluator resets stack BCB8, uses s6 script PC/s7 stack, dispatches signed tokens through table E718 or operand descriptor decoder, and pushes tagged values. Complete 5205C includes termination storing shared stack B6F0/restoring s4/returning s3; retain shared control flow and nonstandard register ABI.
+
+Complete raw multi-entry opcode file reviewed. Public prefix consumes two bytes big endian and pushes tag 0x10000000; full portable 51D4C proves high byte object ID/low byte property. Name this public entry only. Remaining arithmetic/comparison/assignment/input/trig/geometry/termination handlers stay internal, including divide-zero diagnostic and shared jumps.
+
+Full raw selector reads byte when s5 LOWbit zero, otherwise evaluates/pops expression. Always shifts s5 in branch delay slot and advances s6 appropriately. Preserve original register and stack conventions.
+
+Complete raw public runner saves RA,s0,s1,s2,s3,s5,s6,s7, loads list node from a0 and jumps to internal 52CA0. Actual body does NOT save s4 despite comment. Paired whole 5289C supplies dispatch and epilogue; no ordinary ABI rewrite.
+
+Complete raw actor-list loop establishes current actor/local base, checks state/wait/PC, dispatches opcode table E918 and fallback, handles branches/switches/deletion/wait/text/position, persists PC and event status/resume node. Paired runner supplies frame. Preserve states, internal entries, special registers, caller callback/provider mismatches and exact instructions.
+
+Full raw wrapper saves s6/RA, reads signed descriptor byte via pointer-owned cursor, calls full 51F18 decoder, writes advanced cursor back and restores previous s6. Pointer owner in v1 survives callee; retain register contract.
+
+Complete raw wrapper loads shared B6F0 stack, pops/resolves operand via full 51D4C, publishes advanced stack and restores prior s7/RA. Preserve callee arithmetic trap/load ordering and register ABI.
+
+Whole raw shared B6F0 stack wrapper calls internal 51E8C assignment selector in fully reviewed 51DF4 file, publishes new stack and restores prior s7. Preserve internal linker address, value register and incomplete provider views.
+
+Full raw wrapper saves RA,s1,s3,s6,s7, loads current actor B70C and its script PC, evaluates through 51F54, writes PC back, restores exact registers. No actor NULL check or VM ownership/stack normalization.
+
+Whole four-store clear of blink cursor/wait/latched/pending request. Entire 4FBD8 consumer establishes request-latch and blink-script roles, 4F9A0 draw consumer binds highlight box. Do not clear remembered pointer or consolidate stores.
+
+Whole pending request plus remembered pointer setter. Full interpreter selects start script from pointer nonzero; full highlight renderer also uses stored word for sprite index. Preserve original pointer type despite differing consumers; no pointer/ID normalization.
+
+Whole changed-only mode store and reset to44. Full 4FE0C consumer establishes arrow-kind/always-show bits and increasing frame counter, so this is phase reset not countdown decrement. Preserve unchanged-mode behavior.
+
+Whole opcode 7F..85/D8 handler and mode1 dispatch excerpt: slot flags10/20, packed40-byte render record, primary line effect/overlay hook. Retain no-force-mem, v1/a0 pins, pointer reacquisition and mask-first case82 workaround for documented old-GCC store loss. Unknown opcode returns1, handled0.
+
+Whole opcode handler with mode2 dispatch excerpt: distinct work8E4->11C0->28 record table, same packed flags/fields, D8 consumes second byte but drops it. Read body independently, preserve pins/flags/types and stream advancement. Mode number explicit; no extra subsystem/provider interpretation needed.
+
+Whole opcode handler with mode3 dispatch excerpt: distinct work8E4->8->1C render record table and secondary line-effect setter in D8. Preserve all pins/types/flags and arithmetic, unknown-opcode convention and distinct table/provider identity.
+
+Full C BIOS bzero wrapper clears AEF0 0x800 bytes. Complete memory selector and operand resolver establish this as VM global-variable region; preserve original short-array declaration and clear provider ABI.
+
+BV-03 follow-up, P2: maintained identifier-variant support should consume reviewed
+source-scoped semantic mappings for the five 3CAB4 func_ imports above, produce
+readable callsites while keeping each original relocation name, and reject
+ambiguous/shared mappings. Acceptance: entire object equality, identical CPP
+tokens, scoped alias collision checks and explicit retained provider identities;
+this batch does not implement that reusable feature.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Distinct func_ imports and internal/provider identities retained; variant
+propagation gap documented in BV-03 with local inputs and acceptance below. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
