@@ -10401,3 +10401,69 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot script modulation packed controls naming acceptance (BV-03/BV-08, P2):
+FF9 3286e23ba adds twenty two selected canonical boot names. Catalog
+4,998 unit/symbol names, 299 scoped alias headers. Twenty two selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-script-modulation-packed-controls.json and Binviz
+target/ff9-names-boot-script-modulation-packed-controls/. Twenty two full native object pairs equal;
+exact affected/scored namespace twenty two. Pinned strict-relocation scores unchanged:
+9 exact/13 partial, 652/2,196 code bytes, zero failures. Twenty two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and twenty six isolated committed paths audit.
+
+Read unsigned byte count/advance cursor/storeU16+C6,zero->256;reloadcursor/readSIGNED8delta/advance/storeU16+10C narrowing. No257 sentinel, clamp or computed ramp.
+
+Preserve -fno-cse-skip-blocks. Read unsigned count/advance/storeU16+CA,zero256; clearU16+10E THEN+C8,storeU16+CC1. No alternate zero sentinel or dirty flags.
+
+Capture baseU32+2C before control store;U16+108=SIGNED8byte,product=base*LOW UNSIGNEDBYTEp108 (not signed halfword),advancecursor,negativeSIGNED16control?logicalproduct>>8 minus base:logicalproduct>>7;WORD+84=value thenflags+11C|16. Preserve unsigned multiplication/shifts and sign test mismatch; no signed-product simplification.
+
+Capture base/cursor,advance BEFOREU16+108+=SIGNED8byte with halfword wrap; product=base*LOW UNSIGNEDBYTE updatedcontrol,negativeSIGNED16 test selects logicalproduct>>8-base else>>7;WORD+84 thenflags|16. No signed scaling rewrite or saturation.
+
+FlagsWORD+34|1. IfTYPEU16+94 nonzero clearU16+CE then consume unsignedbyte and only ifnonzero updateU16+D6=byte<<8;zero retains old+D6. Else consume andstoreU16+CE. Consume ratebyte<<12/storeWORD+3C,zero-rate->1048576. Read fieldU16+D6 and LOW U16+2C (not wholeword base),consume modebyte. Fieldbit8000 chooses ((field&7F00)>>8)*base else samecoefficient*((SIGNED32(base*15))>>8). reciprocal16777216/(rate>>12),U16+D4=product>>7;readU16+CE,clearU16+D2/store+D0=count;WORD+1C=CAPITALIZEDglobaltable[mode&7],WORD+48=reciprocal. Preserve zero-depth retain, divisor fallback, signed product shift, macros and store order.
+
+Controlunsignedbyte<<8,advancecursor BEFOREbaseWORD+2C/read/writeU16+D6; ifnotcontrolbit8000 base=SIGNED32((base<<4)-base)>>8 using unsigned wrapping before reinterpret;product=((control&7F00)>>8)*base,storeU16+D4=logicalproduct>>7. Unlike initializer it uses fullWORDbase and wrapped computation, no unification or dirty update.
+
+Read unsignedcount intoSIGNED32/advance via ++cursor;zero256;delta=(unsignedtargetbyte<<8)-U16+D6, signeddividecount;storeU16+D8count BEFOREcursoradvance andU16+DAdelta. No7F targetmask or lower clamp.
+
+Capturecursor thenflagsWORD+34|2;consume unsignedbyte/advance FIRST,iftypeU16+94 nonzero U16+DC0 andonlynonzero byte setsU16+E2=(byte&127)<<8,elseU16+DC=byte. Consume ratebyte<<12/storeWORD+4C/zero1048576,compute unsignedreciprocal16777216/(rate>>12);reloadcursor/readU16+DC/modebyte,storeU16+DE=count BEFOREadvance,clearU16+E0,WORD+20=CAPITALIZEDglobal[mode&7],WORD+58reciprocal. No initialscale computation or zero-depth overwrite.
+
+Read lowSEVENbits(unsignedbyte&127),advancecursor,storeU16+E2=value<<8. No sign extension/base scaling/dirty flag.
+
+Unsignedcount SIGNEDlocal/advance/zero256; delta=((targetbyte&127)<<8)-U16+E2 signeddividecount,storeU16+E4count BEFOREadvance/U16+E6delta. Distinct7Fmask retained.
+
+FlagsWORD+34|4;advancecursor BEFOREWORD+5C=oldbyte<<12,zero1048576;unsignedreciprocal16777216/(rate>>12);reloadcursor/indexbyte&7/advance,clearU16+E8/WORD+64,storeWORD+68reciprocal,WORD+24=lowercaseglobaltable[index]. Preserve distinct symbol case and preadvance stores.
+
+Unsignedbyte->SIGNED32local/advance,storeU16+EA=(U32)value<<7. No127 mask, sign extension or dirty update.
+
+Unsignedcount SIGNEDlocal/advance/zero256;delta=((targetbyte&255)<<7)-U16+EA signeddividecount,storeU16+ECcount BEFOREadvance/U16+EEdelta. Preserve sevenfractionalbits and halfword narrowing, no eightbit shift unification.
+
+TWOarg definition,does not consume cursor. U16type+94==0 sharedpointerWORD+40|mask else staticglobalWORD+20|mask;thenstaticdirtyWORD+8|256. Preserve fresh shared pointer branch, full32bitmask and unspecified sharedcontrol meanings.
+
+Unsignedbyte/read/advance,chooseU16field sharedpointer+6E iftype0 else staticglobal+28. ANYtopTWO bits selectsincrement (old+(byte&63))&63;else setfield=byte. DirtyWORD+8|16. No signed decrement interpretation, clamp or cursor rollback.
+
+ReadflagsWORD+11C beforeunsignedbyte/advance;storeflags|2304,WORD+34|16777216,thenU16+12A=(old&80FF)|(byte<<8). Preserve unmaskedinput/OR of preserved highbit, not a bounded field replacement.
+
+Readflags first/unsignedbyte/advance;storeflags|8704,WORD+34|134217728,thenU16+12C=(old&E03F)|(byte<<6). Input not127-masked, bit13 may beORed with preserved bit; no bitfield normalization.
+
+Readflags first/unsignedbyte/advance;flags|17408,WORD+34|268435456,U16+12C=(old&FFE0)|(byte<<0). Allbytebits ORed even outside lowfive replacement bits, preserve literalshift and overlap.
+
+Preservecompilerflag. ReadoldU16+12A&~8000 intoU32 BEFOREvaluebyte;advance;writeclearedfield ALWAYS,ifvalue==5 SECONDwriteold|8000;flagsWORD+11C|256. No bool conversion or other value setting.
+
+Readunsignedvalue BEFOREU16+12C&3FFF;advance;writeclearedtopbits ALWAYS;value3->4000,5->8000,7->C000 withSECONDstore,others leavezero;flagsWORD+11C|512. No arithmetic nibble mapping/unrecognized-value preservation.
+
+Preservecompilerflag. ReadoldU16+12C&~32 beforevaluebyte/advance;writecleared ALWAYS,ifvalue==7 SECONDwriteold|32,flagsWORD+11C|1024. No bitmask based on arbitrary nonzero values.
+
+Read unsignedbyte,writesharedpointerWORD+38 BEFORErecord cursoradvance;no halfword narrowing/zero-sentinel/flag updates. Preserve alias-sensitive store order.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
