@@ -8761,3 +8761,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four orbiting handles five staggered trails screen flash naming acceptance (BV-03/BV-08, P2):
+FF9 72058d926 adds one canonical ovl_1084e000 names. Catalog
+4,852 unit/symbol names, 242 scoped alias headers. One full own-unit
+body reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-orbiting-handles-five-staggered-trails-screen-flash.json and Binviz
+target/ff9-names-four-orbiting-handles-five-staggered-trails-screen-flash/. One full native object pair equal;
+exact affected/scored namespace one. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/2,868 code bytes, zero failures. One
+installed WASM token comparison agrees; current source/header/catalog/object/
+review bindings and five isolated committed paths audit.
+
+Mode0 ONLYout0=452/return0. Init savecontext/70(globaltable,20), clear firstTENwords includingpad24 ONLY. loc8halfwordwrites all retained evenunused. FOUR58resource5 handles withliteralUVarguments; rg.angle=i*1024,radius256,h3C0,paduntouched;198/58 and1FC(0,v180[i]) interleavedforeach. ScaleINTthree819. FIVE58resource1handles, act0/cnt-1each. Separate1F0(0)/1F4(0),1FC(0,v160),overridev160.Y=-128,act[0]=1, onlyv140XYZ0, w13C/w1C0=0.
+
+Initcenterh158=v160.X,h15C=v160.Z,h15A=v160.Y-w16C unsigned/signednarrowing literal. w148/w150=ORIGINALw168,w14C=w16C/3; THENw168=(old>>2)+(old+256). Trail0XYZ=center, yb=centerY. Othertrailpositions, fade, pos4/objects/targetvectors and padding uninitialized untilevents/activation; no blanketzeroing. Storedtransforms/extents and ownership remain original.
+
+Exactframeevents0:t8=80/t0=16;8:t18=60/w13C16;16:t10=8;20:tc/t1C32, FOURseparateloadsresource2atindependentv180[0..3],t20=48;48:resources11/12/7 atv160 withEACHnullableh22=220(0,256);52:t4=16;55/56/57/58/59:cnt[4/3/2/1/0]=8. No missedframebackfill or deduplication. Allrgangles+=64 andw1C0+=16 onEVERYupdate, evenbeforeactivation/afterterminal threshold.
+
+NONZEROtc predecrements thenyb=B4(v160.Y,centerY,tc<<7). NONZEROt0/t4 predecrement inTHATorder, maybothoverwritefade; cosine containsliteralleft/right12bitshifts. t8NONZERO predecrement thenfourposesXZ=center+cos/sin(angle)*(w168+fade)>>12, Y=yb-cos(512)*fade>>12,60(rgrecord,posrecord,scale,hnd). Hostp2C firstXYZ=pos0 truncatedhalfwords andh30=256/h32=rg0angle/h34=0. No implication thosehostfields are a camera API.
+
+t20NONZERO predecrements, four loadedobject targetXYZ:center+cos/sin(i1024+w1C0)*(w168+fade+512)>>12, Y=pos0.Y; fourthpaduntouched. IfobjectNONZERO andh30==-1 clearhandle; ALWAYS1D8(handle,&target), INCLUDINGzero pointer afterdrop orfailedload. No extra nullguard/release. t10NONZERO predecrement then240(table8328[t10>>1]);t14NONZERO predecrement then240(table8348[t14]); ELSEframe>=21 randomcallandlow3bitzero armst14=4 WITHOUTdrawingnewflashuntilnextupdate. Randomcalls happenbeforeterminal92guard.
+
+t1CNONZERO trail0.Y=yb, v=PREDECREMENTcount,n=v>>3; when(v&7)==0 andn>0 activateact[n] andcopytrail0XYZ. Ordinary32timer emitsindices4/3/2/1 atframes20/28/36/44, no n<5guard forexternally changedtimer. Thent1C--. t18NONZERO predecrement thenD4(ctx.p2C+84,&center,v140),forcev140X/Z0 ONLY. ForEACHactiveof5:60(transform,&trail,&w148,handle), cnt>0predecrement then26Ctint=(newcnt<<5)-256; reaches0deactivateAFTERplacement/tint. i0/w13CNONZERO additionalpredecrement tint overridescountertint evenifjustdeactivated. Negativecntnotdecremented unlikeliteralNONZEROother timers.
+
+Terminalframe>=92 returns1 AFTERall timer/pose/random/trailwork BEFORElast240(10000-frame*4,608,256,32,240,576,256). Otherupdates drawlast240 thenreturn0. No78/release/restore callback, phase switch or semantic meteor identification. NegativeNONZEROtimers, unbounded tableindices/activation n, read-before-init/padding/provider null frontiers remain literal. Init returns0 viazero label withoutdrawing.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
