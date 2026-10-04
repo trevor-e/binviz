@@ -12837,3 +12837,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual cached direction model sequence naming acceptance (BV-03/BV-08, P2):
+FF9 592b00c09 adds 1 selected canonical ovl_fbdf800 names. Catalog
+5,547 unit/symbol names, 350 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-cached-direction-model-sequence.json and Binviz
+target/ff9-names-effect-residual-cached-direction-model-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 1,004/1,004 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remainingFBDF800 controller independently full-read and named by cached direction updates for staged model objects. Full g09/lifecycle headers bound. Own actor selection, resource ordering and only three updated objects retained; no broader travel or visual identity claim.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole2Cbyte size/init/update handler independently read. Anchor pair selected by actorbyte24==mode1 versus direct hostposition; cached directionD4, resources8/7initial,5/6at30with callback6, resource4at50. Three tracked objects receive cached direction at5C/5E/60 with dropminus1 handling, resource7 deliberately not updated, completion80. Preserve actual conditional f200(0,0) despite stale comment, distinct original pointers and uninitialized later slots, redundant checks and signed/narrow views. Repeated purpose name unit-scoped, no transplant from10DC0800 or spell inference.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
