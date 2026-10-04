@@ -14754,3 +14754,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual signed offset single resource longer naming acceptance (BV-03/BV-08, P2):
+FF9 faa3a6e51 adds 1 selected canonical ovl_fc8a000 names. Catalog
+5,618 unit/symbol names, 421 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-signed-offset-single-resource-longer.json and Binviz
+target/ff9-names-effect-residual-signed-offset-single-resource-longer/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 296/296 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFC8A000 independently reviewed and named for signed vertical-offset resource with own longer lifetime. Full g10/lifecycle/local declarations bound; actual70frame cutoff and unit identity retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+EntireFC8A000handler independently read including all local declarations and owncompletion.8byteallocation/4byteview,84(0,1)anchor h2signedbyte25times4unsignedbranches,resource1h22via220(0,128). Actualcompletion70 differs12808000/134EC80048;preserveactual timer and separateidentity. No normalizationofbranches or requestedlayout.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
