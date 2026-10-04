@@ -15429,3 +15429,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual anchor resource timeout r4 40 naming acceptance (BV-03/BV-08, P2):
+FF9 bce0bd5f7 adds 1 selected canonical ovl_123f6000 names. Catalog
+5,643 unit/symbol names, 446 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-anchor-resource-timeout-r4-40.json and Binviz
+target/ff9-names-effect-residual-anchor-resource-timeout-r4-40/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 240/240 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete123F6000 independently reviewed and named for single-anchor resource timeout. Full lifecycle/local declarations bound; own hostkey0/resource4/40-frame lifetime retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole123F6000source including own complete localhost/context/object/state and handler independently read.12byte allocation,byte52clear,200(0,0)anchor,resource4h22via220(0,128),completion40. Preserve originalowncanonicalidentity,numericargs,opaquehostflag,partialpadding and negatedsignedframecomparison. No inferredspelllabel or substitute relatedsource review.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
