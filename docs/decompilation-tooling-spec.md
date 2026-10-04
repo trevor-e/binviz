@@ -12195,3 +12195,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Status menu residual count state helpers naming acceptance (BV-03/BV-08, P2):
+FF9 fe3c0d418 adds 3 selected canonical ovl_010f000 names. Catalog
+5,523 unit/symbol names, 327 scoped alias headers. 3 selected complete overlay
+bodies reviewed and bound, 3 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 2 semantic-provider body hashes bound. Evidence:
+docs/function-names-status-menu-residual-count-state-helpers.json and Binviz
+target/ff9-names-status-menu-residual-count-state-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 136/136 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+All three residual010F000 bodies completely reviewed and named. Two full status menu providers in alternate10F000 view and full lane02/g06 headers identify tables and state. Existing target rows/images and canonical filenames retained; transformations apply only010F000. The other unit callback/data declaration remains at original identity pending source-scoped alias variants.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole state=2, ifcount nonzero clear mark[count-1], then unsignedBYTEcount++. Full status init/draw ability pages and Ui header identify count/mark tables. Preserve wrap and unchecked table access; do not invent add-item allocation.
+
+Whole state=1, six pairs of mark/used clears, then distinct globalBYTE1F120D=0. Full Ui header and status providers bind roles. Preserve alternating store order, alias identity and separate count global.
+
+Whole BYTE1F120C=1. Same state as complete reset helper, existing status init provider references this callback as byte-array address. Preserve data/function-address declaration and unit scope; no callback prototype repair or rename across different unit.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
