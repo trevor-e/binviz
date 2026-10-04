@@ -2595,3 +2595,31 @@ preprocessor tools reused;no private ownership/type/CFG walker added. BV-08 exac
 namespace gate enforced. No portable module,link,gameplay,selected-provider or
 shared workspace acceptance. Refresh source-bound evidence from current catalog;
 historical reports/scorer stay pinned;foreign work/index/checkpoints preserved.
+
+Title scene naming acceptance (BV-03/BV-08, P2): FF9 cf66ec7ef
+adds five canonical ovl_0c7800 names;catalog3604 unique unit/symbol names,
+56 alias headers. All15 recovered primary bodies reviewed;ten explicit semantic
+deferrals cover opaque global bytes/word,timer record,work890 phase and empty
+hook. Other units remain pending. Evidence:docs/function-names-title-scene.json
+and Binviz target/ff9-names-title-scene/. All five complete native object pairs
+identical,exact manifest/scoring namespace five,pinned strict-relocation scores
+unchanged four exact/one partial,288/636 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree;current catalog/source/
+header/object and15 review bindings audit;nine isolated committed paths agree.
+
+Names cover scene archive range resolution,mixed scene resource tracking reset,
+song slot reset and two low-nibble bit helpers. Actual pinned sound-command and
+scene-resource consumers support shared field roles;cursor donor comments do
+not supersede song id/playback handle/level operations. Preserve EXACT mask
+0xbfffff,which clears more than bit22,reverse loops,unchecked directory ranges,
+failed-search output behavior,register pins,matching wrapper and compiler flag.
+No runtime-provider inference from equal addresses/offsets;no body corrections.
+
+Existing naming/farm/scoring/preprocessor tools and thin audit adapters reused;
+BV-08 exact namespace gate enforced,no new reusable tooling gap found. Commit
+guard caught concurrent unrelated CLAUDE checkpoint edits;fresh inspected
+snapshot and isolated index retained those working edits while committing only
+our marked naming checkpoint. Foreign work/index remain preserved. No new
+matching credit,portable module,linked image,gameplay or shared workspace
+acceptance. Refresh source-bound evidence from current catalog;historical reports
+and scorer stay pinned;full-tree review remains active.
