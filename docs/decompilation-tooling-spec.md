@@ -10227,3 +10227,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Centered rectangle five phase model track staged load naming acceptance (BV-03/BV-08, P2):
+FF9 2679ae1da adds two canonical ovl_122de800 names. Catalog
+4,954 unit/symbol names, 294 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-centered-rectangle-five-phase-model-track-staged-load.json and Binviz
+target/ff9-names-centered-rectangle-five-phase-model-track-staged-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 2,288/2,288 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7718 reads global context/api; rect s16 X=U16 originX+cx-(w>>1),Y=U16 originY+cy-(h>>1),W=w,H=h; call298(rect,a4,a5). Preserve signed right shifts and halfword narrowing, no clipping/negative-size/origin/null guard.
+
+7790 descriptor84. Init context/70(table,1)/58(resource1,311,65535,0,0) INT handle/1FC(0,v4)/20C(0,vc)/2A0(0,&INTw14)/200(0,1,v38),signed v38Y+=128 then publish XYZ into context +18/+1A/+1C, phase0 only. No initializer for p50/history/pads. Phase0 exact0 local INT XYZ=w14,w14+460,w14,2A4(0,local); exact3 centered rectangle(160,140,128,192,448,256); exact4 2BC(0,0)/200(0,0,v40)/load3 nullable128. Else if type>=5 s5=((type-4)<<12)/28;80(16,9,a) then80(16,28,b),D4(a,b,rot),rotY+=2048,INT transXYZ signed endpoint sums>>1; scaleX/Y cos(s5*5+1024)/3+5120 and cos(s5*5)/3+5120,scaleZ sin(s5*6)/3+5120,each*(4096-(s5>>1))>>12;60. >=32 phase1/jobtype=-1 AFTER work,return0.
+
+Phase1 s5=(type<<12)/9;1FC(16,a),80(16,28,b),BC(b,a,s5,c),cos((s5*2450)>>12);rotX=-type<<8,Y/Z=type*6,XYZscale=((4096-s5)*5<<10)>>13,cY-=cos>>5,INT transXYZ=c;60 THEN >=9 phase2/jobtype=-1,return0. No terminal clamp or cleanup. Phase2 EVERY update80(16,4,v48),k=type/5,exact multiple type==k*5 load2; nullable object p14=global+k*720,h12=20,hC36,h22=128. >=19 phase3/jobtype=-1 AFTER query/load; negative multiples/raw record offsets retained.
+
+Phase3 >=16 phase4/jobtype=-1 then load4 at previously saved v48 and nullable128,return0. Phase4 always80(16,4,v48)/2C4(16,4,32byte matrix)/2B4(matrix,local signed vector),nullable p50 receives U16 XYZ before any terminal return. For type<13: exact1 2BC(0,128);t4=(type<<12)/12;BC(v48,v4,t4,local),localY-=cos(t4>>1)>>3;204(0,local);half=w14/2,INTXYZ=half+((half*t4)>>12),2A4(0,INTXYZ);local s16 XYZ=(vcX+((4096-t4)>>1),vcY-(4096-t4)/3,vcZ),2A8(0,local). >=16 return1 AFTER matrix/object work. Unknown phases fall through0; no78/release/host restoration/backfill/provider aliasing or pad repair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
