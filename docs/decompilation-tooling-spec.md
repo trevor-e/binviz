@@ -5395,3 +5395,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Spinning model and grayscale naming acceptance (BV-03/BV-08, P2): FF9
+282253ee8 adds six canonical ovl_103f5800 names. Catalog4,482 unique unit/symbol
+names,134 alias headers. All six complete bodies,bothheaders and four reference
+helpers reviewed; no semantic deferrals. Evidence:
+docs/function-names-spinning-model-grayscale.json and
+target/ff9-names-spinning-model-grayscale/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+all six exact,2,140/2,140 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all six sources; current catalog/source/header/object/review
+and10 isolated commit paths audit. Other units remain pending.
+
+Established spinning model shrink/color blend,three-resource spawn timeline,
+grayscale fade cycle and interpolation helpers. Preserve signedvalues,partial
+fields,rawcallbacks,pins/asm,pose-before-rotation ordering,unclampedscalar math
+and terminal calls. Negativecolor blend is observed,not assumedstandardfade.
+Own-unit aliases retain canonical native/runtime identities. Exact game effect/
+provider identities unresolved. No body/type/layout/ABI repairs or original names.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
