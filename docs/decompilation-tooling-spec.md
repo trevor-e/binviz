@@ -2792,3 +2792,40 @@ implementation claimed,no private ownership/type/CFG walker. No new matching
 credit,portable module,link,gameplay,provider or shared workspace acceptance.
 Refresh source-bound evidence from current catalog;historical reports/scorer stay
 pinned;full-tree goal remains active.
+
+Scripted effect naming acceptance (BV-03/BV-08, P2): FF9 de5ff3604
+adds23 canonical ovl_115e1800 names;current catalog3727 unique unit/symbol
+names and62 alias headers. All23 complete primary bodies directly reviewed,
+including four large handlers and own-unit keyframe/event consumers. No semantic
+deferrals in this unit;other units pending. Evidence:docs/function-names-scripted-effects.json
+and Binviz target/ff9-names-scripted-effects/. All23 complete native object pairs
+identical,exact affected/scored namespace23,pinned strict-relocation baselines
+unchanged20exact/three partial,7408/11320codebytes,zero failures. Installed WASM
+preprocessed tokens identical for23sources. Current catalog/source/header/review/
+object bindings and27isolated committed paths independently audit. Progress:
+3727/5812canonicalprimaryfiles named64.1%,2085remaining.
+
+Names cover actor/position-event sequences,keyframed host handles,ribbon sets,
+object offsets/flash,position blend/spawn,screen fade,keyframe initialization/
+fetches,scalar/grayscale interpolation and64slot/four-clock position events.
+Original spell/ability and selected runtime-provider identities stay unresolved.
+Direct body review overrides inaccurate comments when selecting names:8A10
+releases handles atframe41,notframe1;9AA8 modifies cachedYto-3000 before its
+blend,so does not establish original-position restoration. Preserve all comments,
+matching flags,register pins,duplicate branches,assignment wrappers,types,
+layouts,signatures,resources and frame thresholds unchanged.
+
+Preserve opcode-skipping/count-at2 record layouts,upper-only clamps,unchecked
+negative/zero-count/denominator cases,paired output order/NULL handling,halfword
+bit patterns and sign extension,ribbon reverse indices/width division order,
+position blend(target,current)weight order andscreen-fadehostargument2.
+Event cursors and played counts advance pernonzero target nibble,not perframe;
+retain exact start-time equality,silent full-pool drop,last-triplet reuse and
+no automaticfree. Existing maintained naming/farm/scoring/preprocessor tools
+andthin proof/commit adapters reused;BV-08namespace gate enforced. No additional
+shared implementation gap discovered in this batch;existing raw-prefix and
+concurrent-checkpoint acceptance proposals remain separate. No private ownership/
+type/CFG walker,new matching credit,linked image,gameplay,provider or shared
+workspace acceptance. Historical reports/scorer remain pinned;refresh downstream
+source-bound evidence fromcurrentcatalog. Foreign work/index preserved.
+Full-tree naming goal remains active.
