@@ -4724,3 +4724,32 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Three phase ring and ribbon naming acceptance (BV-03/BV-08, P2): FF9
+86bbdb707 adds seven canonical ovl_108a6000 names. Catalog4,316 unique
+unit/symbol names,108 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-three-phase-ring-ribbons.json and
+target/ff9-names-three-phase-ring-ribbons/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines five exact/two partial,2,676/9,872 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Others pending.
+
+Actual roles: three phase ring/spark burst,14segment ribbon,two segment strip,
+polyline wrapper,paired strip callback,random ribbon vertex hook,three independent
+radial emitter variants. Preserve burst29/2/50 transitions,volatile reload,
+separate division then shifts,repeated trig calls,16sparks underflag32. Paired
+strips reuse same destination and complete only after submission; actual builder
+has3vertices/2segments despite oldcomment. Emission counts precede allocations,
+INT pool offsets/signed biases retained. Variant2 history/localvector published
+even first allocation failure; preserve original uninitialized local possibility,
+oddframe randomflash even at terminal31,all types/layouts/pins/wrappers/data.
+No original effect/provider identity claim; own-unit aliases keep linker/runtime.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
