@@ -4942,3 +4942,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Ten phase ripple particles naming acceptance (BV-03/BV-08, P2): FF9
+37d6be513 adds seven canonical ovl_12847800 names. Catalog 4,371 unique
+unit/symbol names,116 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-ten-phase-ripple-particles.json
+and target/ff9-names-ten-phase-ripple-particles/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines five exact/two partial,3,856/20,760 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Established mirrored sprite pair,repeated rows,transformed sprite,24x24radial
+ripple grid,random24segment ribbon,five-kind particle callback and ten actual
+phases0..8/10. Comments eleven phases/two tailbands differ from actual body;
+names follow body. Preserve cube proximity threshold,predecessorhalfword[-1],
+case2 overwritten color used as cosine argument,partial XYZ/pad and overlapping
+scratch union,mode0 goto,unused randomcalls,allocation success timing and
+new-phase scrollband gate. Grid reserves576slots but advances emitted pointer
+only admitted cells,and links before fourth-corner SXY store. Native symbols/
+runtime exports retain canonical identities. No sibling-body replacement or
+collision/radius/type/layout/tint/body fixes. Game-effect/provider purpose unresolved.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
