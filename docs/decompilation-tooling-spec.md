@@ -8831,3 +8831,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four phase shrink spin blend hooked object load naming acceptance (BV-03/BV-08, P2):
+FF9 63e663f20 adds one canonical ovl_10100000 names. Catalog
+4,854 unit/symbol names, 244 scoped alias headers. One full own-unit
+body reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-phase-shrink-spin-blend-hooked-object-load.json and Binviz
+target/ff9-names-four-phase-shrink-spin-blend-hooked-object-load/. One full native object pair equal;
+exact affected/scored namespace one. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 2,084/2,084 code bytes, zero failures. One
+installed WASM token comparison agrees; current source/header/catalog/object/
+review bindings and five isolated committed paths audit.
+
+Mode0 ONLYout0=40. Initglobalcontext/70(table,4), FOUR58 handlesresources3/1/25 with(186,15808,0,0), then2 with(184,15680,128,128), eachreturnSIGNEDs16->INT. Phase0/counter0, copyactorSIGNEDXYZ intop andq separately, thenp.Y-=415 with16bitnarrowing. Bothvectorfourthpadsuntouched, q isORIGINALactorposition not loweredp. No addedownedobjectstate/release.
+
+Phase0 exactframe0 load7atp,nullablew14=globaltable/h12=10/hC=92/h22=220(0,32). Thesearedata/hookfields, no replacementABI. frame>=8 nextphase1/resetjobtype-1 AFTERloadcheck; ordinary9updates, no posework. Phase1 t=frame<<10,sine(t>>2), XYZscale=((4096-sine)*3584)>>12, rotationXYZ0, INTtranslationSIGNEDpXYZ. 2E4(handle3,2),60,268(handle3,0),26C(3,0,0,0); fourthlanes ofrotation/scale/translation remainuninitialized. frame>=4 nextphase2/reset-1 AFTERdraw;ordinary5updates shrinks3584towards0.
+
+Phase2 fixedscale3584/rotationYframe*32/translationp; primary3 same2E4/60/268/26Csetup then60(handle2)/268(handle2,1). t=frame<<8 THEN>>1, THREE separateCOS(t) calls eachtint=(cos>>5)-128, no dedup. Screen240 firstarg=((4096-SIN(t))>>9)+frame*5, fixedrest(576,384,64,128,576,256). Otherhalfwordrotation/storeordering andparenthesization literal.
+
+Phase2 frame>=16 transitionAFTERallposes/tint/240 tophase3/reset-1, THREEseparateloadsresources24/22/21 atLOWEREDp, eachnullableh22=220(0,32). Resource10loadedatORIGINALq,returnignored;100(ctx.w20+4,1,0,32,70). Ordinary17updates andno missedframeevent backfill. Providerobject lifecycle/value/read extents unchanged.
+
+Phase3 fixedscale3584/rotation(0,512,0)/translationp. If frame<2:m=frame<<11,w8192;else m=((frame-2)<<12)/14,w4096 viawrapper. w_b=w-m. Strictw_b>4096 draws28C(handle3,handle1,w_b-4096),26C(handle3,-64each); ELSEdraw28C(handle1,handle25,w_b),26C(handle1,((w_b-2048)>>5)-128each). Ordinaryframe0/1 firstpair, frame2..12secondpair. Onlyexactframe1 load8atq nullableh22=220(0,32).
+
+Phase3 terminalframe>=12 calls78/return1 AFTERblend/tint/optionalload butBEFOREcommoncounterincrement. The14-frame denominator isNOTreached tozero underordinary13updates; terminalweight4096-floor(10*4096/14)=1171 remains. Ordinaryphasecounts9/5/17/13, jobframe reset-1 reliesonhostincrement. Counter++ onotherupdates includingunknownphase; query/initnotincremented. Negative frames/overflow/sharedctx/provider arity/uninitializedfourthlanes remainliteral, no normalization/backfill/extra cleanup or inferred spellidentity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
