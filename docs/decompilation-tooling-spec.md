@@ -2392,3 +2392,37 @@ Shared readability acceptance remains proposed until frozen namespaces and
 compiler/input/output identities are configured and independently verified.
 Refresh downstream source-bound evidence using the current catalog; keep the
 historical scorer selection, foreign work/index entries and CLAUDE sections.
+
+World UI/effects naming acceptance (BV-03/BV-08, P2): FF9 commit
+97f906504 adds19 canonical ovl_09b800 behavioral names. Current catalog3450
+unique unit/symbol names,51 alias headers. All149 world-map canonical primary
+bodies reviewed cumulatively:127 named,22 documented purpose deferrals,zero
+unreviewed. Other canonical units remain pending; no whole-tree completion.
+Evidence: FF9 docs/function-names-world-ui-effects.json and Binviz
+target/ff9-names-world-ui-effects/. All25 affected complete native object pairs
+identical, scoring namespace exactly25 manifests, unchanged pinned strict-reloc
+scores16exact/9partial,12960/33132 code bytes,zero failures. All25 installed WASM
+preprocessed token comparisons agree. Current catalog/source/header/object hashes,
+149 reviewed source identities,prior reports and29 isolated committed paths audit.
+
+Names cover cursor motion, location visibility, world-to-map coordinates,
+full-map/minimap compasses, window/auxiliary panels, banner fade, sprite effect
+spawn/step/release, weather model rendering/event spawning, both model-part
+packet submission routines and animation bone matrices. Re-reviewed8574 after
+the foreign geometry ABI correction was committed; that three-argument64E88
+baseline remains intact. Native tests grant no new original matching credit.
+Preserve unchecked indexing, sequential cursor attraction, different marker
+skip lists, sine/cosine choices, fade progression side effect, type23 fallthrough,
+biased random jitter, effect-kind versus weather-mode distinction, GTE flags/pins,
+typed FT3 depth shift-before-store and four-to-two argument frame call mismatch.
+Unknown hooks/flag meanings stay explicit deferrals; donor comments and equal
+addresses do not establish a selected runtime provider.
+
+Maintained naming/farm/scoring/preprocessor workflow reused with thin adapter;
+no private ownership/type/CFG walker or tooling rewrite added. Previously flagged
+BV-08 exact object namespace acceptance is enforced again. Shared readability
+acceptance remains proposed until frozen namespaces and compiler/input/output
+identities are configured and independently verified. No compiled portable
+module,linked image,gameplay,selected-provider or shared workspace acceptance
+claim. Refresh downstream source-bound evidence using the current catalog,
+retain historical scorer and preserve foreign work/index/checkpoint sections.
