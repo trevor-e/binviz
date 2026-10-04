@@ -3751,3 +3751,38 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Rippling sheet naming acceptance (BV-03/BV-08, P2): FF9
+cbc61292c adds11 canonical ovl_12f0f000 names. Catalog4,146 unique unit/symbol
+names,88 alias headers; all11 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-rippling-sheet.json
+and target/ff9-names-rippling-sheet/. All11 entire native object pairs identical,
+exact affected/scored namespace11, unchanged pinned strict-relocation baselines
+nine exact/two partial,1,744/6,644 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all11 sources; current catalog/review/source/header/
+object bindings and15 isolated commit paths audit. Progress4,146/5,812 canonical
+primary files named(71.3%),1,666 remaining; full-tree goal active.
+
+Names cover four inline key readers, wrapping strip, asymmetricwave,18x19 sheet
+renderer, cyclicattachment reader, full two-phase scene, actoroffset spawn and
+pairedscene vector tracks. Complete own-unit bodies/consumers establish roles;
+10FEA800 similarity informs vocabulary only, not inferred donor equality or
+original ability/camera/provider identity. Readable C names retain own-unit
+native/runtime symbols through aliases, including integerhook casts.
+
+Preserve signedcount upper-onlyclamp, signedremainder/reservation and wavebranch.
+Renderer reserves22320bytes, preserves $21/flags/barriers/wrappers/GTE sequences;
+bothclip signs draw, positiveclip halves onlyR/G, depthliteral0x158002d precedes
+finalvertexRTPS, fourthXY written afterpacket submission. Firstcolumn skippedcells
+leave stale row/on; attachment cycles16 of18 rows, ignoreson andneverresetscursor.
+Scene resource5 loads atframe18 beforeh10 explicitinit50, transition81 publishes
+beforeoptional stateY/Z adjustment, jobframe reset/cumulativecounter distinction,
+spriteflag windows/discardedcalls and finish24 afterdraw retained. Actorrec h4
+height/h2-512 remain distinct; hostpairedtrack publication/completion order stays.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
