@@ -5921,3 +5921,49 @@ No new reusable tooling implementation or private type/ownership/CFG walker.
 No new original matching credit,linked image,gameplay or sharedworkspace
 acceptance. Refresh source-bound evidence; historical scorer/reports pinned;
 foreign work/index preserved; full-tree naming goal active.
+
+Nine vertex trail naming acceptance (BV-03/BV-08, P2):
+FF9 fd6a6c0f5 adds five canonical ovl_1385b800 behavioral names. Catalog4,582
+unique unit/symbol names,154 scoped alias headers. All five complete bodies
+and current g24/g28/transitive headers directly reviewed;zero semantic
+deferrals in this unit. Other units remain pending. Evidence:
+docs/function-names-nine-vertex-trail.json and Binviz
+target/ff9-names-nine-vertex-trail/. Five complete native object pairs identical;
+exact affected/scored namespace five;pinned strict-relocation scores unchanged
+four exact/one partial,3,260/3,604 code bytes,zero failures. All five installed
+WASM preprocessed token comparisons agree. Current catalog/source/header/
+object/review bindings and nine isolated committed paths audit.
+
+Names establish host-gated three-phase sprite/ring sequence,eight-frame fading
+flash callback,eight-slot cursor reset,nine-vertex builder and emitter. Actual
+own-unit references establish roles. Preserve host b10 gate/no fixed deadline,
+brightness gate,two sprite poses,terminal ring/count ordering,callback index
+versus frame distinction,partial vector/pad stores,signed modulo8,U16 angle
+wrapping,vertex generation before allocation and success-only velocity rolls.
+Keep original game effect identity and selected-provider contracts unresolved.
+No body/type/layout/ABI repair. Readable definitions,declarations,calls and
+callback references propagate;own-unit aliases retain canonical linker/address/
+runtime identities. Maintained naming/farm/scorer/preprocessing interfaces
+and thin adapters reused;BV-08 exact namespace gate enforced.
+
+Reusable progress/prioritization gap BV-03/P2: existing thin count adapter
+target/ff9-names-movie-api/progress.py ranks all unnamed canonical files
+together. ovl_0cc000 appears with21 although existing
+docs/function-names-blackjack-intro.json records all33 bodies reviewed,
+12 named,21 explicit semantic deferrals,zero unreviewed. This batch's
+prepare-tooling-note.py verifies all21 current deferred source hashes still
+equal that report. Temporary policy: inspect existing unit review metadata and
+hash-bound deferrals before selecting another review;retain total unnamed
+count for naming coverage. Shared acceptance should expose distinct named,
+reviewed-but-deferred and unreviewed counts keyed by(unit,symbol),bound to
+current source/catalog identities. Reject or visibly mark stale review hashes,
+preserve historical reports,avoid double counting later batches and never
+equate empty hooks/opaque byte accessors with confidently nameable work.
+Use this33/12/21 unit and the newly reviewed five-name unit as fixtures;cover
+current/stale source drift and unchanged naming denominator. This is a
+proposal,not an implemented shared feature or full-tree review claim.
+
+No new reusable tooling implementation or private type/ownership/CFG walker.
+No new original matching credit,linked image,gameplay or sharedworkspace
+acceptance. Refresh source-bound evidence;historical scorer/reports pinned;
+foreign work/index preserved;full-tree naming goal active.
