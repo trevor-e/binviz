@@ -5371,3 +5371,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Scheduled ribbons and actor trails naming acceptance (BV-03/BV-08, P2):
+FF9 a6da78146 adds six canonical ovl_102de000 names. Catalog4,476 unique unit/symbol
+names,133 alias headers. All six complete bodies and g08/g14 headers reviewed;
+no semantic deferrals. Evidence: docs/function-names-scheduled-ribbons-actor-trails.json
+and target/ff9-names-scheduled-ribbons-actor-trails/. Six entire native objects
+identical;exact affected/scored namespace six,unchanged pinned strict-relocation
+baselines two exact/four partial,868/5,644 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established ribbon builders/polyline helper,cosine sprite/expanding ring pulse,
+two-phase ribbon callback,scheduled particles and per-actor trails fromframe34.
+Preserve byvalue/flat argument and VOID/INT differences,pins,barriers,wrappers,
+signedindices,unsignedrounding,randomcallarity,allocation-failure ordering,pads,
+b15specialcase and terminalactorattempt. Callback/caller references renamed;
+own-unit aliases retain canonical native/runtime identities. Exact game effect/
+provider identities unresolved. No body/type/layout/ABI repairs or original names.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
