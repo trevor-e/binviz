@@ -9629,3 +9629,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two history point trail discarded cosine actor zero load naming acceptance (BV-03/BV-08, P2):
+FF9 891d787dc adds two canonical ovl_12262000 names. Catalog
+4,912 unit/symbol names, 273 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-history-point-trail-discarded-cosine-actor-zero-load.json and Binviz
+target/ff9-names-two-history-point-trail-discarded-cosine-actor-zero-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,028/1,028 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor116: signedFOUR-halfwordp0/p8/m10, U16h18[4], INTv20[4], THREEscaleINT+pad, TWO U16hs[4]/INThv[4], U16handles. Init context,70(table,2),200(16,0,state),200(0,0,p8),80(16,23,m10),D4(m10,p8,h18),scales4096,h18X+=2048 U16,INTXYZ=m10signedXYZ,338(resource5,1)/58(resource12,151,15680,0,0). No history/fourthlane init.
+
+Update capturedframe; frame<8 includingnegative ang=(frame<<12)/6,BC(state,p8,ang,locals16t[3]),INTXYZ=tXYZ THENcos(ang>>1) RESULTDISCARDED. Drawhead60(h18,v20,scale,h70); i0..1 frame>=i+1 draws cachedhs/hv with SAMEtrailhandleh72,268(h72,3),26C(h72,-(i<<4) RGB). ShiftONLYXYZhistory0->1 then current->0 AFTERdraw, fourthlanes unchanged. frame>=6 calls78/return1 AFTERhistory; ordinary6weight4096,continued7weight4778. No removingunusedcosquery/clamp/backfill/extentrepair/release/historyinitializers.
+
+7A20 descriptor12 object+THREEU16pos/tailpad. Init savesEfxcontext,200(0,0,pos),load4 inclNULL/nullableh22=220(0,128). Othermodesreturn>=30 with no per-framework/78/release. Own copied body fullyread; actor-zero load name reused based on actual behavior.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
