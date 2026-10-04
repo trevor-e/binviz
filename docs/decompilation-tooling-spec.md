@@ -5652,3 +5652,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Resource vertex centers and centroid displacement fade naming acceptance (BV-03/BV-08, P2):
+FF9 69d8b2c98 adds five canonical ovl_ff6c000 names. Catalog4,537 unique unit/symbol
+names,145 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-centroid-displacement-fade.json and
+target/ff9-names-centroid-displacement-fade/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+five exact,2,836/2,836 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all five sources; current catalog/source/header/object/review and9
+isolated commit paths audit. Other units remain pending.
+
+Established resource vertex centers,three/four-group averaging,scaled-center
+displacement and sprite fade. Preserve provider/caller arity,signed halfword
+narrowing,last-unit cachedtable reuse,partial initialization,pads,pose-before-scale
+decrement,double counter increment and terminal ordering. Caller references
+renamed; own-unit aliases retain canonical native/runtime identities. Exact game
+effect/provider identities unresolved. No body/type/layout/ABI/originalname claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
