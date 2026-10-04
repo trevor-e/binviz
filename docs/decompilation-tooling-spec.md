@@ -14079,3 +14079,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual hooked anchor resource timeout naming acceptance (BV-03/BV-08, P2):
+FF9 85b6e9580 adds 1 selected canonical ovl_10088000 names. Catalog
+5,593 unit/symbol names, 396 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-hooked-anchor-resource-timeout.json and Binviz
+target/ff9-names-effect-residual-hooked-anchor-resource-timeout/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 288/288 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete10088000 handler and own declarations independently reviewed and named for hooked anchor resource with fixed completion timeout. Preserve actual size contract and every original local layout/API call.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole source including complete own API/context/state read. Mode0 requests36bytes though displayed state fields cover28; init200(16,0),200(0,0),84 vectors, resource2atsecondpoint with callback/h12=43/hc=64. Update only returnsframe>=40. Preserve requestedsize versus localstructextent, unusedstoredvectors, integer loader result and K&R API. No added size/type repair or spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
