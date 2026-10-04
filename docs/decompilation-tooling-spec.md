@@ -6312,3 +6312,32 @@ prioritization and BV-06 provider frontiers retained. No new implementation or
 private ownership/type/CFG walker. No original matching gain, linked-image,
 gameplay or sharedworkspace acceptance. Refresh source-bound evidence, retain
 historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Hooked companion objects naming acceptance (BV-03/BV-08, P2): FF9
+06ee891ad adds four canonical ovl_1041d000 behavioral names. Catalog 4,631
+unit/symbol names, 165 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-hooked-companion-objects.json and Binviz
+target/ff9-names-hooked-companion-objects/. Four whole native object pairs
+identical; exact affected/scored namespace four, unchanged pinned strict-reloc
+scores four exact, 1,376/1,376 code bytes, zero failures. Four installed WASM
+token comparisons agree; source/header/catalog/object/review bindings and eight
+isolated committed paths audit.
+
+Names establish paired-object tracking, hook table plus frame10 companion,
+indexed four-object sequence with flag7 signaling, and host buffer byte setter.
+Preserve init-fetched target vector, ended-object clearing, nullable stores,
+partial state/pads, skipped/repeated frame10 behavior, signed index with only
+upperbound check, frame4 signaling separately from frame40 completion, and
+tracking before terminal return. Hook table contents/provider identity remain
+unresolved. Setter current declaration/definition both VOID; do not transfer
+other units INT extern mismatch facts. Historical lane difftest trap asymmetry
+not fixed or accepted. No original effect identity or gameplay claim.
+
+Readable declarations/definitions/callers propagate; aliases retain canonical
+linker/address/runtime identities. Existing naming/farm/scorer/preprocessor and
+thin adapters reused; BV-03 reviewed-deferral prioritization and BV-06 provider
+frontiers retained. No new reusable implementation or private ownership/type/
+CFG walker. No matching gain, linked-image or workspace acceptance. Refresh
+source-bound evidence, pin historical reports/tools, preserve foreign work/index;
+full-tree naming goal active.
