@@ -6731,3 +6731,34 @@ BV-03 reviewed-deferral prioritization/BV-06 provider proposals retained.
 No new implementation/private ownership/type/CFG walker, matching gain,
 linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical tools/reports, preserve foreign work/index; full-tree goal active.
+
+Camera layered burst naming acceptance (BV-03/BV-08, P2): FF9
+4967a176e adds four canonical ovl_13c7e800 names. Catalog 4,683 unit/symbol names,
+178 scoped alias headers. All four full own-unit bodies and nine current header
+inputs reviewed and bound, zero deferrals; other units pending. Evidence:
+docs/function-names-camera-layered-burst.json and Binviz
+target/ff9-names-camera-layered-burst/. Four full native object pairs equal,
+exact affected/scored namespace four; unchanged pinned strict-reloc scores
+two exact/two partial, 168/4,596 code bytes, zero failures. Four installed WASM
+token comparisons agree; current source/header/catalog/object/review bindings
+and eight isolated committed paths audit.
+
+Names cover RGB555 Gouraud-grid/texture transfer, index-phased cosine callback,
+three-phase camera/layered burst and zero-state host flag clear. Preserve pool
+row restart despite upfront whole-grid allocation, MAC0 gate without NCLIP,
+shared captured centerdepth, rejected-cell advancement and skip dimensions.
+No packet-storage fix or newly certified transfer direction. Main repeated
+h34 poses and seven h3C poses use same handles; discarded sine/repeated cosine
+calls remain. Phase transitions37/32/87 retain operation order, exact outro32
+mutates pos10Z while loading at pos18. Byte52 clear is a sideeffect, not no-op;
+actual flag/effect/resource/provider identities remain unresolved.
+
+Definition/declaration/reference propagation and own-unit alias scope preserve
+canonical linker/address/runtime identities; data/types/layouts/signatures,
+pads/compiler flags/pins/strings unchanged. Current review does not admit
+host providers, portable runtime or uninspected data-table dispatch. Maintained
+naming/farm/scorer/preprocessor/thin adapters reused, BV-03 reviewed-deferral
+prioritization and BV-06 provider proposals retained. No new implementation/
+private ownership/type/CFG walker, matching gain, linked-image/gameplay/workspace
+acceptance. Refresh source-bound evidence, pin historical tools/reports,
+preserve foreign work/index; full-tree naming goal active.
