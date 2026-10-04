@@ -3685,3 +3685,36 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Target vector step naming acceptance (BV-03/BV-08, P2): FF9
+958cb81f1 adds12 canonical ovl_11373000 names. Catalog4,124 unique unit/symbol
+names,86 alias headers; all12 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-target-vector-steps.json
+and target/ff9-names-target-vector-steps/. All12 entire native object pairs
+identical, exact affected/scored namespace12, unchanged pinned strict-relocation
+baselines12 exact,3,376/3,376 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all12 sources; current catalog/review/source/header/object
+bindings and16 isolated commit paths audit. Progress4,124/5,812 canonical primary
+files named(71.0%),1,688 remaining; full-tree goal active.
+
+Names cover offset object spawn, position blend callback, target-slot paired
+sequence, fifteen/four-step host vector handlers/helpers, hostkind/index checks,
+activekind2/3 and indirectbuffer byte store. Complete own-unit bodies/consumers
+establish boundedroles. No provider animation/orientation or original effect
+labels inferred; historical transplant comments do not establish equality.
+
+Preserve upper-only slotchecks, partiallyinitialized state, sharedcontext/vector
+overwrites, event4/5/13 ordering, callbackcast and followedobject nullchecks.
+Fifteen-step handler stores targetreference but helper ignores it; delta remains
+external/unspecified. Preserve duplicate firstframe host20C calls, perstep signed
+division/narrowing and completion-after-publication. Derivedvector helper Y>=2048
+uses4096-Y reflection, lowernegativebranch adds4096; no conventionalwrap fix.
+Preserve post-update byte7 finishflag, hostkind/index call order, unusedformals,
+exact resource/id calls and indirectbuffer indexwithoutboundscheck.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
