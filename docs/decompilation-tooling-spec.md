@@ -12540,3 +12540,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual resource13 three model scale tint sequence naming acceptance (BV-03/BV-08, P2):
+FF9 7ac773ae5 adds 1 selected canonical ovl_11506000 names. Catalog
+5,536 unit/symbol names, 339 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-resource13-three-model-scale-tint-sequence.json and Binviz
+target/ff9-names-effect-residual-resource13-three-model-scale-tint-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 1,672/1,672 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining11506000 controller independently full-read and named for three-model scale/rotation/tint sequencing. Full g20 and handler headers bound. Repeated readable purpose in a different unit is intentional; original symbol/unit/body identities, actual resource13, timings, casts and provider contracts remain separate.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+WholeB4byte size/init/update handler independently read, including eight-word clear, all frame events and three countdown arms. Resources13/3/1 supply three model handles with32/48/24 countdowns, Yrotation128 and distinct per-axis interpolation/tint timing, completion128. Unit-scoped purpose name also fits independently reviewed13B6F800 but no implementation transplant. Preserve resource13, struct-grouped views, reloads/copies, asymmetrical tint arguments, load order and K&R host contracts.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
