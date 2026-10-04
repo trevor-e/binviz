@@ -3919,3 +3919,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Radial ring burst naming acceptance (BV-03/BV-08, P2): FF9
+19056aad2 adds10 canonical ovl_11969000 names. Catalog4,196 unique unit/symbol
+names,93 alias headers; all10 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-radial-ring-burst.json
+and target/ff9-names-radial-ring-burst/. All10 entire native object pairs
+identical, exact affected/scored namespace10, unchanged pinned strict-relocation
+baselines four exact/six partial,1,104/10,052 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all10 sources; current catalog/review/source/
+header/object bindings and14 isolated commit paths audit. Progress4,196/5,812
+canonical primary files named(72.2%),1,616 remaining; full-tree goal active.
+
+Full radial-grid renderer, four-phase ring burst, orbit/direction/history
+callbacks,14-segment ribbon builder/five-frame callback, history-or-radial emitter
+and three-phase pulse reviewed. Bounded main reread resolves initialtruncation;
+names describe own-unit consumers, no original ability/provider label asserted.
+Definitions/declarations/calls/callbackcasts map tostable native/runtimeidentities.
+
+Preserve unchecked cols division/17-entry rowbuffers, UVclamp beforecallback,
+two-page flags/packet chains/colorB partialcodebyte, ringindexreload and24wordpairs.
+Orbitcallback keepshalfwordoverflow/threeindependent sinecalls; helperintformals
+stillreceivepointers. Ribbonheaderbyte3 untouched,15records/124bytes andterminal
+draw retained. Emitter actualthree-argumenthost200 preserved despite stalecomment,
+count advancesbeforeallocation, fourindependent historyindices and INTstride
+randomtableoffset stay. Fourphase keepspins/barrier/wordunion/Xoffset512/jobframe
+resets/cumulativecounter/axispermutation/two sinecalls;pulse earlyterminalsample
+andthree-phase timing stay. No nativebaseline cleanup or matchingcreditadded.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
