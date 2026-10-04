@@ -6762,3 +6762,31 @@ prioritization and BV-06 provider proposals retained. No new implementation/
 private ownership/type/CFG walker, matching gain, linked-image/gameplay/workspace
 acceptance. Refresh source-bound evidence, pin historical tools/reports,
 preserve foreign work/index; full-tree naming goal active.
+
+Scheduled random particle emitter naming acceptance (BV-03/BV-08, P2):
+FF9 c498c84ac adds three canonical ovl_ffbd800 names. Catalog 4,686 unit/symbol
+names, 179 scoped alias headers. Three full own-unit bodies and g11/g13 headers
+reviewed and bound, zero deferrals; other units pending. Evidence:
+docs/function-names-scheduled-random-particle-emitter.json and Binviz
+target/ff9-names-scheduled-random-particle-emitter/. Three full native object
+pairs equal, exact affected/scored namespace three; unchanged pinnedstrict-reloc
+scores three exact, 1,224/1,224 code bytes, zero failures. Three installed WASM
+token comparisons agree; current source/header/catalog/object/review bindings
+and seven isolated committed paths audit.
+
+Names cover indexed/random-offset particle init callback, scheduled emitter
+and companion objects, signed-halfword host-value fade. Preserve three ordered
+signed-modulo random calls, unbounded global table index without controller
+reset, partial state vectors including uninitialized a24, nested emitter access
+and frame1/5/9 load order. Final emitter scale assigned after companion loads.
+Fade emits before subtraction, ordinary17 values128..0 thenendsat-8; no clamp.
+INT callback definition/declaration/hook agree; no inherited VOID conflict.
+
+Definitions/declarations/callback reference propagate; own-unit aliases preserve
+canonical linker/address/runtime identities. Original effect/provider/table
+meanings unresolved, no type/body/layout repair/provider admission. Maintained
+naming/farm/scorer/preprocessor/thin adapters reused; existing BV-03 reviewed
+deferral prioritization/BV-06 provider proposals retained. No new implementation/
+private ownership/type/CFG walker, matching gain, linked-image/gameplay/workspace
+acceptance. Refresh source-bound evidence, pin historical tools/reports,
+preserve foreign work/index; full-tree naming goal active.
