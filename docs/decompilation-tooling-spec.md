@@ -4039,3 +4039,34 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Five phase ring burst naming acceptance (BV-03/BV-08, P2): FF9
+bb576cd6c adds nine canonical ovl_1071e800 names. Catalog: 4,233 unique
+unit/symbol names and 97 alias headers; all nine complete primary bodies
+reviewed, no semantic deferrals in this unit. Other units remain pending.
+Evidence: docs/function-names-five-phase-ring-burst.json and
+target/ff9-names-five-phase-ring-burst/. Nine entire native object pairs
+are identical, with exact affected/scored namespace nine. Pinned original
+strict-relocation baselines unchanged: four exact, five partial,
+1,104/10,320 code bytes, zero failures. Installed WASM preprocessed tokens
+agree for all nine sources. Current catalog/source/header/object/review
+bindings and 13 isolated committed paths audit. Full-tree goal remains active.
+
+Complete radial grid, five-phase ring sequence, orbit/history/spark callbacks,
+host direction helper and ribbon builder/driver/emitter reviewed. Full standalone
+main reread covers initial truncated output. Preserve resource IDs 3/8/20,
+phase durations 50/10/14/8/50, cumulative tick, per-frame ring-index reset,
+the resource handle used as a sine argument, phase-three bitwise-OR scale,
+signed halving, independent trig/random calls and allocation-attempt counts.
+Retain two-formal/three-argument legacy direction prototype mismatch, partial
+records/padding/header byte, unchecked grid dimensions, UV clamping before
+callback, integer-stride history selections, pins/barriers and compiler flags.
+Definitions, declarations, direct callers and callback references use readable
+names; scoped identity aliases retain canonical compiler/linker identities.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin
+adapters reused; BV-08 namespace gate enforced. No additional shared tooling
+gap found. No private ownership/type/CFG walker, new matching credit, linked
+image, gameplay, provider or shared workspace acceptance. Historical reports
+and scorer remain pinned; refresh downstream evidence from current catalog.
+Foreign work and index preserved; full-tree goal remains active.
