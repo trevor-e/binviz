@@ -9435,3 +9435,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Derived key point binding live host vector track naming acceptance (BV-03/BV-08, P2):
+FF9 72742c0fd adds two canonical ovl_128b7800 names. Catalog
+4,898 unit/symbol names, 266 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-derived-key-point-binding-live-host-vector-track.json and Binviz
+target/ff9-names-derived-key-point-binding-live-host-vector-track/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 636/636 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor20: obj, THREEU16a4/pad/THREEU16a0C/tailalignment. Init savecontext,200(0,0,a4),2C4(16,2,local32byte s32 matrix),2B0(matrix,400,a0C),load1 at a4 inclNULL; no h22. Update captures type, nullableobj h30==-1 clears/rechecks then POINTER BINDS obj.p2C=(Vec3h*)state.a0C, not an XYZ copy. Return!(type<40). Vec3h is THREEU16, lifetime/provider extent unresolved; no78/release/new initializer.
+
+7830 descriptor20: object+THREEU16h4/h6/h8/pad+FOURU16vecc. Init savescontext,80(16,15,vecc),load3 there inclNULL, nullableh22=220(16,32). Update captures type BEFORE20C(16,&h4) EVERYupdate includingNULLobject/terminal; nullableobject h30==-1 clears/rechecks then copies REFRESHEDU16XYZ to h5C/E/60. Return>=40 AFTERprovider/tracking. No cached substitution, provider-suppressing nullguard, release/78 or extent repair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
