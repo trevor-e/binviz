@@ -12486,3 +12486,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual two phase sprite burst sequence naming acceptance (BV-03/BV-08, P2):
+FF9 72eb8ce2a adds 1 selected canonical ovl_12f82800 names. Catalog
+5,534 unit/symbol names, 337 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-two-phase-sprite-burst-sequence.json and Binviz
+target/ff9-names-effect-residual-two-phase-sprite-burst-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,764 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining12F82800 sprite burst controller full-read and named from observed two-phase lifecycle. Three full headers bound; keep unknown concrete effect/spell and original API slot declarations. No resource rendering, gameplay or provider admission claimed.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole24byte size/init/update handler and two phases read. Main handle transforms, seventeen-vector sprite passes with distinct sizes/fades, ten later sprites across X from-500 in100steps, staged ctxflag180 set/clear, resource17 frame feed, frame40 phase change and later finish slot78. Name sprite burst lifecycle only; no spell/ring geometry claim without resources. Preserve unused rotation writes and redundant resource lookups, pins18/20, compiler flags, narrowing and exact order.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
