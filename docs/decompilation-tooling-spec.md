@@ -6078,3 +6078,42 @@ unreviewed prioritization proposal retained. No new reusable implementation
 or private type/ownership/CFG walker. No original matching credit,linked image,
 gameplay or sharedworkspace acceptance. Refresh source-bound evidence;historical
 scorer/reports pinned;foreign work/index preserved;full-tree naming goal active.
+
+Spinning ring flash grid naming acceptance (BV-03/BV-08, P2): FF9
+d3c8ce03b adds five canonical ovl_1074f000 behavioral names. Catalog4,602
+unique unit/symbol names,158 scoped alias headers. All five complete own-unit
+bodies reviewed;zero semantic deferrals. Other units pending. Evidence:
+docs/function-names-spinning-ring-flash-grid.json and Binviz
+target/ff9-names-spinning-ring-flash-grid/. Five complete native object pairs
+identical;exact affected/scored namespace five;pinned strict-relocation scores
+unchanged two exact/three partial,2,024/4,972 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish callback-deformed radial sprite grid,parent-gated ring callback,
+spinning-ring particle controller,radius-dependent grid orbit callback and
+three-phase projected flash/grid sequence. Actual own-unit callback/direct
+references reviewed independently. Preserve UV clamp/page selection BEFORE
+geometry callback,previous shared orbit factor BEFORE update,uninitialized
+shared factor/counter,partial packed colour/vector/pad stores,manualOT24-bit
+pointer/topbyte/length chains,file-scoperegisterpins,do/typeof/compiler tricks,
+unconditional colsdivision,unchecked17buffer dimensions,eleven allocation
+ATTEMPTS including failures,parentflag/scheduler transitions and terminal
+drawing/count ordering. No donor comments treated as game/provider identity.
+No body/type/layout/ABI repair.
+
+Existing BV-06 declaration/callback frontier retained: orbit callback definition
+VOID while builder acceptsINTK&R callback and ignores its result;parent ring
+callback definitionINT while descriptor declaresVOIDK&R and casts its address.
+Keep these distinct from the preceding1367C000 meaningful used-result mismatch.
+Naming/native/preprocessor identity grants no callback/provider/scheduler ABI
+admission or global initialization proof. Readable definitions,declarations,
+directcalls,descriptor callback and grid callback argument propagate;own-unit
+aliases retain canonical linker/address/runtime identities.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. Existing BV-03 reviewed-deferral versus
+unreviewed prioritization proposal retained. No new reusable implementation
+or private type/ownership/CFG walker. No original matching credit,linked image,
+gameplay or sharedworkspace acceptance. Refresh source-bound evidence;historical
+scorer/reports pinned;foreign work/index preserved;full-tree naming goal active.
