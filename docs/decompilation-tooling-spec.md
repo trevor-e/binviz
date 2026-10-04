@@ -10937,3 +10937,69 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot akao timer ramp preset register helpers naming acceptance (BV-03/BV-08, P2):
+FF9 93c32862f adds twenty one selected canonical boot names. Catalog
+5,193 unit/symbol names, 305 scoped alias headers. Twenty one selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-akao-timer-ramp-preset-register-helpers.json and Binviz
+target/ff9-names-boot-akao-timer-ramp-preset-register-helpers/. 33 full native object pairs equal;
+exact affected/scored namespace 33. Pinned strict-relocation scores unchanged:
+17 exact/16 partial, 2,784/9,332 code bytes, zero failures. 33
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 37 isolated committed paths audit.
+
+All selected complete own bodies directly read, including native and WASM register branches and timer callback/coretick/songtick. Existing missing/extra arguments, stalecomments/layouts and differingcountfieldstores retained. No behavioral fixes. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+GCC2.7.2.3: SIGNEDn>0 only, captureshift67A10,bufWORD0=40001010,sharedbufpointer67A50,zero67A4C/count67A48=n,bufWORD1=(10000<<shift)-1010,returnn;otherwise0NOWRITES. Bufferdescriptor exactwords, no n*4/extent/shiftchecks or signedrewrite.
+
+GCC2.7.2.3 ONEINTarg forwards irq_set_callback(9,a0) andreturnsINTresult. Callback value remainsINT/rawprovider contract, not guessed SDK returnpointer/type.
+
+Unsignedlowbyte<<8 ->S32value; mode=(packed>>8)&3:0unchanged,1=10000-value,2=-value,3=value-10000. Fraction/signquadrants numericidentity, no rounding/clamp or signedshift rewrite.
+
+Samefourquadrants as57364, thenWHOLEpacked>>10 mode0 SIGNEDdivide4,mode1divide2,mode2value*3/4,elseunchanged. Truncatestowardzero inclnegatives, UNMASKEDscalemode/highbits, no SAR/bitfield normalization.
+
+Bit100selectsU32FFFF0000 else10000. No otherbits inspected/shift/narrow; fixedsignedunitreturnedU32.
+
+Bit100 selectsSIGNED-10000/+10000; WHOLEpacked>>9 modes0/1/2 signeddivide4/divide2/multiply3divide4 elseunchanged. Signbit/scale-highbits separated, no masking/reassociation.
+
+CastU32index toU8 BEFORE signedbytewavetableaccess, signextendS32thenconvertU32<<8 returnedS32. No indexvalidation/unsignedsampleconversion.
+
+Signedbytewavetable[packed&255]*256 thenWHOLEpacked>>9 mode0/1/2 signeddivide4/divide2/multiply3divide4 elseunchanged;bit8ignored, same truncationtowardzero. No signedmultiply->unsignedshift substitution.
+
+FullnativeANDWASM branches read: voiceaddress(unsignedvoice<<4)+1F801C08 inWASM, nativeSIGNEDvoice<<4. v=(U32a2>>2)<<15 ORa1<<8 UNMASKED, preserveoldLOWBYTEonly. WASMphysicaladdress&1FFFFFFF range1F801000..1F802000 usesMMIOread16&FF/write16,elsevolatilebyte-read/halfword-store. Nativevolatilebyte-read thenvolatilehalfword-store. Preserve MMIOrouting, overflow/truncation and allproviderdeclarations/compilerflags; descriptiveADS R1upperfields not incorrectcommentfieldnames.
+
+Bothbranches:addressvoice*16+1F801C0A, oldhalfword&3F OR((a2>>1)<<14)|(a1<<6), inputUNMASKED. WASMphysicalrangeusesexistingMMIO16adapters elsevolatile16, nativevolatile16read/write. Retain compiler2.7.2.3 fill-delay-slots and rawargs/signatures/guards.
+
+Bothbranches:voice*16+1F801C0A,oldhalfword&FFC0 OR((a2>>2)<<5)|a1, UNMASKEDinputs canspillupperbits. WASMrouting/volatilefallback andnativevolatileread/write preserved. Name merge notboundedbitassignment/SDKrelease-rate claim.
+
+Fullkeyoff: allowed=~(staticw0|w10|83174); optionalsecondpendingWORD18 splitbyVOLATILEw8, maskedcollector thenpostcallfreshw8reads ANDpending removal; currentplayersame. Nonzeroresiduals collectthenpending0. ORstaticWC,lastclearWC ALWAYS thenconditionalspu_key_off(keyoff). No currentpointer caching/orderdedup/maskownership policy.
+
+Flag20 ANDunsigned(U16presetindex-32)<96 thenWORD120/124+=20000 BEFOREU16presetindex+=48,returncurrentindex. Previouspresetselector sources identifyfield9A asPRESETnotnote pitch; leave obsoletecomments/typesmembernames but behavioralnameusespresetwords. No inverse-range assumptions/overflow clamps.
+
+Flag20 ANDSAMEunsigned(index-32)<96 thenWORD120/124-=20000 BEFOREU16index-=48,returncurrentindex. Subtraction canU16wrap for32..47; no inverseupperrange or signedcomparisons.
+
+Fullsecondplayergate andregisterpins7/2: capturepaWORD8 BEFOREpaWC/pbWC; v=~(pbWC&((pbW8&pbWC)|~(paW8&paWC)))&paWC&FFFFFF. Eachsetvoicek scansALL32secondrecords, matchingvoice->24 andgotbit; clearvbit/incrementk. StaticWC|got&~(staticw0|83174) afterscan. No providerkeyoff/ownertable clear/guards or boolean formula cleanup.
+
+U32record[1],mask1,count0; ifbits!=0 loopcountselectedbit, mask<<1; ifmaskwrap0break BEFOREbits>=maskcomparison. Includesbit31; no builtinpopcount/earlyhighest-bit or fieldsignedness changes.
+
+Exact32records: fori0..31 ifmask&(1<<i), U32voice<24 OR1<<voice;ch++EVERYiteration;returnvoices. PreserveSIGNEDliteral1 shifts/aliasing/bounds, no maskdrivenloop rewrite.
+
+TWOargs p/unusedINT withasmvolatileoperand toretainunused. SharedU32countnonzero predecrement; onexpiry capturespWORD4,clearpH6A/WORD4/WORD10/WORD14 thenWORD18=oldrunmask. ElseU32pos+step; ifHIGH16changes callmarkdirty(p) ONEarg despiteactualTWOarg;THENpos=new. OriginalS5d628pads/layout/counttypes andmissingargfrontier preserved.
+
+Full187linecoretick: wrappingframecounter&FF; SIGNEDhalfwordsharedcount80A2CdecrementthenU32control+=step andextraargpairedMMIOcall matchingwrapper. Activestream/ramp48 decrements, highbytecomparisonnewsum versusold;mono usesOLDvolume*gain vsstereoNEWsum; storesmaster831A8=sum&FFFF WITHOUTupdatinggWORD40. Firstsignedcontrolcount96Edecrement/addstep; second96C/highbytechangesmarkEXACT32channelspitchdirty10. Firstandsecond songprimary50/count58 thensecondary5C/count64; retainemptyMEMORYasmbarriers/sharedpointerreloads. CriticalsecondplayersecondarytestsCOUNT64butdecrementsCOUNT58 (existingbody), no correction. Activeauxmaskbit100/Voicep+70, three countedramps withdistinctsignedness anddirty3/10; do-whilemaskzero-bitfrontier/rawlayout/pinned wrappers allunchanged. No genericrampdedup/clamp/ownership or timefrequencyclaim.
+
+Complete113linesongtick: tempoU16+22 adjustedU8tb (<128 addtempo*tb>>7 elsemultiply>>8), U32acc+28; overflowHIGH16or831C4bit4 invokesstepwithacc&FFFF. EACHouterrepeat resetscc=chans/bit1/c=cc+96, currentrunmask[1]; do-whileexecutesonceevenmask0, selectedU16note/gatetimers--, notezero interpreter(cc,bit) elsegatezero pending18|bit; stepchannel(cc,bit,0) extraTHIRDarg relativeviews retained. U16sharedcount68 andSIGNEDcount66 decrementthenWORD20/48steps; dirty80ONLYflag0. Beat74/76/72/70/78 counters wrapU16; boundaryflag0 decrements809B8ifnonzero/gotonext,flag!=0gotoout;flagbreak controlsouterrepeat809B8. ReturnCURRENTglobalrunword;pins23/16 andallfreshglobals/matchingwrappers preserved.
+
+Full152linecallback: VOLATILEsp10sampletimerF2000002; updateprev/currentVSync(-1), unsignedd=cur-prev; d1..8 calculates t=d*4,n=t-progress+1 onlyifprogress<t, progress%=t; otherwisen1. do-while decrementsn/incrementsprogress/U16tick, pendingkeyoff gateANDsongpromotionexactnestedgotos (absencegate preservesoldpaths); keyoffhelperEXTRAarg andmixerEXTRAarg kept. Ifcurrentrunmask tickfirstflag0; secondrunmask swapsCURRENTglobalplayerptr, ticksecondflag1,restorefixed7F858; sharedfadeflags100 onlyeveryfourth andfreshsecondpointeraftercall. Auxmask tempoacc/w5HIGH16,forcebit4; scanbit100/stride134 onlyifnot831C4bit2 ORrecordflag02000000;incrementWORD88,timers/interpreter/pendingmask/clearupdatebit/stepchannel(p,bit,1) exactorder. Core rampsEVERYfourthtick. TimerdeltaSIGNED<=0 +=44E8, fourdurationhistory stores unusual3/2/0 thenSUM then1 retained. No rate-normalization/VSync scheduling/IRQ/providercontract or callbackreturn fixes.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
