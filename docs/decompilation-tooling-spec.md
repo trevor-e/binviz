@@ -4607,3 +4607,33 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Bone ribbon ring burst naming acceptance (BV-03/BV-08, P2): FF9
+5c13f17f3 adds eight canonical ovl_11bd3000 names. Catalog4,287 unique
+unit/symbol names,104 alias headers. All eight complete own-unit primary bodies
+reviewed; full36KB main read in contiguous1..290/291..590/591..end chunks.
+No semantic deferrals in this unit. Evidence:
+docs/function-names-bone-ribbon-ring-burst.json and
+target/ff9-names-bone-ribbon-ring-burst/. Eight entire native object pairs
+identical,exact affected/scored namespace eight,unchanged pinned strict-relocation
+baselines six exact/two partial,2,380/17,048 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all eight sources. Current catalog/source/
+header/object/review bindings and12 isolated commit paths audit. Other units pending.
+
+Bounded roles cover12/4/56-segment ribbon builders,random polyline-edge strip,
+three-row textured ring band,word-position rotation and six-phase bone-driven
+ribbon/ring burst. Rotation role follows actual main consumers without claiming
+hostF8 algorithm/provider. Preserve phase thresholds35/48/28/2/14/77,ten handles,
+partial union/padding/packet bytes,signed remainders/random/trig order,legacy
+INT/pointer declarations,resource IDs and terminal-before-common-tail behavior.
+Ring packet reservation1944bytes,twoGT4 endpoints/46FT4s,NCLIPzero rejection,
+depth sampling before fourth projection and linking before fourth SXY store
+remain. Phase4 consumes randomY then overwrites it; cumulative frame is retained.
+Definitions/declarations/callers use names with scoped canonical identity aliases.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
