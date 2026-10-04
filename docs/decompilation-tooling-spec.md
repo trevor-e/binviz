@@ -5831,3 +5831,33 @@ No new reusable tooling logic or private type/ownership/CFG walker introduced.
 No body/type/layout/ABI repair or new original matching credit,linked image,
 gameplay or sharedworkspace acceptance. Refresh source-bound evidence;
 historical scorer/reports pinned; foreign work/index preserved;full-tree goal active.
+
+Variable trail scene naming acceptance (BV-03/BV-08, P2):
+FF9 8af3276d1 adds five canonical ovl_12b35800 behavioral names. Catalog4,567
+unique unit/symbol names,151 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-variable-trail-scene.json and Binviz
+target/ff9-names-variable-trail-scene/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged three exact/two partial,1,444/7,260 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish variable-length curved strips,reference-segment wrapper,
+17/5-vertex trail callback,six-slot emitter and four-phase transformed-point/
+sprite sequence. Preserve source/pool WORD offsets (no triple-record scaling),
+signed divisions,unchecked n-1,preallocation count increment,success-only
+randoms,global pause/stop0/2/1,callback phase gates and drawing before completion.
+Main phases66/100/18/14 keep source point overwrites,address-of-object-pointer
+release,uninitialized identical-arm test,scratch/pad/color partial writes,
+camera publication,narrowing,register pins and final return before counter.
+Readable definitions,declarations,calls and callback references propagate;
+own-unit aliases retain canonical linker/address/runtime identities. Original
+game effect and selected providers remain unresolved.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. No new reusable tooling logic or private
+type/ownership/CFG walker introduced. No body/type/layout/ABI repair or new
+original matching credit,linked image,gameplay or sharedworkspace acceptance.
+Refresh downstream source-bound evidence; historical scorer/reports stay
+pinned. Foreign work/index preserved; full-tree naming goal active.
