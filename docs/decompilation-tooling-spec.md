@@ -1809,3 +1809,44 @@ reconstruction boundaries. This extends existing semantic-evidence backlog;
 no private walker or tooling rewrite. Legacy farm/scorer checks remain
 compatibility fixtures, not shared workspace acceptance, which requires frozen
 namespaces/compiler inputs and actual outputs. Refresh source-bound evidence.
+
+Battle unit lifecycle naming acceptance (BV-03/BV-08, P2): FF9 adds40
+reviewed C names in canonical ovl_03e000, commit04c6031d7. Catalog2663;
+35 alias headers. All146 primary sources in this unit reviewed,145 named;
+c19f8 deferred because its dispatcher case bodies are stand-ins.
+Evidence: docs/function-names-battle-unit-lifecycle.json and compatibility
+scratch binviz/target/ff9-names-battle-unit-lifecycle/.
+
+All51 affected complete native objects agree and pinned strict-relocation
+scores are unchanged:39 exact,12 existing partials. All51 installed WASM
+preprocessing comparisons agree. Current catalog/source/header hashes and55
+owned committed paths checked,17 semantic inputs and12 bounded original
+jump-pointer/color/code slices verified. No new original matching credit,
+linked image, compiled module, gameplay or shared workspace acceptance.
+
+Names cover enemy/model initialization, equipment element affinities, drawing,
+hit/death animation, model-part visibility, periodic HP/MP effects, tick speed,
+unit-field/battle-state script getters/setters, packet color/status bob,
+grayscale CLUT preparation, music transitions, hit/death/positional sound,
+ground-marker dimensions and action-effect script selection/context.
+
+Actual ad90c/AKAO/e976c consumers contradict generic effect labels for sound
+helpers and establish stereo pan. d62a0 starts an effect script, so c2598/c28f4
+are not merely displayed-message helpers. Ground-marker matrix consumers
+ac37c/ad4e4 establish c23c8 marker dimensions rather than geometry scale.
+Color walkers distinguish packet RGB mutation from CLUT grayscale uploads.
+Old setter field ids, visual death/petrify test and CLUT row-offset prose are
+incorrect; preserve observed operations and types rather than adopting them.
+
+Keep all original expressions, masks, signed shifts, narrow stores, fixed
+strides, compiler flags, allocation pins/barriers/gotos and ABI mismatches.
+In particular bfaf4 retains its no-argument bff20 declaration/call despite the
+callee requiring a unit; naming acceptance does not repair ABI. Retain pending
+reaction/death fallthrough, frame-byte wrap, ignored command failures, unchecked
+modulo/array/pointer paths, target count average and stale partner pointer.
+Interior split heads are within complete primary functions, not extra names.
+Unit namespaces stay distinct across file11 pieces. Shared naming semantic
+evidence backlog now includes conflicts between old labels, sound/effect/marker
+consumers and explicit incomplete-dispatch deferrals. Reuse existing tooling;
+legacy farm/scorer fixtures do not replace configured frozen compiler/output
+workspace acceptance. Refresh source-bound downstream evidence after renames.
