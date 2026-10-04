@@ -14808,3 +14808,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual resource frame context fill copy naming acceptance (BV-03/BV-08, P2):
+FF9 c943e3703 adds 1 selected canonical ovl_13760000 names. Catalog
+5,620 unit/symbol names, 423 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-resource-frame-context-fill-copy.json and Binviz
+target/ff9-names-effect-residual-resource-frame-context-fill-copy/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 380/380 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete13760000 controller independently reviewed and named for resource frame submissions with one context-fill event. Full g20/lifecycle/local declarations bound; source copies do not replace complete review or native proof.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole10hex-byte lifecycle independently read including complete ownextendedcontext/state and historicaltransplantcomment. Init200anchor/level128;everyupdatectxw28=128and118(resource2,anchor,frame,1,-1),3resource1h22via220(0,128),7slot100(p20+4,1,level,level,level),finish50. Preserve setflagwithoutlocalclear, submitbeforeevents/end, untouchedobjuntil3 and own numericarguments. No material/lighting/spell interpretation of fill parameter or transplant-derived provider claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
