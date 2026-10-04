@@ -4666,3 +4666,32 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Sprite debris and spiral trail naming acceptance (BV-03/BV-08, P2): FF9
+035fe56f5 adds seven canonical ovl_13702800 names. Catalog4,302 unique
+unit/symbol names,106 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-debris-spiral-trails.json and
+target/ff9-names-debris-spiral-trails/. Seven entire native object pairs identical;
+exact affected/scored namespace seven,unchanged pinned strict-relocation baselines
+four exact/three partial,2,320/11,088 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all seven sources. Current catalog/source/header/
+object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Bounded roles cover four phase sprite/debris sequence,random horizontal radial
+hook,debris callback,variable length curve strip builder,polyline vertex wrapper
+and two variant spiral trail callback/emitter. Main registers both callback and
+hook and publishes the trail anchors/radius/debris threshold. Preserve terminal
+returns before common tail,shared scratch/register pins,partial vectors,signed
+rand remainder,byte narrowing and counter/alloc order. Trail phase1 actually
+advances frame*0x300 despite old0xC00 comment; strip flag128 brackets submission
+after geometry generation; vertex wrapper reverses endpoints. Variant1 radius
+becomes negative at frame29. All operation order/types/layouts/data/comments
+unchanged; names scoped to own unit and retain linker/runtime identities.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
