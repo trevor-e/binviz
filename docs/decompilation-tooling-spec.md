@@ -6219,3 +6219,38 @@ reviewed-deferral versus unreviewed prioritization proposal and BV-06 provider
 frontier retained. No new reusable implementation or private type/ownership/CFG
 walker. Refresh source-bound evidence; historical scorer/reports pinned; foreign
 work/index preserved; full-tree naming goal active.
+
+Paired pulse particles naming acceptance (BV-03/BV-08, P2): FF9
+81ba203c5 adds four canonical ovl_114b8000 behavioral names. Catalog 4,619
+unique unit/symbol names, 162 scoped alias headers. All four complete own-unit
+bodies reviewed, zero semantic deferrals; other units pending. Evidence:
+docs/function-names-paired-pulse-particles.json and Binviz
+target/ff9-names-paired-pulse-particles/. Four whole native object pairs
+identical; exact affected/scored namespace four; pinned strict-relocation scores
+unchanged, two exact/two partial, 600/3,876 code bytes, zero failures. Four
+installed WASM preprocessed token comparisons agree. Current source/header/
+catalog/object/review bindings and eight isolated committed paths audit.
+
+Names establish callback-deformed radial sprite grid, table-relative particle
+pose, spinning paired-handle pulse callback and its particle/sprite sequence.
+Own-unit code/callers directly reviewed, independent of transplanted comments.
+Grid UV clamps/page choice precede callback geometry changes; retain 17-entry
+buffers, unchecked dimension division, packed partial fields, manual 24-bit
+ordering-table links and register/compiler tricks. Pulse actually uses scale
+times THREE times cos-like lookup plus scale/2, not the old amp-based formula;
+mode1 zeroes amp but leaves scale/position unchanged. Sequence uses jobtype for
+timeline and a separate call counter, success-only random draws, paired shared
+handles and three sprite draws before terminal return. Descriptor six is not
+claimed as the total spawn count; normal types0..30 have eleven attempts.
+
+Retain BV-06 declaration frontiers: table pose wrapper defines INT arguments
+but receives pointers through K&R; INT callback result definition is exposed via
+VOID K&R declaration and void* descriptor. No signature repair or selected-host
+provider/linked ABI admission. Readable definitions/declarations/calls/callback
+reference propagate; scoped aliases retain linker/address/runtime identities.
+Existing naming/farm/scorer/preprocessor and thin adapters reused. BV-03
+reviewed-deferral versus unreviewed prioritization proposal retained; no new
+reusable implementation or private type/ownership/CFG walker. No matching gain,
+linked-image, gameplay or sharedworkspace acceptance. Refresh source-bound
+evidence; historical tools/reports pinned, foreign work/index preserved;
+full-tree naming goal active.
