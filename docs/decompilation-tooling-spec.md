@@ -6631,3 +6631,39 @@ BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained;
 no new implementation/private ownership/type/CFG walker, matching gain,
 linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Five trail target swirl naming acceptance (BV-03/BV-08, P2): FF9
+0f7a9572d adds four canonical ovl_106bd800 behavioral names. Catalog 4,671
+unit/symbol names, 175 scoped alias headers. All four complete own-unit bodies
+and g15/g11/g13 headers reviewed and bound, zero deferrals; other units pending.
+Evidence: docs/function-names-five-trail-target-swirl.json and Binviz
+target/ff9-names-five-trail-target-swirl/. Four complete native object pairs
+identical, exact affected/scored namespace four; unchanged pinned strict-reloc
+scores three exact/one partial, 3,224/7,428 code bytes, zero failures. Four
+installed WASM token comparisons agree; current catalog/source/header/object/
+review bindings and eight isolated committed paths audit.
+
+Names cover eased blend and decreasing host-pair weight wrappers, five-trail
+controller with delayed target motion, and64FT4/32G4 swirl/ring renderer.
+Preserve unconditional quadratic division even linear/unknown mode, unclamped
+weights, sixteen-word clear despite fourteen-word declared array, X/Z/Y initial
+position order, dynamic target count without eight-slot clamp and crosscounter
+radius calls. Return-target final tick rereads current position; eleven trail
+samples omit endpoint atj11, spawn does not draw same branch. Renderer reserves
+3712 bytes, retains asymmetric12/16-bit geometry shifts, no clipping/depthsort,
+and final host-FC link. Terminal70 follows all scheduled updates, no host78.
+
+BV-06/P1 meaningful return frontier: 78E4 definition VOID discards host-B4
+result, while actual INT caller consumes it in radii, scales and target offsets.
+Name records applied weight; no invented pure interpolation/return repair.
+77A8 INT argument definition versus pointer caller and renderer six/eight-byte
+vector declarations preserve separate representation/readextent frontiers.
+Native equality grants no provider/portable admission. Definitions/declarations/
+calls propagate; aliases preserve canonical linker/address/runtime identities.
+Original effect/resources/providers unresolved, no body/type repair.
+
+Maintained naming/farm/scorer/preprocessor and thin adapters reused; existing
+BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained.
+No new implementation/private ownership/type/CFG walker, matching gain,
+linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical reports/tools, preserve foreign work/index; full-tree goal active.
