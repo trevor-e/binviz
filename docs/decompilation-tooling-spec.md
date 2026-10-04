@@ -5560,3 +5560,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Jittered ribbon particle naming acceptance (BV-03/BV-08, P2):
+FF9 d1ffc4688 adds five canonical ovl_1019a800 names. Catalog4,517 unique unit/symbol
+names,141 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-jittered-ribbon-particles.json and
+target/ff9-names-jittered-ribbon-particles/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+four exact/one partial,2,416/3,600 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established long/short ribbon builders,polyline branch,two-phase callback and
+24-attempt jittered emitter. Preserve provider arity,pins,signed modes,
+failedallocation/random ordering,partial initialization,pads,same shortbuffer
+reuse,prefix mark,word-offset pool index and terminal ordering. Caller/callback
+references renamed; own-unit aliases retain canonical native/runtime identities.
+Exact game effect/provider identities unresolved. No body/type/layout/ABI claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
