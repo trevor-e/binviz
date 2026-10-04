@@ -13053,3 +13053,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual offset direction pair sequence naming acceptance (BV-03/BV-08, P2):
+FF9 dd3b9dc57 adds 1 selected canonical ovl_10c80000 names. Catalog
+5,555 unit/symbol names, 358 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-offset-direction-pair-sequence.json and Binviz
+target/ff9-names-effect-residual-offset-direction-pair-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 1,132/1,132 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining10C80000 controller independently full-read and named by offset-loaded direction pair. Full g18/g16/lifecycle headers bound. Unused jitter calculations and all original numeric anchor/API identities retained; no visual-resource claim.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole40byte modes and all frame/resource/drop arms read. Six random calls populate unused jitter vectors atinit, two hostpositions; modelpair resources7/8created10at trig-offset point derivedfrommatrixandindexedanchors, shared directionfields refreshedfromcachedvector until dropminus1. Auxiliary resources1at4/2at18, completion45. Preserve GCC2.8.1, unused random writes/calls and original objectclears, directionYminus180, signedangle casts and all slotordering. No beam/projectile/spell shape inference.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
