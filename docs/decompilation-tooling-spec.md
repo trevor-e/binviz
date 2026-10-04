@@ -8163,3 +8163,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four phase pillar pixel grid spiral handles naming acceptance (BV-03/BV-08, P2):
+FF9 f63144203 adds two canonical ovl_f987800 names. Catalog
+4,820 unit/symbol names, 225 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-phase-pillar-pixel-grid-spiral-handles.json and Binviz
+target/ff9-names-four-phase-pillar-pixel-grid-spiral-handles/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+0 exact/2 partial, 0/6,044 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 fifteenargVOID grid: skip0 increments W/H and reserves all36bytecells BEFOREpositivechecks; NULLrotationinputfallback8zero bytes,f14/optionaluniformf20/padf27C,centerdepthreused. ZEROZ/XYloads,RTPT thenMAC0WITHOUTNCLIP gateANYnonzero/fourthRTPS. Interior5-5-5RGB afterTWOc11<<2,byte3partial/blackedges. EACHrow resets pk SAMEpool ratherthanadvancing, preserve arena frontier; f234length8eachlinkedcell/length1end. Unconditional a6/a5+remainder,f4rect tail,skip keepsincomingdimsW-1/H-1. No GTErestore/providerdirectionguess.
+
+7CA0 descriptor56/init TWO hostvectors via200/1FC,table6,FOUR338handles22/23/24/25 plusTWO58objects8/9. Resource12atsecondvectornullabletable/h12=18/hc36/h22=32. Phase0/counter0/twotrackedNULL; no hardcodedYzero or actoroffset as inotherfourphase variant. TableD801E8EF8 declaredONEINT but70count6, providerreadextentunknown. Createdw28 unusedlater; pads/partialvectors remain.
+
+Fourphases ordinary25/9/47/17updates. Phase0 t4096/24 ring11context512,gridfadeprogress/3 andscale2730 (not6144orcommon2/3);>=24transition1/load10nullable256 AFTERdraw. Phase1 redflash,exact4loads18/17/16atfirstvector,gridfadeSIN(t128),scale(t512)/3+1365;ring11 repeatSIN;>=8transition2 AFTERwork. Scope namesdescribephasebehaviorwithoutclaimingwater/spellidentity.
+
+Phase2 first4flash/first32randomred SIGNEDremainder%50, before29sprite15Y-1024 cos*3/2+4096/gridscaleprogress/2+2048. Sprite11 allupdates exactSIN/2*2+8192 truncateorder, repeatedSINcalls. Modelw24 firstcosXYZwriteslateroverwritten XZcos/3+384,Ysin*3/2+4096; THREE separateSINtints. Events2resource14/14resource19/3resource21and20trackednullable256; endedh30clearselsewrites1024/0/0 toPOSITION5C/5E/60, notrotation repair.
+
+Phase2first36updates 18poses reuseFOURadjacentINThandles (&w14)[i&3], not18createdobjects. Negate-firstshift -t<<7/-t411,base700/oscillation170, verticalscale2496+(progress>>5),height2400COSfirst6else2400-angle. Trig/B4oscillation/interpolation literalorder and signed narrows retained. MaxTHREEsprite13randomoffsetsparks, RANDOMall18iterations evenwhenlimitreached. >=46transition3 AFTERwork.
+
+Common gridonlyfade!=0,rotation1024/0/t256/pad1,fifteenargs page279/U0/V48/columns2/counter&7/step256/input16x16/scaleLAC DIRECT (notcommon2/3)/colorfade/fl1/pixelbuffer. Builder17x17reservation10404/tail16x16. Phase2from29fade0;phase3terminal16 calls78return1 BEFOREcounter. Otherwisecounter++. Preserve pins20/16,memoryword arithmetic/partialpads/APIarities and providerownershipfrontiers.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
