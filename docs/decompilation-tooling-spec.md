@@ -8299,3 +8299,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Five phase saved matrix fade resource variant naming acceptance (BV-03/BV-08, P2):
+FF9 133c1d8b9 adds two canonical ovl_12b92000 names. Catalog
+4,827 unit/symbol names, 229 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-five-phase-saved-matrix-fade-resource-variant.json and Binviz
+target/ff9-names-five-phase-saved-matrix-fade-resource-variant/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 380/4,828 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7718 event1 initializes ONLYh0=0. Otherwise angle=(frame<<7)>>2; subtract ((4096-sin(angle))*globalStrength)>>12 ONLYfrom positionX, signed widened Y/Z unchanged. Uniform scale((4224-cos(angle))*particleScale)>>12,60 usingvec4byteview andsharedhandle78. THREEindependentcosine evaluations tint(cos>>5)-128. Terminal32 AFTERpose/tint. Uninitialized fourthINTwords, vec declared4bytes versus external20byte record andproviderreadextent retained.
+
+7894 descriptor188/16particles/20record/callback. Initphase/count0/contextsaved/1CC/tablecount7; actual six338resources1(flags0),2(flags1),9,3,6,4. TWOwordglobalTHREEhalfwordcopy readsadjacenthalfword; rotation34XYZ0,scale4096,INTposwidened,hostpoint2THREElanes,rotation5C0/1024/0. Target/globalstrength/savedmatrix7C initiallyunspecified,padsuntouched.
+
+Phase0 ordinary33updates: pose/tint1,11Cresource16,hostpoint2X-=46 then >=32transitionandDC-2408target54 widened48. Phase1 ordinary33: poses2/9/1, tints2/9,sineXhostpointmotion,strength1024,everythirdframe184attempt via literal divisiongate. Success rotationhc/he1024/h10=0,targetXYZ thenh2scale4096; preserves ownstoreorder. 128resource5 underflag512,sizeframe64 andframe128weight;11Cresource16cosineparameter thenopaque4096.
+
+Phase2 ordinary25updates: t=frame4096/24,poses2/9/1 plus3/6 at target withXZ(4096-cos(t>>2))/3+245/Y2048; strength(t>>1)+1024. Everythirdframe particle scale4096 with own reordered hc/he/h10 andXYZstores. Exact1 chainedcopies target54 intoh18firstandh10second, thenh18X-=3072; resource11nullableobject rawpointer+2C=&h18,h22=128. Signeds8SB stores0x84 narrowing to-124 while passingbyteaddress to248; no unsignedview conversion. Overlaypartialcolor/rotpad scales4128/4128/4096;128resource5size(t>>1)+2048/sine,11Cresource16.
+
+Phase3 ordinary25: poses/tints2/9/1 plus3/6XZ((4096-cos(t>>2))*245)>>12/Y2048,strength(t>>2)+3072. EveryfourthframeAND<24 emits scale4096-t, ownstoreorderh10/hc/he/Z/Y/X/scale. Exact22 captures EIGHTctxrotwords7C; skippedframeleavesstaleoruninitializedmatrix. Overlay132signedbyteview/11Cresource16. Transition24AFTERwork,restorehostpoint3fromv8 withY-512.
+
+Phase4 ordinary21: EIGHTcurrentctxrotwordssaved9C,writecaptured7C intoctxrotmemory,pose1/2681/tint((4096-frame4096/20)>>5)-128,restorecurrent9C BEFOREoverlay/11Cresource16flag1. Ownstoreorder scaleZbeforeotheroverlayfieldsretained. No explicitGTEloadorbackfill. Terminal20 TWOarg180(pool,704)/78/return1 BEFOREtail. All nonterminalincludingunknownphases TWO240count4/10000-count4,134resource7 (distinctfrom13731000resource3),count++. Externalpool16doesnotimpose inventedcap; partialscratch/readextents/arithmetic unchanged. Originaleffectandprovider meanings unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
