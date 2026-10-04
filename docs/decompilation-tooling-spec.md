@@ -2426,3 +2426,42 @@ identities are configured and independently verified. No compiled portable
 module,linked image,gameplay,selected-provider or shared workspace acceptance
 claim. Refresh downstream source-bound evidence using the current catalog,
 retain historical scorer and preserve foreign work/index/checkpoint sections.
+
+World scene/camera/sound naming acceptance (BV-03/BV-08, P2): FF9
+9775afbaa adds72 canonical ovl_08d800 behavioral names;catalog3522 unique
+unit/symbol names,52 alias headers. Review81/109 whole primary bodies in this
+unit:72 named,9 documented deferrals,28 unreviewed. Other units remain pending.
+Evidence: docs/function-names-world-scene-camera-sound.json and Binviz
+target/ff9-names-world-scene-camera-sound/. All83 affected complete native
+object pairs identical;exact manifest/scoring namespace83;unchanged pinned
+strict-relocation scores61exact/22partial,15564/41848 code bytes,zero failures.
+All83 installed WASM preprocessed token comparisons agree. Current catalog,
+source/header/object and81 reviewed source bindings audit;87 isolated committed
+paths agree. No new original matching credit or whole-tree completion claim.
+
+Actual producers/consumers correct misleading comments: AA15C creates model
+objects despite a per-frame callback comment;AE280/AE4C8 produce camera
+projection/orbit parameters rather than backdrop lighting;B01F0 eases actor
+y/terrain offset rather than list-row scroll. 8D78/9A44/9B54 stage and restore
+sound-bank data through VRAM, without guessed portrait asset names. Names cover
+scene lifecycle and resource loading, model/animation lookup and flat grid
+effect packets,music/sound/stream commands and bank chunks,frame presentation,
+exit/pause transitions,camera target/eye/follow/look-at/parameter blending,
+actor/palette/terrain updates and analog/digital axis readers.
+
+Preserve source signatures/callback casts and argument mismatches,missing lookup
+outputs,linked-id=-1 search,AA39C first-row re-test bug,third grid quad's three
+depth corners,available-sound ramps returning-1 on success,unsigned song timer,
+asymmetrical camera easing,terrain/exclusion clamps,packed signed offsets,
+first-record music selection,repeated actor queries and digital-button precedence.
+Unknown hooks/camera flag meanings stay explicit deferrals. External canonical
+bodies/equal addresses do not establish selected runtime providers.
+
+Maintained naming/farm/scoring/preprocessor interfaces reused;thin batch/audit
+adapter only,no private ownership/type/CFG walker or tooling rewrite added.
+Previously flagged BV-08 exact object namespace gate is enforced again. Shared
+readability acceptance remains proposed until frozen namespaces and actual
+compiler/input/output identities are configured and independently verified.
+No portable module,linked image,gameplay,selected-provider or shared workspace
+acceptance. Refresh source-bound downstream evidence through current catalog;
+retain historical scorer and preserve foreign index/work/checkpoint sections.
