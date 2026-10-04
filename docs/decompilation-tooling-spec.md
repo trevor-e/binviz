@@ -2684,3 +2684,35 @@ equal addresses/fields do not assert selected provider identity. No new matching
 credit,portable module,link,gameplay or shared workspace acceptance. Refresh
 source-bound evidence from current catalog;historical reports/scorer stay pinned;
 foreign work/index/checkpoints preserved;full-tree review remains active.
+
+Main menu naming acceptance (BV-03/BV-08, P2): FF9 1c74df50c
+adds25 canonical ovl_0af800 names;catalog3669 unique unit/symbol names,
+59 alias headers. All25 complete canonical primary bodies reviewed and named,
+including every instruction of one native-only raw sprite packet builder.
+Other units remain pending. Evidence:docs/function-names-main-menu.json and
+Binviz target/ff9-names-main-menu/. All25 complete native object pairs identical;
+exact affected manifest/scoring namespace25,pinned strict-relocation scores
+unchanged24exact/one partial,6492/7148 code bytes,zero failures. All25 installed
+WASM preprocessed token comparisons agree;current catalog/source/header/object
+and review/consumer bindings audit;29 isolated committed paths agree.
+
+Names cover page/party input,reordering,portrait VRAM swaps,status/caption/time/
+gil panels,help substitutions,cursors,label position tweens,resource image uploads
+and sprite animation/frame packet stages. Actual tween and level/equipment/gil
+consumers correct misleading comments:label records hold position scripts,not
+strings;time/gil panel does not display level;level progress helper prepares
+text substitutions rather than directly drawing a gauge. Same-slot party selection
+toggles bit9 without naming it locked;unequal selection swaps actual party pointers
+and portraits. Preserve global indices,extra caller arguments,all signature
+mismatches,MP color division,level99 zero remaining,five item ids andFFsentinel,
+script pointer offsetbase+14,sixteen-byte stride,matching pins/wrappers/barriers.
+
+Raw sprite packet helper retains asm-first prefix,every assembler string,custom
+register/stack/caller-area convention,delay slots,NCLIP-zero whole-loop exit,
+RTPT/RTPS and depth>>3+bias ordering bounds. Native-only alias does not recover
+a portable C body. Existing raw snapshot adapter reused. BV-08 exact namespace
+gate enforced,no new reusable tooling gap found;no private ownership/type/CFG
+walker or tooling rewrite. No new matching credit,portable module,link,gameplay,
+provider or shared workspace acceptance. Refresh source-bound evidence from
+current catalog;historical reports/scorer stay pinned;foreign work/index and
+unrelated checkpoints preserved;full-tree review remains active.
