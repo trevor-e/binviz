@@ -11003,3 +11003,103 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot resource gpu packet reverb fog helpers naming acceptance (BV-03/BV-08, P2):
+FF9 73628b957 adds thirty eight selected canonical boot names. Catalog
+5,231 unit/symbol names, 306 scoped alias headers. Thirty eight selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-resource-gpu-packet-reverb-fog-helpers.json and Binviz
+target/ff9-names-boot-resource-gpu-packet-reverb-fog-helpers/. 72 full native object pairs equal;
+exact affected/scored namespace 72. Pinned strict-relocation scores unchanged:
+51 exact/21 partial, 15,128/30,124 code bytes, zero failures. 72
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 76 isolated committed paths audit.
+
+All selected full own bodies directly read. Original BIOSerrorhook637C0/rawassembleridentity untouched. Uncheckedresourcepointergetters, duplicateGPU-libraryidentities, LONGGTEinputs, rawproviderarity andmatching constructs retained. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Readcurrentreverbmode(outINTstack); mismatchONLYdisableSPU0, preset(arg0|100), enableSPU1. No returnresultchecks/restoringpreviousenable state, errorhandling/providercontract repair.
+
+Full87lines: U32slotbit100 enablesclear andremoved, reject>=10; matchingemptyasm pinsidpointer, allocationconflictreject-1 BEFOREglobalwrites. BytecopyEXACT68bytes do-while43..-1 into local, globalmode/address beforecopy,localWORD0=0. Slot7 mixlevels[0]/[-1]127;slot8 first0/second127;othersboth0. CaptureSPUflagbit80,temporarilyclearonlyifset;zero TWOmasterregs thenTWOshadowvolumes,writeexistingreverbregisterhelper(local),optionalclearworkarea(slot),register(D1,address,0),restoreflag80ifpreviouslyset,return0. No structcopy/localalignment/levelorder/flagdedup/flags/compiler repair.
+
+WORD0sentinel selectsU16operand0 or1, differenceU16target4-currentstreamU16+40 narrowedSIGNED16 numerator, divisorisSIGNED16count; division BEFOREfullWORD+48divisor/fullWORD+44SIGNED16step. NonzeroWORD0withLOW16zero cantrap; retainwrap/countsign/narrowing and no guard.
+
+Fullspritebuilder: CLUTpalettey<<6 |SIGNEDpalettex>>4 castU32&63; pageC0+x/ybits;SIGNEDx%64 thenU32<<1, SIGNEDy%256, plus31UV. Stream=(U32)p+U32count*40 BEFOREloop, loopSIGNEDcount. Each40descriptor has unusualtagmask/store sequence (includingp0=128), thenTWOrows*FOURvariant slots. flagsbit0absentzeroWORDslot8;presentstoreCURRENTstreampointer BEFOREoptional12prefix advance,allocate40+optional12suffix;headers9/2E, fourflipUVpatterns andpageU16+22/CLUT+14. Preserve possiblepointerprefix distinction/descriptoroverlap/negativecount arithmetic/currentpstores, no packetbounds/normalization.
+
+Onlybyte3=5,byte7=28; VOIDflatquadheader,no otherpacketfields/return.
+
+StackcountSIGNED16-1 scansdescending loadedresourceids; resource_lookup(entry,2,120000,0), skipONLYsentinelU8*-1 (notNULL). EachheadercountU8byte1-1 scansdescending12byterecexactU16id cast fromINT. Return&recordid/nullifnone; no extent/NULLguard or sort/index cache.
+
+LookuprecordINTid,UNGUARDEDpointerWORD1&FFFFFF thenreturnrecord+offset. Retaincharpointer/header-word casts/signatures, noNULL/sentinelrepair.
+
+LookupUNGUARDEDrecord,returnrecord+(WORD1&FFFFFF)+U8byte7*4. No count/recordextent validation/callerpointer normalization.
+
+Lookuprecord, q=record+(WORD1&FFFFFF); countU8byte7*8, return count+(INT)q castchar*. Preserveintegerpointerarithmeticvs634D8pointerarithmetic.
+
+Drawmode(p,0,1,x),spriteheader(p+8), merge(p,p+8), nonzeroresult invokesoriginalBIOSstub637C0(-1). KeepunprototypedINT vs VOIDheaders andconditionalerrorhook; noabort/resultpolicyguess.
+
+Sameorderedmode/primitive/merge/errorhook wrapper foralready-namedtileinitializer. All rawviews andoriginalerrorstub untouched.
+
+Drawmode(p,0,1,x),flattriangleheader(p+8),merge nonzero->637C0(-1); no cursor/packetlength rewrite.
+
+Drawmode(p,0,1,x),flatquadheader(p+8),merge nonzero->637C0(-1). No separateGPUsubmission added.
+
+Drawmode(p,0,1,x),gouraudtriangleheader(p+8),merge nonzero->637C0(-1), originalINTK&R/VOIDdifferences retained.
+
+Drawmode(p,0,1,x),existinggouraudquadinitializer(p+8),merge conditionalerrorstub. Scopeoriginalhelperidentity, no shader/colortable claims.
+
+Onlybyte3=4 THENbyte7=20 flattriangleheader,VOID; otherfieldsuntouched.
+
+Onlybyte3=6 THENbyte7=30 gouraudtriangleheader,VOID.
+
+Onlybyte3=4 THENbyte7=64 texturedspriteheader,VOID; UV/size/coloruntouched.
+
+Lookuprecord thenifnonnullreturnU8byte7 else0; guardedcountgetter unlikeunguardedpointergetters.
+
+Byte3=4/byte7=50,returnINT50. Knownlinecommand/headernumericidentity andreturn retained.
+
+NonzeroINTenable ->E6000001 elseE6000000;byte3=2,WORD4command,WORD8=0,returnU32command. No secondmask-bitcontrol/BOOLtype/volatile rewrite.
+
+ReadALLTHREEtranslationU32words into localsBEFOREstores,pWORD20/24/28 exactorder,returnp. Matrixtranslationoffsets consistent existinglayout, preservealiassafety fromcapturedinputs/no memcpy.
+
+GCC2.7.2.3byte-rect texturewindowbuilder:packetbyte3=2; nonNULLrect E2 |(BYTE2>>3)<<15|(BYTE0>>3)<<10, negativesIGNED16dimensions+6 convertedU32/subtract0then<<2&3E0, dimensions+4 negativeLOW8>>3; WORD4command. NULLrectWORD4=0 (noE2opcode), ALWAYSWORD8=0. Keepbytecoordinates/SIGNEDdimensions/nullcase/storeorder, no RECTcast/address correction.
+
+InstallqueueDMAcallback BEFOREnullgates. Headnonnull/addnonzero walks links through24bitKSEG0, preservinglookaheadtailselection: dereferenceNEXTnode linkfortermination, notsimplecurrentterminator. WritesTAILpreservedhighbyte|addLOW24. HeadNULL/add0returnsAFTERcallback, elsehead=(U32*)add. StartDMAorderF4=04000002,E4=head,E8=0,EC=01000401. No directcontroler-lifetime/sentinel/cycleguard/volatilepointer or DMApolicychange.
+
+CaptureGPUstatusWORDFIRST; packetbyte3=6; queriedinfo3/4/5 wordsOR E3/E4/E5 thenstatus-derivedE1 fromlow7FF/bit8000>>4;info2OR E2, statusmask1800>>11 OR E6. Distinctquerystoreorder/statussnapshot; no automaticGPUreadback sync/packetinit forlink.
+
+Capturestatus FIRST ->low7FF +bit8000>>4|E1 intoWORD1; queriedinfo2|E2WORD2. No taglengthset despitetwo-commandpacket, fullfunctionboundary retained.
+
+OnlyWORD1=queryinfo2|E2. No length/tag/update ofWORD2.
+
+WORD1query3|E3 thenWORD2query4|E4, no caching/combinedquery or implicitlength.
+
+OnlyWORD1query5|E5. OriginalINTK&Rdecl stays.
+
+GCC2.7.2.3secondarylibraryportglobals70508/70504:localpointerGP1store(a|10000000) thenGPUREAD&FFFFFFreturn. NotnewSDKidentity; existingfirstlibraryread_info separateaddress. RawNONvolatiletypes/currentglobalreads/matchinglocal retained.
+
+TWOINTargs firstUNUSED; selectCURRENTbank()noargs,globalcontrol7BCA4=b thenneutralpackedcolor808080. No bankindexa/b reinterpretation.
+
+U8preset0grey808080,1=2020A0,2=20A020,3=A02020,4black0, othersreturnwithoutsetter; no clamping/defaultcolor. Retainpackedbyteorder.
+
+INTRGB inputs each&FF,packsR|(G<<8)|(B<<16), callsalready-namedpackedcolorsetter. No alpha/highbit/pointercontract fixes.
+
+Restorestate() first,position(a&FFFF,b&FFFF),GLOBAL7BCB0=a&FFFF only, savestate(). PreserveINTK&Rproviderreturns discarded, inputnegativewrap/storeorder.
+
+Capturedsharedblock834D0,uploadimage(g+12,g+20),computeSECONDbaseg+8+SIGNEDWORDg8 AFTERfirstupload,upload(second+4,second+12),drawsync0. No cachedoffsetbeforeprovider call/NULL/extent guards or guessedTIMresources.
+
+SIGNEDd=b-a, d<100return. newvar=(b<<12)/d;v=(-a*b)/d, q=(v<<8)/h, w=newvar<<12; clampqSIGNED16range thenDQA(q),DQB(w). Preservedivision/trap frontiers/overflow/signedshifts/nohzero guard orassociative rewrite.
+
+LONGinput ->volatileinlineasm CTC2control27 depthcueA. PreserveLONGwidth/nativeassembleridentity; noportableproviderimplementation added.
+
+LONGinput ->volatileinlineasm CTC2control28 depthcueB. Preserveallcallingviewmismatches/nativeassembler.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
