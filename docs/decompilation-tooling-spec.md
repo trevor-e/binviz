@@ -5323,3 +5323,28 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Timed resource sequences and host object kinds naming acceptance (BV-03/BV-08, P2):
+FF9 5bfa2dfe1 adds six canonical ovl_120bf000 names. Catalog4,464 unique unit/symbol
+names,131 alias headers. All six complete bodies,threeheaders and four reference
+helpers reviewed; no semantic deferrals. Evidence:
+docs/function-names-resource-sequences-host-kinds.json and
+target/ff9-names-resource-sequences-host-kinds/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+all six exact,1,552/1,552 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all six sources; current catalog/source/header/object/review
+and10 isolated commit paths audit. Other units remain pending.
+
+Established five-resource/host-kind and transformed-anchor three-resource
+timelines,apply-kind/last-index/conditional-kind2/3 helpers. Preserve partial
+fields,rawdata callbacks,redundantnullcheck,provider ordering,signed indices,
+terminal updates and signatures. Consistent helper names independently checked
+against own-unit bodies and reviewed ovl_10165800 references. Own-unit aliases
+retain canonical native/runtime identities. Exact game effect/provider identities
+unresolved. No body/type/layout/ABI repairs or original developer name claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
