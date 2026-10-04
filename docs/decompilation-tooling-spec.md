@@ -4577,3 +4577,33 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Polygon center burst naming acceptance (BV-03/BV-08, P2): FF9
+7d138fcb7 adds eight canonical ovl_10b72000 names. Catalog4,279 unique
+unit/symbol names,103 alias headers. All eight complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-polygon-center-burst.json and
+target/ff9-names-polygon-center-burst/. Eight entire native object pairs identical;
+exact affected/scored namespace eight,unchanged pinned strict-relocation baselines
+eight exact,2,960/2,960 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all eight sources. Current catalog/source/header/object/review
+bindings and12 isolated commit paths audit. Other units pending.
+
+Complete own-unit table/center producers and consumers,paired-object burst/fade,
+timed host object and two weighted blend helpers establish bounded roles.
+Center-derived polygon offsets translate each polygon without scaling its local
+shape. Preserve centroid halfword narrowing after EACH addition before division,
+staged delta/center/vertex halfword arithmetic,signed overflow/division preconditions,
+eight-kind loops reusing same table entries and center pointer,legacy INT/pointer
+caller mismatches and matching wrapper. Main restores2600halfword vertex backup,
+animates only unsignedframe<40,startsfade24,resource12update evenontterminal90,
+partial state/padding and exactcalls unchanged. No original effect/provider guess.
+Readable identifiers in definitions,declarations and calls retain canonical
+runtime/linker identities through own-unit alias header.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
