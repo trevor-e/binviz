@@ -4803,3 +4803,32 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Recorded path crossfade naming acceptance (BV-03/BV-08, P2): FF9
+dc2caa3a3 adds seven canonical ovl_1380a000 names. Catalog4,337 unique
+unit/symbol names,111 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-recorded-path-crossfade.json and
+target/ff9-names-recorded-path-crossfade/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines seven exact,3,036/3,036 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all seven sources. Current catalog/source/header/
+object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Actual roles: reverse keyframe ribbon builder/fade sequence,two handle crossfade
+and seven object sequence,fixed/scalar interpolation,halfword track initialization
+and position reader. Preserve header padding,prefixrecord0,reverseactiveindices,
+signed6/10 scale,narrowing,GTEcalls/matrixbuildEACHvertex,partialGTE8byteaccess.
+Ribbon33vertices grows4perframe,capsbybuilder,unsignedfade subtract1024before
+draw24..31 wraps,angleprovider executes even beyond draw window. Crossfade
+weight counter,initsYoverwrites,cumulativeearlyY/sway,frame8loadsevenopaque
+objects,independentfadewrites and tintonlyfirsthandle remain. Reader upperonly
+clamp/zero-count/negative indices and opcode-skip initializer types unchanged.
+No gameplay/provider identities asserted; unit aliases retain linker/runtime.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
