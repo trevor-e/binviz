@@ -13323,3 +13323,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual left right direction pair sequence naming acceptance (BV-03/BV-08, P2):
+FF9 d01a10edd adds 1 selected canonical ovl_12131000 names. Catalog
+5,565 unit/symbol names, 368 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-left-right-direction-pair-sequence.json and Binviz
+target/ff9-names-effect-residual-left-right-direction-pair-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 764/764 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining12131000 controller independently full-read and named for left/right derived direction pair. Full g24/lifecycle headers bound. Actual origin/object/vector identities remain separate, no world-motion/resource-shape/provider inference.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole40byte size/init/update and both object/drop branches read. GroundanchorXminus/plus500points, two indexedhostorigins84, D4directionswithXforcedminus512, resource3paircreatedatownorigins. Liveobjectsreceiveowncachedq20/q28halfwords until dropped, centerresource2at16, completion80. Preserve signed/unsigned vectors, chaineddirectionstore and exact original call/null ordering. Name opposing offset directions, not proved object world placement or spell anatomy.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
