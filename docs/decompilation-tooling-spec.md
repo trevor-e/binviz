@@ -10467,3 +10467,51 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot script loop shared controls naming acceptance (BV-03/BV-08, P2):
+FF9 b5c7dcc0b adds thirteen selected canonical boot names. Catalog
+5,011 unit/symbol names, 300 scoped alias headers. Thirteen selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-script-loop-shared-controls.json and Binviz
+target/ff9-names-boot-script-loop-shared-controls/. Thirteen full native object pairs equal;
+exact affected/scored namespace thirteen. Pinned strict-relocation scores unchanged:
+6 exact/7 partial, 312/952 code bytes, zero failures. Thirteen
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seventeen isolated committed paths audit.
+
+index=(U16+F4+1)&3;readcurrentcursor/writeU16+F4index/savepointerat+4+index*4. ReloadU16index AFTERpointerstore,clearU16+A2+index*2,RELOADindex then storeU16+AA+index*2=currentU16+A0. No cursor consumption/stackoverflow guard, no assuming stable index under aliasing.
+
+Read unsignedcountbyte/advancecursor/zero256;readU16index+F4 (no mask),value=(U16counter+A2+index*2+1)&FFFF,writecounter. If wrappedvalue==count popU16index=(freshindex-1)&3,leaveadvancedcursor/currentstate. Else readSAVEDpointer+4+FRESHindex*4 thenreloadindex,restorecursor BEFOREU16+A0=savedU16+AA+index*2. Counter increments with16bitwrap unlike branch peek. No bounds repair/fallthrough restoration onpop/skip operand rewind.
+
+Readcountbyte/advancevia++cursor/zero256,readU16index (unmasked),next=U16counter+1 inU32 WITHOUT16bitwrap. If mismatch cursor=operandbase+2 skipsTWOoffsetbytes;matchcursor=operandbase+SIGNED16(littleendianbyte0|byte1<<8),relative to offset operandbase,not after it. No counter/index/state update; next65536 isnot0, no truncated comparison.
+
+Same widened next-count comparison/count0->256/signedLEoffsetbase as60388; mismatchskips2/noindexchange. Matchwritesbranchcursor FIRST THENpopU16index=(freshindex-1)&3. No current-state restoration, bounds repair, or pop onmismatch.
+
+CaptureU16index,incrementU16counter+A2+index*2 withnarrowingwrap;readSAVEDpointer usingFRESHindex,thenreloadindex,restorecursor FIRST/U16+A0=savedAA+index*2. No byteconsumption/count comparison/pop/stackcap.
+
+Unsignedbyte/read/advance;clearU16+FA thenwriteSAMEunsignedbyte toU16+98,+96,+F8 inthatorder. Zero remainszero, no256/257 sentinel or dirty bit update.
+
+SIGNED8byte/read/advance;onlyNONZEROdelta addsSIGNED16current+F8 andclamps <=0 to1/>=256 to255. Inputzero writesZERO toU16+FA withoutadding/clamping. No writeback tobase+F8, preserve sentinelzero and signed halfword read.
+
+Does not consume cursor. IfsharedpointerWORD+34 nonzero thenrecordflagsWORD+34=(old&E6FFEFF7)|8;otherwise no writes. No sharedpointer nullguard, flag clear onabsence or meaning assigned to payload.
+
+Capturecursor/sharedpointer;writeU16shared+74=byte0 FIRST thenrecordcursor=++cursor;writeU16shared+70=byte1 thenrecordcursor=cursor+1;clearsharedU16+76 THEN+72. Preserve separate consumption/store order/byte unsigned widening; no signed or fullwordcontrol rewrite.
+
+Capturecursor/sharedpointer;writeU16shared+78=unsignedLOWbyte FIRST/advancevia++cursor;OR sameU16field withbyte1<<8 SECOND/advanceagain. Not combinedsinglewrite; preserve alias-sensitive intermediatefield/cursor values.
+
+Unsignedbyte/read/advance,storeU16+F0=value?value+1:257. Ordinarynonzero1..255 become2..256,zero257. No usual256-zero encoding or decrement/loopstate reset.
+
+Unsignedbyte/read/advance,storeU16+F2=value?value+1:257,distinctsecondfield andsame1..255->2..256,zero257. Do notmergeidenticalarithmetichandlers across distinct fields or changezeroencoding.
+
+Unsignedbyte->SIGNED32local/read/advance,storeU16+F6=(U32)value<<0. No sign extension/count sentinel/dirtyflag. Auxiliaryhalfword control purpose remainsunresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
