@@ -4753,3 +4753,28 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Seven step position naming acceptance (BV-03/BV-08, P2): FF9
+b4db001c4 adds seven canonical ovl_1307e800 names. Catalog4,323 unique
+unit/symbol names,109 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-seven-step-position.json
+and target/ff9-names-seven-step-position/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines seven exact,1,916/1,916 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all seven sources. Current catalog/source/header/
+object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Actual roles: actor-position resource1 spawn/wait40,seven-step actor offset
+position blend,fixed-weight wrapper,scalar interpolation,host vector delta and
+derived-object vector steppers. Actor position sampled at init only. Preserve
+radius1300/total7,legacy pointer/INT mismatch,frame0 host reads,publication before
+completion,duplicate20C atstep0,unused1FC and scratch,halfword narrowing,signed
+division and asymmetric Y adjustment4096-Y orY+4096. No provider/vector-kind
+assumption or type/bounds repair; unit aliases retain linker/runtime identities.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
