@@ -7079,3 +7079,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Six radial placements cycling handles naming acceptance (BV-03/BV-08, P2):
+FF9 732012e69 adds three canonical ovl_12063800 names. Catalog
+4,719 unit/symbol names, 190 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-six-radial-placements-cycling-handles.json and Binviz
+target/ff9-names-six-radial-placements-cycling-handles/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 156/1,264 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor192. Savescontext/table70(count3),200(0,0,THREE-SIGNED-lane anchor), ifY>=-279 setsY=-280. ScaleXYZ32768. t=1F0(256), uppercap2200 when t>=2201, no lowercap; table SIGNEDx=t, y=z=i*682 for6entries. Initializes ONLYthree rotationlanes perentry, notpads/Wvectors/obj/wa4; creates THREEU16handles from resource-ID table, counters=-1. Pin17/18 and matching assignment wrappers retained.
+
+Exactframe0 armsfade4,20fade8,22loadsresource4 atanchor then nullableh22=220(16,128). Ordinary drawgate SIGNEDframe>=0 and<28. Counters interpolate BEFOREdecrement; tint gate is checked AFTER decrement for EACH placement. Normal first calculates five valuesframes0..4 but submits tint ONLY0..3, omitting its zeroendpointframe4. Second calculates/submits eight values20..27 elapsed0..7; frame28 excluded before its endpoint/count decrement, count remains0. Keep overwrite order if externallybothactive.
+
+SIX placements each update: local SIGNED3 rotation0/tableY/0, DC(anchor,local,tableX,localSIGNED3result), SIGNED-widen XYZ into16-byte W with untouched fourthword. Pose vectors addressed via literal i*8+4 and i*16+52. Handle beginsstoredhnd0, increment numeric h++ andwrap ifstoredhnd2<h; STOREDhnd1 neverread in drawloop, contiguous handle assumption not repaired. Visibility/tint gated as above. TableY+=85, Z+=512 but Z is UNUSED by this body; X radius fixed. RotationstateY+=128. No growing-radius claim, no invented usage of Z.
+
+Local3-lane vector provider read/write extent unknown, pads stay. Finish78/return1 atframe>=40 AFTER exactevents/drawgate; no releases. Host48 complementary-weight wrapper VOID/unusedresult; integerhelper INT typed caller agrees, unclamped/division-zero/overflow arithmetic retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
