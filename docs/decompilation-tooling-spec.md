@@ -6003,3 +6003,34 @@ No new reusable tooling implementation or private type/ownership/CFG walker.
 No new original matching credit,linked image,gameplay or sharedworkspace
 acceptance. Refresh source-bound evidence;historical scorer/reports pinned;
 foreign work/index preserved;full-tree naming goal active.
+
+Layered column trails naming acceptance (BV-03/BV-08, P2): FF9
+991cd8f24 adds five canonical ovl_13693000 behavioral names. Catalog4,592
+unique unit/symbol names,156 scoped alias headers. All five complete bodies
+reviewed;zero deferrals in this unit. Other units remain pending. Evidence:
+docs/function-names-layered-column-trails.json and Binviz
+target/ff9-names-layered-column-trails/. Five complete native object pairs
+identical;exact affected/scored namespace five;pinned strict-relocation scores
+unchanged two exact/three partial,544/4,024 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish tagged two-point strip,three layers of eighteen keyframe trails,
+three-track/ring instances,three offset-table instances and two-phase light
+column/trail sequence. Own-unit bodies/calls reviewed independently. Preserve
+signed tag shift/inheritance,delayed-point repetition,unchecked signed counts,
+U8 header truncation,U16 source/output narrowing,ring step0 inclusion atn0,
+partial vectors/pads,compiler flags,pins/typeof/do wrappers,host camera target
+and final helper calls before completion/count increment. No donor comments
+treated as game identity or selected-provider proof. Instance drawing has no
+particle allocator;do not invent allocation semantics. No body/type/layout/
+ABI repair. Readable definitions/declarations/calls propagate;own-unit aliases
+retain canonical linker/address/runtime identities.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. Existing BV-03 reviewed-deferral versus
+unreviewed prioritization proposal retained. No new reusable implementation
+or private type/ownership/CFG walker. No new original matching credit,linked
+image,gameplay,selected-provider or sharedworkspace acceptance. Refresh source-
+bound evidence;historical scorer/reports pinned;foreign work/index preserved;
+full-tree naming goal active.
