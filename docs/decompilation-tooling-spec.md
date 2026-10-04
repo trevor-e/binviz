@@ -4457,3 +4457,32 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer remain
 pinned; refresh downstream source-bound evidence from current catalog. Foreign
 work/index preserved; full-tree goal remains active.
+
+Ribbon particle shower naming acceptance (BV-03/BV-08, P2): FF9
+a18d84fa7 adds eight canonical ovl_119b7800 names. Catalog4,249 unique
+unit/symbol names,99 alias headers. All eight complete primary bodies reviewed,
+including full main and callback; no semantic deferrals in this unit.
+Evidence: docs/function-names-ribbon-particle-shower.json and
+target/ff9-names-ribbon-particle-shower/. Eight entire native object pairs
+identical,exact affected/scored namespace eight,unchanged pinned strict-relocation
+baselines six exact/two partial,4,664/12,696 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all eight sources. Current catalog/source/
+header/object/review bindings and12 isolated commit paths audit. Other units pending.
+
+Names cover four active main phases6/7/8/10,ribbon builder,flying particle trail,
+three-phase14-frame sprite pulse,mirrored/repeated/transformed textured quads
+and24x24 radial ripple grid. Actual ribbon loop and late-transform loop each
+execute once despite older three-buffer comments. Preserve job+16 word allocation,
+particle threshold cubed,negative halfword write,partial vectors/padding,independent
+trig/random calls,signed narrowing,host call order and main cumulative count.
+Grid reserves576 packets but advances local packet pointer only on accepted cells;
+NCLIP rejects zero only,link precedes fourth SXY store,depth sample before fourth
+projection. No matrixrestore/bounds/cleanup/provider guesses added. All identifiers,
+declarations,calls and callbacks alias back to canonical runtime symbols.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
