@@ -2222,3 +2222,43 @@ Maintained naming/farm/scoring adapters add no private analysis walker. Shared
 workspace acceptance/scorer migration still needs configured frozen namespaces,
 compiler inputs and verified outputs. Refresh source-bound downstream evidence
 using current catalog/header identities; preserve foreign runtime/tooling work.
+
+Field renderer/collision naming acceptance (BV-03/BV-08, P2): FF9
+a715de40d names all81 canonical ovl_01f000 functions: background tile packets,
+camera follow/scripted moves, layer window masks, colour-fade records, walkmesh
+geometry/contact resolution, region frame changes, motion channels, animated
+sprite models and party-menu lifecycle/input/drawing. Total3249 unique reviewed
+unit/symbol names,47 alias headers. Evidence: FF9
+docs/function-names-field-render-collision.json and Binviz
+target/ff9-names-field-render-collision/. All81 complete native object pairs are
+byte-identical; pinned strict-relocation scores remain65exact/16partial,
+25856/43912 code bytes, zero failures. All81 installed WASM preprocessed token
+pairs agree. Independently rehashed current catalog/headers, primary snapshots,
+object pairs and85 isolated committed paths. Other canonical units remain.
+No new matching credit, portable module, linked-image or gameplay proof.
+
+All81 primary bodies reviewed, including21 unchanged complete consumers pinned
+in the preceding field-command report. Two actual BOOT helper bodies establish
+important semantic corrections:630e8 initializes a flat quad (length5/code28),
+so layer window records are mask strips rather than light/matrix groups.
+631ac waits/advances signed-byte position deltas and detaches a completion
+script; c95b8 steps window tweens rather than releasing resources as its comment
+claims. c44f4/c73ac actually step actors rather than merely querying status.
+Semantic naming acceptance should bind actual consumer bodies; address equality,
+donor comments and local field labels alone are insufficient provider evidence.
+No cross-unit alias applied or selected-provider resolution claimed.
+
+Preserved c07d8's double arena increment and unsupported-mode behavior,
+c1e14's asymmetric crossing bounds, c2af0's expanding retry displacement despite
+a contraction comment, c31f8's existing uninitialized/incorrect accumulator
+slots, c3ec0's mutated triangle/point state, first-containing floor-height
+selection, early whole-walker stop on negative duration, unchecked indexes and
+capacities, narrowing, flags, K&R/mismatched signatures, GPU tags, inline GTE
+assembly, compiler flags and register/scheduling tricks. Only identifiers and
+unit identity aliases changed. Native-only leading metadata rule remains intact.
+
+Maintained naming/farm/scoring adapters were reused without a private analysis
+walker or tooling rewrite. Existing BV-03/BV-08 readability acceptance proposals
+still need shared frozen namespace/compiler-input/output gates. Refresh
+downstream source-bound evidence using the current catalog; preserve other
+sessions' runtime work. No new shared feature or workspace acceptance claimed.
