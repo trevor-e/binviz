@@ -6931,3 +6931,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Cosine position hook and delayed companion naming acceptance (BV-03/BV-08, P2):
+FF9 13e70108d adds three canonical ovl_1221a000 names. Catalog
+4,704 unit/symbol names, 185 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-cosine-position-hook-and-delayed-companion.json and Binviz
+target/ff9-names-cosine-position-hook-and-delayed-companion/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,220/1,220 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 six-argument INT callback: weight=(i-4)<<8, host BC(shared start, shared end,weight,pos), cosine(weight>>1), subtract cos*200>>12 from SIGNED posY with narrowing, widen three lanes<<12. Writes happen before return-1 if i>=n, otherwise0. Unclamped weight, negative frames, arithmetic right shift versus division and undefined negative-shift frontier retained. No rotation or orbital interpretation of BC arguments; global vectors are u8 extern here and u16[3] in controller, preserve declaration/read-extent frontier.
+
+77F8 reports40. Initialization saves context,20C(16,a),200(0,0,b), THREE-lane b->shared end,84(16,0,c),DC(c,a,0,d),THREE-lane d->shared start. Loads resources1 atconstant global9410 and2 atd BEFORE any hook/scale writes. Nullable first gets cbtable/h12=35/hc32; repeated outer guards then unguarded hdrw8=(void*)INT callback, then f220(0,128) scale; second nullable scale f220(16,128). Callback is INTdecl/definition but stored as untyped address, ABI consumption unknown. Three-lane globals/arrays and partial pads remain, no semantic admission. Later modes frame>=40 return with no finish/release.
+
+7A28 reports28. Saves context,1FC(0,a), copies onlythree lanes to b then unsigned Y-=400; resources3 atb/4 ata, first nullable hooktable/h12=51/hc32. Exactupdate frame4 loadsresource5 ata and nullable table/h12=30/hc112 into third pointer. Terminal signedframe>=40 after optionalload; no per-frame position refresh, padding/object2 initialization orrelease. Provider may fill more than declaredthree-lane arrays, read/write extent remains unknown.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
