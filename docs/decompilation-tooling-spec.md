@@ -13215,3 +13215,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual tracked model two point bursts naming acceptance (BV-03/BV-08, P2):
+FF9 7dc553e56 adds 1 selected canonical ovl_1274d800 names. Catalog
+5,561 unit/symbol names, 364 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-tracked-model-two-point-bursts.json and Binviz
+target/ff9-names-effect-residual-tracked-model-two-point-bursts/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 776/776 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining1274D800 controller independently full-read and named for tracked model plus two indexed point bursts. Full g26/lifecycle headers bound. Original pre-initialization vector read and table layout remain unchanged; no provider or callback semantics inferred from related overlays.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole44byte lifecycle and both indexed resource loops independently read. Resource1model follows refreshed host84point with cached direction fields; frame16 resource4atgroundanchor plusresource3atfetchedindexedpoints, frame20resource8atsamepointtable, completion64. Preserve one-element tabdecl backedbypad, unchecked hostcount, original D4init reading untoucheda10, unguarded1D8null call, halfword views and own initialization. No aim repair, twin body transfer or spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
