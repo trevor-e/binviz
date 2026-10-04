@@ -15105,3 +15105,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual gated paired anchor resources g16 naming acceptance (BV-03/BV-08, P2):
+FF9 0674e5df4 adds 1 selected canonical ovl_10989800 names. Catalog
+5,631 unit/symbol names, 434 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-gated-paired-anchor-resources-g16.json and Binviz
+target/ff9-names-effect-residual-gated-paired-anchor-resources-g16/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 492/492 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete10989800 handler independently reviewed and named by gated initial/delayed resource pairs. Full g16/lifecycle bound; retain actual scoped resource/callback and compiler identities.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole0Chex-byte lifecycle all gate/event/end arms independently read.200anchor initialresources7/6 with differenth22sources and lattercallbackh12=25/hc=52;6resources10/9h22via220(0,64);finish40onlyflagzero. Preserve GCC2.8.1, job-as-Obj16view,intstatevectorpointer,gotozeroandflagnotsetlaterhere. No flash/beam asset meaningfromcomment or crossunittransfer.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
