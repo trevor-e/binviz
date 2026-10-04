@@ -2829,3 +2829,48 @@ type/CFG walker,new matching credit,linked image,gameplay,provider or shared
 workspace acceptance. Historical reports/scorer remain pinned;refresh downstream
 source-bound evidence fromcurrentcatalog. Foreign work/index preserved.
 Full-tree naming goal remains active.
+
+Ribbon scene naming acceptance (BV-03/BV-08, P2): FF9 b92871c5e
+adds 26 canonical ovl_11a96800 names. Current catalog: 3,753 unique unit/symbol
+names and 63 alias headers. All 26 complete primary bodies were directly
+reviewed, including every chunk of the two large handlers and the five-track
+handler. All established behavioral roles are named; original spell/ability
+labels and selected runtime providers remain unresolved. Adjacent ovl_11a99800
+is outside this canonical review and alias scope. Other units remain pending.
+Evidence: docs/function-names-ribbon-scenes.json and Binviz
+target/ff9-names-ribbon-scenes/. All 26 complete native object pairs are identical.
+The exact affected/scored namespace is 26; pinned strict-relocation baselines
+remain 19 exact and seven partial, 4,932/21,248 code bytes, zero failures.
+Installed WASM preprocessed tokens agree for all 26 sources. Current catalog,
+source, header, review and object bindings and 30 isolated committed paths audit.
+Progress: 3,753/5,812 canonical primary files named (64.6%), 2,059 remaining.
+
+Names cover paired/blended/reverse/rotated ribbon builders, waypoint projection,
+textured Gouraud ribbon quads, actor/ribbon/particle sequences, five-track handle
+sequence, descending object orbits, position blend/trail spawn, keyframe helpers,
+position-event scheduling and wrapping strips. Direct consumers establish track
+layouts. Preserve upper-only clamps, optional paired outputs, signed narrowing,
+eight-byte vertices, 12-byte projected rows, two RTPS operations, OTZ shifts,
+conditional Z rotation and every assembler string, compiler flag and register pin.
+Quad drawing reserves n packets but draws n-1; preserve 52-byte packet stores,
+eight-segment UV cycles, fade boundaries, UV clamp and conditional ordering depth.
+
+Handler review identified reasons to bound names more carefully than old comments:
+89DC updates particles only in its explicit frame range and advances the strip
+counter inside the five-object loop. A95C has an eight-argument screen call and
+its first spawn uses previous track state rather than a fixed point. AFF4 can
+decrement the same fade counter in two blocks during a single frame. C030 first
+changes cached Y to -3000, so original-position restoration is not established.
+Preserve all bodies and comments, partial initialization, resources, frame
+thresholds, duplicate branches, assignment/do/typeof wrappers and host arities.
+
+Keep target/current blend order, unchecked denominators and signed remainder,
+64-slot/four-clock event lifecycle, exact start-time equality, per-target-nibble
+cursor advance, last-triplet reuse and no automatic freeing. Existing maintained
+naming/farm/scoring/preprocessor tools and thin proof/commit adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found in
+this batch; existing raw-prefix and concurrent-checkpoint proposals stay separate.
+No private ownership/type/CFG walker or new matching credit, linked image,
+gameplay, provider or shared workspace acceptance. Historical reports/scorer
+stay pinned; use current catalog hashes for downstream source-bound evidence.
+Foreign work/index/checkpoints preserved. Full-tree naming goal remains active.
