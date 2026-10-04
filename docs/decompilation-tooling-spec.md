@@ -2746,3 +2746,49 @@ No new reusable tooling gap found,no private ownership/type/CFG walker. No new
 matching credit,portable module,link,gameplay,provider or shared workspace
 acceptance. Refresh source-bound evidence from current catalog;historical reports
 and scorer stay pinned;foreign work/index/checkpoints preserved;goal remains active.
+
+Effect track naming acceptance (BV-03/BV-08, P2): FF9 98f2caa0b
+adds30 canonical ovl_1233a800 names;catalog3704 unique unit/symbol names,
+61 alias headers. All30 complete canonical primary bodies directly reviewed
+and bounded effect/track/geometry behaviors named;original spell/enemy/ability
+labels remain unresolved. Other units pending. Evidence:docs/function-names-effect-tracks.json
+and Binviz target/ff9-names-effect-tracks/. All30 complete native object pairs
+identical,exact affected manifest/scoring namespace30,pinned strict-relocation
+scores unchanged27exact/three partial,4916/15224 code bytes,zero failures. All30
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object and30 review bindings audit;33 isolated changed commit paths and
+34 HEAD paths verified;marked naming checkpoint was already present in priorHEAD.
+
+Names cover four dynamic tracked-point callbacks,parent actor/grid/ribbon/fade/
+spark handlers,keyframe initialization/fetches,scalar/grayscale interpolation,
+position-event pool,ribbon vertices,texture-colored quad grid and wrapping strip.
+Actual parent fills consecutive eight-byte tracked vectors and assigns each
+callback to its corresponding object;these are dynamic positions,not constant
+descriptors. Preserve volatile late stack limit,signed-halfword-to12-bit-fixed
+shift,old-style arity mismatches,upper-only key clamps,mirrored X/Z,optional
+paired outputs,script/opcode layout differences,zero-count/denominator hazards,
+width division order and every matching compiler flag/pin/barrier/wrapper.
+
+Event script cursor and played count advance inside each nonzero target nibble;
+do not silently make that once per frame or auto-free completed slots. Preserve
+exact channel start-time equality,64slot/four-clock lifecycle,last-triplet reuse,
+resource/frame thresholds and partially initialized state. Quad grid tests
+MAC0/NCLIP nonzero rather than the misleading depth-word comment;keep allocation
+before loop tests,negative texture read-ahead,zero color borders,36-byte packets,
+render-skip upload,unchecked texture divisor and two24-byte wrapping-strip slots.
+No effect subtype/provider identity inferred from legacy transplant comments.
+
+Existing naming/farm/scoring/preprocessor tools and thin audits reused;BV-08
+namespace gate enforced. Concurrent commit guard caught a shared checkpoint
+stage;fresh authoritative HEAD inspection showed the other completed commit
+already contained the exact naming checkpoint. Thin commit adapter permits
+CLAUDE absence from changed paths only when constructed bytes equal HEAD bytes;
+all other owned paths remain exact andforeign work/index preserved. Reusable
+BV-03/P2 acceptance edge: concurrent isolated batches may already have committed
+a shared checkpoint;verify exact current HEAD bytes and real changed path set,
+preserve foreign index and outside-marker content,and reject actual drift rather
+than requiring an unchanged checkpoint to appear as a diff. No shared feature
+implementation claimed,no private ownership/type/CFG walker. No new matching
+credit,portable module,link,gameplay,provider or shared workspace acceptance.
+Refresh source-bound evidence from current catalog;historical reports/scorer stay
+pinned;full-tree goal remains active.
