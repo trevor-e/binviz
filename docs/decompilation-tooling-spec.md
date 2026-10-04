@@ -7923,3 +7923,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Sixteen ribbons eight spinning handles models naming acceptance (BV-03/BV-08, P2):
+FF9 e17fcd780 adds three canonical ovl_13af9000 names. Catalog
+4,802 unit/symbol names, 218 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-sixteen-ribbons-eight-spinning-handles-models.json and Binviz
+target/ff9-names-sixteen-ribbons-eight-spinning-handles-models/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 456/5,540 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 sixargVOID B8(c,d,a,b) result r then100(&ctxINTtable[f],e,r,r,r). No tablebounds/clamping; name describes interpolation and replicated grayscale values, not specific screenfade provider identity. 7794 fiveargVOID unconditional k=0x20000000/(len*len),kind0 4096-((0x10000000/len)*t>>16),kind1 k*(len-t)^2>>17,kind2 4096-k*t*t>>17,default0; callB4(handle,extra,w),NOreturnstatement. MaindeclaresINTandCONSUMESreturn into scales, rotations andpositions; serious ABI frontier remains, notrenamedasreturnsinterpolation.
+
+78CC descriptor288, initclear7objectslots separately THENfirst16stateINTwords descending15..0,70table32. SignedsceneX/U16Z anchor withY-512. Init16 global324byte ribbonrecords:life0,key/radiusfromtable,angleRAND&4095,stepRAND&255+64,step2=64,110resource17initialbuffer. Init8handlesresource13, per-indexrandomuniformscale range1024..1536 growing512eachindex,Yanchor+rand_n2(-512,512),XZanchorfixed,anglei1024+RAND1023,wc0,h8-1024,spinRAND511+256. No actualorbitingtranslation update; spinninghandlesnamechosen. Setupresource1handle,positionXYZ/order,scale12288,threehandlepairs9/9,8/8,19/20 androt/scales1024. Three1F8(16) vectors,Yoffsets-1024/-2048,allpadsuninitialized.
+
+Exactframeevents0 ribboncount74/actorcounter32;34capture80(16,46,pos64)/resource14nullable512;42res15;82res7;98res5table/h12=36/hc204/512 plusres4;114w0=128;126res3;146releaseobj6 thenres18(untracked)nullable512/w4=16;154flash4;157stopw0/releaseobj2/3/4/6 AGAINwithoutnulling;158flash8/three32pulsecounts/96spincount/res11nullable512;190actorreturncounter32. Sevenseparateendedchecksafterevents preserved, obj5neverloadedhere; no missed-frame backfill/newrelease.
+
+Counterorder w4, w0, w14,w20,w18,w10,w1C,w8,wC,w24,w28 exactly. PREdecrementpositivecounts includingarmed-eventframe; negativecounts remaintruthy. Scale/rotation/positionvalues CONSUMEVOIDhelperreturns. w0 D4(ctxp2C+84,anchor,rot)/60pose/tintfirst7 and240. Threepairedpulse groups consumedweight,pose/tintlast16/240; w18 rotation updates AFTERposes so nextupdateorientation. Eighthandle wc halfword += helper; XYscales+=helper/Z2048,pose/tint. FixedXZ/Y notorbitalmotion.
+
+Ribbons activew1C predec74→73..0,setctxw28=128. Whilecount>=9 searchfirstfreeinEACH8recordhalf (maxTWO launches/update),2C4(16,key,record),life8. EVERYlive16recordpredec,80anchortranslation,load32byteGTE matrix;33points k0..32 withangle+k64 (2048angularspan, notfullcircle). LocalSIGNEDXYZ cosineX/sineZ/Y0,RTV0TR/fullINTstore,readFLAGignored, outputU16lowX/lowY,constant192atpoint+4,lowZat+6. Header32/0/32 byte3untouched. Lifetimefade life<4→life1024,else(8-life)1024; angleadvance usesVOIDhelperlate. Submit110resource17,clearctxw28. No restoredmatrix/FLAGuse/padfix.
+
+w8/wC flashhelpers afterpredec; actorw24 predec usesINT-declaredVOIDhelperkind1 Y fromv108towardsv118, publish204(16,partialSIGNEDvec). w28 predec nonzero helperkind2 Yv118→v108,zero fresh1F8(16,vec) then204 (notforcedcachedoriginal). Terminal t>=254 tested LASTafterallwork, no78/newfinish/release. Preserve word/halfword conversions and original ABI/provider frontiers.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
