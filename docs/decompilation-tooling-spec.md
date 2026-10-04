@@ -11299,3 +11299,101 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot platform gpu kernel display helpers naming acceptance (BV-03/BV-08, P2):
+FF9 d81e34f93 adds thirty six selected canonical boot names. Catalog
+5,340 unit/symbol names, 309 scoped alias headers. Thirty eight selected complete boot
+bodies reviewed and bound: thirty six new names and two explicit semantic deferrals. Three existing descriptive bodies additionally reviewed and retained; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-platform-gpu-kernel-display-helpers.json and Binviz
+target/ff9-names-boot-platform-gpu-kernel-display-helpers/. 83 full native object pairs equal;
+exact affected/scored namespace 83. Pinned strict-relocation scores unchanged:
+65 exact/18 partial, 10,960/22,896 code bytes, zero failures. 83
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 87 isolated committed paths audit.
+
+Selected complete C/raw bodies and semantic callback/kernel providers read and bound. Three existing descriptive definitions retained; two opaque state helpers reviewed and explicitly deferred. Stale controller comments disagree with actual fade callees; kernel criticalsection asymmetries, VSync/memmove/export identities and runtime contracts retained. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Entire raw startup-list body: load665E8 before frame, if nonzero skip; else store1 BEFORE list pointers/count. Listbase10000,count fixedzero; if nonzero iterate WORDfunctionpointers, increment pointer then jalr with count-- in delay slot; saved s0/s1/ra restored. Constructor/startup-list role, preserve native zero-count and guard even though callbacks not executed in current image. Alias/include only, no instruction/label/relocation edits.
+
+Entire raw second startup-list body: loadflag665E8 BEFOREframe, zero skips, nonzero listbase10000/countzero. Same forward function-pointer loop but no onceflagwrite; restoreframe. Descriptive when-initialized role, not guessed destructor SDKname or user callback contract; all asm unchanged.
+
+Entire raw BIOS A0/39 InitHeap stub read; preserve t2 jump/t1 delay slot/raw assembler labels. Descriptive CRT BIOS heap initialization alias only.
+
+Whole Cbody/types: capture packetBYTE3 as INTn BEFOREops.f15(0), then FRESH ops pointer f5(p+4,n). Local GPUops entries and library-map DrawPrim role support direct primitive payload submission. Preserve returned ops results discarded, stored count, no packet bounds/queue/ABI rewrite; -mno-split-addresses preserved.
+
+Entire C/typebody: currentGPUops slot14 noargs return unsigned status>>31. Name top bit, not ready flag or new status semantics. GCC2.7.2.3/current provider return retained.
+
+Entire native/WASM MMIO helper block/body read: capture global66764 address and rd32. Local library-map identifies GPU GP1/status port. Host classification masks onlyphysicalbits while passing originaladdress; RAMvolatile path untouched. No MMIO/provider policy/masking/read-width changes.
+
+Entire MMIO helpers/body: capture global66764, wr32(command), return PORTADDRESS not command. Preserve nativevolatile store/WASM hostclassify/originaladdress, all U32types/macros; no semantic return repair.
+
+Entire MMIO helpers/body: capture GP1address66764,write04000000 THENwhileU32count nonzero read*data++ beforeFRESHdataPORT66760, count-- thenwriteword; returns0. Disables GPU DMA direction before CPU commandblock writes; no count clipping/const pointer/wordorder/provider conversion or freshportload hoist.
+
+Whole ops-thunk/type: current callback library table678AC slot3 noargs, preserve unsigned callee result. Full1603C reset body/standing local platform table excerpt establish reset-dispatch role; existing VOIDviews in callers preserved.
+
+Whole ops-thunk: table678AC slot5(4,callback), unsigned prior-value return. Fullvblank slotregistration/opsinitialization read; default slot4, no ordinary callback pointer or narrowedreturn type repair.
+
+Whole ops-thunk: currenttable slot5(slot,callback) with both U32args and unsignedreturn. Fullvblank initializer/registration bind semantics; preserve no rangecheck/provider signature or callback admission.
+
+Whole ops-thunk: slot4 noargs returnsunsigned. Fully read1642C suspend dispatcher and local documented optable role; old callers VOIDviews still preserved, no body expansion.
+
+Whole ops-thunk: slot6 noargs returnunsigned; fully read164CCresume dispatcher/local documented table role. Freshoptable/defaultcallingviews unchanged.
+
+Whole getter returns globalHALF66826 as UNSIGNED16, callback enabled-state check based on local CheckCallback evidence/CD poll consumers. Preserve actual distinctoffset66826 (notdispatcherflag66824), no normalization/type or duplicate-global merge.
+
+Whole getter reads first U16 through NONvolatile globalpointer678B4, returnszeroextendedU32. Fullcallback init/suspend/resume and local MMIOmap establish I_MASK pointer1F801074. Retain nonvolatile caller view, no host boundary or pointer masking added.
+
+Whole body reads U32global6792C then storesinputvalue andreturnsprevious. Fullcurrent1699C getter identifies sameaddress asGPUvideo mode, contradicting stale callback/state comment; descriptive exchange mode, no validmode clamp/globalspelling/type merge.
+
+Whole device-library initialization body: callbackreset, ResetGraph0/debug0/displaymask0,GTEinit,SPUinit,cardinit0/cardstart,backupunitinit,padportinit,CDinit. Preserve exact ordering/VOIDdeclaredreset vs U32definition and all discardedresults, no retries/errorrecovery/providerschanged.
+
+Entire raw BIOS A0/70 backup-unit init stub read. Existing provenance _bu_init, preserved assemblerlabel/register/delay slot; no portable host implementation.
+
+Entire raw GTEinit: save RAglobally67958, jal16C60 and reloadRA, COP0SR CU2bit40000000 enable. CT29=155,30=100,26=3E8,27=-1062,28=01400000,24/25=0 with originalnops. Retain globalRA/nonreentrancy/kernelpatch/COP0/nativeconstants and exact GTE sideeffects; no runtime init profile change.
+
+Entire raw geometrykernel patch: saveRAglobal736A8, EnterCritical syscall, B0/56 provider ->WORD+18 then+28 destination. Compare six codeWORDs with16D0C..16D24, mismatchskipcopy; matchedcopies six16D24..16D3C words. FlushCache then ExitCritical and restoreRA. Signature-checked installer name, no kernel address rebasing/code/BIOS admission or rawstring changes.
+
+Entire raw BIOS B0/07 DeliverEvent stub read; localpad/kernel library family. Preserve all jumpregisters/nops/delay-slot/serviceidentity.
+
+Entire raw BIOS B0/0A stub read; local library-map WaitEvent role. Pad BIOS wait-event alias only, no wait termination/providerreturn contract implementation.
+
+Entire raw 5instruction thunk: loadkernelentrypointer736E8 through t1,lui/lw/nop then jr t1/nop. Full18B68producer sets base+884; callback forwarding role, no claimed arity/result/register repair.
+
+Entire raw pad-kernel setup: saveRA736E0,EnterCritical,B0/57,loadWORD+16C asbase; checkedADDI base+884/+894 storescached736E8/EC, zeroELEVENwords atbase594..5BC via loop. FlushCache/restoreRA, NOExitCritical in this function; fullpad_init_buffers caller doesouterExitCritical. Preserve nestedcriticialentry/currentcleanup/missinginnerexit and raw labels.
+
+Entire raw pad-kernel clearing: saveRA736F0,EnterCritical,B0/57->WORD16C,checkedADDIbase62C, zeroNINEWORDS via t2count; FlushCache/ExitCritical/restoreRA. Numeric kernel offset name avoids unproved originalpatchpurpose. All traps/delay slots intact.
+
+Entire raw pad-kernel clear: saveRA73700, NOEnterCritical here,B0/57->WORD16C,checkedADDIbase1988; t2=9 retainedunused; FlushCache JAL has SINGLEzeroWORDstore in delay slot thenrestoreRA. Preserve actualoneword unlikeearliernineword commentstyle, no criticalsection repair.
+
+Entire raw pad-kernel patch: saveRA73700,EnterCritical,B0/56->WORD18; decode LOW16ofcodeWORDS70/74 as hi<<16 +lo (no signextensionadjust), destinationdecoded+28. Copy FIVEWORDS18D34..18D48 and store ENDPTR atphysicalDFFC in FlushCache delay slot. RestoreRA, noExitCritical. Preserve decodeoverflow/destination/order/critical asymmetry/asmstrings.
+
+Entire raw patch: saveRA73700,EnterCritical,B0/57->WORD16C; loadoldWORD9C8 into v1 unused, copy FIVEWORDS18D48..18D5C into handler+9C8 advancingbaseeachiteration. FlushCache/restoreRA NOExitCritical. Numericplacementname, all originalloads/stores/BIOS/delay slots unchanged.
+
+Entire raw copy: destinationphysicalDF80,source18CC4..18D34 ->TWENTYEIGHTWORDS in forward loop,returnRA. No frame/critical/cache call, preserve physicalmemory/address/wordwidth/order and original no host implementation.
+
+Entire raw patch: saveRA73710,EnterCritical,B0/56->WORD18; copy THREEWORDS18F10..18F1C to base70/74/78 with interleavedbaseincrements; FlushCache/ExitCritical/restoreRA. Numeric handler-word replacement role, not guessed original codepurpose.
+
+Whole body/fullPadheader: commandBYTE37=4B, txptrWORD2C=NULL, txlenBYTE36=0 in order. No specific vibration-map action inferred beyond literalcommand/payloadabsence; original structpadding preserved.
+
+Entire container-extent body: null orBYTE0!=DB ->-1; U8count<=0->4. Selectlasttableentry atheader+count*4, addentryLOW24relativeoffset; U8items=p1,bytes=items*2+4, roundup4 via originalremainder arithmetic,advancebybytes thenitems*4; result p+LOW24WORDp-header int. No buffer extents/countheader/type or safe arithmetic rewrite; numericmagic in descriptivename.
+
+Whole body: FRESH CTX2->p10 pointer percolorchannel; redBYTE75then19,green76then1A,blue77then1B. Full display helpers/header identify paired draw-environment clear colors. Preserve freshstatepointerreads/twonarrowingstores/channelorder, no callback/state normalization.
+
+Entire pinnedconnected=$18 body read: fade running/busy LOW8queries,mode/colorqueriesalways,mode1 invertthreebytes; whennotactive usecurrentdrawENV19/1A/1B. IfSIGNEDcurrentdisplayheight<a0 clearRECT(x0,yold,w640,hdelta),DrawSync0. Build paireddisplayenv(320,0,320,h)/(0,0,320,h), clearflags/offsets,centerY=(240-h)/2,heightfields. Build paired drawenv0/320 withsameheight, set threeflagspairs17/73,16/72,18/74 in order. VSync0thenworknonnull currentdisplayenvwork8*20 submission. Stale padqueriescomments preserved; namesfollowexistingfade/ENVbehavior. No screen clamp/pins/layout/compiler/ABI rewrite.
+
+Whole body/fullheader: worknonnull ONLY VSync0,currentdisplayenvworkBYTE8*20 submission,copyOTHERdrawenv(work8^1)*5C into73C88 staging record viaexistingmemmove. Fade running/busyLOW8,mode,colorqueries; active&&mode0 ->clearflagBYTE18=1 thenRGB19..1B,otherwiseflag18=0. PutDrawEnv thenDrawSync0. Preserve freshwork/state/providerreads/copyABI/partialstagingfields and unusual memmove behavior; no pad-controller identity guess.
+
+Whole noargsVOIDwrapper callsalready-named release_main_resource_container once. Descriptive archive wrapper, no free-policy/arg/return/layout change.
+
+Use maintained wide renamer/farm/scorer/preprocessor and the established raw-entry include-only snapshot pattern. Sixteen raw definitions expose C aliases while every assembler string/label/instruction/delay slot remains byte-for-byte intact. BV-03 public readability review/deferral and raw-entry support remain proposals; no shared tooling or private walker implemented.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
