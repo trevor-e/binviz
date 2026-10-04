@@ -12999,3 +12999,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual four sprite slide scale sequence naming acceptance (BV-03/BV-08, P2):
+FF9 9830ba972 adds 1 selected canonical ovl_11ef5000 names. Catalog
+5,553 unit/symbol names, 356 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-four-sprite-slide-scale-sequence.json and Binviz
+target/ff9-names-effect-residual-four-sprite-slide-scale-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/988 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining11EF5000 controller independently full-read and named by four delayed sliding sprites with scale ramps. Full g24/lifecycle headers bound. Original loaded-object treatment, constant middle scale and compile workaround remain; no fabricated initialization of global sprite records.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole18byte handler and four sprite-record countdown branches read. Three staged loaded objects at0/32/40, firstrelease40; four delayed sprites advance Xbycachedspeed and age, grow scale first8 then shrink final8 of48timer, choose resource5or12 bykind. Object0/2 drop and feedframes4/2, object1 intentionally not updated; completion72. Preserve no-strength-reduce flag, chained pointer-to-int zero stores, unused sprite-record fields, middle scale1000ratherthanbase, exact call and countdown ordering. No spell/resource visual identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
