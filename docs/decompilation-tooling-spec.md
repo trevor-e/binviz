@@ -12069,3 +12069,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Battle residual effect command unit helpers naming acceptance (BV-03/BV-08, P2):
+FF9 d775cf3c1 adds 3 selected canonical ovl_065800 names. Catalog
+5,510 unit/symbol names, 323 scoped alias headers. 4 selected complete overlay
+bodies reviewed and bound, 3 named and 1 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 3 semantic-provider body hashes bound. Evidence:
+docs/function-names-battle-residual-effect-command-unit-helpers.json and Binviz
+target/ff9-names-battle-residual-effect-command-unit-helpers/. 4 full native object pairs equal;
+exact affected/scored namespace 4. Pinned strict-relocation scores unchanged:
+4 exact/0 partial, 2,468/2,468 code bytes, zero failures. 4
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 8 isolated committed paths audit.
+
+All four residual065800 bodies fully reviewed: three named from complete helper/provider bodies and one opaque draw-environment flag clear deferred. Three full semantic providers and full lane01 header read. Exact phase gate, table selector, empty-enemy-count condition and unit flag bitfield preserved. No invented flag meanings or type fixes.
+
+Full selected bodies and complete bound semantic providers are the evidence; transplanted template comments do not transfer purposes. Known buffer/scene/command/bitfield behavior named, unresolved field/category/callback purposes explicitly hash-bound and deferred. Every distinct unit/symbol identity remains separate.
+
+Whole scene+0C roster BYTE27==0 -> globalflagFEC65=1. Full lane01 BScene/Btl header proves BYTE27 is enemy count. Name exact empty-roster condition and flag store only; do not assign battle-ending/result meaning to flag.
+
+Whole phase1 uses stack args id/packed, low5bits select table value and bits5..7 select halfword1 for0/1 orhalfword2 for2/3; other selectors no write, allphases return1. Full loaded-offset provider and effect animation consumer independently read. No guessed table-value meaning; retain phase protocol/extra arguments/prototype mismatch.
+
+Whole unit lookup, lowBYTEcast then>>5 yields flag bits5..7. Full unit lookup/header read. Numeric bitfield identity explicit rather than guessing enemy/class/action meaning; preserve unsigned return and existing out-of-range provider behavior.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
