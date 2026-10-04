@@ -14916,3 +14916,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual ground host anchor resources naming acceptance (BV-03/BV-08, P2):
+FF9 57fb35480 adds 1 selected canonical ovl_fb22000 names. Catalog
+5,624 unit/symbol names, 427 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-ground-host-anchor-resources.json and Binviz
+target/ff9-names-effect-residual-ground-host-anchor-resources/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 384/384 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFB22000 independently reviewed and named for delayed resources at ground and original host anchors. Full g09/lifecycle/local declarations bound; actual no late h22 writes retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole24hex-byte lifecycle and event read.84origin/200hostposition;copyhostvectorYzero groundanchor. Resource7initialoriginh22via220(0,16);20resources2groundpoint and1originalhostpoint WITHOUTlateh22writes,finish40. Preserve mixedsix/eightbytevectors, partiallatepointers and exactloadorder. No assumed objectparameter updates or spellgeometry.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
