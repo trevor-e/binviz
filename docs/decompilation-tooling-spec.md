@@ -12972,3 +12972,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual staggered direction pair sequence naming acceptance (BV-03/BV-08, P2):
+FF9 613da66cb adds 1 selected canonical ovl_11c1d800 names. Catalog
+5,552 unit/symbol names, 355 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-staggered-direction-pair-sequence.json and Binviz
+target/ff9-names-effect-residual-staggered-direction-pair-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 848/848 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining11C1D800 handler independently full-read and named by staggered pair of direction-tracked objects. Full g23/lifecycle headers bound; opaque resource138parameter meaning retained without semantic or type repair.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole44byte modes and all resource/countdown/drop branches read. Initial resource6 at offset200point, resource8at15; both live object direction fields follow cached D4vector, second onlyfrom15. Resource9slot138at15..27with capped5counter and unsigned halfword parameter decreasing512fromstep5, completion60. Preserve original object initialization frontier, halfword copying/narrowing and redundant checks/API ordering. No unverified alpha/scale interpretation for138 or spell geometry.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
