@@ -7717,3 +7717,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Table guided split particle paired pulse naming acceptance (BV-03/BV-08, P2):
+FF9 f92e10a01 adds three canonical ovl_11888000 names. Catalog
+4,784 unit/symbol names, 212 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-table-guided-split-particle-paired-pulse.json and Binviz
+target/ff9-names-table-guided-split-particle-paired-pulse/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 1,692/4,528 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 seven-argument INT callback: init phase/t=0, resource14 at handleblock+20, nullable h22=64; idx, position c, scale and h38/h3A not initialized here. Every non-init op selects unchecked table[idx]. Phase0 scales XY=(4096-sin(t*256))*(scale*5/2)>>12 and Z=cos(t*256)*scale>>12; creates unused offset local vector but loaded object receives UNOFFSET table XYZ. Clear ended object then write if still nonnull. Increment t, switch to phase1 at4/t0; tail uses updated phase.
+
+Phase1 XY=scale*5/2/Z=scale, copies both table words then narrows local X-=2048; object receives offset local XYZ. Handle h24 gates phase2/t0, h38 += rand()%50-25 and h3A += (rand()&31)-16 with U16 narrowing. Copy c into d/e, copy both table words into x30/w34. Tail immediately uses new phase2 and three handles although phase1 scales/lum are still used.
+
+Phase2 sin((t<<12)/20>>2) controls XY scale and lum; separate sine call produces a_b>>7. D8(table,a_b/2*a_b/3*a_b) outputs three motion vectors: c/d/e XYZ subtract these with separate Y adjustments (6-t), -(t-6)*4, -(t-6)*8. Switch pt to saved x30/w34 only after third D8; x30/x32 add unsigned h38/h3A with SIGNED narrow, t++ before eZ subtraction. Terminal t>=20 returns1 before any tail poses; normal t0..18 draw, t19 movement only. No assumed fall direction or effect identity.
+
+Common tail halves XY scales arithmetically, leaves Z. Phase<2 calls2E4(handlea,2), poses a plus d at c, tints onlya. Phase>=2 poses d/c/b at c/d/e, tints allthree. GLOW visibility1 iflum<4000 withlum>>5, otherwisevisibility0 with(lum*3)>>6; subtract128 then26C triple. Preserve every repeated lookup, invalidphase frontier and uninitialized lane.
+
+7ED8 descriptor state52/callback68/count10, reg3/4 untouched, registers callback address with explicit INT cast. Actual declared main state48 bytes preserved. Init five creates resources19/21/22/23 then11 overwrites same hnd[3], no cleanup invented. First four154/15808/128/0, final186/15680/0/128; phase/cnt/frame/h24/scroll0, capture200/1FC, resources13/20 nullable h22=220(0,70). Mutate all10 shared static table XY halfwords by92/512 on EVERY init, preserving accumulated mutation and Z/pad.
+
+Phase0 one184 pool-allocation attempt every update, successful allocation uses signed cnt then increments it, DC(v14,table[idx],-16) fills three position INTs and scale=SIGNED tablepad*3. Failed allocation does not increment cnt. Scroll+=32; ordinary frames0..9 produce TEN attempts, phase1/frame-1 at>=9. Phase1 scroll+=sin((t<<10)/14)*32>>12, at>=14 phase2/frame-1/h24=1 then loads17/18/16/15 withnullable32. Phase2 t<5 blue-weighted flash, exact0resource25, terminal>=21 calls78/return1 before scrolling draw/counter. Other updates240(scroll,640,384,64,128,640,256) and frame++. No bounds/failure-backfill/newrelease fixes.
+
+8574 descriptor16/init savedctx phase/frame0. Every update2B8(16,1,vec) before any terminal test. Phase0 t4096/3, size512, cos/2 and declining h, transitions>=3 after computing values and still draws. Phase1 parity wobble, size(t4096/9>>3)+512 with identical ifarms retained;>=9 transitions and stilldraws. Phase2 k=(t4096/9)>>2, size1024-k, x=sin(k), w=cos(k)+4096, h=cos(k)*3/2+4096 with separatecoscalls;>=9 returns before drawing/counter. Common tail fourSIGNEDrot0/0/size/0, ctxw28=128 around SEVENarg128 resources27 THEN26, NULL rotation then vec, w/3,x/2 and h/2,(x<<1)/3. Clears context then frame++. Pin23 retained; old donor resource comments not trusted.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
