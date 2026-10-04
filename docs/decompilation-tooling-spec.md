@@ -2465,3 +2465,51 @@ compiler/input/output identities are configured and independently verified.
 No portable module,linked image,gameplay,selected-provider or shared workspace
 acceptance. Refresh source-bound downstream evidence through current catalog;
 retain historical scorer and preserve foreign index/work/checkpoint sections.
+
+World movement/rendering naming acceptance (BV-03/BV-08, P2): FF9
+e0cf9aa1a adds31 canonical ovl_08d800 behavioral names; catalog3553 unique
+unit/symbol names,53 alias headers. All109 primary bodies in this unit are
+cumulatively reviewed:103 named,six empty/zero-return hook roles deferred.
+This batch reviews28 previously unreviewed primaries plus three resolved
+deferrals; prior81 source bindings independently verified before snapshots.
+Other units remain pending. Evidence: docs/function-names-world-movement-rendering.json
+and Binviz target/ff9-names-world-movement-rendering/.
+
+All33 complete native object pairs are identical; exact manifest/scoring
+namespace33. Pinned strict-relocation scores unchanged:24exact/nine partial,
+16600/28500 code bytes,zero failures. All33 installed WASM preprocessed token
+comparisons agree. Current catalog/source/header/object/review bindings audit;
+37 isolated committed paths agree. No new original matching credit.
+
+Actual movement consumers resolve AE828 as camera heading-follow toggle and
+B35F4/B3638 as start/cancel travel to the selected map destination. Names also
+cover visible actor rendering, height-based palette shading, actor model and
+ground effects, terrain collision probes/walkable-position search, controlled
+actor mode changes, movement input dispatch and three input modes, camera
+heading easing, projected-point visibility and palette depth cueing.
+
+Eleven raw rendering primaries expose public descriptive C aliases only; raw
+assembly strings are independently compared, every label/instruction/register
+convention/delay slot stays canonical, and leading asm marker stays first.
+B3844/B3998 retain existing conditional C/default assembly selection. Actual
+vertex stages distinguish bent/unbent Y, wide/compact depth formats, single/dual
+depth-color streams and GTE/software bend. Triangle emitters distinguish fixed
+depth, mip UV adjustment, quantized depth selection and compact semitransparent
+or layered packets. Renderer caller pairings corroborate stage roles without
+proving cross-overlay runtime provider identity; avoid guessed asset subtypes.
+
+Preserve bitwise camera flag complement, overwritten packed ground-effect word,
+mutated collision fallback vector, early-return query flag, pre-null dereference,
+unchecked indexes, signature mismatches, negative-speed rescaling, reversed-looking
+analog gate, asymmetric clamp, terrain RNG effects, sound ramps and every raw
+packet/depth/texture detail. Naming makes these inspectable without fixing them.
+
+Maintained naming/farm/scoring/preprocessor interfaces and existing thin raw
+snapshot adapter reused; no new ownership/type/CFG walker or tooling rewrite.
+Previously flagged BV-08 exact object namespace gate is enforced again; no new
+reusable tooling gap found. Shared readability acceptance remains proposed until
+frozen namespaces and actual compiler/input/output identities are independently
+verified. No portable module,linked image,gameplay,selected-provider or shared
+workspace acceptance. Refresh source-bound downstream evidence from the current
+catalog; historical batch reports/scorer stay pinned. Foreign work/index and
+unrelated FF9 checkpoint sections remain preserved.
