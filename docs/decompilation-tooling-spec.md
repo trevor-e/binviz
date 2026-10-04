@@ -5348,3 +5348,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Six object paired keyframes naming acceptance (BV-03/BV-08, P2): FF9
+f16fdbab1 adds six canonical ovl_118f9000 names. Catalog4,470 unique unit/symbol
+names,132 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-six-object-paired-keyframes.json and
+target/ff9-names-six-object-paired-keyframes/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+five exact/one partial,2,208/3,040 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established six-object paired-track crossfade,mirrored pair/scale tablehelpers
+and three-phase sprite ring pulse. Preserve upper-only clamp,signature differences,
+pads,initialanchor,handlepairs,nullablecall,pins,terminalordering and actual
+resource choices. No inferred actor-follow despite donor comments. Own-unit
+aliases retain canonical native/runtime identities. Exact game effect/provider
+identities unresolved. No body/type/layout/ABI repairs or original developer names.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
