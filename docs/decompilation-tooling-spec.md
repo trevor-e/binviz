@@ -3786,3 +3786,35 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Three-track crossfade naming acceptance (BV-03/BV-08, P2): FF9
+345c3290d adds10 canonical ovl_138d7800 names. Catalog4,156 unique unit/symbol
+names,89 alias headers; all10 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-three-track-crossfade.json
+and target/ff9-names-three-track-crossfade/. All10 entire native object pairs
+identical, exact affected/scored namespace10, unchanged pinned strict-relocation
+baselines10 exact,2,704/2,704 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all10 sources; current catalog/review/source/header/object
+bindings and14 isolated commit paths audit. Progress4,156/5,812 canonical primary
+files named(71.5%),1,656 remaining; full-tree goal active.
+
+Names cover paired snapshot objects, tenframe purewait, three-track crossfade,
+actor-slot object spawn and weight/scalar/paired/scalartrack helpers. Complete
+own-unit bodies/consumers establish boundedroles; no original flyby/ability/
+provider labels or donor equality inferred. Calls retain own-unit native/runtime
+identity through aliases; storedsnapshots are not livefollow sampling.
+
+Preserve upper-only actorcheck, independent idcalls, partialstate, exact event
+resource/customrecord order andhq=$16 pin. Three tracks share rotation/position
+scratch; firsttrack scalarcrossfade from22 usesfourthhandle. Tintcounter10 starts
+30 anddecrements beforegates; windowends40 withoutterminal sample. Unsignedh50
+subtracts512 from24 everyframe, destroy atzero doesnotclear storedpointer and
+laterframescontinue touching/wrapping it. Preserve NULLdestroy possibility,
+finish60 afterfade, pairedoutput reversal and signedscalar/unsignedcount clamp.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
