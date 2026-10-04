@@ -1728,3 +1728,44 @@ backlog without a private walker or tooling rewrite. Reused legacy farm/scorer
 checks are compatibility fixtures; shared workspace acceptance still requires
 configured frozen namespaces/compiler inputs/actual outputs. Refresh downstream
 source-bound evidence after names change. Preserve unrelated session changes.
+
+Battle camera/model naming acceptance (BV-03/BV-08, P2): FF9 adds29
+reviewed names (28 C definitions,1 callable assembly alias) in ovl_03e000.
+Current catalog2547;33 alias headers. Unit inventory146 primary sources,29
+named and117 remaining for combat/status/reward review. FF9 commit7a11562b1;
+docs/function-names-battle-camera-model.json and compatibility scratch
+binviz/target/ff9-names-battle-camera-model/.
+
+All32 affected complete native objects agree; pinned strict scores unchanged
+(22 exact,10 existing partials;7536 matched of22968 code bytes). All32 installed
+WASM preprocessing comparisons agree. Original assembly source stays untouched.
+Independent audit verifies2547 current definition identities,33 headers,36
+owned committed paths,7 inspected semantic inputs and4 original data/code
+slices. Unrelated work preserved. No new original matching credit, linked image,
+compiled module or gameplay proof; old behavioral-test comments are historical.
+
+Names cover camera initialization/actor binding, script selection/interpreter,
+key decode/timing/evaluation, anchor lookup/midpoints, random shake, sine bob,
+rolled look-at matrices, stored transitions, model relocation/UV offsets,
+visibility/scaling, part projection/packet emission and animated bone matrices.
+Complete camera consumers contradict old result/color-fade/water-ripple prose.
+The look-at roll uses eye->pad, not eye->vz. Original f5758 preset sample is
+bounded evidence, not proof of safe table extent or valid class indices.
+
+Preserve signed16 narrowing before midpoint shift, unsigned bob shift, wrapped
+angle equality rules, uninitialized interpolation weights, polynomial factors6,
+script command count/timing/flags and repeated unadvanced scene-end pointer.
+Retain flags|=2 then flags=0 in model initialization, one-time relocation/UV
+mutation, shared-index scratch marking, low-half translation, groups of three
+with possible extra/preloaded vertices, low-bone do-while behavior and next-parent
+reads. The two packet emitters keep distinct tag writing, hidden-object return,
+texture flags and depth arithmetic. Bone-builder code spans clipped overlay
+boundaries; aliases remain confined to its canonical03e000 naming unit.
+
+Shared naming evidence should retain complete consumer chains and conflicting
+old labels, observed code extents and unresolved same-address overlay callees.
+No role is inferred for ea004 from a different unit's source. This extends the
+existing semantic-evidence backlog without a private walker or tooling rewrite.
+Legacy farm/scorer checks remain compatibility fixtures; shared workspace
+acceptance requires configured frozen namespaces/compiler inputs/actual outputs.
+Refresh downstream source-bound evidence after names change.
