@@ -6149,3 +6149,41 @@ or private type/ownership/CFG walker. No original matching credit,linked image,
 gameplay,selected-provider or sharedworkspace acceptance. Refresh source-bound
 evidence;historical scorer/reports pinned;foreign work/index preserved;full-tree
 naming goal active.
+
+Spark spiral ribbon naming acceptance (BV-03/BV-08, P2): FF9
+eb495a490 adds four canonical ovl_108e4800 behavioral names. Catalog4,611
+unique unit/symbol names,160 scoped alias headers. All four complete own-unit
+bodies reviewed;zero semantic deferrals. Other units pending. Evidence:
+docs/function-names-spark-spiral-ribbon.json and Binviz
+target/ff9-names-spark-spiral-ribbon/. Four complete native object pairs identical;
+exact affected/scored namespace four;pinned strict-relocation scores unchanged
+one exact/three partial,340/9,760 code bytes,zero failures. All four installed
+WASM preprocessed token comparisons agree. Current catalog/source/header/object/
+review bindings and eight isolated committed paths audit.
+
+Names establish sixteen-tile spiral ribbon,cylindrical spark field,projected
+spark trails and three-phase spark/ribbon/burst sequence. Actual own-unit bodies/
+typed calls independently reviewed. Ribbon has TWO GT4 endpoint packets and
+FOURTEEN FT4 middle packets despite swapped old-comment types. Spark buffer
+history words retain PREVIOUS screenXY/sentinel,not RGBcolours/deadstate:
+project OLDposition beforeZmovement,wrap skipsstore/draw,firstvalidframe seeds
+history,next draws current/old endpoint trail. Restore GTEscreen distance and
+preserve rejectedtile cursors,manualpartialfields,pins/barriers/compilerflags.
+Main actually creates EIGHThandles without blanketstate initialization;
+phase2Z usescapturedX andphase3uses24-byte strides through64x8 burst table.
+Keep these actual own-unit operations,zero randomranges,camera/draw/tick order;
+do not correct using misleading comments or donor assumptions. No original
+game effect or selected-provider identity claimed. No body/type/layout repair.
+
+Existing BV-06 declaration frontier retained: nine-argument VOID sparkdrawer
+defines first/fifth arguments INT while actual typed caller declaresu8*/void*.
+Native/preprocessor identity grants no linked/provider ABI admission. Preserve
+current contracts and distinguish them from meaningful used-return mismatches.
+Readable definitions,typed declarations and calls propagate;own-unit aliases
+retain canonical linker/address/runtime identities. Maintained naming/farm/
+scorer/preprocessing interfaces and thin adapters reused;BV-08 exact namespace
+gate enforced. Existing BV-03 reviewed-deferral versus unreviewed prioritization
+proposal retained. No new reusable implementation or private type/ownership/
+CFG walker. No original matching credit,linked image,gameplay or sharedworkspace
+acceptance. Refresh source-bound evidence;historical scorer/reports pinned;
+foreign work/index preserved;full-tree naming goal active.
