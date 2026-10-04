@@ -12432,3 +12432,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual nine model bounce scale sequence naming acceptance (BV-03/BV-08, P2):
+FF9 2abd5a89e adds 1 selected canonical ovl_10040000 names. Catalog
+5,532 unit/symbol names, 335 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-nine-model-bounce-scale-sequence.json and Binviz
+target/ff9-names-effect-residual-nine-model-bounce-scale-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,628 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining10040000 controller full-read and named for nine-model bounce-shaped scale updates. Full g11/handler headers bound. Actual height writes scale Y, so no positional or sphere-shape claim. Keep every original arithmetic/API signature and partial baseline.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole30byte handler size/init/update read. Ten handles initialized, nine models receive parabolic speed*t-128*t*t into SCALE Y, not position; landing rerolls speed, ending countdown parks time-100, separate rising/falling level/fade counters, frame88 completion. Do not infer spheres or physical movement from comments. Preserve resource/order/indexed records/scalar reloads, modulo denominator, signed shifts, fourteen-argument call and scale-field identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
