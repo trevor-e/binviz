@@ -13080,3 +13080,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual anchor follow interpolation sequence naming acceptance (BV-03/BV-08, P2):
+FF9 c324f01d0 adds 1 selected canonical ovl_12ba2000 names. Catalog
+5,556 unit/symbol names, 359 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-anchor-follow-interpolation-sequence.json and Binviz
+target/ff9-names-effect-residual-anchor-follow-interpolation-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 860/860 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining12BA2000 controller independently full-read and named by anchor following and final interpolation. Full g27/g16/lifecycle headers bound. Five original counters with onlyfour initclears remain; no bounds, initialization, layout or matching fixes.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole54byte handler all five countdowns and frame events read. One resource9handle: first8ticks follow indexedanchor5withYminus100, then14anchor12ticks, then3step1365interpolation towardcachedposition. Separate8stepbrightnessramp and26ticktransformgate; resources2at26, completion66. Preserve onlyfourcountdowns clearedatinit thougharrayfive, possibleoverlap ordering, unsignedjobview, fixedscales, original tintskipat128 and untouched initialpositionfrontier. No anatomy/spell/provider claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
