@@ -8865,3 +8865,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Fixed negative z load per actor resource load naming acceptance (BV-03/BV-08, P2):
+FF9 acb55711d adds two canonical ovl_13bb9800 names. Catalog
+4,856 unit/symbol names, 245 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-fixed-negative-z-load-per-actor-resource-load.json and Binviz
+target/ff9-names-fixed-negative-z-load-per-actor-resource-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 412/412 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor0/no state. InitglobalSIGNEDs16XYZ0/0/-1560 ONLY, fourthhalfworduntouched, savesG28context, lookupresource3/loadglobalvector/discardresult. Othermodesreturn1 ifframe>=64 else0, no perframework/78/release or objectstate. DistinctresourceID comparedto othermodules preserved.
+
+77A0 descriptor0/no state. Init savesdifferentlocalcontextview atSAMEglobalidentity, for i0 whilei<LIVEcountbyte atctx.actors+36,200(i,0,unsizedglobalposition[i]) THEN198(job.id,1)/1D4thatposition, discardreturn. Countreloadedforeachcondition, no snapshot/dedup/nullguard/countcap/vectorinitializer or release. Globalfourhalfwordrecordproviderwriteextent unresolved, sourcekeepsallrecordrefs. Othermodesreturn1 ifframe>=48 else0; query/initreturns0. No updaterestore/78/scheduledevent inferred.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
