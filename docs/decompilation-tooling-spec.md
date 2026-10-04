@@ -13350,3 +13350,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual three model directions point burst naming acceptance (BV-03/BV-08, P2):
+FF9 fa640141f adds 1 selected canonical ovl_fee7800 names. Catalog
+5,566 unit/symbol names, 369 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-three-model-directions-point-burst.json and Binviz
+target/ff9-names-effect-residual-three-model-directions-point-burst/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 820/820 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remainingFEE7800 controller independently full-read and named for three direction-tracked models plus indexed point burst. Full g11/lifecycle headers bound. Every own resource/vector identity and original count/extent behavior retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole6Cbyte lifecycle, all three drop/updatebranches and indexedburstloopread. Opposing cachedD4vectors towardgroundpointZplus500; resources3/1/8objects receiveforward/reverse/forward direction fields. Resource2atallhostindexedpoints6, completion50. Preserve GCC2.8.1, eightpointarray with uncheckedhostbytecount, original signed/narrowstores and nullhandling. No modelworldmotion/spell identity or providerclaim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
