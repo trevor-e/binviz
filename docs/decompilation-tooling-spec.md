@@ -8725,3 +8725,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Twelve particle fan shared sine hooked object load naming acceptance (BV-03/BV-08, P2):
+FF9 427bd4f61 adds two canonical ovl_12d42800 names. Catalog
+4,851 unit/symbol names, 241 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-twelve-particle-fan-shared-sine-hooked-object-load.json and Binviz
+target/ff9-names-twelve-particle-fan-shared-sine-hooked-object-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 684/1,852 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 ev1 phase0, loadresource4 at existing v0C, nullable h22=0, separate zeroargRAND calls set w4=(RAND&31)+39 andw8=(RAND&31)+32. Existing v0C/v14/v20 supplied by allocator/caller, no additional initializer. Other events phaseNONZERO returns0 immediately. Phase0 incrementsw4 by12 clamps only when>=321 to320; incrementsw8 by29 clamps when>=557 to557. Those values feed movement/rotation slots, not identified sprite sizes.
+
+Phase0 t=4096 except frame<5 usesframe<<10, then(t*SHARED D_801e86CC)>>12. CallsD4(v0C,v20,TWOintlocal),E4(local,v14,w8),DC(v0C,v14,w4,v0C) in order. Drawing TWO114calls at NEW v0C usesresource14 and3, size t+2048, frame, mode1 versus2, fade-1/offset0/0. Separate198lookups retained. Negative frame/overflow frontiers preserved; no clamp on shared value or interpolation.
+
+Callback checks nullable object h30==-1 andclears pointer AFTER motion/draw. SharedNONZERO returns0. SharedZERO still performs motion/draw first, then ifobj nonnull sets h38 fromobj.p24.h6 WITHOUTp24nullguard; phase=1,return1. Later phase1returns0 evenifsharedbecomesnonzero. Termination is shared-value-driven, not frame bounded; no object release, position write or implicit retry.
+
+79B0 descriptor32/12particles/40recordsize/callbackout5; untouched descriptor slots preserved. Init phase0/count0, savesctx viaD_801e7E88.ctx, TWOword copieshost+38/+3C into packedp4/p8 including fourthhalfword, unsignedY-=512. 200(16,0,v0C),20C(16,v14),shared4096 thenunsignedrotationY+=2048. No invented coordinate initializer/provider semantics.
+
+Phase0 oddframes allocate ONLYifcount<12; count incrementsBEFORE184 so failed allocation consumes anattempt. Successful particle copiesTWO v0C words includingpadding, targetXYZ storesX/Z/Y inliteralorder, headingY=v14.Y-768+((count&3)<<9), headingZ0, headingX=v14.X+((count>>2)*3<<7), halfwordnarrowingretained. Count startsat1 forfirstsuccessfulattempt, groups derivedfromattemptcount notsuccesscount. t>=62 transitionAFTERattempt tophase1/resetjob.frame=-1; continuesphase0idle until62 evenwhen12attemptscomplete. No lowerframebound/countcap added.
+
+Phase1 t<8: b=t<<9,a4096,shared=SIN(t<<7); t>=8: a=SIN((t-8)<<7),b4096,shared0. Thena=3*a+1024. Fully initialize rotationvector(1024,0,0,1),flag32 around128(resource20,packedp4,rotation,a,0,1,b), clearflag0 then134(resource15,t). Shared isZERO atordinaryphase1frame0 aswellasfrom8 onward, so callback completion depends onhost scheduling; do not claim continuous fade or persistence throughall8frames.
+
+Phase1 t>=16 transitionsAFTERdraw tophase2/resetframe-1 thenloadresources16/17/18 eachnullableh22=128, resource19nullablep14=globalhooktable/h12=25/h22=32/hC=84, resource21nullableh22=32. All usepackedp4 origin, no release/backfill andorder preserved. Phase2 t>=32 selfstoresphase2 andreturns1; no78 call. Unknownphasesreturn0, nocommoncounter. Job castObj16 readsresourceid+8 separatelyfromframe/allocatorarg+10. Sharedglobal context/scale and loaded-object/hook ownership unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
