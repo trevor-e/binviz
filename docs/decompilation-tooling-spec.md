@@ -11842,3 +11842,42 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+World residual buffer mesh map helpers naming acceptance (BV-03/BV-08, P2):
+FF9 bb4df7ebf adds seven selected canonical ovl_09b800 names. Catalog
+5,488 unit/symbol names, 316 scoped alias headers. Twenty two selected complete overlay
+bodies reviewed and bound, seven named and fifteen explicit full-body deferrals; remaining boot and overlay functions pending. No new layout headers; seven semantic-provider body hashes bound. Evidence:
+docs/function-names-world-residual-buffer-mesh-map-helpers.json and Binviz
+target/ff9-names-world-residual-buffer-mesh-map-helpers/. 12 full native object pairs equal;
+exact affected/scored namespace 12. Pinned strict-relocation scores unchanged:
+11 exact/1 partial, 4,316/4,416 code bytes, zero failures. 12
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 16 isolated committed paths audit.
+
+All twenty-two currently uncataloged canonical primary bodies in ovl09B800 read fully: seven named, fifteen full-body hash-bound deferrals including twelve empty hooks and three opaque predicates/wrappers. Seven complete semantic providers/consumers read, including two raw08D800 geometry/packet providers. No selected raw definitions or new layout headers. Remaining boot/otheroverlay functions pending.
+
+Unit-scoped aliases preserve all overlay identities, stable symbols/imports/types, callback mismatches and original files. Two upper-RAM accessors remain separate addresses with exact int return. Terrain wrapper calls08D800 constituent despite stale boot comment; texture reset belongs to world frame4 setup despite battle comment. Mesh wrapper retains hidden register input to B3A80 and extra callsite arguments. No provider/link/runtime admission.
+
+Whole constant accessor returns801EDF00 in existing int type. Established local buffer annotation; no resource ownership/extent/type admission, runtime pointer normalization or original entry consolidation.
+
+Whole independent accessor returns same801EDF00. Keep distinct canonical address and declaration, no function merging or claimed stronger buffer role.
+
+Whole forwarder calls importedB30C0. Independently complete linked-module08D800 provider walks kind4 actors, computes terrain height/angle, updates height and previous position. Existing comment calls provider boot but it is separate overlay constituent; keep import symbol and prototype unchanged, no new provider admission.
+
+Whole unsigned(wordD3F98-2)<2 predicate. Complete world frame consumer stores result into workBYTE571 for map-change request3; do not infer fuller meaning of opaque modeword or alter native U8caller/intdefinition mismatch.
+
+Whole bank ordering-table select, rawB3A80 projection then rawB3FEC triangle packet emission updating current cursor. Both full08D800 raw providers read independently, including scratchpad register saves and GTE/packet writes. Preserve B3A80 void(void) declaration despite raw reading incominga0, extra caller arguments and original saved-register allocation; no prototype/register repair.
+
+Full nine-group mask loop copies active texture recordh4->h6 across12 one-based IDs, resets three scrolling slots/counters, derives progress-range flag, initializes full visible-mesh pool and texture caches/uploadslots. Complete world frame caller establishes first-time frame4 setup; stale battle-scene comment not treated as identity. Preserve extra provider args/localhoists/types/allbounds and original record extents.
+
+Whole currentID comparison against tablebytes0/1 and conditional3/4 when regionflagzero. Complete sound-request submitter uses predicate to set worldflag400000 unless exit3. No guessedvehicle/character identity or unnamedtablelabel; preserve SHORT result temporary and conditional table access.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
