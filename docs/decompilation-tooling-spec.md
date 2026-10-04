@@ -5155,3 +5155,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Slot16 model position naming acceptance (BV-03/BV-08, P2): FF9
+6279a7b97 adds six canonical ovl_12cbd000 names. Catalog4,422 unique unit/symbol
+names,124 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-slot16-model-position.json and
+target/ff9-names-slot16-model-position/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+six exact,1,656/1,656 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all six sources; current catalog/source/header/object/review and10
+isolated commit paths audit. Other units remain pending.
+
+Established slot16 interpolated model sequence,30-frame actor object sequence,
+slot16 position blend/wait,host-position blend,fixed weights and scalar lerp.
+Preserve actualYZ angle inputs,unsignedhalf handle,partial vectors,six-byte local,
+externaljobframe versusinternalcur,emptyasm,unguarded division/extrapolation,
+equality-only waittermination and terminalcallordering. No body/type/layout/
+signature repair or original game/provider identity guess. Readable references
+alias to canonical native/runtime symbols within the unit.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
