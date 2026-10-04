@@ -1893,3 +1893,34 @@ conflicting old comments, mutating query helpers and partial dispatcher
 boundaries. No private walker/tooling rewrite. Legacy farm/scorer fixtures
 remain compatibility evidence; shared workspace acceptance requires frozen
 namespaces/compiler inputs and actual outputs. Refresh downstream evidence.
+
+Battle screen/phase naming acceptance (BV-03/BV-08, P2): FF9 commit5311a6549
+adds33 reviewed C definitions, reaching2755 unique unit/symbol names. Unit
+ovl_02e800 now has92/106 primary definitions named;14 remain for purpose review,
+including loading state machines and the partial action dispatcher. Evidence:
+docs/function-names-battle-screen-phase.json and binviz/target/ff9-names-battle-
+screen-phase/. All33 complete native objects and installed WASM preprocessed
+tokens agree; original strict scores stay unchanged (29 exact,4 existing
+partials). No new original matching credit, linked image/module or gameplay
+proof is claimed.
+
+Complete bodies and30 semantic inputs establish screen lifecycle, common
+archive resources, scene buffer allocation, actor records, disc-wait/pause,
+ordering tables/frame submission, battle phase transitions and render tails.
+Four original code ranges bind the complete pause epilogue, zero-return hook,
+phase driver and outcome-transition body. Catalog/header/current-source and
+isolated committed-path checks pass across2755 names and37 alias headers.
+
+Stale prose incorrectly calls graphics initialization an audio start, global
+exit flags a direct button mask, scene intro an aftermath phase and the broad
+outcome-transition routine victory-only. Names follow actual bodies and callees.
+The frame-render tail passes primitive cursors; marker projection uses mask2
+(bit1). Release cleanup repeats sweeps of the same fixed table. The actor sprite
+record wrapper takes palette/texture positions, not a display rectangle. Keep
+all ABI mismatches, signed/narrow counters, pointer/flag asymmetries, packet
+order, raw assembly, register pins and compiler matching hacks unchanged.
+
+Legacy farm/scorer compatibility evidence is not shared workspace acceptance
+or scorer migration. Shared acceptance needs configured frozen namespaces and
+compiler inputs. Regenerate source-bound downstream evidence using current
+catalog/header identities. Preserve unrelated runtime-adoption work.
