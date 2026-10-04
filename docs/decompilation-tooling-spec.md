@@ -1924,3 +1924,34 @@ Legacy farm/scorer compatibility evidence is not shared workspace acceptance
 or scorer migration. Shared acceptance needs configured frozen namespaces and
 compiler inputs. Regenerate source-bound downstream evidence using current
 catalog/header identities. Preserve unrelated runtime-adoption work.
+
+Battle load-sequence naming acceptance (BV-03/BV-08, P2): FF9 commite34004516
+adds13 reviewed C definitions, reaching2768 unique unit/symbol names. Unit
+ovl_02e800 now has105/106 primary definitions named; b44c0 remains deferred as
+an action-dispatch HEAD with109 stand-in cases. Evidence:
+docs/function-names-battle-load-sequence.json and binviz/target/ff9-names-battle-
+load-sequence/. All16 complete native objects and installed WASM preprocessed
+tokens agree; original strict scores stay unchanged (12 exact,4 existing
+partials;6232/9472 matched code bytes). No new original matching credit,
+linked image/module or gameplay proof is claimed.
+
+Complete bodies and20 semantic inputs establish sound-bank, scene texture,
+party weapon/model and single-slot reload stages plus archive-sector selection,
+texture-table patching and actor rebinding. Six original full code ranges bind
+the complex drivers. Catalog/current-source/header and isolated committed-path
+checks pass across2768 names and38 alias headers. Deferred source identity is
+pinned, not counted as semantic reconstruction or naming coverage.
+
+Old prose treats load-control flags as buttons/cancel and lowest-sector resource
+selection as player dialog choices. Actual AKAO, scatter-read, image upload,
+equipment/model/animation consumers contradict that. Preserve all existing
+behavior, including unguarded reverse scans, dedup out-1 probe, missing-candidate
+outsel unchanged, fixed capacities, asymmetric actor frame selection and
+unchecked current-command pointer. aabc4 uses first selected size n rather than
+n2 for the second scatter segment; its second selection guides buffer placement.
+The default-flag wrappers each STEP a machine rather than block until completion.
+
+Legacy farm/scorer compatibility evidence is not shared workspace acceptance
+or scorer migration. Shared acceptance needs configured frozen namespaces and
+compiler inputs. Refresh downstream source-bound evidence against current
+catalog/header identities. Preserve unrelated runtime-adoption work.
