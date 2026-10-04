@@ -1769,3 +1769,43 @@ existing semantic-evidence backlog without a private walker or tooling rewrite.
 Legacy farm/scorer checks remain compatibility fixtures; shared workspace
 acceptance requires configured frozen namespaces/compiler inputs/actual outputs.
 Refresh downstream source-bound evidence after names change.
+
+Battle combat/status naming acceptance (BV-03/BV-08, P2): FF9 adds76
+reviewed C names in ovl_03e000, commit9bec11145. Current catalog2623,
+34 alias headers. Unit inventory146 primary sources,105 named,41 remaining.
+Evidence: docs/function-names-battle-combat-status.json and compatibility
+scratch binviz/target/ff9-names-battle-combat-status/.
+
+All89 affected complete native objects agree, pinned strict-relocation scores
+unchanged:75 exact,14 existing partials,19308 matched of33272 code bytes.
+All89 installed WASM preprocessing comparisons agree. Independent audit checks
+2623 current definitions,34 headers,93 committed paths,12 semantic inputs and
+7 original bounded jump-pointer/code slices. No new original matching credit,
+linked image, compiled module or gameplay proof. Unrelated work preserved.
+
+Names cover action results, stealing, hit/evade/critical rolls, physical/magic
+formulas, elemental affinity, HP/MP damage and healing, partner-cast checks,
+command-entry flags, status masks/timers/model colors, encounter-start rolls,
+reward drops, party results and unit-list selection. Complete callees contradict
+old hit-sound, status-hit-roll, magic-stat, hue and preemptive-roll prose.
+Resident4ab7c dispatches actor VM commands; b4040 cancels queued commands.
+Damage and healing paths preserve all result flags, integer narrowing, signed
+arithmetic, repeated-byte RNG, queue/animation side effects and ABI mismatches.
+
+Status application accepts masks and selects their highest bit for side effects;
+removal uses an exact-mask switch. Timers expire when negative, not at zero.
+The encounter forced-mode flag path is opposite its old prose. Reward item0 can
+write into adjacent card storage after a rare drop fills the last item slot;
+retain this behavior and whole-word card eligibility. Preserve unchecked list
+insertion, zero-enemy list linkage, candidate-array capacity and differing side
+selector conventions. No status/ability label inferred solely from numeric masks.
+
+Deferred c19f8 calls dispatcher kind0x38, but the02e800 dispatcher only recovers
+a scored head with stand-in cases; no complete action purpose follows from it.
+c0a3c names the observed spirit-scaled counter initialization without claiming
+an unconfirmed period consumer. Shared naming evidence should retain conflicting
+old labels, complete consumers, bounded original tables and explicit partial
+reconstruction boundaries. This extends existing semantic-evidence backlog;
+no private walker or tooling rewrite. Legacy farm/scorer checks remain
+compatibility fixtures, not shared workspace acceptance, which requires frozen
+namespaces/compiler inputs and actual outputs. Refresh source-bound evidence.
