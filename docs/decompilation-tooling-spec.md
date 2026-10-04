@@ -3547,3 +3547,39 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Model triangle particle naming acceptance (BV-03/BV-08, P2): FF9
+ad916d8a9 adds13 canonical ovl_12f4b800 names. Catalog4,076 unique unit/symbol
+names,82 alias headers; all13 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-model-triangle-particles.json
+and target/ff9-names-model-triangle-particles/. All13 entire native object pairs
+identical, exact affected/scored namespace13, unchanged pinned strict-relocation
+baselines9 exact/four partial,1,688/6,692 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all13 sources; current catalog/review/source/
+header/object bindings and17 isolated commit paths audit. Progress4,076/5,812
+canonical primary files named(70.1%),1,736 remaining; full-tree goal active.
+
+Names cover four inline key readers, wrapping texture strip, pool initialization/
+source load/free search/spawn/step, model-group callback, model particle sequence
+and paired vector tracks. Own-unit complete bodies and consumers establish roles;
+FD32800 similarity guides vocabulary only, no equality inferred from transplant
+comments. Ancillary7A5C .i/.s artifacts untouched. Readable source references
+and callbacks expand to stable own-unit native/runtime identities.
+
+Preserve signed inline count upper-only clamp, optional outputs, signed remainder
+and unconditional48-byte strip reservation. Preserve cumulative poolcount, free
+cursor, FIRST n entry reset, initial source cursor, vertex1Y threshold, signed
+centroid/3, exact randomcall order, GTE sequences and no used-flag reset at expiry.
+Model callbacks retain external timer halfword[-1], phases/flags, partialpadding
+and group>=6 supplied poolindex init versus fixed pool6 update. Scene flags are
+not reset atinit; frame20 skips thresholdupdate, overlapping flash/fade calls,
+jobframe reset and cumulativecounter distinction stay. Preserve explicit api18
+pin/emptyasm barrier, all event resources/timing, descriptor/input dualrole and
+row*out-3 paired-track publication/completion ordering.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
