@@ -2652,3 +2652,35 @@ portable module,linked image,gameplay,selected-provider or shared workspace
 acceptance. Refresh source-bound downstream evidence from current catalog;
 historical reports/scorer stay pinned;foreign files/index and unrelated checkpoints
 preserved;full-tree review remains active.
+
+Movie API naming acceptance (BV-03/BV-08, P2): FF9 313472bcc
+adds12 canonical ovl_147000 behavioral names;catalog3644 unique unit/symbol
+names,58 alias headers. All13 recovered primary bodies reviewed;one volatile
+mailbox deferred because its consumer/limit purpose is unresolved. Other units
+remain pending. Evidence:docs/function-names-movie-api.json and Binviz
+target/ff9-names-movie-api/. All12 complete native object pairs identical;
+exact affected manifest/scoring namespace12,pinned strict-relocation scores
+unchanged12exact,1012/1012 code bytes,zero failures. All12 installed WASM
+preprocessed token comparisons agree;current catalog/source/header/object and
+all13 review plus actual consumer bindings audit;16 isolated committed paths agree.
+
+Names cover decoder buffer state clearing,frame counter,delayed sound event,
+stop callback,display-record buffer switch/copy,display center,metadata counts,
+start CD position,current ring record/state,free frame-slot accumulation and
+MDEC decode-table copy. Complete pinned movie pump/finish/path/ring/MDEC and
+BOOT sound-command bodies establish roles. Older finished/played flag comment
+does not define a completion metric:1000bit is set by initialization and slot
+release;8000 marks fetch-ready. Accumulator is deliberately not initialized.
+Preserve signed flag/count results,int callback setter signature,negative defaults,
+event postincrement/gating,first-frame output gates,uncopied padding,fourth CD
+position byte,state-bit precedence and untouched result when no state matches,
+2292-byte payload stride,16+16+32 table loops andmno-split-addresses flag.
+Opaque volatile mailbox retainsgcc2.7.2.3 and$8pin without semantic guess.
+
+Maintained naming/farm/scoring/preprocessor tools and thin adapters reused;
+BV-08 exact namespace gate enforced,no new reusable tooling gap found. No private
+ownership/type/CFG walker or tooling rewrite. Native aliases remain unit-scoped;
+equal addresses/fields do not assert selected provider identity. No new matching
+credit,portable module,link,gameplay or shared workspace acceptance. Refresh
+source-bound evidence from current catalog;historical reports/scorer stay pinned;
+foreign work/index/checkpoints preserved;full-tree review remains active.
