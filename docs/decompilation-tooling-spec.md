@@ -7223,3 +7223,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Six radial tint companion objects naming acceptance (BV-03/BV-08, P2):
+FF9 47b08029a adds three canonical ovl_12089800 names. Catalog
+4,734 unit/symbol names, 195 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-six-radial-tint-companion-objects.json and Binviz
+target/ff9-names-six-radial-tint-companion-objects/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 156/1,380 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor204, TWOobjectslots, rotations+8/W+56/scale152/tint168/anchor172/secondvector180/counts188/handles196. Savesctx/table70count3,200(0,0,anchor) then1FC(0,secondvector); upperYbound-280 appliedONLYanchor, scaleXYZ32768. Radius1F0(256) uppercap2200ONLY; SIXtable xradius/y=z=i*682 andthree initializedrotationlanes. THREE338createdU16handles, counts-1. Keep fourthlanes/Wwordpadding/obj/wa8uninitialized andpin17/wrappers.
+
+Exactframe2 loads8 atcaptured secondvector, nullableh22=220(16,128); exact22loads4 atanchor andsamescale. Exact0armsfade4,20fade8. Drawgate SIGNED0<=frame<28. Fade compute beforedecrement, visibility/tintgate AFTERdecrement: firstcomputesfive0..4 buttints0..3, zeroendpointomitted. Secondcomputes/tintseight20..27 elapsed0..7, frame28drawgate blocksendpoint/countdown andcountstays0. Provider call ordering and externallyoverlappingcounter overwrites retained.
+
+SixplacementsDC(anchor,localSIGNED3rotation0/tableY/0,tableX,localSIGNED3output); SIGNED-widen intoINTXYZ at16-byteW withfourthworduntouched. Nativepose addressesi*8+8 andi*16+56 retained. h startsstoredhnd0 thennumeric h++/wrapifhnd2<h, storedhnd1unused; no repairtoarraycycling. TableY+=85/Z+=512 (Zunusedhere), Xradiusfixed; rotationY+=128. Partial3-lane/providerread-writeextents unresolved. Finish78/return1 at40afterevents/drawgate, no releases. INTtypedblendcall agreesdefinition, VOIDhostwrapperdiscardedresult.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
