@@ -10515,3 +10515,121 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot sequencer presets masks control helpers naming acceptance (BV-03/BV-08, P2):
+FF9 29ce2d4c6 adds forty seven selected canonical boot names. Catalog
+5,058 unit/symbol names, 301 scoped alias headers. Forty seven selected complete boot
+bodies plus sixteen additional complete reference bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-sequencer-presets-masks-control-helpers.json and Binviz
+target/ff9-names-boot-sequencer-presets-masks-control-helpers/. Sixty three full native object pairs equal;
+exact affected/scored namespace sixty three. Pinned strict-relocation scores unchanged:
+59 exact/4 partial, 5,564/8,032 code bytes, zero failures. Sixty three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and sixty seven isolated committed paths audit.
+
+All sixteen additional affected reference bodies read completely: 59548 channel reset, named5963C song startup/named59AA8 sound release/named5C158 pending stop, DD7C note-key selection/E170 indexed note preset-pitch setup, ED8/1070/E1C/FBC stream accounting and stop-handler references, 127C/12D0/15F8/1B20/1B78/2290 stream setup/reset wrappers. Current hashes bound separately from selected naming inputs; thirteen unnamed reference definitions remain pending naming, three already named. Full additional lane09 channel/config header read and bound. All 63 changed C sources require native equality, unchanged strict original scores and installed preprocessing. Complete-body reference review is not an ABI/provider or gameplay validation.
+
+If flagWORDbit32 then unsigned(c-32)<96 selects integer control codes32..127 and returns c+48; otherwise c unchanged. Preserve unsigned range check/overflow and no ASCII category inference beyond numeric interval.
+
+mask=(1<<shift)-1;SIGNED base=U32accumulator&~mask, target=a<<shift;overwrite parameter shift=target-base BEFOREq=shift/b. Storebase AFTERdivision. target<base storesbase|mask thenq--;else both b!=0 andb==0 arms q++, matching branch retained. Division runs BEFOREzero-test/store, preserving trap frontier; no exact endpoint normalization, added guard or algebraic branch removal.
+
+THREEarg VOID helper:channelWORD+120=a2 thenWORD+124=sourceWORD+4,channelU16+12A=source+12/channelU16+12C=source+14,flagsWORD+11C|130944(0x1FF80). Preserve interleaved source loads/stores and ABI discrepancies with INT K&R declarations in callers; no record copy or cursor/index update here.
+
+SIGNED16channelindex+9A=i narrowing FIRST,thenhelper(p,table+i*16,table[i].WORD0);thirdarg is storedpresetword, not fixed4112. No index guard/nullcheck, exact pointer/index expressions and INT K&R helper declaration remain.
+
+Complement U32mask once;clear staticmask WORDindices0,4,7,8,9,1,2 inthatexactorder;thenchannelWORD+28=0,+6C=0. Header tableTENwords; indices3/5/6 untouched. No type check/dirtyflags/sharedpointer clearing or release provider.
+
+If bankarg!=0:unsigned(c-192)<32 returns c+bank*8;elseunsigned(c-224)<24 returns c+(bank-4)*8; otherwise c unchanged. First interval192..223,second224..247; no narrowing/modulo/clamp or negative-bank restriction.
+
+If U16type+94==0 complementmask, sharedpointerWORD1&mask; iffreshsharedWORD1==0 resetstaticWORD809B8=0/sharedU16+6A0/sharedWORD00. Then sharedWORDindices5,2,3,15,16,17 clear inexactorder, reacquire pointer at EVERYuse. Else callec20(p,ORIGINALmask). ThenchannelWORD+34=0/dirtyglobalWORD2|272. Comment sayssixwords but actual seven+conditionalreset; allretained. No cachedpointer/owner-release assumption/argument expansion.
+
+OnlyrecordWORD+34 OR64, no cursor or other fields. Flag meaning unresolved; behavioral name identifies bit operation.
+
+OnlyrecordWORD+34 AND~64U, no cursor or other fields; retain flags purpose as unresolved.
+
+ReadU16+C4 intoU32,storeU16+C4=(value+1)&15; does not retain higherbits. No clamp/extra flags.
+
+ReadU16+C4 intoU32,storeU16+C4=(value+(-1))&15 withunsignedwrap;zero->15. Preserve literalnegative and all types.
+
+Consume unsignedbyte via*(*pp)++;typeU16+94==0 callsdd54(freshsharedWORD0,op),otherwiseec8c(channelSIGNEDWORD+38,op). Loadpresethelper(pp,table[idx],table[idx].WORD0);thenU16+9Aidx/U16+12E0/flagsWORD+34&E6FFEFF7. Helper BEFOREindexstore unlikeebe8; no bounds check or type/global snapshot consolidation.
+
+Capture sharedpointer BEFOREunsignedbyteconsumption;dd54(capturedWORD0,op),loadpresethelper(pp,table[idx],FIXED4112),THENindexU16+9A/pendingU16+12E0/flagsWORD+34&E6FFEFF7. No per-type remapping branch, tableword thirdargument or acquisition-order change.
+
+OnlyU16+CA=0. Previously reviewed count decoder614 stores this count and initializes loop controls; nameclearloopcount, no extra resets.
+
+Unsignedcountconsume;zero256;storeU16+D2 count BEFOREconsuming targetbyte;storeWORD+40=eb40(channel+3C,target,count,12). Rawu8**channelview andINTK&R helper preserved, no flags or directreciprocal interpretation. Applies direction-adjusted helper, not simple target-current/count.
+
+CaptureWORD+34 THENflagsWORD+11C;clearU16+110,storecontrol&~1U,flags|16. No period/indexed-table/control-depth reset or cursorconsumption.
+
+Unsignedcountconsume/zero256/U16+E0 count thenunsignedtargetconsume;WORD+50=eb40(channel+4C,target,count,12). Distinct second period/step and raw views, no flags or timer extra reset.
+
+Capturecontrol thenflags;U16+1120,controlWORD+34&~2U,flagsWORD+11C|3. Flags differ from first reset, no normalization.
+
+Unsignedcountconsume/zero256/U16+E8count thenunsignedtargetconsume;WORD+60=eb40(channel+5C,target,count,12). Thirdperiod/step fields preserved.
+
+Capturecontrol thenflags;U16+1140,controlWORD+34&~4U,flagsWORD+11C|3. No period/reciprocal/table-index reset.
+
+TWOarg VOID helper,typeU16+94==0 sharedpointerWORD15|mask else staticWORD7|mask;dirtyglobalWORD2|272. No cursor/fixedmask/guard, preserve caller mismatched INT/VOID K&R views and omitted mask frontiers.
+
+Type-selected sharedWORD15 orstaticWORD7 AND~U32mask;dirtyglobalWORD2|272 THENchannelU16+F00. Preserve storeorder and countreset after shared mask/dirtyflags.
+
+Type0 sets sharedWORD17|mask;other types ONLYifcontrolWORD+34bit65536 setsstaticWORD9|mask. ALWAYSdirtyWORD2|256 evenguardrejects. No type-agnostic setting/unconditional static update.
+
+Type-selected sharedWORD17/staticWORD9 AND~U32mask;dirtyWORD2|256 THENchannelU16+F20. Not firstmaskdirty272/countF0.
+
+Type-selected sharedWORD16/staticWORD8 AND~U32mask,dirtyWORD2|256, no countreset/cursor.
+
+OnlyU16+CC=1, does not inspect type or reset count.
+
+IfU16type+94nonzero ONLYstoreU16+CC4; otherwise no write. Type field is not an accumulated count despite comment; no cursor consumption.
+
+ReadoldU16+12A&FF0F BEFOREunsignedbyteconsume,flagsWORD+11C|4096 thenU16+12A=old|(byte<<4). Input notnibblemasked; highbyte overlap remains, do not convert tobitfield assignment.
+
+ReadoldU16+12A&FFF0 BEFOREunsignedbyteconsume,flagsWORD+11C|32768 thenU16+12A=old|byte. Input notlow-nibblemasked despite comment; highnibble OR overlap preserved.
+
+Noargs,ONLYsharedpointerWORD+38=0; no count/loop/flags updates inchannel.
+
+CapturecontrolWORD+34,clearU16+12E thenstorecontrol&~8U. No cursor/globalpayload/timer or unrelatedflags reset.
+
+TWOINTformalargs p,x;invoke6008C(p) THEN600C0(p,x) withunusedextra x relative to one-argument actualcallee. Keep raw INTpointerpassing/VOID K&R declarations andextraarg; two separate byteconsumptions occur, no merging or formal/type repair.
+
+Unsignedbyteconsume/storeU16+F0=(byte?byte+1:257);thenCALLfd10(p) withONEarg despite TWOarg actualcallee needingmask. Mask unresolved, do not add fixedmask or claim defined mask selection. ReturnVOID/recordlayout unchanged.
+
+Unsignedbyteconsume/storeU16+F2=(byte?byte+1:257);thenCALLfdd8(p) withONEarg despite TWOarg masksetter. Preserve omittedmask/typeguard frontiers; no inferred ABI/provider argument.
+
+ChannelWORD+34&FFFFFFC8 THENfd70(p,mask),fe4C(p,mask),ff14(p,mask) inthatorder,THENU16+CC&FFFA. Underlyingsetters reset countsF0/F2 anddirtybits each; no dedup or extra release/cursor change.
+
+OnlyWORD+34|16; original flag purpose unresolved, namebitfour operation.
+
+OnlyWORD+34&~16U; no counter/cursor/other flag update.
+
+OnlyWORD+34|32; original flag purpose unresolved.
+
+OnlyWORD+34&~32U; no counter/cursor/other flag update.
+
+ReadTWO unsignedLE16 relativeoffsets sequentially atcursor andcursor+2; eachnonzero pointer=itsOWNoperandbase+offset+2 elseNULL. GlobalFOURINTargumentblocka/b0,c=U16channel+BE>>8,d=SIGNEDWORD+78>>23,callalready-named allocate_sound_voices(global,t1,t2,0). THENchannelCURRENTcursor+=4 aftercall (not snapshot q assignment). No offset bounds/signedconversion/providerownership/resultclaim or earlyadvance.
+
+OnlyWORD+34|1048576, no cursor or timer state; underlying flag purpose unresolved.
+
+ONEpointerargument,ONLY(*cursor)++ byonebyte, no operandread/guard/returnvalue.
+
+TWO U32args,firstunused,ONLYsharedpointerWORD+8 ORbits. Preserve firstformal/wholemask width/unguardedsharedpointer.
+
+TWO U32args,firstunused,ONLYsharedpointerWORD+8 AND~bits, no cursor/count/dirtyflags.
+
+OnlyU16+F6=0, pairwithprevious unsigned auxiliaryhalfwordcontrol608F4. No cursor or other control resets.
+
+Noargs VOIDwrappercalls eCCC() withZEROargs despite TWOarg actualreleasehelper. Preserve INTK&R declaration/omittedp+mask; name only invocation role, not defined release scope or correctness. No padding args/ABI fix.
+
+Captureglobalstreamblock;onlyifWORD3mask!=0 disableIRQ(0)/settransfermode(0)/keyoff(currentmask). IfWORD2&1024 setrepeataddr(firstvoice-2,4144) then(firstvoice-1,4144);ALWAYScurrentfirstvoice/firstvoice+1 repeataddr4144. SnapshotmaskAFTERproviders,clearWORD3,staticWORD8&~mask,dirtyWORD2|256. No voice release provider or repeataddr bounds check; preserve global rereads, inactive no-op and before/after masking.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
