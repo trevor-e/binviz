@@ -7625,3 +7625,35 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Stretched texture gradient screen transition naming acceptance (BV-03/BV-08, P2):
+FF9 846193f80 adds three canonical ovl_12a35800 names. Catalog
+4,775 unit/symbol names, 209 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-stretched-texture-gradient-screen-transition.json and Binviz
+target/ff9-names-stretched-texture-gradient-screen-transition/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 332/3,284 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+C704 elevenargVOID, -fno-expensive-optimizations,pins22/23. Reserve640bytes up front for16FT4s, 4x4loops; cellW/H arithmetic shifts>>2,originX=x-(w>>1)*3/2,Y=y-(h>>1). Xquad edges stretch3/2 with original integerdivision ordering; UVlastcolumn/row one texel shorter, RGBallr narrowedU8, opaque2C ifmode255 elsesemitransparent2E. TpageOR((mode&3)<<5) insideeachquad, CLUTpreserved; host234(0x09000000,arg0,p) perquad. No tag-length initialization/allocator bounds/negative-size fixes; pads/provider ownership stay.
+
+C944 sixargVOID reservesfour36byteG4s, len8/code3A. Fori0..3,leftX=x,righttopX=x+128+16*i,rightbottomX=x+128+16*(i+1),Y=60*i..60*(i+1), so slanted/growing-width bands, notconstant16wide rectangles. LeftbothRGB(r,g,b),rightbothblack. 23C(0x08000000,arg0,p,arg1),typeof temp/do-while retained, no newtag/pad init. Mainpassespointerasfirstarg throughK&R versusINTdefinition, unchanged.
+
+CA90 descriptor124, phase/framecounter0, savesctx/table70(2),handle338(resource158,1),68(sceneobjectw180,handlew60). Init firstpose zeroXYZ/scales2048,2048,1365, secondpos0,0,256/scales4096/rot-1024,0,0; buildlowhalfwordw18/w1C withX1024then+32,Y0,Z-12288, publishctxp2C vectors atbyte8and16. w8/wC NOT initialized here but used atphase transition, leavefrontier; allpartialpads/pointers remain.
+
+Phase0 EVERYupdate decrements bothZby620 beforepose, evenframe0. s=(t<<12)/24; scenepose onlyt!=0 with104tint, main60/26Ctint thenpublishvectors andX+=32. 240everyframe;sinflashp20+8192 onlyt<12,redflashbyte8 onlyt>12 (noneatexact12). Exact8load157/8atv10,nullabletable/h12=224/hc28/h22=128; latert>8 clearsendedptr orwritesTHREErotationhalfwordsintopositionfields. >=5trail330→128withtemporarycontextw28=256 andtemporaryv10Z+600/restored;>=18gradientbands. At>=24 AFTERallphase0work, switchphase1/frame=-1,1DC(p74)evenNULL,firstY=-8192/scales819,819,3072, w18/w1Cfromopaque w8/wC,rotation1024,0,0,publishbyte24vecwithY-4096,load159nullableh22=128.
+
+Phase1 alwaysdrawsgrid(slot4094,x=t/2+150,y112,w256,h240,RGB128,tpage155,CLUT16064,UV0,mode1),Y+=88, TWO60poses SAMEhandle sequentially with2/3XYscale thenfullscale,26C=-64. Trail128resource5 withcontext256/zero; nullablep70endsorreceivesrotationasposition. 240(t*12...). Terminal80 AFTERdraw/pose/trail then78,publishbyte24vec0,-4096,0,return1BEFORE finalcontextclear/framecounter++. Otherupdatesfinalcontextzero/counter++. No effectidentity, extra clamps or cleanup inferred.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
