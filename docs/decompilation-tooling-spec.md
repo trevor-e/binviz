@@ -6562,3 +6562,38 @@ BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained;
 no new implementation/private ownership/type/CFG walker, matching gain,
 linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Four band hooked objects naming acceptance (BV-03/BV-08, P2): FF9
+129544a68 adds four canonical ovl_13249800 behavioral names. Catalog 4,663
+unit/symbol names, 173 scoped alias headers. All four complete own-unit bodies
+and g29/g15/g13 headers reviewed and bound, zero deferrals; other units pending.
+Evidence: docs/function-names-four-band-hooked-objects.json and Binviz
+target/ff9-names-four-band-hooked-objects/. Four complete native object pairs
+identical, exact affected/scored namespace four; unchanged pinned strict-reloc
+scores two exact/two partial, 588/7,288 code bytes, zero failures. Four installed
+WASM token comparisons agree; current catalog/source/header/object/review
+bindings and eight isolated committed paths audit.
+
+Names cover primary/secondary late-progress pose callbacks, sixteen-quad band
+renderer and three-phase four-band/hooked-object controller. Preserve unclamped
+fade and zero-denominator behavior, scalar/array handle declarations and reads,
+upfront664-byte pool reservation, two GT4/fourteen FT4, colors before rejection,
+actual both-sign NCLIP gate, accepted-only packet cursor advancement and link
+before final SXY store. No ending matrix restore. Controller's phase2 first6
+Y is replaced rather than offset; two w64 and four w5C poses repeat same handle.
+Phase1 captures band scale before reset; terminal32 follows phase operations,
+skips four-band tail/frame increment. Preserve partial pads/pins/flags/wrappers.
+
+BV-06/P1 frontier retained: callbacks have VOID definitions and INT K&R externs
+used only as addresses through void-pointer hook fields. Main passes INTscale
+words through K&R call while renderer consumes a halfword-vector pointer.
+No corrected layout/ABI/provider admission or inferred scale interpretation.
+Definitions/declarations/calls/hook references propagate; aliases retain native
+symbols/address/runtime exports. Original effect/resource/provider identities
+unresolved; no body/type repair.
+
+Maintained naming/farm/scorer/preprocessor and thin adapters reused; existing
+BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained.
+No new implementation/private ownership/type/CFG walker, matching gain,
+linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical reports/tools, preserve foreign work/index; full-tree goal active.
