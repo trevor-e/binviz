@@ -7535,3 +7535,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Parabolic displacement staged tracking swap naming acceptance (BV-03/BV-08, P2):
+FF9 b842e8792 adds three canonical ovl_132d2800 names. Catalog
+4,767 unit/symbol names, 206 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-parabolic-displacement-staged-tracking-swap.json and Binviz
+target/ff9-names-parabolic-displacement-staged-tracking-swap/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 2,548/2,792 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+77D0 VOID: unconditional k=0x20000000/(dur*dur) EVEN defaultmode; r0. Mode0 r=4096-((0x10000000/dur)*t>>16);mode1 k*(dur-t)*(dur-t)>>17;mode2 4096-(k*t*t>>17). These literal integer/truncated/overflow formulas retained; do not replace with comment claiming factor2 or clamp. Allmodes pass(handle,extra,r) to savedctx B4, no return. No other own-unit body directly calls this helper; external usage unresolved.
+
+7908 descriptor96, init eightwords0 descending order,20C(0,v38)/20C(0,v44),fiveobjNULL;othervecs uninitialized. Everyupdate clears ended objpointers,80(16,4,v30) beforeevents. Exact0 captures1FC16/start0, resource5 into sharedglobal notfiveobjarray; nullable table/h12=4/hc156, unguardedinnerp0 hookINTcallbackcastVOIDaddress;count14. Exact14 2BC(0,0),1F8fresh/204samevec. Exact20/26/32 loadsresource1 atseparate80-derivedglobalpositions;46resource2;eachcount16. Exact50 w2=2,2BC(0,128),2A8(0,v44),1F8(0,global),resource3/count16.
+
+w0 countdown decrements BEFOREk=14-w: samplesk1..14 onframes0..13, no k0. SharedX/Z useB8(start,dynamicend,k,14);Y=startY-(600*k-37*k*k) intoU16;204publishes;v38lane0-=170 then2A8. Fourtrackingblocks independently decrementcounts,2C4/2B4 tmp,nullable3positionwrites,80/1D8 call EVENwhenobjNULL. Normal windows20..35,26..41,32..47,46..61. Fifth window50..65 setspos3072/0/0 only, no1D8. w2 predecrements at50→1 weight2048 BC(start,capturedactor16,vec),51→0 usesfresh1F8 then204; no assumedrestoretoinitpoint. Terminal70 AFTERallwork;no78/release.
+
+81C4 sixarg INT callback: s8selector-1 (zeroonlysel1) selects shared85A8 else85B0, capturesTHREEU16lanes BEFORE overwriting85B0 with oldpositionwords>>12; writes dstTHREE thenSIGNEDtmp<<12into positionwords; allstores BEFOREterminal n>=lim returns-1 else0. Alias-safe snapshot order retained, possible overlap/provider extent not normalized. D85A8 declaration4lanes inmain versus3here retained; duplicatedifarms/pins/new_var arithmetic unchanged.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
