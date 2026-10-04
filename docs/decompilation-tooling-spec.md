@@ -1850,3 +1850,46 @@ evidence backlog now includes conflicts between old labels, sound/effect/marker
 consumers and explicit incomplete-dispatch deferrals. Reuse existing tooling;
 legacy farm/scorer fixtures do not replace configured frozen compiler/output
 workspace acceptance. Refresh source-bound downstream evidence after renames.
+
+Battle queue/sound naming acceptance (BV-03/BV-08, P2): FF9 adds59
+reviewed C names in canonical ovl_02e800, commitd83e8f03e. Catalog2722,
+36 alias headers; unit106 primary sources,59 named,47 remaining.
+Evidence: docs/function-names-battle-queue-sound.json and compatibility
+scratch binviz/target/ff9-names-battle-queue-sound/.
+
+All68 affected complete native objects agree, pinned strict scores unchanged:
+58 exact,10 existing partials. All68 installed WASM preprocessing comparisons
+agree. Independent audit verifies2722 current source identities,36 headers,
+72 owned committed paths,14 semantic inputs and6 bounded original jump/code
+slices. No new original matching credit, linked image, compiled module or
+gameplay; unrelated adoption/runtime work preserved.
+
+Names cover actor/model resource slots and tables, handle release, ground and
+target marker rendering, sound/music command engine and streamed bank loading,
+queue initialization/insertion/cancellation/execution/completion, reactions,
+cover, source status attributes, target redirection, MP payment and item
+reservation release. Source and runtime identities retain original symbols.
+
+Complete consumers contradict voice/effect/channel labels: item commands
+release inventory reservations; sound-bank paths call AKAO; command records
+are queue sentinels and marker records are GPU packets. Resource release uses
+inclusive indices (4/3 handles rather than old3/2 comments), dynamic slot
+counter initializes0, stream chunks rebase amounts before feeding. MP payment
+is mutating, cost mask4 is bit2, and command preparation pays gil separately.
+Random refusal x<64 is64/256 rather than one-in64. Preserve these observations
+and differing owner checks, sentinel membership, kind priorities and masks.
+
+Preserve all bodies, flags/types, ABI mismatches, matching compiler settings,
+allocation pins/barriers, raw GTE code, partial baselines and existing traps.
+Retain allocation before ground-marker center-depth exit, a missing center
+in one depth maximum, angle step4f1, unchecked candidates/indices/pointers,
+negative-cost/narrow overflow, double RNG refill, signed movement division,
+ignored command errors and reservation made before reaction eligibility.
+The action dispatcher b44c0 remains a scored head with stand-in case bodies;
+complete surrounding command names do not assert its reconstruction.
+
+Shared semantic-evidence backlog includes complete callee/consumer chains,
+conflicting old comments, mutating query helpers and partial dispatcher
+boundaries. No private walker/tooling rewrite. Legacy farm/scorer fixtures
+remain compatibility evidence; shared workspace acceptance requires frozen
+namespaces/compiler inputs and actual outputs. Refresh downstream evidence.
