@@ -3477,3 +3477,38 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from the current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Sprite debris naming acceptance (BV-03/BV-08, P2): FF9 c7fb690a3
+adds12 canonical ovl_133fe800 names. Catalog4,050 unique unit/symbol names,
+80 alias headers; all13 complete primary bodies reviewed, one explicit semantic
+deferral for80D0 pending selected host2F4 provider/buffer semantics. Evidence:
+docs/function-names-sprite-debris.json and target/ff9-names-sprite-debris/.
+All12 entire native object pairs identical, exact affected/scored namespace12,
+unchanged pinned strict-relocation baselines12 exact,3,332/3,332 code bytes,
+zero failures. Installed WASM preprocessed tokens agree for all12 sources;
+current catalog/review/deferred/source/header/object bindings and16 isolated
+commit paths audit. Progress4,050/5,812 canonical primary files named(69.7%),
+1,762 remaining. Naming goal remains active across other units.
+
+Names cover repeated debris/scale timeline, delayed paired debris, sprite fades,
+fixed-weight blend, interpolation/grayscale, pointer-backed position track init/
+signed-halfword to word key read and bounded host-object kind/last-index helpers.
+Own-unit complete bodies and consumers establish roles; no selected provider,
+original effect/ability or transplant equality inferred from comments. Opaque
+single host call is recorded as reviewed, without a timer-only replacement name.
+
+Preserve16-frame separate event blocks, mode1 fadecounter1, partialobjects/level,
+w64!=2 actor gate, metadata stride2400 and endedpointer checks. Last -128 repeated
+sequence tint is stored but not submitted after counter decrement. Standalone
+fadeout runs only unsignedframe<50; finalcounter0 is not processed at50, finish80.
+Track init consumes twohalfwords; wordreader upper-only clampsunsignedcount,
+signextends payload and reportsended. Preserve count0/negative-index hazards,
+integerdivision/overflow, int*p20 byteoffset4idx, objectkind pass-through, exact
+arity/flags/types/layouts/comments and no invented final color/cleanup.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
