@@ -5275,3 +5275,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Keyed ribbons and particle burst naming acceptance (BV-03/BV-08, P2): FF9
+0bb8b85ca adds six canonical ovl_139a1000 names. Catalog4,452 unique unit/symbol
+names,129 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-keyed-ribbons-particle-burst.json and
+target/ff9-names-keyed-ribbons-particle-burst/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+four exact/two partial,864/6,584 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established point-track reset/queue/step,decay blend,keyed paired ribbons and
+twelve-group rotating particle burst. Preserve own-unit resource choices/e2pin,
+write order,VOID/INT declaration mismatch,nullable submission,explicit48resource
+calls,shrinking radius,delay/life updates before rendering,partialfields and
+terminal ordering. Definitions/declarations/callers renamed; alias headers keep
+canonical native/runtime identities. Exact game effect/provider identities unresolved.
+No body/type/layout/ABI repairs or original developer name claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
