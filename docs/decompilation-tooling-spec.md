@@ -7823,3 +7823,35 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Indexed model paired ribbon history burst naming acceptance (BV-03/BV-08, P2):
+FF9 baa24a3c4 adds three canonical ovl_10c3f800 names. Catalog
+4,793 unit/symbol names, 215 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-indexed-model-paired-ribbon-history-burst.json and Binviz
+target/ff9-names-indexed-model-paired-ribbon-history-burst/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 292/4,320 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 eightargVOID unsignedn, negativefade→4096. n>=1000 clears firstn-999 a.flag halfwords andreturns; otherwise backwardsFOURword16bytehistorycopy nrecords. Count contiguouslivepairedflags BEFORE writingnewhead (notcommentorder);newhead copiesbothpaWORDS,forcesa.flag1,copiesbothpbWORDS includingpad, n=count. n0stillformsunderflowpointer thoughcopyloopempty. Reservecount36byteG4prims; colorNULLsetsTHREEblackbytes, otherwiseDPCS4096-fade. Loadctxmatrix, code38opaque255else3A. Forn!=0:RTPT THREEpoints, storeMAC0WITHOUTNCLIP instruction, acceptsnonzero only;XY3,AVSZ3/4,RTPSfourth,22Clength8 BEFOREfourthXY and4colorDPCS usingfa/fb. Pointersadvanceevenunculled. No matrixrestore exists inactualbody (commentwrong), no newtag/pad/overflow/bounds fix.
+
+7B74 fourargVOID 290(a,b,&localmatrix),loadrot/trans,LDV0,RTV0TR,storeTHREEfullINT resultsintom.t,outputTHREEU16lowhalves viaindices0/2/4. Restores savedctxmatrix withemptyasm keepingctxlive. Outputpad remains; name selectedhostmatrix notinferred matrix coordinate system or handle API semantics.
+
+7C98 descriptor72/initphase1/count0,198(jobid,2,1) then340(resource8,list1,table),index/counter-1,length=UNSIGNED info+36; clearctxp0byte16. Phase1 preincrementbothindices, ifcounter>=length phase4/frame-1, else1FC(index,vec,1),20C(index,dir),quantizeU16angle into0or2048 viaunsignedrange. D8(dir,1F0(index)+120), publishposition;200overwritesbasevec afterselectedpos. BuildTHREEctxp2C points withY-320, thirdpointY=offsetY-320 (NO baseY). Bindscene68/190(6),scales4096,rotationYquantized, launch15/16/17,phase2/frame-1. Processingoneindex percycle1→2→3→1; not continuousanimation guessed fromcomments.
+
+Phase2 f64 modelpose, firstsixframes104tint. Ribbonfade=-1 onexact0, ELSE frame<22 uses LOCALx/22 withoutany initialization inthispath; retainandrecorduninitialized-read frontier, notfixornameinterpolatedfade. Laterfade4096. Exact24 launches18/19/20,26yellowflash,27 resource selectorXOR(directionranges) thennullable220(index,64)/launch21/22/23,28redflash+objects1/9nullable220(index,64),29calls228index. >=30 phase3/frame-1 afterwork.
+
+Phase3 x=t4096/24 (onlyxassignmentinbody),exact2resources7/14 with7nullabletable/h12=24/hc68/h22=64. XZscales4096-cos(x>>2), Yprevious4096 unchanged;190(41-frame),64pose,sinefade/tint. >=6 returnsphase1/frame-1 afterwork. Phase4 >=8 setsctxp0byte16=1/return1 beforetail; no78. PerupdateifFPnonzero transformTHREEconstantvectors with290(scenehandle,9) then two ribbons. NegativeFP clears17historyflags via1016;positiveFP length16 each, saveTWOsp30words tostatew2C/w30; modifiesall17historyYhalfwords withsignedarithmeticshifts differingbyedge3/4/6 AFTERdrawing. Common134resource3/count++ exceptterminal. No repairs to undefinedx orprovider layouts.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
