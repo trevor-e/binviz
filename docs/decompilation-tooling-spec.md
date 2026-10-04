@@ -5706,3 +5706,32 @@ Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
 BV-08 namespace gate enforced. No new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Scheduled mesh particle and nine vertex strip naming acceptance (BV-03/BV-08, P2):
+FF9 8b925ccdd adds five canonical ovl_13438800 behavioral names. Catalog4,547
+unique unit/symbol names,147 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-scheduled-mesh-strip.json and Binviz
+target/ff9-names-scheduled-mesh-strip/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged three exact/two partial,1,552/14,472 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish grayscale interpolation,eased host weight,eight-part triangle/
+quad mesh particle initialization and advance,and scheduled nine-vertex strips.
+Preserve halfword narrowing,partial initialization,random order,fixed rotation,
+GTE pipeline,six distinct restart gates (mode5 outside XY distance),unsigned
+attractor arithmetic,strip countdown thresholds,pins/flags,duplicate releases,
+four strip patterns and frame668 return before the common tail. Readable
+identifiers propagate through definitions,declarations and callers; own-unit
+aliases retain canonical linker/address/runtime identities. Exact game effect
+and selected provider contracts unresolved; no body/type/layout/ABI repair.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No new reusable tooling logic or implementation
+introduced. Existing BV-06 selected-provider frontier remains separate from
+naming object/token proof. No new original matching credit,linked image,
+gameplay or sharedworkspace acceptance. Refresh downstream source-bound
+evidence; historical scorer/reports stay pinned. Foreign work/index preserved;
+full-tree naming goal active.
