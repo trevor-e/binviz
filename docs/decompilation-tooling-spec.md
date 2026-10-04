@@ -5443,3 +5443,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Screen rings and grayscale capture naming acceptance (BV-03/BV-08, P2):
+FF9 4c745fc0a adds five canonical ovl_10b42000 names. Catalog4,492 unique unit/symbol
+names,136 alias headers. All five complete bodies/g17 header reviewed,no semantic
+deferrals. Evidence: docs/function-names-screen-ring-grayscale-capture.json and
+target/ff9-names-screen-ring-grayscale-capture/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+three exact/two partial,1,948/4,392 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established four-phase ring particles,twelve-attempt scheduler,grayscale screen
+capture/bands,sixteen-segment capture-textured ring and capture/ring fade timeline.
+Preserve pins/asm,failedallocation counts,phase-transition table choice,pads,
+packet/tag/write order,signed dimensions,fixed radius and terminalrender. Alias
+headers retain canonical native/runtime identities. Exact game effect/provider
+identities unresolved. No body/type/layout/ABI repairs or original developer names.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
