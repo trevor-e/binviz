@@ -5106,3 +5106,28 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Keyed ribbons actor spawn naming acceptance (BV-03/BV-08, P2): FF9
+15adf1b76 adds six canonical ovl_1394d000 names. Catalog4,410 unique unit/symbol
+names,122 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-keyed-ribbons-actor-spawn.json and
+target/ff9-names-keyed-ribbons-actor-spawn/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+five exact/one partial,1,120/4,548 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established16-channel point-track reset/queue/update,decay blend,keyed paired
+ribbon sequence and per-actor resource spawn/wait48. Each own-unit body read
+completely; preserve actual resources3/4/5 and29 ribbon,which differ from
+transplant comments. Preserve e2=$23 pin,buffer-write order/nesteddo wrappers,
+VOID definition/INT caller declaration mismatch,nullable object submission,
+partial vectors,terminal channel update and unsigned actor count without clamp.
+Exact game/provider identities unresolved; no body/type/layout/signature repair.
+Readable references alias to canonical native/runtime symbols within the unit.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
