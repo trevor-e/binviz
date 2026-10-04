@@ -7689,3 +7689,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Radial sprite grid two phase swirl naming acceptance (BV-03/BV-08, P2):
+FF9 7c61ba8da adds three canonical ovl_12d7b000 names. Catalog
+4,781 unit/symbol names, 211 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-radial-sprite-grid-two-phase-swirl.json and Binviz
+target/ff9-names-radial-sprite-grid-two-phase-swirl/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 892/2,864 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 tenargVOID reserves cols*rows*52 bytes beforechecks. Spritepresentopaque3C computesTWOpages fromoriginalsignedUV, mutatesspriteUVtoenvironment+center, reserves24extraspritebytes and1Cbuilder;NULLsprite semitransparent3Eusesenvironmentpages0x120. Init17previousgeometry0/currentUV(x0,y0),dang=4096/cols unconditional division. Forpositive rowsrad+=step,upper/lowerRGBB8 perrow, processj0..cols whennonnegativecols, no bounds16. Circularpb-relativeXY via38/3C, pdUVabsoluteclamped0..319/0..239;lastjclosesfrombuffer0. QuadsecondpagewhenanyfourUVX>=256 subtract128,callbackONLYj<cols AFTERUV/pagechoice butBEFOREgeometrypublication, so callbackaltersgeometry notclampedUV. WritesGT4wordfields/partialcolors, linktaglength12 onlyifunsignedslot<4096, low24addresspreserveOTtopbyte; optionalextraspritetaglength5linkedLAST. No bounds/divzero/negative-shift/pad fixes.
+
+7EB8 VOID5arg callbackoutSIGNED2lanes only: t=cos((b<<11)>>4)*sharedamplitude>>12;radius+=t*cos(sharedangle+(b<<10))>>12;outXY=sin/cos(c)*radius>>12. b=row, c=angle, fourthcolumnargunused. Keepliteralshifts and repeatedhostlookups, truncation/overflow; actualgridexpectsINTcallbackpointerwhilemainVOIDK&Rreference, unresolvedreturndiscard/typefrontier preserved.
+
+7FA0 descriptor28, savecontext200actor0/16vectors,220(0,32)storedunused,sharedangle/amplitude0,phase0; cntNOTinitialized. Phase0 q=(t<<12)/40,amplitudeCOS(q>>2)/320,angle-=512;at>=40phase1/jobframe=-1 butSTILLdraw. Phase1 qsame,SINamplitude/angle+=512, exact1resource1atcapturedv0C nullableh22=220(0,32);at>=40returns1BEFOREdraw/counterincrement (angle/amplitudealreadyupdated). OtherupdateslocalSIGNEDsprite4halfwords448,256,256,256;draw(1,160,104,16,16,8,136,136,sprite,swirlcallback),cnt++includingunknownphase. No78/release/newcounterinit orclaimunusedhostvectorpurpose.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
