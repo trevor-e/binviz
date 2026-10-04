@@ -13701,3 +13701,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual lowered anchor four resource sequence naming acceptance (BV-03/BV-08, P2):
+FF9 64612ce52 adds 1 selected canonical ovl_105eb000 names. Catalog
+5,579 unit/symbol names, 382 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-lowered-anchor-four-resource-sequence.json and Binviz
+target/ff9-names-effect-residual-lowered-anchor-four-resource-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 456/456 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete remaining105EB000 handler independently reviewed and named by four resources at lowered actor anchor. Full g15/lifecycle and own context/global declarations bound; no scheduling/type/ownership changes.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole0C-byte-hex lifecycle and all four load/null branches read. Actor position copied as two words and lowered384; resources7/2/1/3 at same anchor each h22=32, first two distinct callback tables/fields. p0 cleared and not assigned any loaded resource; completion requires p0null and frame>=49. Preserve context global as struct member for scheduling, split actor reload, untouched p0 ownership and all original arguments. No callback ownership or spell inference.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
