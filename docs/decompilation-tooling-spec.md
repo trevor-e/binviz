@@ -5227,3 +5227,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Wavy grid history sequence naming acceptance (BV-03/BV-08, P2): FF9
+c21f57820 adds six canonical ovl_119ff800 names. Catalog4,440 unique unit/symbol
+names,127 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-wavy-grid-history-sequence.json and
+target/ff9-names-wavy-grid-history-sequence/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+one exact/five partial,56/9,828 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established RGB555 Gouraud grid/texture upload,animated textured history ribbon,
+wavy grid with fading bottom row,five-value callback,pair-scale callback and
+five-phase sequence. Preserve rowpacket reuse,MAC0 guard without addedNCLIP,
+history count beforehead,link beforefourthSXY/UV,fullverticalproducts,pins,
+partialfields,provider/callback arities,globalX baseforbothorbitcoordinates,
+phase2duration159 and earlyterminaltail omission. Callbackobjectreference renamed;
+canonical native/runtime identities retained. No originaleffect/providerguess.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
