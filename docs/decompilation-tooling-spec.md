@@ -9545,3 +9545,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Phase gated staged load three phase paired draw naming acceptance (BV-03/BV-08, P2):
+FF9 6194bd9c9 adds two canonical ovl_116f6000 names. Catalog
+4,906 unit/symbol names, 270 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-phase-gated-staged-load-three-phase-paired-draw.json and Binviz
+target/ff9-names-phase-gated-staged-load-three-phase-paired-draw/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,248/1,248 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor24, phase/object/TWO signedFOURhalfwordpositions. Init savescontext/phase0,200(0,0,vec8),1FC(0,vec10),load1 atvec8 inclNULL/nullableh22=220(0,32),THENload9 atvec10 OVERWRITESsameobjectpointer with no h22. Update capturesframe; ANYnonzero phase returns0 immediately includingterminal. phase0 exact2 load2 atvec8 overwritespointer/nullable220(0,32); frame>=60 return1. Phase never advances here, retained externalphasegate/uninitializedpads/missedframe behavior. No release/backfill/78.
+
+78A4 descriptor16; phase,counter,FOURs16vec. Init savescontext/phase0/counter0, no vecinit. Update initializes a/d/c/b ZERO,capturesn,2B8(16,1,vec) BEFOREphasework eventerminal/unknownphase. Phase0 a=(n<<12)/3,b512,d=cos(a>>2)>>1,c=((4096-a)>>1)+2048; n>=3 writesphase1/job.type=-1 THEN draws oldphase sample. Phase1 q=(n<<12)/9,c=((n&1)<<8)+4096,u=(q>>1)+2048,a=parity256+u,b=(q>>3)+512,d=c; >=9 phase2/job.type=-1 then draws. Phase2 q=(n<<12)/9,t=q>>2,b1024-t,a=sin(t),d=cos(t)+4096,c=SEPARATEcos(t)*3/2+4096; n>=9 returns1 AFTERquery/trig but BEFOREdraw/flag/counter.
+
+Nonterminal/unknownphase rotXYZ=0/0/b with pad0/s16narrowing; ctx.w28=128 around128(resource11,vec,NULL,d/3,0,1,a/2) THEN128(resource12,vec,rot,c/2,0,1,a*2/3); clearflag0/counter++. Counter independent of job.type neverusedhere. Unknownphase drawszeros thenincrements; no trig dedup, clamp/phase repair/78/release/preterminal flagclear.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
