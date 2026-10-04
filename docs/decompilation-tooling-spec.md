@@ -7505,3 +7505,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Spread burst particle proximity finish naming acceptance (BV-03/BV-08, P2):
+FF9 0c6f4bdae adds three canonical ovl_104bc000 names. Catalog
+4,764 unit/symbol names, 205 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-spread-burst-particle-proximity-finish.json and Binviz
+target/ff9-names-spread-burst-particle-proximity-finish/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 56/1,816 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 mode1 phase0,w4=(rand&31)+39,w8=rand&31,h26=585, no other init/descriptor. Phase0 exactframe0 ninearg110 resource2 thenw4+=32 upper768,w8+=102 upper4096, D4/E4/DC providercalls retained with in-place stored vector, localv28Z=frame<<5. Pose60 receives SIGNED currentXYZ and scale585,585,oldh26;h26+=151; temporarily signedh14+=2048 thenrestoreafterpose. Barrierforcesliteralone before110resource2. SIGNED-narrow target-minus-current differences used squared sum<=262143 ORframe>=17 tophase1; writes HALFWORD BEFOREstate=-1. If targetw20bit1 thenflash32/16/0 atctxp20+1INT (byte4). No claim generic Euclidean overflow safety, pointerprefix ownership or undocumented provider math.
+
+Phase1 fillsfourhalfwordlocal{1024,0,frame<<5,ph}, copytwo storedwords then Y-=frame*4. Temporarilycontextword+40=64 for ninearg114resource9, thenZERO (doesnotrestorepriorvalue). Resource8 onlyframe<16, copiedY=0;110resource2always, terminalframe>=24 AFTERallcalls. No phase-frame reset, meaning skipped/repeatedframe and earlyproximity behavior preserved. Pins17,barriers,do/while,narrowing/overflow/uninitializedpad allretained.
+
+7BC0 descriptorwords0=40/2=40/5=(INT)callback/1=32, words3/4 untouched. Initw0/n/w20=0, savesctx,200(0,0,h4),200(16,0,wC),20C(16,h14),U16Y+=2048,table70(1),338(resource10,1)->w24. Updateonlyw0==0: ifn<32 PREINCREMENTn before184(pooljob+16), allocfailure stillcounts. Success copiesTWOwords into particlewC/w10, THREEh4/h6/h8 into20/22/24; Y=U16h16-768+((n&3)<<9),X=U16h14+(n>>2)*255,Z0, recordptrbase+n*84. Indices1..32 (not0..31), actualtableextentunknown. Preserve asm on tempY and all opaque/prefix fields. w20 increments every activeupdate EVENalreadyatlimit; returns1 once n>=32 regardlessallocsuccess, nonzero w0 stalls.
+
+7DE4 threearg INT handler: onlymode1savesctx/calls78, but EVERYmode returns1; no descriptor or allocator semantics invented. Different saved-context local declarations preserved. Body/name-onlypass no runtime/export changes.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
