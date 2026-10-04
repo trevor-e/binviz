@@ -3583,3 +3583,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Follower satellite naming acceptance (BV-03/BV-08, P2): FF9
+7611e21b3 adds12 canonical ovl_1261b800 names. Catalog4,088 unique unit/symbol
+names,83 alias headers; all12 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-follower-satellites.json
+and target/ff9-names-follower-satellites/. All12 entire native object pairs
+identical, exact affected/scored namespace12, unchanged pinned strict-relocation
+baselines12 exact,4,720/4,720 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all12 sources; current catalog/review/source/header/object
+bindings and16 isolated commit paths audit. Progress4,088/5,812 canonical primary
+files named(70.3%),1,724 remaining; full-tree goal active.
+
+Names cover shared/indexed scatter callbacks, paired object position sequence,
+follower/five-satellite burst sequence, complementary weights/scalar interpolation
+and pointer-backed pair/position/scalar track initialization/readers. Complete
+own-unit bodies and consumers establish roles; donor comments are historical
+hints only. Readable source calls and callbacks retain own-unit native/runtime
+identities through alias headers.
+
+Preserve callback shift12 despite16.16 comments, unclamped weights, unchecked
+id-1, stored snapshot position and independent id calls. Pair reader returns
+second vector into first output and first into second, with no mirror; upper-only
+clamp/unsignedcounts/signedscalar retained. Scene event45 consumes prior-frame
+v90 before current GTE and preserves exact randomcall order. Main/five satellite
+transforms share scratchrotation; later follower GTE sees last satelliteY.
+Postdecrement color gates, partially initialized state, resource/timing/custom
+records, unconditional possiblyNULL host1D8 and exact asmstrings stay unchanged.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
