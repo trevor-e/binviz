@@ -5082,3 +5082,27 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Keyed point track ribbons naming acceptance (BV-03/BV-08, P2): FF9
+f2faf973b adds six canonical ovl_10f67800 names. Catalog4,404 unique unit/symbol
+names,121 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-keyed-point-track-ribbons.json and
+target/ff9-names-keyed-point-track-ribbons/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+five exact/one partial,1,756/5,184 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established16-channel point-track reset/queue/update,decay blend,keyed paired
+ribbon sequence and party-member object fade. Preserve nibble selectors,stream
+consumption only for selected destinations,pinned registers,partial fields,
+VOID definition/INT caller declaration mismatch,nullable object submission,
+negative fade and terminal channel update. Exact game/provider identities are
+unresolved; no body/type/layout/signature/ABI repair. Readable references alias
+back to canonical native/runtime symbols within the unit.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
