@@ -6903,3 +6903,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Shared position hook and derived track naming acceptance (BV-03/BV-08, P2):
+FF9 3e29aacd5 adds three canonical ovl_101ae800 names. Catalog
+4,701 unit/symbol names, 184 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-shared-position-hook-and-derived-track.json and Binviz
+target/ff9-names-shared-position-hook-and-derived-track/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 724/1,148 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 six-argument INT callback computes signed frame<<10, clamps ONLY upper4096, host BC(shared start, shared end,w,signed-halfword output), widens three signed lanes <<12 into destination. Interpolates/writes BEFORE testing frame>=total and returning-1, otherwise0. Negative frames are not lower-clamped; invalid shifts/arithmetic kept. No effect easing curve beyond linear host weight or inferred provider read extent.
+
+77C0 reports28. Mode1 saves context, 200(0,0,v14), unsigned Y-=100 with narrowing; copies THREE lanes to shared end. Host84(16,0,vc) fills start, THREE lanes copied to shared start and direct ctxp2C. Loadsresource2 at global constant vector, nullable sets table/h12=11/hc32, repeated outer-null guard then unguarded innerp0 f8=(VOID pointer) INT callback. Own declaration is INT K&R; callback return meaningful to caller unknown and VOID hook cast preserved. No camera-update claim for callback itself; controller publishes camera only once. Later modes return frame>=30, no finish/release.
+
+7968 reports40. Mode1 captures two two-WORD vectors via200/1FC, D4(vec8,shared start,v20), DC(vec8,v20,200,v18); unsigned v18Y-=100. Resource1 atv18 nullable table/h12=52/hc32, resource3 atvec10, THEN nullablep0h22=220(0,32). No invented normalizing/subtraction semantics for D4/DC. Update clears p0 if h30==-1, otherwise publishes THREEv20 lanes into h5C/h5E/h60; terminalframe>=40 checked AFTER writes. No reacquisition of actor position, actual v20 may change externally; no release or resetting unused p4. Preserve partial vectors/pads and shared-global initialization ordering frontier.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
