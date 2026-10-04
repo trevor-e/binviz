@@ -7889,3 +7889,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four phase model descent paired ribbon naming acceptance (BV-03/BV-08, P2):
+FF9 b31a00d69 adds three canonical ovl_10584000 names. Catalog
+4,799 unit/symbol names, 217 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-phase-model-descent-paired-ribbon.json and Binviz
+target/ff9-names-four-phase-model-descent-paired-ribbon/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 292/4,444 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 unsignedn>=1000 clears n-999 a.flags thenreturn. Otherwise backwards16bytehistorycopy, countcontiguouspairedflags BEFOREnewhead copies, forcefirsta.flag1, preservepbpad. n0 stillformsunderflowpointer; reserve n36byteG4s. Negativefade4096, NULLcolorwritesTHREEbytes only;DPCScolor thenloadctxGTE matrix. Code38if255else3A; RTPT thenMAC0read WITHOUTNCLIP, gateANYnonzero, AVSZ3/4 andRTPSfourth,22Clength8 BEFOREfourthXY/colorwrites. FourDPCSfa/fb gradientwrites; advance history/output evenunculled. No matrixrestore atfunctionend despitecomment, no allocator/pad/bounds repairs.
+
+7B74 290(a,b,&matrix),GTErot/trans/LDV0/RTV0TR,storethreeINTs thenoutputTHREEU16lowhalves,restorectxmatrix,emptyasmretainsctx. Outputpad untouched; no original coordinate-system identity inferred.
+
+7C98 descriptor64/initphase/cnt0. 1FC0position,20C0rotation,quantize maskedU16yaw into0/2048 viaunsignedrange. D8(rotation,1F0(0)+120),addhalfwordoffsets tooriginalposition for target, THEN200overwritesposition. PublishTHREEctxpoints targetY-320, target+D8(-210)Y-320, overwrittenbaseXZ+D8(-1F0(0)) butthirdY=offsetY-320 WITHOUTbaseY. TWOwordtargetcopyincludesuninitpad. 340(resource6,listresource2,1,table),68scenehandle,scale4096,rot0/yaw/0,70table1,338resource28 narrowedSIGNEDhalfword. Provider/pad frontiers unchanged.
+
+Phase0 progress=t4096/24;exact0resources9/27 at target nullable64,27table/h12=24/hc60. t>0 targetINTposition withY+=1300*(4096-cos(progress>>2))>>12,320offset BEFORE31Cpose/tint. >=24 transitionsphase1/frame-1 AFTERwork (25ordinaryupdates0..24). Phase1 190(scene,0)/64pose;>=8 switchesphase2/frame-1 andANOTHER190(scene,0), notassertedrelease. Nineordinaryupdates0..8.
+
+Phase2 assign s0=t<<12 BEFORE64pose; s7=-1 exact0, s0/24 for1..23,4096after. Exact31 resourcechoiceXOR yaw versusctxpoint10X range,nullable220(0,64);32yellowflash,33redflash/resources4/5 nullable220;38resources12/16,12table/h12=24/hc68/h22=64. Everyphase2update134resource11 withphaseframe. >=41 switchesphase3/frame-1 AFTERwork (42updates0..41, notcomment40). Phase3 angle=t128,XZscale4096-cos,Yunchanged4096;190(41-t)/64pose,sinefade/tint. >=8 calls78/returns1 AFTERphasework BEFOREribbontail/cnt++; no extra release.
+
+Common tail onlys7!=0 getsTHREEselectedmatrixpoints. Negative clears17flags fromeachhistory via1016,positive buildsTWO16segment ribbons thenstoresTWOwordsfirstpoint toq andnarrowsall17Yedges afterdrawing withsignedshifts6/4 and4/3. Phase0/1 s7zero → no ribboncalls. Exact terminalphase3t8 skipsribbontail despitepositiveSIN. Unlikeindexed sibling no uninitializedfadeinput here; formula/order retained.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
