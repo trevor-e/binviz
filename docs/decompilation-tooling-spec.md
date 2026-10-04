@@ -3056,3 +3056,44 @@ remain separate. No private ownership/type/CFG walker, new matching credit,
 linked image, gameplay, provider or shared workspace acceptance. Historical
 reports/scorer remain pinned; refresh downstream source-bound evidence from
 the current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Actor segment naming acceptance (BV-03/BV-08, P2): FF9 e88338a07
+adds 20 canonical ovl_126b1000 names. Current catalog has 3,881 unique unit/symbol
+names and 69 alias headers. All 20 complete primary bodies directly read,
+including both complete sequence handlers; no semantic deferrals in this unit.
+Evidence: docs/function-names-actor-segments.json and Binviz
+target/ff9-names-actor-segments/. All 20 entire native object pairs identical,
+exact affected/scored namespace 20, unchanged pinned strict-relocation baselines:
+18 exact/two partial, 3,220/8,376 code bytes, zero failures. Installed WASM
+preprocessed tokens agree for all 20 sources. Current catalog/source/header,
+review/object bindings and 24 isolated commit paths audit. Progress:
+3,881/5,812 canonical primary files named (66.8%), 1,931 remaining.
+
+Names cover individual/shared-track actor segment dispatch, offset keyframes,
+blend segments with added/subtracted X wave, plus/minus X offset callbacks,
+staggered/shared-track coordinators, five-object position spawn and track/buffer
+helpers. Distinct tables and branch guards prevent misnaming alleged copies;
+only two offset callbacks are literal duplicates, guarded by complete token
+comparison after normalizing only the function identifier. Segment kind supplies
+blend weight; callback n only tests completion. Actual output shifts by 12,
+despite older comments calling the position format 16.16. No format assertion
+is embedded in names and no source comments are altered.
+
+Preserve unchecked actor id-1, upper-only clamps, unsigned halfword narrowing,
+signed shifts/negative weights, repeated wave calls, volatile completion limit,
+old-style void/int callback declarations, exact resource IDs/start boundaries,
+partial state/counter setup, and random-call/remainder order. First-table X jitter
+occurs twice while second-table X is unchanged; 8060 also writes first-table h12
+twice and leaves second-table h12 untouched. These asymmetries remain intact.
+Preserve register19 pin, do wrapper, -fno-cse-skip-blocks/-fforce-addr, redundant
+pointer tests and unchecked header pointers. Buffer-byte helper gets a generic
+indirect-store name; byte7 meaning and host provider identities remain unresolved.
+
+Function identifiers and own-unit aliases only; all other source tokens,
+comments/types/layouts/signatures/matching tricks remain stable. Existing
+maintained naming/farm/scoring/preprocessor tools and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found;
+existing proposals remain separate. No private ownership/type/CFG walker, new
+matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer remain pinned; refresh downstream source-bound evidence
+from the current catalog. Foreign work/index preserved; full-tree goal active.
