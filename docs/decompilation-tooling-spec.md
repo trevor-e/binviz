@@ -10167,3 +10167,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Dual quartic motion staged actor load weighted helper naming acceptance (BV-03/BV-08, P2):
+FF9 2368a008e adds two canonical ovl_125c3000 names. Catalog
+4,950 unit/symbol names, 292 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-dual-quartic-motion-staged-actor-load-weighted-helper.json and Binviz
+target/ff9-names-dual-quartic-motion-staged-actor-load-weighted-helper/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 2,448/2,448 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7D48 s=(524288/dur*n)>>12 EXACTdivideBEFOREmultiply, u128-s. FIVEweights u*u*u*u>>16; s*u*u*u>>13; s*s*u*u*24>>16; s*s*s*u>>13; s*s*s*s>>16. InitializeINToutXYZ with EACHp0SIGNEDhalfword*weight>>12 separately, thenEACHp1,p2,p3,p4 XYZterm shiftBEFOREaddition, exactorderpreserved/no combinedsum. dur24/n24 yields s127 (524288//24=21845), NOT128; u1/residual/missingendpointexactness retained. Unclamped/negative/dur0/overflow/aliasingfrontiers unchanged, no coefficientnormalization/reorderedaccumulation.
+
+7704 descriptor172. Init context,80(16,48,v60) THEN80(16,8,v58),70(table,2),TWO338(resource7,255)INThandles. rot28Y1792/Z1024/rot30Y-1792/Z-1024/scalesZ/Y/X8192; signedv50Z-1760/v68X1682/v70X-1682/rotX0/v50XY0/v68Y0/v70Y0; v68Z=(SIGNEDv58Z-1760)>>1,v70Z=(SIGNEDv60Z-1760)>>1 s16narrowing. clearFOURspawnflags indices3DOWNTO0. Pads/positions/history outputs notinitialized beyondstores.
+
+Onlycapturedtype1..24 callshelper(24,type,v58,v70,v50,v68,v60,w8),60(rot28,w8,scale,hnd0),helper(24,type,v60,v68,v50,v70,v58,w18),60(rot30,w18,scale,hnd4). THENsignedrot28Y-=384/rot30Y+=384; publishTHREEs16narrowedXYZw8 atctx.p2C+0/2/4 andTHREEw18 at+8/10/12; gap+6 untouched. No publication at0/after24/newclamp/endpointfix/padstores/providerextentrewrite.
+
+AFTERmotion exact8 ALWAYSflag0=1/200(0,0,v7C0)/load2nullable220(0,128) THENload1nullableSEPARATE220(0,128),even ifalreadyflagged. Candidate3 ifnot<livecount usescount-1; ifFLAGcandidate==0 setsflagBEFOREquery/loads2then1withseparate220calls. Exact10 similarlycandidate1 thencandidate2 each freshlycountclamped/checkflag/set/query/loads2then1. Count0 canproduce-1 indexing afterunconditionalactor0load; no guardrepair. Nullallocations stillconsume flags, aliases suppress secondloadgroups; no flagbackfill/countsnapshot/release/78. Return>=32 AFTERevents.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
