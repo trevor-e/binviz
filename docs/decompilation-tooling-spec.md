@@ -7993,3 +7993,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Pixel colored grid spiral handles paired pulse naming acceptance (BV-03/BV-08, P2):
+FF9 972cf7148 adds three canonical ovl_1176a000 names. Catalog
+4,808 unit/symbol names, 220 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-pixel-colored-grid-spiral-handles-paired-pulse.json and Binviz
+target/ff9-names-pixel-colored-grid-spiral-handles-paired-pulse/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 812/6,660 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 fifteenargVOID. Initialize TWO fallback words zero; skip0 increments W/H and reserves W*H*36 bytes BEFORE positive-dimension checks. fFC(0,fl); load context matrix and center, rotation INPUT out (fallback zero), f14(out,mat), optional uniform f20 scale, GTE center translation. One center depth is reused for EVERY cell; pad nonzero invokes f27C. Codes38/3A; ZEROZ before XY-only loads. Each row resets pk to SAME pool, overwriting the first row storage rather than advancing pool; preserve explicit arena extent/order frontier, do not claim corrected grid allocation.
+
+Grid edge colors zero; interior RGB from 5-5-5 pixels times c11 after TWO left shifts by2, signed >>12 and byte narrowing. Interior fourth color bytes remain partially initialized. RTPT then MAC0 read WITHOUT NCLIP; nonzero gate, RTPS fourth, f234 length8 with center depth; all cells advance36 even unlinked. Final f234 length1 with fFC result. No context GTE matrix restore. Unconditional tail a6/a5 and remainder unguarded, rectangle page coordinates and W-1/H-1, f4(rect,tex). Skip mode does not increment dimensions. Actual f4 provider read/write direction unresolved here; original upload comment not accepted as proof. No provider identity guessed.
+
+7CA0 descriptor56. Init savesctx, f200 firstvector and1FC second,70table6, FOUR338handles resources28/27/29/30 and TWO58objects9/11, resource14 nullable table/h12=18/hc36/h22=32, resource12 nullable256; phase1/framecounter0,trackedobjectsNULL. w28 created object unused later; no cleanup added. Phase1 n0..8 ordinary nineupdates, exact4 loads18/19/20, ring13 and sine/grid weights; transition at>=8 AFTERwork so frame8 can draw grid.
+
+Phase2 ordinary n0..46 (47updates), flashfirst4/redrandomfirst32. Pillar/model gated n<29, spiral n<36. Ring13 alwaysdrawn with v/2*2+8192 literal truncation; repeated cosine scale writes overwritten but calls retained. Events2/14/3 load16/21/22/23; trackedobjects clear ended h30 or write constant1024/0/0 into POSITION fields5C/5E/60, no rotation correction. Spiral18 iterations reuse FOUR handles i&3, not18 independently created particles. Negate-before-shift ang=-n<<7 and xdc=-n*411 remain. Random called EVERYiteration even after3sparks because left-first condition; up to3 resource15 draws with positive random XYZ offsets and partial pad. Phase2>=46 transitions AFTERwork.
+
+Phase3 n>=16 calls78/returns1 BEFOREcommon counter. Common grid only la!=0, rotation1024/0/n256/pad1, fifteenarg caller with tpage279/U0/V48/two columns/framecnt&7/step256/inputW/H16,scale lb/color la/fl1. Builder actually increments to17x17 reservation10404; tail rectangle16x16. Phase2 from29 has la0 so no grid. Counter increments except phase3 terminal. Preserve helper VOID declaration and context-global type frontier; definitions/declarations/direct call propagated.
+
+8DDC descriptor16 phase/counter0. Every update reads2B8(16,1,vec8) BEFOREphase/terminal. Phase0 n4096/3 cosinehalf/diminishing scale, >=3 transitions AFTERwork; phase1 n4096/9 parity256, >=9 transitions AFTERwork. Phase2 n4096/9, sinefade, cosine+4096 firstsize, c=(cosine<<1)+4096 secondsize; >=9 returns1 AFTERvector/trig BEFOREdraw/counter. Draw resources24/25 aroundctxw28=128; first NULLrot,d/3,a/2; second0/0/b/0 rotation, c DIRECTLY (not c/2), a*2/3. Unknownphase still draws both with zeros. No finish78 or release added.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
