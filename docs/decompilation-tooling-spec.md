@@ -11945,3 +11945,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Battle residual source menu selection helpers naming acceptance (BV-03/BV-08, P2):
+FF9 32fa341b9 adds 3 selected canonical ovl_02d800 names. Catalog
+5,498 unit/symbol names, 319 scoped alias headers. 12 selected complete overlay
+bodies reviewed and bound, 3 named and 9 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-battle-residual-source-menu-selection-helpers.json and Binviz
+target/ff9-names-battle-residual-source-menu-selection-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 200/200 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+All twelve currently uncataloged battle bodies fully reviewed, three named/nine deferred. Full included g02/g05/ff9 headers read. Keep raw-mask return, volatile request ordering, byte range wrap and original two-unit flag count; no guessed field meaning or provider admission.
+
+Full selected bodies are the evidence, not transplanted twins comments or numerical resemblance. Exact timers/masks/pair bytes/first-request latches/math/indexed getters are named; opaque field/category/callback purposes have explicit full-body hash-bound deferrals. Every distinct unit/symbol identity remains separate.
+
+Complete source-unit pc4->w0&200 check. Full hit/unit headers establish attacker flag-word location. Returns raw200mask, not normalized bool; actual flag name unknown, numericmask explicit. No support/status conflation.
+
+Complete volatile menu state b9 gate, b9=1 then byteb14=value. Establishes first-request latch behavior; no guessed request opcode/unit/player meaning. Preserve volatile order/full argument narrowing and unchanged busy path.
+
+Whole returns2 for LOWbyte(selection-9)<3; otherwise counts linked units with BOTH flags28/29 and returns count>=2. Selection/unit-count classification only, no party/visible/target-bit label claimed. Preserve modulo-byte range, null-list handling and unbounded original count.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
