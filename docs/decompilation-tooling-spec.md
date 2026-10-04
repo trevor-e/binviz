@@ -2065,3 +2065,39 @@ scorer migration. Shared acceptance requires configured frozen namespaces,
 compiler inputs and verified outputs. Refresh source-bound downstream evidence
 against current catalog/header identities. Preserve unrelated adoption/tooling
 work; other canonical units still need purpose review.
+
+Scene session/resource naming acceptance (BV-03/BV-08, P2): FF9 commit
+d706d72af adds 44 reviewed definitions in canonical ovl_009800, reaching 2951
+unique unit/symbol names and 42 alias headers. Evidence lives in FF9
+docs/function-names-scene-session-resources.json and Binviz
+target/ff9-names-scene-session-resources/. All 56 complete native objects agree;
+pinned strict-relocation original scores retain 48 exact and 8 partial baselines,
+11300/26988 exact code bytes, with no failures. All 56 installed WASM
+preprocessed token comparisons agree. Current catalog/header/source hashes and
+all 60 isolated committed paths independently verify. No new original-matching
+credit, linked image/module or gameplay proof.
+
+Unit progress is 44/159 named primary definitions. Complete-body review includes
+five explicit deferred roles and one additional voice-release consumer; 109
+primary bodies remain unreviewed. Actual callers establish nested whole-session
+loops versus the true frame loop, resource lifetime/registration, selection
+history, sector-range restoration, pending asset disc order and sprite texture
+origin/packet allocation. Preserve old-style externs, extra call arguments,
+unchecked capacities, pointer/int differences, fixed layouts and matching hacks.
+
+Concrete comment pitfall for BV-03: FxEnt f4 is a buffer address and f8 a byte
+size, despite source and generated-header comments claiming expiry/timed slots.
+ac3d8 reserves memory below the lowest cached buffer, aa4e8 reads/copies actual
+data there, ac474 compacts it upward, and ac67c invalidates by address boundary.
+Names reflect these complete bodies and consumers; generated headers and all
+comments remain untouched. aa01c resource fields30/32 are texture origins, not
+dimensions: ad44c forwards them to boot62e3c texture-page and UV calculations.
+Unresolved tag1E control/tag1F auxiliary resources and the table mapping that
+repeatedly tests only its first entry remain deferred rather than guessed.
+
+Reused maintained naming/farm/scoring adapters add no new private analysis
+walker. Compatibility checks remain distinct from shared workspace acceptance
+and scorer migration; shared acceptance still requires configured frozen
+namespaces, compiler inputs and verified outputs. Refresh source-bound evidence
+against current catalog identities. Preserve unrelated runtime/adoption/spec
+changes and continue purpose review of remaining canonical functions.
