@@ -2347,3 +2347,48 @@ alongside source/compiler/header/output identities and leading asm metadata.
 Maintained farm/scoring/preprocessor adapters reused; no private analysis walker
 or tooling rewrite added. Refresh source-bound downstream evidence from current
 catalog, preserve other sessions' work and historical scorer selection.
+
+World streaming/weather/sound naming acceptance (BV-03/BV-08, P2): FF9
+c3bf5115d names60 more canonical ovl_09b800 functions;3431 unique reviewed
+unit/symbol names,50 alias headers. Unit has108/149 named,128 complete primary
+bodies reviewed cumulatively,20 reviewed unnamed and21 awaiting review.
+Current batch reviews70 whole primary bodies and records10 purpose deferrals.
+Evidence: FF9 docs/function-names-world-streaming-weather-sound.json and Binviz
+target/ff9-names-world-streaming-weather-sound/. All74 affected complete native
+object pairs identical, unchanged pinned strict-relocation scores66exact/8partial,
+30308/38616 code bytes, zero failures. All74 installed WASM preprocessed token
+comparisons agree. Current catalog/source/header/object hashes and78 isolated
+committed paths verify. No new matching credit, portable module, linked image,
+selected runtime provider, shared workspace acceptance or gameplay proof.
+
+Producer/consumer review resolves previously generic effect-pool descriptions:
+32-node coarse-cell cache with16 mesh buffers;40-node visible fine-cell mesh
+pool with20 position payloads;6-node/3-buffer texture data cache and4-node/
+2-upload-slot pool. Names cover streaming target/window, row/column sector
+descriptors, contiguous CD scatter reads and completion, terrain height,
+visible mesh gathering/binding/drawing, texture requests/read-done/uploads,
+weather region/mode/fog/blend and music requests/play/stop/volume wrappers.
+Three actual maintained shared Binviz captures of Weather, w_music and Texture
+strings on the full08C000 original container corroborate exact diagnostics.
+CLI545beb01...44b6e, original image, overlay config and outputs all hash-pinned.
+Full canonical08D800 sound-command body corroborates protocol; external code
+and equal addresses do not establish selected runtime-provider correspondence.
+
+Preserve one-step coordinate wrap, negative z interval, fixed13/fixed14 cells,
+hardcoded24-row read stride, unchecked10-entry chains and slot bounds, linked
+list compaction behavior, field/signature mismatches, compiler flags and pins.
+BBBA8 keeps uninitialized k on no-match;BC528 is a group index, not the count
+claimed in comments. BBE24 transforms wrapped relative coordinates and range
+gates; it does not itself project screen pixels. C24D8 writes descriptor ob+id
+despite its comment claiming id+60. Weather keeps mode5/flag2 sentinels,
+invalid-mode side effects, region precedence and alignment-dependent94-byte
+copies; sound keeps masked arguments, halved flags and uninitialized copied
+request words. Foreign8574 ABI work remains completely untouched.
+
+Maintained naming/farm/scoring/preprocessor workflow reused; no private analysis
+walker added. Thin batch adapter and audit enforce the previously flagged BV-08
+exact object namespace: no missing/extra objects; score count equals74 records.
+Shared readability acceptance remains proposed until frozen namespaces and
+compiler/input/output identities are configured and independently verified.
+Refresh downstream source-bound evidence using the current catalog; keep the
+historical scorer selection, foreign work/index entries and CLAUDE sections.
