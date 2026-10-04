@@ -16326,3 +16326,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual stateless timeout and service deferrals naming acceptance (BV-03/BV-08, P2):
+FF9 297a3267b adds 1 selected canonical ovl_1204d800 names. Catalog
+5,675 unit/symbol names, 478 scoped alias headers. 3 selected complete primary
+bodies reviewed and bound, 1 named and 2 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-stateless-timeout-and-service-deferrals.json and Binviz
+target/ff9-names-effect-residual-stateless-timeout-and-service-deferrals/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 64/64 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete1204D800 stateless timeout named; complete1203A000 and12719000 host-service controllers reviewed and purpose-deferred with current source hashes. No unsupported hostslot meanings or argument repairs introduced.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole handler and sharedheader reviewed. Requestszero state,init savesctx,update returnsframe>=40 with no hostservices or resources. Preserve GCC2.8.1, unusedstateargument and frameless body; no invented visualpurpose or extra calls.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
