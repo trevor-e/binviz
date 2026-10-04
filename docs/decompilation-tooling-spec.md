@@ -7391,3 +7391,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Ground level pair sequential actor objects naming acceptance (BV-03/BV-08, P2):
+FF9 8dbbc52ec adds three canonical ovl_10327000 names. Catalog
+4,752 unit/symbol names, 201 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-ground-level-pair-sequential-actor-objects.json and Binviz
+target/ff9-names-ground-level-pair-sequential-actor-objects/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 860/1,384 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor12: w0=0, save context, copy two full words from pc+56/+60 including fourth halfword, THEN clear signed Y halfword at state+6. Resource2 nullable h22=-300, resource1 nullable h22=-600, no pointer retained in state. Update resource5 at current signed frame ONLY if w0==0; terminal60 check is inside same gate. Externally nonzero w0 stalls completion, not repaired. No f78/release/provider normalization.
+
+7848 descriptor60: captures unsigned actor-count byte, clears context p0 byte18, fills vec[4][2] with 1FC and nulls obj[4] for every i<count; no bound4 or zero-count guard. phase/index0. Phase0 loads resource3 at indexed cached vector even count0, nullable h22=220(index,64), advances phase1 and resets job frame=-1. Phase1 only when frame>0 advances index then phase0 or phase2 with frame=-1; returns0 directly. Phase2 terminal10; default0. Preserve pin3, empty asm barrier, signed h22 narrowing and unguarded count/index behavior; no completion byte set here.
+
+7A54 separately reviewed: same cached-vector initialization/count hazards and phase0/1/2 schedules, but loads resource4 and writes ctx p0 byte18=ph (normally1) only after final phase1 advance, before job frame=-1. Phase1 breaks rather than immediate return, then final0; terminal phase2 frame>=10. Pins3/4 retained. Shared flag purpose and mutable count/phase remain unknown; name records signal behavior without declaring host meaning or correcting copied comments.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
