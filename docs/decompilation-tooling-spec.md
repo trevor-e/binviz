@@ -12038,3 +12038,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Title residual transition scene helpers naming acceptance (BV-03/BV-08, P2):
+FF9 d436aff7f adds 3 selected canonical ovl_0ba800 names. Catalog
+5,507 unit/symbol names, 322 scoped alias headers. 6 selected complete overlay
+bodies reviewed and bound, 3 named and 3 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 4 semantic-provider body hashes bound. Evidence:
+docs/function-names-title-residual-transition-scene-helpers.json and Binviz
+target/ff9-names-title-residual-transition-scene-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 128/128 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+All six residual combined card/title bodies fully reviewed, three moduleB scene wrappers named and three card-game hook/state-handler purposes deferred. Four full semantic providers and full module mapping header read. Public definition names propagate where canonical symbols are referenced; real importA812C/A8378 intentionally retained as distinct compiler/linker identities. Existing BV-03 source-scoped alias variant gap remains; no guessed alias admission.
+
+Full selected bodies and complete bound semantic providers are the evidence; transplanted template comments do not transfer purposes. Known buffer/scene/command/bitfield behavior named, unresolved field/category/callback purposes explicitly hash-bound and deferred. Every distinct unit/symbol identity remains separate.
+
+Whole registers importedA8378 with resident transition done callback setter. Full lane02 header proves moduleB lane5378 corresponds to realA8378 and lane512C to realA812C. Full5378 selects numeric scene4. Preserve callback importA8378 and existing function-pointer/u32 prototype mismatch.
+
+Whole wrapper importedA812C(4). FullB512C scene switch independently read with enter/leave hooks; moduleB lane mapping in full header. Numeric scene4 only, no invented new/loadgame role. Original real import identity retained.
+
+Complete unsigned counter++ then>=2 invokes realA812C(5). Name threshold behavior without claiming single invocation: continues invoking while counter remains>=2. Preserve unsigned wrap, hoisted-counter annotation and original import identity; no reset/guard added.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
