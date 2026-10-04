@@ -4070,3 +4070,31 @@ gap found. No private ownership/type/CFG walker, new matching credit, linked
 image, gameplay, provider or shared workspace acceptance. Historical reports
 and scorer remain pinned; refresh downstream evidence from current catalog.
 Foreign work and index preserved; full-tree goal remains active.
+
+Six object fade naming acceptance (BV-03/BV-08, P2): FF9
+4124eb436 adds eight canonical ovl_12cac800 names. Catalog4,241 unique
+unit/symbol names,98 alias headers. All eight complete own-unit primary
+bodies reviewed, no semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-six-object-fade.json and
+target/ff9-names-six-object-fade/. Eight entire native object pairs identical;
+exact affected/scored namespace eight, unchanged pinned strict-relocation
+baselines seven exact/one partial,1,928/2,948 code bytes,zero failures.
+Installed WASM preprocessed tokens agree for all eight sources. Current
+catalog/source/header/object/review bindings and12 isolated commit paths audit.
+The audit adapter's expected header count corrected from88 to98; passed rerun.
+
+Roles cover position-following object pair, lowered-start interpolation,
+six-track object fades,indexed three-object hooks,weighted integer and host
+blends,halfword reader and dual-vector key fetch. Preserve partial initialization,
+legacy helper declarations,unsigned/signed halfword conversions,upper-only key
+clamps,zero/negative index behavior,two-byte state walks,resource/hook tables,
+threaded fade goto,tint condition after counter decrements and host call order.
+No original game effect/provider identity inferred. Identifiers and aliases only;
+canonical runtime exports retained,opaque data and matching tricks unchanged.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer remain
+pinned; refresh downstream source-bound evidence from current catalog. Foreign
+work/index preserved; full-tree goal remains active.
