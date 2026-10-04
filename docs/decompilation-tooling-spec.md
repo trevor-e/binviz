@@ -5514,3 +5514,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Slot16 spiral finale and fifteen point spark trails naming acceptance (BV-03/BV-08, P2):
+FF9 dd5c1b02d adds five canonical ovl_12d57800 names. Catalog4,507 unique unit/symbol
+names,139 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-slot16-fifteen-point-sparks.json and
+target/ff9-names-slot16-fifteen-point-sparks/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+four exact/one partial,1,420/4,820 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established three-phase slot16 sprite/spiral finale,twelve-frame callback,ring
+reset,fifteen-point trail and timed jittered emitter. Preserve negativeheader
+offsets,provider arity,pins,failedallocation/random ordering,partials,pads,
+phase transition,nullablecall and terminaltail omission. Callback/caller
+references renamed; own-unit aliases retain canonical native/runtime identities.
+Exact game effect/provider identities unresolved. No body/type/layout/ABI claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
