@@ -13890,3 +13890,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual six staged anchor resources naming acceptance (BV-03/BV-08, P2):
+FF9 986b42a60 adds 1 selected canonical ovl_fd91800 names. Catalog
+5,586 unit/symbol names, 389 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-six-staged-anchor-resources.json and Binviz
+target/ff9-names-effect-residual-six-staged-anchor-resources/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 720/720 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFD91800 controller independently reviewed and named for six staged resources at one anchor. Full g11/lifecycle and local host/object declarations bound; all original stores/API arguments and compiler choices retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole20hex-byte lifecycle and complete frame switch read. Init clears host byte52 and captures200 point; resources2/5/6 initially,7at6,3/4at12, each h22via220(0,32), completion60. Preserve GCC2.8.1, actual three-load-before-three-store and two-load-before-two-store ordering, partial pointer initialization and unknown hostbyte meaning. No drop handling or resource visual identity invented.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
