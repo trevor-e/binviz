@@ -2945,3 +2945,46 @@ ownership/type/CFG walker, new matching credit, linked image, gameplay, selected
 provider or shared workspace acceptance. Historical reports/scorer stay pinned;
 refresh downstream source-bound evidence fromcurrent catalog. Foreign work,
 index and outside-marker checkpoints preserved; full-tree goal remains active.
+
+Spark burst naming acceptance (BV-03/BV-08, P2): FF9 cebc408be adds
+22 canonical ovl_13640000 names; current catalog has3,817 unique unit/symbol
+names and66 alias headers. All22 complete primary bodies directly reviewed;
+no semantic deferrals in this unit, other units pending. Evidence:
+docs/function-names-spark-burst.json and Binviz target/ff9-names-spark-burst/.
+All22 complete native object pairs identical; exact affected/scored namespace22;
+pinned strict-relocation baselines unchanged:20 exact/two partial,3,924/8,788
+code bytes,zero failures. Installed WASM preprocessed tokens agree for22 sources.
+Current catalog/source/header/review/object bindings and25 isolated commit paths
+audit. Progress:3,817/5,812 canonical primary files named (65.7%),1,995 remaining.
+Concurrent transition-input commit already captured our marked checkpoint;
+the naming commit changes25 owned paths and preserves its other work/index.
+
+Names cover ribbon burst, keyframed spark shower, position-event sequence,
+mirrored position/pair tracks, signed three-component scale keyframes,
+texture-colored quad grid, wrapping texture strip and scheduler/interpolation.
+Count-at0 versus opcode/count-at2 layouts remain distinct. Preserve duplicated
+helper/caller mirroring, unsigned position versus signed scale widening,
+23 spark records/24 main handles, physics transitions, exact frame/resource
+boundaries, partial initialization, random calls, matching flags/register pins,
+all assembler strings and do/assignment wrappers. Grid retains arena allocation
+before loop tests, optional result fallback, negative scale bypass, row read-ahead,
+colors/depth rules and upload when rendering is skipped; W/H increment only on
+the rendering branch, so skip-mode texture window differs. Event cursor advances
+per target nibble; preserve exact start-time equality, no automaticfree, silent
+pool overflow, last-triplet reuse and unchecked arithmetic/index behavior.
+Original spell/asset labels and selected runtime-provider identities unresolved.
+
+Evidence correction: FF9 11b726122 corrects earlier effect-track grid review
+wording, without source/name changes or changes to historical native proofs.
+Direct full-body review of1233A800 ABB4 and13640000 92D4 shows MAC0 stored using
+swc2 $24 after RTPT and its saved value tested for nonzero. Neither body issues
+NCLIP. This supersedes the earlier MAC0/NCLIP wording in the effect-track
+acceptance note and report. The correction binds the current ABB4 source hash;
+no runtime interpretation beyond the observed register test is asserted.
+
+Existing maintained naming/farm/scoring/preprocessor tools andthin adapters
+reused;BV-08 namespace gate enforced. No additional shared implementation gap
+found;existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit,link,gameplay,provider orshared workspace acceptance.
+Historical reports/scorer remain pinned; refresh downstream source-bound evidence
+fromcurrent catalog. Foreign work/index preserved; full-tree goal remains active.
