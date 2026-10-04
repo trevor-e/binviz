@@ -13188,3 +13188,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual two copy model expansion fade sequence naming acceptance (BV-03/BV-08, P2):
+FF9 c2ba99d3a adds 1 selected canonical ovl_109e4000 names. Catalog
+5,560 unit/symbol names, 363 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-two-copy-model-expansion-fade-sequence.json and Binviz
+target/ff9-names-effect-residual-two-copy-model-expansion-fade-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/860 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining109E4000 controller independently full-read and named for two scaled submissions and tint fade. Full g16/lifecycle headers bound. One handle and disabled counter-feed behavior retained, no source/body/type/ownership normalization.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole28byte lifecycle, flag and update paths read. One resource3handle submittedtwice with growingXZscaleandYscale, secondYhalved, sharedcosinetint; initial auxiliary8/11, completion32onlyifenabled. Disabledpathstillresource1countfeed. Preserve GCC2.8.1, pins8/16, do-while0/gotozero, signed/unsigned marker copies, unused loweredvector and original counterinitfrontier. Two copies describe submits of onehandle; no glow geometry, spell or missinginitrepair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
