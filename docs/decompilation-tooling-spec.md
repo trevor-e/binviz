@@ -7279,3 +7279,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Delayed dual handle growth tint naming acceptance (BV-03/BV-08, P2):
+FF9 4902794fb adds three canonical ovl_11e6c000 names. Catalog
+4,740 unit/symbol names, 197 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-delayed-dual-handle-growth-tint.json and Binviz
+target/ff9-names-delayed-dual-handle-growth-tint/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 156/1,652 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor112, savesctx/table70(count2), initiallyreads hostX intoSIGNEDanchor then OVERWRITESX0, captures SIGNEDY/Z. Rotation1XYZ0, allsixINTscales0, rotation2X/Z0/Y512, INTtranslationfromanchor. Creates10/11 U16handles, lowhalf copies translation intoh60/62/64, loads2then3 atanchor, SIGNEDcounts68/6A=-1. Preserve redundant firstXread/store, partialpads/otherobjectslots and -fno-cse-skip-blocks/wrappers. h68 NEVERarmedhere; w3Cfade NOTinitialized.
+
+Exact15 resource4nullableh22=-256; exact54 resources13then12nullableh22=128/256; exact82 armsSIGNEDfadecount16. Draw50..97: firsthandle pose/visibility onlyd>=4 (54..97), secondall50..97; both poses BEFOREfade/growth. Dormantfirstcount would interpolate-128->0 over3ifexternallyarmed. Second normally16samples82..97 elapsed0..15, missing -256 endpoint98 duewindow; countbecomes0. Tintcalls occur EVERYdrawupdate evenbefore82, so uninitialized w3C frontier50..81 remains; no invented fade initialization.
+
+FirstscaleXZ+=64 onlyd>=4; firstY+=64 for4<=d<16, else-8. SecondXZ+=64all; secondY+=85 ford<12, else-8. UppercapsXZ1638/Y3276 appliedafterupdates withliteralconditionals; no lowerclamp. Thus poseshow PREgrowthscales and latesttint. Everyupdate resource134 uses14before50,8from50 (includingterminal120), then78/return1 at>=120; mode1 goes directlytotail without134. No release or sprite-identity inference. INTtypedweightedhelper agreesusedreturn; VOIDhostwrapperresultdiscarded.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
