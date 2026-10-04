@@ -6790,3 +6790,30 @@ deferral prioritization/BV-06 provider proposals retained. No new implementation
 private ownership/type/CFG walker, matching gain, linked-image/gameplay/workspace
 acceptance. Refresh source-bound evidence, pin historical tools/reports,
 preserve foreign work/index; full-tree naming goal active.
+
+Rising camera handle transition naming acceptance (BV-03/BV-08, P2):
+FF9 5ab4b27ba adds three canonical ovl_11bf0800 names. Catalog 4,689 unit/symbol
+names, 180 scoped alias headers. Three full own-unit bodies and g23/g13 headers
+reviewed and bound, zero deferrals; other units pending. Evidence:
+docs/function-names-rising-camera-handle-transition.json and Binviz
+target/ff9-names-rising-camera-handle-transition/. Three full native object
+pairs equal; exact affected/scored namespace three. Pinned strict-relocation
+scores unchanged: two exact, one partial, 156/1,524 code bytes, zero failures.
+Three installed WASM token comparisons agree; current source/header/catalog/
+object/review bindings and seven isolated committed paths audit.
+
+Names describe rising camera writes, created-handle transition, tint and two
+blend helpers. Preserve frame7 object loads before frame8 rise endpoint,
+fixed initial sprite anchor, literal versus created handle identities, unsigned
+draw gate, partial initialization and uninitialized transition handle frontier.
+Normal tint emits sixteen samples before the omitted endpoint; camera/pose
+publication precedes tail position increment. No guessed resource/provider role.
+Definitions, declarations and direct helper calls propagate, scoped aliases
+preserve linker/address/runtime identities. All types/bodies/layouts remain.
+
+Maintained naming/farm/scorer/preprocessor and thin adapters reused; existing
+BV-03 reviewed deferral prioritization/BV-06 provider proposals retained. No new
+tool implementation/private ownership/type/CFG walker, matching gain, provider
+admission, linked-image/gameplay/workspace acceptance. Refresh source-bound
+evidence and pin historical reports/tools; preserve foreign work/index. Full-tree
+naming goal active.
