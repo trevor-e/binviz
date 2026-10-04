@@ -12100,3 +12100,36 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Disc prompt residual hook status helpers naming acceptance (BV-03/BV-08, P2):
+FF9 c1d78fc9a adds 4 selected canonical ovl_146000 names. Catalog
+5,514 unit/symbol names, 324 scoped alias headers. 4 selected complete overlay
+bodies reviewed and bound, 4 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 6 semantic-provider body hashes bound. Evidence:
+docs/function-names-disc-prompt-residual-hook-status-helpers.json and Binviz
+target/ff9-names-disc-prompt-residual-hook-status-helpers/. 4 full native object pairs equal;
+exact affected/scored namespace 4. Pinned strict-relocation scores unchanged:
+3 exact/1 partial, 192/312 code bytes, zero failures. 4
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 8 isolated committed paths audit.
+
+All four residual146000 primary bodies completely reviewed and named. Six complete neighboring state-machine providers and full lane05 header read. Distinct original F-address imports/table indices retained; source names do not admit different-overlay save/menu providers sharing those addresses.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole ordered chain of three original F6654/F66AC/F66F4 imports, described as per-frame chain. Name chain only; no inference about individual imported implementation or alternate overlay providers.
+
+Whole current-state index into F6B74 table, null checked call. Full neighboring current-state dispatch/confirm/reset bodies and full lane05 state header establish disc prompt context. Original index and function pointer type unchanged.
+
+Whole current-state F6B88 table lookup and optional call. Separate exit hook table preserved, no enter/exit consolidation, null handling unchanged.
+
+Whole byte-truncated imported F6368 status recorded in b3 with f10 reset. Status7 disables finish/restore fade and finishes transition; every other status including1 sets state3, white-to-black mode1 fade24 and calls originalF6AE0. No guessed meanings for individual status codes or imported providers; retain redundant goto and exact calls.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
