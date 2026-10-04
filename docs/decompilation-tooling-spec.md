@@ -2623,3 +2623,32 @@ our marked naming checkpoint. Foreign work/index remain preserved. No new
 matching credit,portable module,linked image,gameplay or shared workspace
 acceptance. Refresh source-bound evidence from current catalog;historical reports
 and scorer stay pinned;full-tree review remains active.
+
+Collection menu naming acceptance (BV-03/BV-08, P2): FF9 10a21cb87
+adds28 canonical ovl_0e4000 behavioral names;catalog3632 unique unit/symbol
+names,57 alias headers. All29 recovered primary bodies reviewed;one empty hook
+deferred. Other units remain pending. Evidence:docs/function-names-collection-menu.json
+and Binviz target/ff9-names-collection-menu/. All28 complete native object pairs
+identical,exact affected manifest/scoring namespace28,pinned strict-relocation
+scores unchanged28exact,7196/7196 code bytes,zero failures. All28 installed WASM
+preprocessed token comparisons agree. Current catalog/source/header/object and
+29 review bindings audit;32 isolated committed paths agree.
+
+Names cover initialization,action/list input,selection,threshold lookup,save-mask
+counts,help/cursors,panels/rows,frame/shadow primitives and tile VRAM staging/
+restoration. Bound collection-menu roles to actual operations without guessing
+the asset subtype or relying on old portrait/nine-slice labels. Preserve24-bit
+masks,strict threshold<progress,selected index+1,zero-selection sentinel,list
+tail base17,fade/busy/input priorities,threshold+1 icon row,redundant calls,
+caller/definition arity/return/RECT-buffer mismatches and all matching spellings.
+Atlas staging starts its save pointer one0x518-byte record before the source;
+preserve negative offset,stride,sync ordering,mode3 selected-tile moves,packet
+tag/CLUT/UV masks and four-frame/two-shadow loops. No behavioral fixes.
+
+Existing naming/farm/scoring/preprocessor tools and thin proof/commit adapters
+reused;BV-08 exact namespace gate enforced,no new reusable tooling gap found.
+No ownership/type/CFG walker or tooling rewrite added. No new matching credit,
+portable module,linked image,gameplay,selected-provider or shared workspace
+acceptance. Refresh source-bound downstream evidence from current catalog;
+historical reports/scorer stay pinned;foreign files/index and unrelated checkpoints
+preserved;full-tree review remains active.
