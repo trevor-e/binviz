@@ -16380,3 +16380,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Retained readable function review ledger acceptance (BV-03, P2):
+FF9 8f4fd0f7a commits docs/function-names-retained-readable.json and the isolated
+naming checkpoint. Seventeen complete existing readable definitions are retained,
+including all local MMIO/poll/timeout helpers in four previously reviewed CD
+sources, whose candidate hashes were revalidated, and thirteen newly reviewed
+archive/CD/VSync/memmove sources. Actual definition lines, full-body review
+decisions, source bytes, current header inputs and the source HEAD are recorded.
+Unusual VSync/CdRead arguments, memmove forward end-pointer return and SDK exports
+remain unchanged. This is an explicit temporary reviewed table and thin ledger
+aggregation, not the proposed maintained generic review-admission feature.
+
+Current canonical-source partition verified: 5812 = 5676 catalog aliases +17
+retained existing readable definitions +119 current full-body purpose deferrals.
+Zero sources await initial review/accounting. All current catalog source/header
+hashes and aliases verify, retained report bytes match HEAD, and every retained
+definition/source/header identity verifies. No source or header changes arise
+from this documentation batch. The 23 new names in this continuation separately
+have23 complete native before/after object pairs equal, unchanged strict original
+scores23exact/0partial and5492/5492 code bytes, and23 identical preprocessor-token
+comparisons. That selected proof is not whole-game link/runtime/gameplay proof.
+
+Evidence: target/ff9-names-retained-readable-completion/remaining-review-inventory.json,
+the committed retained ledger and docs/function-names-catalog.json; the maintained
+audit-current-progress.py adapter joins canonical paths and invalidates retained
+reviews on source/header drift. No new parser/ownership/type/CFG walker or native
+backend is introduced. Existing BV-03 retained SDK accounting proposal remains
+the reusable implementation handoff: admit typed review decisions and input
+provenance in the maintained ledger, refuse stale bindings, keep named/retained/
+deferred/pending counts distinct and verify source/header mutations invalidate
+reuse. This specimen proves current manually reviewed admission, not generic
+feature completeness. Future purpose work requires new caller/provider evidence;
+addresses, transplanted comments, bare constants and empty hooks are insufficient.
+Foreign changes and index entries are preserved by the isolated note adapter.
