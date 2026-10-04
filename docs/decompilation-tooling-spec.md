@@ -9769,3 +9769,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Six frame cosine dipped three history trail actor zero load naming acceptance (BV-03/BV-08, P2):
+FF9 478efd9af adds two canonical ovl_1223e000 names. Catalog
+4,922 unit/symbol names, 278 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-six-frame-cosine-dipped-three-history-trail-actor-zero-load.json and Binviz
+target/ff9-names-six-frame-cosine-dipped-three-history-trail-actor-zero-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,128/1,128 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor140 THREE U16fourlane rotation/INTfourlane position histories. Init savesD7BB4,70(D7BC4,2),200(16,0,state),200(0,0,p8),80(16,23,m10),D4(m10,p8,h18),scale4096each,h18X+=2048 U16narrowing. InitialINTXYZ=SIGNEDm10XYZ. U16head338(resource1,1),trail58(resource12,151,15680,0,0). Full signedp0/p8/m10/U16h18/INTv20 fourlaneviews retainunusedlanes.
+
+Update capturedframe; frame<8 includingnegative ang=(frame<<12)/6,BC(state,p8,ang,locals16t[3]),INTXYZ=tXYZ then Y-=cos(ang>>1)*200>>12. THREEhistorysamples tint-(i<<4); terminalframe>=6 AFTERallwork. Ordinary6endpoint4096; continued7weight4778; no per-update spin. Head60 precedes historyloop; for each history i ifframe>=i+1,60(rotation[i],position[i],scale,SAMEtrailhandle),268(trailhandle,3),26C(trailhandle,negative repeatedRGB). ONLYXYZ history shifts from oldest highindex down then currentXYZ->history0 AFTERdraw; FOURTHlanes/pads/history not initialized byinit or shifted. Terminal78/return1 occurs AFTERhead/historydraw/shift; no release/clamp/eventbackfill/padinitializer/historyrepair/trig/providerquery dedup.
+
+Secondhandler descriptor12 objectpointer+THREEU16position/tailpad; init savesEfxCtxcontext,200(0,0,pos),loadresource5 inclNULL/nullableh22=220(0,128). Othermodesreturncapturedjobtype>=30 with no tracking/release/78/fourthlaneinit. Originalfilename/commentaliases remain; own copied body fullyread.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
