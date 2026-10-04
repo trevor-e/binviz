@@ -7049,3 +7049,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Host point drop return hooked objects naming acceptance (BV-03/BV-08, P2):
+FF9 efc576121 adds three canonical ovl_11ce1800 names. Catalog
+4,716 unit/symbol names, 189 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-host-point-drop-return-hooked-objects.json and Binviz
+target/ff9-names-host-point-drop-return-hooked-objects/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,240/1,240 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor60, mode1 captures1FC(0,v14)/1F8(0,v1C), counters-1/hold0, replacesv1C X/Z fromv14. No blanket zeroing of objectarray/unusedpads. Exactframe0 count12, copies THREE lanes tov24/v2C thenv2CY=-1000; resource3 atv24 and2 atv14 before nullable3scale220(0,128). Exact28 count3/hold0, v2CY=storedv1CY, resource1 atv14. These are event snapshots, not continuous object-target mirroring.
+
+Drop gate SIGNEDcount>=0: gets freshpoint1FC, blend stored SIGNEDY->-1000 elapsed12-count, writes204 then decrements. Newcount==0 arms HOLD on normalframe11 before endpoint; same update separately gets freshpoint and overwritesY=-1000. Nextframe12 also executes interpolationendpoint beforecount-1 andhold write. Preserve redundant calls and earlyhold, not oldcomment twelve-step endpoint assumptions.
+
+Return gate count>=0: eachupdate1FC and1F8 to refresh targetY, replaces targetX/Z withcurrentpoint; blend -1000->refreshed SIGNEDY elapsed3-count,204 then decrement. Atnewcount==0 (normalframe30 elapsed2, beforeendpoint31) fetches1F8 AGAIN and204 restores FULL freshly fetched vector, THEN replaces storedX/Z withoriginalv14; loads7then8 atv14, nullable8hooktable/h12=60/hc24. Normalframe31 still runs count0 endpoint using freshtarget; no added finish/release. If counters overlap externally, preserve drop/hold/return order.
+
+For frame>=0 nullableobj0 clears ifh30==-1 then sets w2C pointer to statev2C, not copies of current hostpoint. Terminalframe>=80 checked after all work, no host78. Both helpers retained exactly; VOIDhost48 resultdiscarded, INT weightedhelper consumed via agreeing INT K&R declaration. Preserve casts/U16 stores/overflow/division behavior.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
