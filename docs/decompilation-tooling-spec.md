@@ -8585,3 +8585,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four handle shrink spin blend load paired sprite pulse naming acceptance (BV-03/BV-08, P2):
+FF9 9063d59a2 adds two canonical ovl_1184f800 names. Catalog
+4,843 unit/symbol names, 237 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-handle-shrink-spin-blend-load-paired-sprite-pulse.json and Binviz
+target/ff9-names-four-handle-shrink-spin-blend-load-paired-sprite-pulse/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 1,940/2,772 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor40. Init context/table70count4; THREE58 resources3/4/5 narrowSIGNEDhandle with186/3DC0/0/0, fourthresource2 with184/3D40/128/128. State1/count0,200 firstsignedfour-halfwordposition and1FCsecondposition; secondvector not subsequently consumed. No assumed actor-relative tracking or cleanup.
+
+State1 ordinaryfiveupdates0..4: sin(frame256),uniform scale((4096-sin)*3072)>>12,rotationXYZ0 andsignedINTposition. 2E4(resource3handle,2),60,2680,26C0. Transition>=4 AFTERdraw/state2/frame-1. Fourthrotationlane/INTvectorfourthwords uninitialized. No smoothing of scale jump on next state.
+
+State2 ordinaryseventeenupdates0..16: uniform3072/rotationYframe32,pose3/2680/tint0,pose2/2681/THREE independent cosine calls atframe128 for tint(cos>>5)-128. Texture240 weight((4096-sin(frame128))>>9)+frame5. Transition>=16 AFTERdraw setsstate3/frame-1 thenFOURloads14/13/1/6 at firstposition, nullableh22=220(0,32), then100(ctxINTaddress+4,1,0,32,70). Preserve rawinteger address view and load order.
+
+State3 ordinarythirteenupdates0..12: uniform3072/rotationY512. frame<2 weight8192-frame2048; elseweight4096-((frame-2)*4096/14). STRICTweight>4096 blends3->4 atweight-4096 andtints3=-64; otherwiseblends4->5 withweight andtints4=((weight-2048)>>5)-128. Exact1 resource16loaded/nullableh22=220(0,32). Terminal>=12 AFTERblend/tint/load calls78/return1 BEFOREcommoncountincrement. No invented completion at interpolationendpoint16. Unknown state still incrementscount, no poses.
+
+7E98 descriptor16. Initphase/count0/contextsaved,positionv8 uninitialized untilupdate2B8(16,1,v8). Everyupdate obtainsv8 BEFOREswitch/terminal; localsx/h/w/size0. Phase0 ordinaryfourdrawupdates0..3: x=frame4096/3,size512,w=cos(x>>2)>>1,h=((4096-x)>>1)+2048. Transition>=3 AFTERparametercalculation resetsphaseclock, thencommondrawstillusesphase0values.
+
+Phase1 ordinarytendrawupdates0..9: m=frame4096/9,h=4096+(frame&1)*256,x=(m>>1)+2048+(frame&1)*256,size=(m>>3)+512 usingidenticalifarms,w=h. Transition>=9 resetsphase2/frame-1 AFTERparameters, commondrawstillphase1. Phase2 size1024-(frame4096/9>>2),x=sin(k),w=cos(k)+4096,h=cos(k)*3/2+4096 withTWOseparatecoscalls. Terminal>=9 returns1 BEFOREvec/contextflag/sprite/counttail, while2B8alreadyran; ordinaryninephase2draws0..8.
+
+Common pulse tail fillsALLfourrotationlanes0/0/size/0,contextflag128 around TWO128 calls: resource20 atv8 withNULLrotation,sizew/3,fade x/2; resource19 withrotationvector,sizeh/2,fade(2x)/3. Clearflag0 thenincrementcount. Originalsame-codecommentresource15/16 doesnotmatchthisunit20/19 andisnotusedasnamingauthority. Unknownphase emitszero-sizedsprites usinginitializedlocals; no clamps/phasebackfill/78/release added.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
