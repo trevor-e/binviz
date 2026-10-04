@@ -7307,3 +7307,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Zero offset derived pair flash marker naming acceptance (BV-03/BV-08, P2):
+FF9 f8c6c629b adds three canonical ovl_fe00000 names. Catalog
+4,743 unit/symbol names, 198 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-zero-offset-derived-pair-flash-marker.json and Binviz
+target/ff9-names-zero-offset-derived-pair-flash-marker/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,512/1,512 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor80. Savesctx,1FC/20C actor16 vectors,THREEa14->a34 beforeDC with2000 thenU16Y=-200. 2C4(actor16,31,Scratch32)/2B0(scratch,0,a24),2C4(actor16,45,Scratch32)/2B0(scratch,0,a2C), unlikeFC0D000selectors7/15 andoffset400. Loads1then2 atderivedvectors, nullableh22=220(actor16,256),D4derivestrackvecs. No guessed bone/matrixcontract/provider extent. Pin17 retained; seven actual vectorarrays not commentnine.
+
+Exact10flash128/128/128 thenloads11/12/5 ata34; exact11sameflash, no debuglog. Flashargument&ctxp20w4 is byteoffset4, notarrayelement4. Frame>=13 FOURTEENarg248 withfirstTHREE32-bit scales(t<<7)+2432, firstTHREErotHalfwords0/colorU8s40; Scratch32 tails remainuninitialized. Sharedscratch reused frominitmatrixcalls, no new tailinit. Nullableeachtrackobject clearsifh30==-1 elseTHREEU16tracklanes storedintoSIGNEDh5C/h5E/h60. Terminal40AFTERdraw/tracking,no78/release.
+
+7B98 descriptor16, ownbody reviewed despitetransplantcomment. StoresSIGNEDindex/contextbeforeuppercountcheck, negativesallowed; invalidwritesbyte7=1/returns1 leavingoldpointer. Validwrites7=0 then1FC/loadresource3, nullableh22=220(index,32). Exactupdate1sets7=1,terminal40. BytehelperVOID (*pp)->d[i]=v withpointedbuffer+16, uncheckedindex/U8narrowing. Contextfirstwordopaqueview versusBuf10** andUNKNOWNflagpurpose remain; no ABI/type fixes.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
