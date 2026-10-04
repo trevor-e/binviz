@@ -15132,3 +15132,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual gated three resource frame feed naming acceptance (BV-03/BV-08, P2):
+FF9 1c04ade2c adds 1 selected canonical ovl_fbaa800 names. Catalog
+5,632 unit/symbol names, 435 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-gated-three-resource-frame-feed.json and Binviz
+target/ff9-names-effect-residual-gated-three-resource-frame-feed/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 384/384 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFBAA800 controller independently reviewed and named for gated three resources with raw-frame feed. Full g09/lifecycle bound; opaque signedparameter domain and actual numeric values retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole0Chex-byte lifecycle all gate/null/feed/end arms read.1FCanchor,initialresources2/1/3h22from220(0,64)/literalminus64/literalminus128;updateflagzerofeeds134(resource4,rawframe)thencompletion60. Preserve earlygate return, originalsignedhalfwords and load/storeinterleaving. No tint/scale parameter interpretation, providerarityrepair or combiningcalls.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
