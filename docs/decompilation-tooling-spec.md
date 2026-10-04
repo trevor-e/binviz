@@ -6284,3 +6284,31 @@ thin adapters reused; BV-03 reviewed-deferral prioritization and BV-06 provider
 frontiers retained. No new reusable implementation or private ownership/type/
 CFG walker. Refresh source-bound evidence, pin historical reports/tools,
 preserve foreign work/index; full-tree naming goal active.
+
+Inward spiral particles naming acceptance (BV-03/BV-08, P2): FF9
+0477cc33a adds four canonical ovl_104d4800 behavioral names. Catalog 4,627
+unit/symbol names, 164 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-inward-spiral-particles.json and Binviz
+target/ff9-names-inward-spiral-particles/. Four whole native object pairs
+identical; exact affected/scored namespace four, unchanged pinned strict-reloc
+scores four exact, 1,588/1,588 code bytes, zero failures. Four installed WASM
+token comparisons agree; current source/header/catalog/object/review bindings
+and eight isolated committed paths audit.
+
+Names establish table-selected fading callback, inward spiral emitter and
+three/single object timers. Actual emitter contracts XY radius while Z grows,
+advances before allocation, emits even at terminal phase0 frame6 and resets
+jobtype=-1. Callback draws before terminal8 with remaining weight1366, no fade
+endpoint correction. Preserve partial host250 record and SV pad, unchecked
+indices/negative arithmetic, random-call argument, success-only two-word stores,
+release calls on ordinary updates but no release at phase1 completion, and
+externally mutable timer gates. Original game/provider identity unresolved.
+
+Readable declarations/definitions/calls/registration references propagate;
+scoped aliases preserve canonical linker/address/runtime identities. Existing
+naming/farm/scorer/preprocessor and thin adapters reused; BV-03 reviewed-deferral
+prioritization and BV-06 provider frontiers retained. No new implementation or
+private ownership/type/CFG walker. No original matching gain, linked-image,
+gameplay or sharedworkspace acceptance. Refresh source-bound evidence, retain
+historical reports/tools, preserve foreign work/index; full-tree goal active.
