@@ -14862,3 +14862,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual offset vector hooked pair naming acceptance (BV-03/BV-08, P2):
+FF9 b51c8e8cb adds 1 selected canonical ovl_10d48000 names. Catalog
+5,622 unit/symbol names, 425 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-offset-vector-hooked-pair.json and Binviz
+target/ff9-names-effect-residual-offset-vector-hooked-pair/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 464/464 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete10D48000 controller independently reviewed and named for hooked resource pair at offset-derived host vector. Full g18/g16/lifecycle bound; retain original two in-place vector operations and own timing.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole20hex-byte lifecycle all null/frame arms read.200/1FC/20Cvectors16, in-placeDC(a,c,400,a)andDC(b,c,200,b);resources1initial/2at10 BOTHatb with differentcallbackfields,finish30. Preserve GCC2.8.1, unusedlatera update, in-placealiasarguments, partialslots and exactnumericcontract. No transplant or recombiningunusedvector, camera/spell meaning unspecified.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
