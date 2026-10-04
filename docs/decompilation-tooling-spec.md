@@ -12322,3 +12322,32 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Battle command residual dispatch head naming acceptance (BV-03/BV-08, P2):
+FF9 011983204 adds 1 selected canonical ovl_02e800 names. Catalog
+5,528 unit/symbol names, 331 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 1 semantic-provider body hashes bound. Evidence:
+docs/function-names-battle-command-residual-dispatch-head.json and Binviz
+target/ff9-names-battle-command-residual-dispatch-head/. 2 full native object pairs equal;
+exact affected/scored namespace 2. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 524/524 code bytes, zero failures. 2
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 6 isolated committed paths audit.
+
+BV-03/BV-08, P1: HEAD_SIZE(sub_800b44c0,136) stringifies a linker symbol; its argument must remain canonical while ordinary C uses rename. Temporary exact reviewed role override in this batch preserves native object and WASM strings. Shared rename preview must distinguish linker-role macro arguments from C identifiers, preserve HEAD_SIZE/PIECE contracts and refuse ambiguous macro roles. Do not expand macro symbol identities into readable names.
+
+All remaining02E800 primary source reviewed; one136byte command dispatch head named with its actual same-unit caller. Full body includes109 synthetic stand-in cases which remain unchanged and are not semantic implementation evidence. HEAD_SIZE argument denotes an assembler symbol, so stays canonical; ordinary C definitions/declarations/calls propagate. Full caller and full lane08 header bound.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole487line source read, including109 synthetic stand-in arms and space9712. Full current-command caller establishes battle command routing by actor/entry opcode. Name136byte dispatch head only; case bodies are explicitly synthetic scheduling stand-ins, not recovered command effects. Preserve frame/register pins/local stores/LOWbyte switch/bounds/default/space and original HEAD_SIZE linker-symbol stringification; no semantic claim for stand-in calls.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
