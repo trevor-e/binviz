@@ -3407,3 +3407,38 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer stay pinned; refresh downstream
 source-bound evidence from the current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Radial ribbon scene naming acceptance (BV-03/BV-08, P2): FF9 b247896b4
+adds 14 canonical ovl_1167e800 names. Catalog:4,024 unique unit/symbol names,
+78 alias headers; all14 complete primary bodies reviewed, no semantic deferrals
+in this unit. Evidence: docs/function-names-radial-ribbon-scenes.json and
+target/ff9-names-radial-ribbon-scenes/. All14 entire native object pairs identical,
+exact affected/scored namespace14, unchanged pinned strict-relocation baselines:
+nine exact/five partial,2,548/14,624 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all14 sources; current catalog/review/source/header/
+object bindings and18 isolated commit paths audit. Progress:4,024/5,812 canonical
+primary files named(69.2%),1,788 remaining.
+
+Names cover texture-colored quad grid, radial sprite grid, four inline key readers,
+position ribbon history, radial XY scaling, counter-rotating handle scene,
+round-robin scenehandle id callback, horizontal wave offset, seven-phase ribbon/grid
+sequence, host flag clearing and paired vector tracks. Own-unit complete bodies
+and consumers establish bounded behavioral names. Original spells/abilities and
+selected host providers remain unresolved; no clone equality inferred from comments.
+
+Preserve shared grid OTZ versus MAC0 reads afterRTPT withoutNCLIP, both c11 shifts,
+skip-specific W/H upload differences, fixed17-entry grid buffers, geometry callback
+after UV/page calculation, byte/halfword narrowing and packet/tag sizes. Ribbon
+reset uses n>1000 then n-999; validity count precedes new head write; pm/fr have
+no explicit pins despite comment. Preserve true register pins/compiler flags,
+all hints, partial initialization and unchecked arithmetic/indices. Seven-phase
+timeline resets jobtype=-1 while keeping cumulative counter, repeats transforms,
+uses six0xc0 ribbon buffers and retains phase6 paZ/pbZ mismatch. Flag-clear handler
+is not a no-op; actual signed shifts and completion order remain untouched.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from the current catalog. Foreign work/index preserved; full-tree goal remains active.
