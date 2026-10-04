@@ -9601,3 +9601,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Derived vector y offset track four offset staggered load naming acceptance (BV-03/BV-08, P2):
+FF9 e7c71f3c5 adds two canonical ovl_11f1a000 names. Catalog
+4,910 unit/symbol names, 272 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-derived-vector-y-offset-track-four-offset-staggered-load.json and Binviz
+target/ff9-names-derived-vector-y-offset-track-four-offset-staggered-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 396/1,140 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor28 obj+FOURU16v4+THREEU16anchor/pad+THREEU16b/tailpad. Init savescontext,200(16,0,v4),copyhostanchorXYZ,load3 atv4 inclNULL THEN D4(v4,a,b)/bY-=1024 U16narrowing. Nullableobject updates h30==-1 clears/rechecks then currentbXYZ to h5C/E/60. Returncapturedtype>=70 AFTERtracking. No provider semantic reinterpretation/binding instead ofcopy/scaleassignment/requery/release/78/extentrepair.
+
+7890 descriptor80 tenobjectpointers/THREEU16anchor+pad/FOUR FOURU16offsetpositions. Init copiesanchorXYZ BEFOREsavingcontext; fori0..3 copyONLYXYZ to b[i], mutateGLOBALRec4.frame=i<<2 (U16),localTHREEU16rotation0/(i<<10)/0,DC(anchor,rotation,rand()%400+1400,b[i]) with SIGNEDremainder/no normalization. Globalschedule.ids unchanged, fourthlanes/pointersuninitialized, own table data not functions. Preserve registerpin and unknown DC/provider extents.
+
+Update capturesframe. Exact15 loads14 then13 atanchor/storeobj8/9inclNULL. THEN loopFOURrecords each readsCURRENTwritableframe/id, whenequals capturedframe loadsCURRENTid then13 at ownsavedb[i]/storeobj[i]/obj2[i]. Everyupdate134(198(resource1),frame) then134(198(resource2),frame), includingterminal. Return>=45 AFTERallloads/updates. Nomissedframebackfill/schedule snapshot/padinit/scales/tracking/release/78/newnullguard. Shared schedule externally mutable/ownership unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
