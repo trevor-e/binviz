@@ -15240,3 +15240,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual anchor resource timeout base naming acceptance (BV-03/BV-08, P2):
+FF9 fe2c2f0ab adds 1 selected canonical ovl_123ce800 names. Catalog
+5,636 unit/symbol names, 439 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-anchor-resource-timeout-base.json and Binviz
+target/ff9-names-effect-residual-anchor-resource-timeout-base/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 240/240 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete123CE800 independently reviewed and named for single anchor resource timeout. Full lifecycle/local declarations bound; unchanged related-copy comments do not replace review or merge overlay identities.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole123CE800handler independently read including all own localhost/context/object/state/lifecycle.0Chex-byteallocation,hostbyte52clear/200anchor,resource4h22via220(0,128),finish50. Same descriptive purpose as independently reviewed124CF000/124EB800 but separate canonicalidentity/objectproof. Preserve opaquehostbyte, originalnullbranch,paddingandstoreorder.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
