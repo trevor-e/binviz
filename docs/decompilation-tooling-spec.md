@@ -3987,3 +3987,28 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Fixed height waypoint naming acceptance (BV-03/BV-08, P2): FF9
+11b730c93 adds9 canonical ovl_10165800 names. Catalog4,215 unique unit/symbol
+names,95 alias headers; all9 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-fixed-height-waypoint.json
+and target/ff9-names-fixed-height-waypoint/. All9 entire native object pairs
+identical, exact affected/scored namespace9, unchanged pinned strict-relocation
+baselines nine exact,2,032/2,032 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all9 sources; current catalog/review/source/header/
+object bindings and13 isolated commit paths audit. Full-tree goal active.
+
+Complete fixed-height waypoint callback, two object handlers, path reader/fetcher
+and four host-kind helpers reviewed. Callback publishesunoffset savedXYZ with
+Y=-300 thenaddsXZoffsetonly; secondhandler usesactualsavedY withnofallback.
+Preserve upper-only clamp/empty/negative indexing, readerfirsthalfword, partial
+state, timedresource/host220 calls, redundantguards/integercallbackcasts and
+completion40 afterhelpers. g13canonicaldeclaration retained; own-unit aliases
+preprocesstostable symbols. No prototype/provider or original ability claim.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
