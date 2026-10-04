@@ -7595,3 +7595,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Five handle rising flash actor position naming acceptance (BV-03/BV-08, P2):
+FF9 ff7541208 adds two canonical ovl_13336000 names. Catalog
+4,772 unit/symbol names, 208 scoped alias headers. Three full own-unit
+bodies reviewed and bound, one semantic deferral; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-five-handle-rising-flash-actor-position.json and Binviz
+target/ff9-names-five-handle-rising-flash-actor-position/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 152/1,948 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor84,gcc2.8.1. Init1FC16SIGNED3lane position→INTs,20C16rotation,2A016scalevec,savejob/ctx,phase/frames0; A XYZhostbutYoverwritten0,rotationY+=2048,U16C X/Zhost,Y=A0;B NOT initialized. Phase0 waits signedframe>0 thenphase1/jobframe=-1,2BC(16,0),358(80),table70(5),five338resourcesSIGNEDtableIDs(count5),flash128/128/170 atctxp20 byte8. Provider meanings/resourceidentities unknown.
+
+Phase1 s=(frame<<12)/180,flashbyte8 at0RGB64/64/85 and1/20/40RGB42/42/56. Forframe>=0: firstfourupdatesrotationZ+=12,CX+=14,AX+=12;laterZ+=2,CX+=8,AX+=6. Localtranslation initiallycopieshostY thenOVERWRITESY=s; independentC8(cos(s>>2)>>6) randomcalls offsetX/Z, B copiesU16localXYZ thenBX rewrittenX+(s>>4). Five320(handle,s)/31C(samerotation,translation,scale) AFTERupdates; no camera publication, no sharedrandomcall or lowerclamp.
+
+Exact10 resources2/3/4 atA and10atC;30resources5/6atA;69resources7/8/9atA;75resource13atA. Allnullableh22=320,lastaddstable/h12=44/hc=76. Phase1terminal180 AFTERposes/events calls78andreturns1 beforeframes++; otherwiseeveryupdateincludingphase0/default frames++. Keeppins19/do-while/identicalifarms, unusedlocals, incompletepad/hostvectorinit and globals.
+
+7E5C descriptor4, mode1 savesctx,1FC(16,SIGNEDlocal4) thenTHREEsignedlanes written directly to ctxp2C object+24/26/28 andreturn1. No nullguard/fourthlane copy or fixedpointconversion; mode0/otherupdates0. Localcontext declarations differ acrossmain/wrapper/publication and retained. 7E08 remains namedbycanonicaladdress, currenthash/reason bound inreport for future provider resolution.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
