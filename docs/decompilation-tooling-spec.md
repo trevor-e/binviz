@@ -3097,3 +3097,38 @@ existing proposals remain separate. No private ownership/type/CFG walker, new
 matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer remain pinned; refresh downstream source-bound evidence
 from the current catalog. Foreign work/index preserved; full-tree goal active.
+
+Rotated track naming acceptance (BV-03/BV-08, P2): FF9 ec886de76
+adds 18 canonical ovl_13836800 names. Catalog has 3,899 unique unit/symbol names,
+70 alias headers. All 18 complete primary bodies directly read; no semantic
+deferrals in this unit. Evidence: docs/function-names-rotated-tracks.json and
+Binviz target/ff9-names-rotated-tracks/. All 18 entire native object pairs
+identical, exact affected/scored namespace 18, unchanged pinned strict-relocation
+baselines: 16 exact/two partial, 1,364/2,920 code bytes, zero failures. Installed
+WASM preprocessed tokens agree for all 18 sources. Current catalog/source/header,
+review/object bindings and 22 isolated commit paths audit. Progress:
+3,899/5,812 canonical primary files named (67.1%), 1,913 remaining.
+
+Names distinguish the two rotated tracks by the primary table's X80 bias, five
+offset-position tracks by descriptor index, the two-object/five-part handlers,
+track fetchers and bounded host kind/last-index helpers. Rotation loads a host
+matrix, zeros GTE translation, fetches idx*4 and adds the saved module offset;
+preserve every GTE string, narrowing and output-before-completion behavior.
+Five-part resource tables advance ONE halfword per loop, as current corrected
+C shows; the stale header comment about four-byte entries supplies no evidence.
+No new behavior change or boss/spell identity claim. Preserve resource/frame
+boundaries, partial state, redundant pointer tests, unchecked record pointers,
+q state alias, pins18/23, do wrapper, exact differing host1DC arities and all
+old-style callback declarations. Host-kind helpers describe only the observed
+8C->88 then98 sequence, nonzero32C guard and9C==328-1 predicate; specific kind
+meanings/provider contracts remain unresolved. Generic indirect buffer store
+name does not assert an undocumented byte meaning.
+
+Only identifiers and own-unit aliases change; every other source token/comment,
+type/layout/signature/compiler choice remains stable. Existing maintained naming,
+farm/scoring/preprocessor interfaces and thin adapters reused; BV-08 namespace
+gate enforced. No additional shared implementation gap found; existing proposals
+remain separate. No private ownership/type/CFG walker, new matching credit,
+linked image, gameplay, provider or shared workspace acceptance. Historical
+reports/scorer stay pinned; refresh downstream source-bound evidence from the
+current catalog. Foreign work/index preserved; full-tree goal remains active.
