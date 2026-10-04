@@ -6341,3 +6341,31 @@ frontiers retained. No new reusable implementation or private ownership/type/
 CFG walker. No matching gain, linked-image or workspace acceptance. Refresh
 source-bound evidence, pin historical reports/tools, preserve foreign work/index;
 full-tree naming goal active.
+
+Scheduled five object pairs naming acceptance (BV-03/BV-08, P2): FF9
+9a26289f4 adds four canonical ovl_11d96800 behavioral names. Catalog 4,635
+unit/symbol names, 166 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-scheduled-five-object-pairs.json and Binviz
+target/ff9-names-scheduled-five-object-pairs/. Four complete native object pairs
+identical, exact affected/scored namespace four, unchanged pinned strict-reloc
+scores three exact/one partial, 416/964 code bytes, zero failures. Four installed
+WASM token comparisons agree; current source/header/catalog/object/review
+bindings and eight isolated committed paths audit.
+
+Names cover five scheduled object pairs, raised paired objects, halfword operand
+reader and vector triplet reader with upper-only index clamp. Actual host vector
+fetch does not prove zeroing despite old comments. Preserve partial state/pads,
+exact row frame equality and repeated/skipped-frame semantics, row order,
+U16 offset narrowing, nullable fields, dead register pin, and loads before
+completion. Stream reader skips one word, reads operand, advances/stores pointer;
+no original opcode identity assumed. Table reader retains negative indices and
+empty-count entry-1 behavior, read/store alias order and unclamped lowerbound.
+No original effect/provider/stream identity or body/type repair claimed.
+
+Readable definitions and scoped aliases retain canonical linker/address/runtime
+identities. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+BV-03 reviewed-deferral prioritization and BV-06 provider frontiers retained.
+No new reusable implementation or private ownership/type/CFG walker, matching
+gain, linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical reports/tools, preserve foreign work/index; full-tree goal active.
