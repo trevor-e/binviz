@@ -5466,3 +5466,28 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Six phase scene and bone ribbons naming acceptance (BV-03/BV-08, P2):
+FF9 348873969 adds five canonical ovl_11b3c000 names. Catalog4,497 unique unit/symbol
+names,137 alias headers. All five complete bodies reviewed,including fulllarge
+80D4 scene timeline; no semantic deferrals. Evidence:
+docs/function-names-six-phase-bone-ribbons.json and
+target/ff9-names-six-phase-bone-ribbons/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+three exact/two partial,1,428/12,472 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all five sources; current catalog/source/header/
+object/review and9 isolated commit paths audit. Other units remain pending.
+
+Established textured history ribbon,randomized12/48-segment ribbon builders,
+sine-offset callback and six-phase scene/camera/bone-ribbon sequence. Preserve
+sharedstack aliases,pins/wrappers,partialfields,pads,provider/signature differences,
+phase-transition oldlocals,bufferreuse,MAC0/SZ3 gates and terminaltail/count
+ordering. Callback/caller references renamed; own-unit aliases retain canonical
+native/runtime identities. Exact game effect/provider identities unresolved.
+No body/type/layout/ABI repairs or original developer name claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
