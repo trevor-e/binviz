@@ -3617,3 +3617,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Crossfade trail naming acceptance (BV-03/BV-08, P2): FF9
+d07c86eaa adds12 canonical ovl_1389b800 names. Catalog4,100 unique unit/symbol
+names,84 alias headers; all12 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-crossfade-trails.json
+and target/ff9-names-crossfade-trails/. All12 entire native object pairs identical,
+exact affected/scored namespace12, unchanged pinned strict-relocation baselines
+11 exact/one partial,2,556/5,464 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all12 sources; current catalog/review/source/header/
+object bindings and16 isolated commit paths audit. Progress4,100/5,812 canonical
+primary files named(70.5%),1,712 remaining; full-tree goal active.
+
+Names cover scaled/rotated position trail builders, paired object snapshot
+sequence, crossfading model/trail scene, screen fade, weight/scalar/grayscale
+helpers and pointer-backed position/pair track initialization/readers. Own-unit
+complete bodies and consumers establish roles; comments do not establish original
+camera/spell labels or donor equality. Readable C references retain native and
+runtime identities through own-unit aliases.
+
+Preserve inactive trail coordinates, descending keys, signed /10 expansion with
+per-addition halfword narrowing, actororigin offset, per-point matrix/GTE calls
+and exact asmstrings. Scene ph<39 enables four intervals, despite five incomment;
+retains postdecrement tint gate, reused scratch and redundant stores/identical
+arms. Two builders write record i but draw i+1; six rotatedtrail angles repeat
+0/1365/2730 in pairs. Preserve $23/$22 pins/compilerflag/do-while wrapper,
+resource/event order, partiallyinitialized state, unconditional destroys,
+snapshot positions, independent fades, differing OT targets and completion order.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
