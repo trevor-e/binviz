@@ -3651,3 +3651,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Six-path object naming acceptance (BV-03/BV-08, P2): FF9
+e6b845129 adds12 canonical ovl_130f5000 names. Catalog4,112 unique unit/symbol
+names,85 alias headers; all12 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-six-path-objects.json
+and target/ff9-names-six-path-objects/. All12 entire native object pairs identical,
+exact affected/scored namespace12, unchanged pinned strict-relocation baselines
+12 exact,2,036/2,036 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all12 sources; current catalog/review/source/header/object bindings
+and16 isolated commit paths audit. Progress4,112/5,812 canonical primary files
+named(70.8%),1,700 remaining; full-tree goal active.
+
+Names cover six distinct position track callbacks, shared offset keyframe reader,
+six-model ring sequence, variant tracked-object sequence, timed single-object
+sequence and pointer-backed position track initialization/reader. All own-unit
+complete bodies and consumers reviewed; callback suffix0..5 denotes table channel,
+without guessed original variant labels. Readable C calls retain native/runtime
+identity through own-unit aliases; opaque address-valued data remain stable.
+
+Preserve sharedframe*2 sampling independent of callbackt0 completion, unsigned
+halfword origin additions/narrowing, signed shift12 and upper-only clamp. Ring
+loads six resource3 models/scales32, transforms onlyframe<12 and unconditionally
+passes possiblyNULL objects to host1D8. Variant initialization uses outinputs,
+uncheckedindex, sharedorigin overwrite and pointer-backed resource stream;
+running stores globalframe beforecreation, copies opaque integer headerword8,
+customrows/redundant guards and optional resource4/1 scales128. Preserve partially
+initialized state, timedresource19 load, finish20 and no added cleanup.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
