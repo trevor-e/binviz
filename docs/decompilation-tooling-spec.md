@@ -12253,3 +12253,32 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot residual dialogue style draw mode helpers naming acceptance (BV-03/BV-08, P2):
+FF9 23b66fc07 adds 2 selected canonical boot names. Catalog
+5,526 unit/symbol names, 329 scoped alias headers. 12 selected complete primary
+bodies reviewed and bound, 2 named and 10 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 5 semantic-provider body hashes bound. Evidence:
+docs/function-names-boot-residual-dialogue-style-draw-mode-helpers.json and Binviz
+target/ff9-names-boot-residual-dialogue-style-draw-mode-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 228/284 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+Twelve remaining BOOT primary bodies completely reviewed: two named and ten explicit purpose deferrals. Five whole semantic providers and full lane08 header bind dialogue styles and original raw draw-mode30 fragment. The raw fragment has no recorded return instruction; public alias include only preserves all original literals/extent/fall-through. Descriptor and opaque state meanings remain deferred; other boot/overlay bodies pending.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Complete ten-entry active dialogue record scan, null attached-widget check and halfword18 clear. Full message-window creation, release, text-draw and cursor-draw providers establish attached widget and style-table index. Retain ChanSnd8 historic type and field view, every flag/null check and original loop extent; no sound-channel interpretation or widget release.
+
+Complete original raw assembly fragment saves ra in t6, calls original513A4 with30 in the delay slot and restores ra. Full513A4 draw-mode packet provider and full4F5D4 text-draw caller establish operation. No return instruction is present in this fragment: preserve exact extent, fall-through, ra/t6 contract, assembler literals and original symbols; public alias include only, no fabricated epilogue.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
