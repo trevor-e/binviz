@@ -13728,3 +13728,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual anchor derived direction object naming acceptance (BV-03/BV-08, P2):
+FF9 d60d931bf adds 1 selected canonical ovl_10ed4800 names. Catalog
+5,580 unit/symbol names, 383 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-anchor-derived-direction-object.json and Binviz
+target/ff9-names-effect-residual-anchor-derived-direction-object/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 624/624 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete remaining10ED4800 handler independently reviewed and named for anchor-derived cached direction object. Full g18/g16/lifecycle headers bound; refreshing anchor does not refresh direction, original behavior preserved.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole28-byte-hex lifecycle and phase/drop/frame branches read. Initial matrix-derived anchor creates resource1 callback object and cached direction toward position. Phase0 refreshes anchor each frame but writes original cached direction to object until minus1 drop; resource2at12, completion60 onlyphase0. Preserve GCC2.8.1, redundant callback null checks, otherwise-unused refreshed vector and own h22/id ordering. No moving-anchor direction recomputation or spell identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
