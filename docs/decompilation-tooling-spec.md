@@ -8969,3 +8969,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Actor zero two resource load immediate position publish naming acceptance (BV-03/BV-08, P2):
+FF9 f1119a4f9 adds two canonical ovl_12ff9000 names. Catalog
+4,864 unit/symbol names, 249 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-actor-zero-two-resource-load-immediate-position-publish.json and Binviz
+target/ff9-names-actor-zero-two-resource-load-immediate-position-publish/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 496/496 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor16, stateTWOobjectpointers andTHREEU16positionhalfwords/trailingpadding. Init savecontext,200(0,0,pos),198/1D4resource4 then8 SAMEpos. BOTHloads happenBEFOREany h22 assignment; nullableobj0 gets220(0,128), thennullableobj1getsSEPARATE220(0,128), no dedup or earlier scaleassignment. BothpointersincludingNULLretained. Query/initgotozero/return0; othermodesreturnjob.frame>=0, ordinaryfirstupdateendsmodule. No providerrewrites, vectorinitializer/padexpansion/78/release/objecttracking.
+
+784C descriptor8, query/initgotozero, initONLYsavedctx. Othermodes captureframeBEFORE1FC(16,stateU16pointer), copyTHREEhalfwordstoctx.p2C inXYZorder, returncapturedframe>=7 AFTERpublication. Fourthhalfword/providerwriteextent andselector16purpose unresolved; do not infercameratarget oractor16identity. Nullguard/order/bodygoto/signature unchanged, no cleanup/restore or lowerbound.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
