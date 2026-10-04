@@ -2027,3 +2027,41 @@ workspace acceptance and scorer migration; shared acceptance needs configured
 frozen namespaces/compiler profiles and verified outputs. Refresh downstream
 source-bound evidence against current catalog/header identities. Preserve
 unrelated runtime-adoption and tooling work.
+
+Battle resource-state naming acceptance (BV-03/BV-08, P2): FF9 commit
+70707669f adds30 reviewed definitions, reaching2907 unique unit/symbol names.
+Unit ovl_02d800 now has139/151 primary definitions named. Complete primary-body
+review across this and previous passes leaves12 unresolved roles with explicit
+source hashes/reasons. Evidence: docs/function-names-battle-resource-state.json
+and binviz/target/ff9-names-battle-resource-state/. All30 complete native objects
+and installed WASM preprocessed token comparisons agree; original strict scores
+remain30/30 exact,1588/1588 code bytes. Catalog/current-source/header and34
+isolated committed-path checks pass across2907 names and41 alias headers.
+No new matching credit, linked image/module or gameplay proof.
+
+Actual32 semantic consumers and three shared-header identities establish unit
+anchor bone, ground-marker gate, unit-info pager, shared command parameter pairs,
+effect loader/buffer/cache state, effect/summon records, camera-choice queue,
+positional sound sources and UI frame/controller/help/target getters. Context
+establishes purpose without asserting cross-unit selected-provider identity.
+Resource record id misses return2, loader advance preserves signed bookkeeping,
+cache-flush polling is a handshake rather than an immediate flush, model reset
+clears only documented fields and summon reset clears ONLY FIRST record. No
+capacity/index checks are added. Empty release hook stays empty despite calls
+with arguments; pointer/int inconsistencies and matching tricks remain intact.
+
+Concrete stale-comment pitfalls: cf560 writescf588 render level, while the
+transplanted cf58c twin writescf5a0 depth shift; cd808 binds pager owner and clears
+all1520 countdown/bit/page bytes rather than setting numeric counters. Camera
+choice queue is not a sound-id queue. Sound source word is not immediate pan or
+volume; subsequent service projects a unit/tagged vector. Cached multiple-target
+flag and party-info request do not prove a fully open window. The12 deferred
+roles include seven zero/failure stubs, support mask200, one global flag, two UI
+requests/flags and a target classifier; raw values alone are not semantic names.
+
+Reused maintained naming/farm/scoring interfaces add no private analysis walker.
+Compatibility results remain distinct from shared workspace acceptance and
+scorer migration. Shared acceptance requires configured frozen namespaces,
+compiler inputs and verified outputs. Refresh source-bound downstream evidence
+against current catalog/header identities. Preserve unrelated adoption/tooling
+work; other canonical units still need purpose review.
