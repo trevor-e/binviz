@@ -7139,3 +7139,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Delayed host point drop original return naming acceptance (BV-03/BV-08, P2):
+FF9 4490c7441 adds three canonical ovl_fcc5800 names. Catalog
+4,725 unit/symbol names, 192 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-delayed-host-point-drop-original-return.json and Binviz
+target/ff9-names-delayed-host-point-drop-original-return/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,252/1,252 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 reports60. Savesctx,1FC(0,A)/1F8(0,B), SIGNEDcounters-1/hold0, replacesBX/Z fromA. Exactframe5 setsdropcount30, copies ONLYthreeABC/Dlanes thenDY=-1000; resource2 atC and1 atA, nullable2scale220(0,128). Exact40 setsrise3/hold0 andDY=storedBY, resource3 atA. Objectslots andfourthvectorlanes notblanketinitialized; mixed unsignedXZ/signedY views retained.
+
+Dropcount>=0 obtainsfresh1FCpoint, weighted storedBY->-1000 elapsed30-count,204then decrement. At NEWcount0 (normalframe34 elapsed29) hold activates and sameupdate overrideswithfreshpointY=-1000; frame35 stillcomputesendpointandhold beforecount-1. Return gate40..43 refreshes1FC/1F8, BX/Z=currentpoint; rise weightedfreshBY then204beforedec. NEWrise0 at42 elapsed2 causes204(0,ORIGINAL A) BEFOREanother1F8refresh and storedBX/Z=A; loads7then8 atA, nullable8 table/h12=60/h0C24. This differs from11CE1800 freshlyfetched-fullvector restore. Frame43 stillcomputesfresh endpoint. Preserve allrepeatcalls/earlyrestore, notfixoffbyone.
+
+Onlyframe>=5 nullableobj0 clearsifh30==-1 elsep2C=&D; no per-frame copying of currenthostpoint intoD. Terminal signedframe>=80 AFTERallwrites, no finish78/release. Typed INT weightedhelper declaration matchesconsumeddefinition; VOIDcomplementaryhostwrapperdiscardedresult unchanged. Allpartial pads/data/layouts/local vectors/overflow/division/provider frontiers preserved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
