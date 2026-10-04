@@ -3290,3 +3290,41 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer stay pinned; refresh downstream
 source-bound evidence from the current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Half-scale track naming acceptance (BV-03/BV-08, P2): FF9 a47c55c6e
+adds 15 canonical ovl_1291c000 names. Catalog has 3,980 unique unit/symbol names,
+75 alias headers. All 15 complete primary bodies and g26/g10/g13 headers read;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-half-scale-tracks.json and target/ff9-names-half-scale-tracks/.
+All 15 entire native object pairs identical; exact affected/scored namespace15,
+unchanged pinned strict-relocation baselines: 14 exact/one partial,
+2,084/3,332 code bytes, zero failures. Installed WASM preprocessed tokens agree
+for all 15 sources. Catalog/review/object bindings and19 isolated commit paths
+audit. Progress: 3,980/5,812 canonical primary files named (68.5%),1,832 remaining.
+
+Names cover six indexed half-scale rotated track callbacks, keyframe transform,
+randomized track-handle scene, six-object spawn sequence, host12bit interpolation,
+integer blend, pointer-backed keyframe initialization/read, indirect byte store
+and wrapping strip. Five wrappers pass exact existing-lexer token equality after
+only function/table identifier normalization. Own-unit bodies/consumers establish
+names; no donor-comment-only, original asset/ability or callback-table claim.
+
+Preserve signed16 division by2 before rotation, unsigned payload narrowing,
+zero-translation GTE sequence, signed offset, upper-only key clamps, zero/negative
+index hazards and partially initialized padding. Main scene preserves random
+row selection, three handles/six descriptors, exact hostDC registrations,
+register17 pin, same-body if/else strip and unsigned frame wrap. Fixed handle
+color gate remains fixed; no smooth fade inferred. Six-object sequence preserves
+subrecord callback-word assignment, redundant null checks, exact resource events,
+unsigned weight decrement and frame cap, partial object state and no added
+cleanup. Preserve two-halfword initializer advancement, h0 untouched, integer
+overflow/division/extrapolation, indirect host buffer identity and strip capacity.
+No bodies/comments/types/layouts/signatures/compiler/matching tricks changed.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer stay pinned; refresh downstream
+source-bound evidence from the current catalog. Foreign work/index preserved;
+full-tree goal remains active.
