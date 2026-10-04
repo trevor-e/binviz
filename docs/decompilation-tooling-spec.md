@@ -11881,3 +11881,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Intro residual timeout helpers naming acceptance (BV-03/BV-08, P2):
+FF9 dbea32525 adds 3 selected canonical ovl_0cc000 names. Catalog
+5,491 unit/symbol names, 317 scoped alias headers. 21 selected complete overlay
+bodies reviewed and bound, 3 named and 18 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-intro-residual-timeout-helpers.json and Binviz
+target/ff9-names-intro-residual-timeout-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 156/156 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+All twenty-one currently uncataloged intro bodies reviewed. Three timer siblings named by exact threshold/reset behavior, eighteen purpose deferrals. Transplanted twins/Tetra Master/boot-party comments do not transfer semantic identities. Full shared g06 header read; no other providers needed.
+
+Full selected bodies are the evidence, not transplanted twins comments or numerical resemblance. Exact timers/masks/pair bytes/first-request latches/math/indexed getters are named; opaque field/category/callback purposes have explicit full-body hash-bound deferrals. Every distinct unit/symbol identity remains separate.
+
+Complete primary block timer increments signedWORD+8, when >48 resets count and stateBYTE+2. Name timeout behavior only; independent full body, preserve signed comparison, original overflow and exact store order.
+
+Complete distinct secondary block timer with signedWORD+8 increment, >48 reset and BYTE+2 clear. Do not infer page/menu identity or merge repeated code; exact original field offsets/types remain.
+
+Whole third block timer independently read; same49-tick threshold and state clear at its own block. Primary/secondary/tertiary describe distinct sibling addresses only, no stronger lifecycle claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
