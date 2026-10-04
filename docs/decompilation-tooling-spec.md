@@ -3022,3 +3022,37 @@ remain separate. No private ownership/type/CFG walker, new matching credit,
 linked image, gameplay, provider or shared workspace acceptance. Historical
 reports/scorer stay pinned; refresh downstream source-bound evidence from the
 current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Staggered object naming acceptance (BV-03/BV-08, P2): FF9 fd36fabd7
+adds 22 canonical ovl_12544800 names. Catalog has 3,861 unique unit/symbol names,
+68 alias headers. All 22 complete primary bodies directly read, including every
+wrapper and the large keyframe handler; no semantic deferrals in this unit.
+Evidence: docs/function-names-staggered-objects.json and Binviz
+target/ff9-names-staggered-objects/. All 22 entire native object pairs identical,
+exact affected/scored namespace 22, unchanged pinned strict-relocation baselines:
+20 exact/two partial, 1,992/6,064 code bytes, zero failures. Installed WASM
+preprocessed tokens agree for all 22 sources. Current catalog/source/header,
+review/object bindings and 26 isolated commit paths audit. Progress:
+3,861/5,812 canonical primary files named (66.4%), 1,951 remaining.
+
+Names cover staggered groups of six objects, six keyframed objects, two-stage
+position spawns, grayscale fade, pair tracks, interpolation and six fixed-position
+presets with six literal duplicates. Duplicate guards compare complete tokens
+after normalizing only the function identifier; suffix _copy retains separate
+identities without inventing behaviors. Track initializer is established by the
+own-unit consumer and explicit two-vector layout. Preserve ignored arguments,
+void extern/int definition discrepancy, volatile final argument, signed shifts,
+partial initialization, halfword casts of word-sized positions, frame boundaries,
+resource tables, exact host calls, redundant checks, potential NULL pointers,
+negative fade arithmetic, do wrapper and -fno-cse-skip-blocks. Fade handler
+finishes at 32 even though its second countdown may still be active; do not
+extend it. No original ring/spell/camera provider identity inferred from comments.
+
+Identifiers and unit-scoped aliases only; every other token, source comment,
+type/layout/signature/compiler flag remains stable. Existing maintained naming,
+farm/scoring/preprocessor interfaces and thin adapters reused; BV-08 namespace
+gate enforced. No additional shared implementation gap found; existing proposals
+remain separate. No private ownership/type/CFG walker, new matching credit,
+linked image, gameplay, provider or shared workspace acceptance. Historical
+reports/scorer remain pinned; refresh downstream source-bound evidence from
+the current catalog. Foreign work/index preserved; full-tree goal remains active.
