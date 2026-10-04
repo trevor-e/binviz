@@ -14646,3 +14646,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual published origin vector reference naming acceptance (BV-03/BV-08, P2):
+FF9 7f3e43e99 adds 1 selected canonical ovl_fca5800 names. Catalog
+5,614 unit/symbol names, 417 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-published-origin-vector-reference.json and Binviz
+target/ff9-names-effect-residual-published-origin-vector-reference/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 332/332 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFCA5800 independently reviewed and named for published origin and loaded-object reference to second vector. Full g10/lifecycle bound; retain original pointer lifetime, raw layouts and separate numeric slots.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole14hex-byte lifecycle with complete ownAPI/host/object/state read.84(16,0/1)twoanchors;firstcopiedhost2C thenresource1loadedfirst. Liveobject2Cpointssecondstoredvector eachupdateuntilminus1drop,finish40. Preserve sixbytevectors/padding, directvectorreference not coordinatewrite, exact publish-before-loadorder, no refreshofstoredvectors or claim of physical movement.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
