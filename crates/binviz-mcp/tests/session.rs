@@ -15,7 +15,16 @@ struct Session {
 
 impl Session {
     fn start() -> Session {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_binviz-mcp"))
+        Session::spawn(&mut Command::new(env!("CARGO_BIN_EXE_binviz-mcp")))
+    }
+
+    /// A server running in `dir`, where relative source paths in debug info are read from.
+    fn start_in(dir: &Path) -> Session {
+        Session::spawn(Command::new(env!("CARGO_BIN_EXE_binviz-mcp")).current_dir(dir))
+    }
+
+    fn spawn(command: &mut Command) -> Session {
+        let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()
@@ -298,7 +307,9 @@ fn an_agent_session() {
     assert!(found.contains("class_type geo::Rect"), "{found}");
     let die = s.ok("dwarf_die", json!({ "die": "geo::Rect" }));
     assert!(die.contains("Layout:") && die.contains("Point min"), "{die}");
-    assert!(die.contains("Declared at") && die.contains("class Rect"), "{die}");
+    // The fixture's DWARF names shapes.cpp by the absolute path it was built at, so its
+    // text shows only on that machine (see a_declarations_source_line).
+    assert!(die.contains("Declared at ") && die.contains("shapes.cpp:31"), "{die}");
     let listed = s.ok(
         "dwarf_dies",
         json!({ "unit": 0, "tags": "variables", "name": "g_counter" }),
@@ -342,6 +353,18 @@ fn an_agent_session() {
     );
     let removed = s.ok("remove_annotation", json!({ "at": "sum_of_areas" }));
     assert!(removed.contains("0 left"), "{removed}");
+}
+
+#[test]
+fn a_declarations_source_line() {
+    // Built with relative paths: its source is found from the folder the server runs in.
+    let path = fixture_copy_for("wasmdemo.wasm", "source-");
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/src");
+    let mut s = Session::start_in(&src);
+    s.ok("open_binary", json!({ "path": path.to_str().unwrap() }));
+    let die = s.ok("dwarf_die", json!({ "die": "Entity" }));
+    assert!(die.contains("Declared at ./wasmdemo.c:8\n    struct Entity {"), "{die}");
+    let _ = std::fs::remove_dir_all(path.parent().unwrap());
 }
 
 #[test]
