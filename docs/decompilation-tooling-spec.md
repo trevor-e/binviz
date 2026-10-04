@@ -9293,3 +9293,29 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two resource derived vector track three origin hook naming acceptance (BV-03/BV-08, P2):
+FF9 90e024ec7 adds two canonical ovl_101d3000 names. Catalog
+4,888 unit/symbol names, 261 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-resource-derived-vector-track-three-origin-hook.json and Binviz
+target/ff9-names-two-resource-derived-vector-track-three-origin-hook/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 792/792 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor32; init savedcontext/200(0,0,TWOintwordvec8)/84(16,0,TWOintwordvec10), load1 atvec10/savep0 thenload2 atvec10/savep4 inclNULL. ONLYAFTERbothloads D4(vec10,vec8,&THREEU16h18..h1C). No h22 setup/hooks or additionalvectorinit. D4fourthlane/providerread/writeextent unchanged. Othermodescachep4 intoo THENcapturejobtype; ifcachedo nonnull ando.h30==-1 clearsstatep4, RECHECKstatep4 thenwritescurrentstatep4U16position5C/5E/60 fromderivedh18/h1A/h1C. Terminalt>=40 AFTERtracking. Firstloadedobjectp0nottracked/released, no78/positionrecomputation/nullguardchange.
+
+7890 descriptor36/stateTHREEobjectpointers/originalTHREEU16XYZ+pad/TWOwordsecondvector/THREEU16loweredorigin+tailpad. Init savedcontext/200(0,0,&hc)/1FC(0,vec14). CopytargetYfirst, Xsecond,Zthird fromoriginalXYZ thenunsignedtargetY-=200. Load3 atLOWEREDorigin,4 atSEPARATEvec14,5 atORIGINALhc-origin inthatorder; storep0/p4/p8includingNULL. AFTERallloads, nullablep0w14=globalINTtable/h12=13/hC=144. No otherhooks/scaleassignments/fourthlaneinitializer/providerextent repair. Othermodesreturntype>=40, no updates/78/release. Threeoriginsemantics fromdistinctvectors, notassertionallrepresentdifferentactors.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
