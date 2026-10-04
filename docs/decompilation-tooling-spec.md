@@ -5888,3 +5888,36 @@ BV-08 exact namespace gate enforced. No new reusable tooling logic or private
 type/ownership/CFG walker introduced. No linked image,gameplay or sharedworkspace
 acceptance. Refresh source-bound evidence; historical scorer/reports pinned;
 foreign work/index preserved; full-tree naming goal active.
+
+Six particle ripple burst naming acceptance (BV-03/BV-08, P2):
+FF9 9dbd84be8 adds five canonical ovl_10be8000 behavioral names. Catalog4,577
+unique unit/symbol names,153 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-six-particle-ripple-burst.json and Binviz
+target/ff9-names-six-particle-ripple-burst/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged three exact/two partial,3,596/9,520 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish RGB555 grid/texture transfer,14x14 radial ripple,four-argument
+tripled-table-distance host wrapper,3072 model growth/tumbling callback and
+seven-phase six-initial-particle burst. Actual bodies independently reviewed,
+including GTE/cull differences,grid row arena reuse,partial fields,pins/random
+ordering,p84 allocation/release,extra resource loads and updated-phase tail
+gates. This wrapper FORWARDS all four words and returns the host result;
+VOID K&R callers ignore the result. The137EC800 three-word/dropped-output fact
+does not apply here. Keep selected-provider contracts/output initialization
+and texture-transfer direction unresolved; neither similar comments nor
+matching success establishes them. New grid name says transfer rather than
+guessing slot4 direction. No body/type/layout/ABI repair.
+
+Readable definitions,declarations,calls and callback references propagate;
+own-unit aliases retain canonical linker/address/runtime identities. Maintained
+naming/farm/scorer/preprocessing interfaces and thin adapters reused; BV-08
+exact namespace gate enforced. Existing BV-06 caller/provider frontier must
+preserve the actual four-word wrapper and distinct caller return declarations.
+No new reusable tooling implementation or private type/ownership/CFG walker.
+No new original matching credit,linked image,gameplay or sharedworkspace
+acceptance. Refresh source-bound evidence; historical scorer/reports pinned;
+foreign work/index preserved; full-tree naming goal active.
