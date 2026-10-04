@@ -4695,3 +4695,32 @@ found. No private ownership/type/CFG walker,new matching credit,linked image,
 gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence from current catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Ten object keyframe naming acceptance (BV-03/BV-08, P2): FF9
+79ea16157 adds seven canonical ovl_10673800 names. Catalog4,309 unique
+unit/symbol names,107 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence:
+docs/function-names-ten-object-keyframes.json and
+target/ff9-names-ten-object-keyframes/. Seven entire native object pairs identical;
+exact affected/scored namespace seven,unchanged pinned strict-relocation baselines
+seven exact,1,556/1,556 code bytes,zero failures. Installed WASM preprocessed
+tokens agree for all seven sources. Current catalog/source/header/object/review
+bindings and11 isolated commit paths audit. Other units pending.
+
+Actual consumer establishes ten round-robin object transforms,mirrored paired
+vector track,scale track and mirrored position track. Actor position sampled
+only at init; no continuous following claim. Three identical stream initializers
+gain names for their actual table consumers; preserve HalfReader versus caller
+KeyTab prototypes. Readers clamp only upper index,retain negative/zero-count
+behavior,conditional output writes,unsigned negation/narrowing and signed scale
+widening. Main transforms only signed frames0..44,always samples position and
+moves pointer even if cleared,then completes60 after movement. Opaque callback
+data unchanged; preserve pads/redundantnullchecks/all types and operation order.
+Own-unit aliases retain canonical linker/runtime identities.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found. No private ownership/type/CFG walker,new matching credit,linked image,
+gameplay,provider or shared workspace acceptance. Historical reports/scorer pinned;
+refresh downstream source-bound evidence from current catalog. Foreign work/index
+preserved; full-tree goal remains active.
