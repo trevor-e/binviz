@@ -6117,3 +6117,35 @@ unreviewed prioritization proposal retained. No new reusable implementation
 or private type/ownership/CFG walker. No original matching credit,linked image,
 gameplay or sharedworkspace acceptance. Refresh source-bound evidence;historical
 scorer/reports pinned;foreign work/index preserved;full-tree naming goal active.
+
+Scheduled wave strips naming acceptance (BV-03/BV-08, P2): FF9
+5eb870c37 adds five canonical ovl_f8a2000 behavioral names. Catalog4,607
+unique unit/symbol names,159 scoped alias headers. All five complete bodies
+reviewed;zero semantic deferrals. Other units pending. Evidence:
+docs/function-names-scheduled-wave-strips.json and Binviz
+target/ff9-names-scheduled-wave-strips/. Five complete native object pairs
+identical;exact affected/scored namespace five;pinned strict-relocation scores
+unchanged four exact/one partial,2,668/3,620 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish sixteen/four-vertex wave strips,reference-segment branch builder,
+wave-strip particle callback and scheduled five-attempt emitter. Actual own-unit
+typed declarations/calls/callback refs establish roles. Table advances THREE
+words pervertex despite old pairs comment;names say vertices rather than segments.
+Preserve signeddivision/cos ordering,partialvectors/pads,same branch destination
+twice,externalphasehalf reset,mode-dependent4/6-frame work/16-frame wait,third
+attempt preallocation jitter,count increment beforeallocation,success-only
+randomrolls,U8 modulo14 indexes and tab pointer INTWORDoffset0..31,nottriples.
+No silent retries/buffer advancement/count correction or invented effect identity.
+No body/type/layout/ABI repair. Readable definitions/typeddeclarations/calls and
+descriptorcallback propagate;own-unit aliases retain canonical linker/address/
+runtime identities.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. Existing BV-03 reviewed-deferral versus
+unreviewed prioritization proposal retained. No new reusable implementation
+or private type/ownership/CFG walker. No original matching credit,linked image,
+gameplay,selected-provider or sharedworkspace acceptance. Refresh source-bound
+evidence;historical scorer/reports pinned;foreign work/index preserved;full-tree
+naming goal active.
