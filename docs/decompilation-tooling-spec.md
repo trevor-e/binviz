@@ -3174,3 +3174,45 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer remain pinned; refresh downstream
 source-bound evidence from current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Triangle particle naming acceptance (BV-03/BV-08, P2): FF9 50579e14d
+adds 17 canonical ovl_fd32800 names. Catalog has 3,933 unique unit/symbol names,
+72 alias headers. All 17 complete primary bodies directly read, including every
+large scene/ribbon/model-particle handler; no semantic deferrals in this unit.
+Evidence: docs/function-names-triangle-particles.json and Binviz
+target/ff9-names-triangle-particles/. All 17 entire native object pairs identical,
+exact affected/scored namespace 17, unchanged pinned strict-relocation baselines:
+14 exact/three partial, 9,016/12,400 code bytes, zero failures. Installed WASM
+preprocessed tokens agree for all 17 sources. Current catalog/source/header,
+review/object bindings and 21 isolated commit paths audit. Progress:
+3,933/5,812 canonical primary files named (67.7%), 1,879 remaining.
+
+Names cover inline scalar/vector/pair/triple keyframes, rotating track handles,
+four-phase tracked scene, keyframed ribbon phases/groups, triangle source/pool
+setup, free-slot search, Y-threshold particle spawning, pool stepping, model-group
+particle callback/coordinator and paired vector publication. Source vertices,
+centroid arithmetic, age/free markers and exact GTE transforms establish particle
+roles; no original effect/spell label inferred. Inline reader count/key layouts
+remain distinct from pointer-backed tracks. Preserve signed counts and upper-only
+clamps, negative/zero indexing, optional outputs, halfword narrowing, random order,
+silent pool exhaustion, unchecked capacities and provider-dependent integration.
+
+Four-phase scene resets job frame but not its separate cumulative counter;
+ribbon parent starts groups1/2 in the same frame. Preserve raw resource-offset
+table layouts, phase2 ribbon4*t versus stale2*t comment, fixed buffer strides,
+possible uninitialized past-start point, widths/colors/fades, all pins/barriers,
+do wrappers, descriptor callbacks, differing old-style declarations and partial
+state. Pool loading marks FIRST n entries free; do not change to an append range.
+Callback phase transition writes the halfword before its record; do not infer
+that external field's meaning. Preserve group>=6 initialization at supplied
+index versus later fixed pool6, shared globals/handles, flags not reset at init,
+negative grayscale, resource events and return-before-tail boundaries. No source
+comments, bodies, types, layouts, signatures or matching tricks changed.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer stay pinned; refresh downstream
+source-bound evidence from the current catalog. Foreign work/index preserved;
+full-tree goal remains active.
