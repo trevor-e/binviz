@@ -10317,3 +10317,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Staggered actor paired handle easing screen rectangles naming acceptance (BV-03/BV-08, P2):
+FF9 1e9ac0f0d adds two canonical ovl_13a4d000 names. Catalog
+4,960 unit/symbol names, 297 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-staggered-actor-paired-handle-easing-screen-rectangles.json and Binviz
+target/ff9-names-staggered-actor-paired-handle-easing-screen-rectangles/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 312/1,944 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 saves api then k=0x20000000/(len*len) before switch, including linear/default kinds. Default w0; kind0 4096-(((0x10000000/len)*t)>>16),kind1 ((k*(len-t))*(len-t))>>17,kind2 4096-(((k*t)*t)>>17). B4(handle,extra,w) return discarded, VOID function. No length guard/clamp/arithmetic rearrangement/returned value claim. Definition/declaration/THREE calls propagate.
+
+783C descriptor64. Init context/354(16)/70(table,8),clear16 statewords indices15 down0. Iterate fresh live actorcount without cap; separate338(resource2,1) then338(resource4,1) INT handles;1FC(i,pos). Preserve initialization store order:rot20X/Y0,scale30Y4096,scale40X4096,rot20Z0,scale30X4352,rot28Y0,scale30Z4352,rot28Z/X0,scale40Y/Z4096;vec50Y=-2048/X=SIGNEDposX/Z=SIGNEDposZ via new_var=2 wrapper. life32/w140/delay=table[i]; w8/pads not initialized here.
+
+Update captured frame;exact0 countdown80 then nonzero countdown predecrement before actor loop with fresh livecount. delay==0/life!=0 predecrementlife; life31 queries1FC again/savesSIGNEDposY intoINTw8/setsposY0/load5 nullableh22=220(actor,256),then2D8 selectors6,7,8 each(jobid,-1) irrespective load success. TWO60 poses BEFORE easing or tint updates. life>=16 tint=(16-life)*16 both handles,vec50Y=helperkind2(16,life-16,-2048,0);SEPARATEhelperkind2(16,life-16,w8,0)->U16vY,posXZ->vXZ then204(actor,v). life<16 tint=(life-16)*16 both;2BC(actor,life*8);vec50Y=helperkind1(16,life,0,-2048),INTvec50XYZ narrowedtoU16local then204(actor,v). Local FOURTH vector lane untouched.
+
+At life0 AFTERposes/tints/easing/204:posY=12288 then204(actor,pos)/2BC(actor,128)/354(actor);signedrot28Y+=19 follows evenfinal life sample. Nonzero delay decrements evennegative; zero life simply skipped. Outside countdowngate ALWAYS TWO240 rectangles(t*8,448,256,32,128,480,256) THEN(t*4,448,384,32,128,480,384). Returnframe>=80 AFTERrectangles evenwhen countdown0; no78/release/countcap/backfill/terminal earlyexit/scale or vector pad initialization.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
