@@ -7019,3 +7019,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Tracked pair flash growing sprite naming acceptance (BV-03/BV-08, P2):
+FF9 bc9b0569b adds three canonical ovl_109b7000 names. Catalog
+4,713 unit/symbol names, 188 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-tracked-pair-flash-growing-sprite.json and Binviz
+target/ff9-names-tracked-pair-flash-growing-sprite/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 1,568/1,568 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+770C descriptor92. Mode1 saves context,1FC/20C actor16 vectors, DC with1800/2000 then BOTH derivedY=-200. Calls2C4(actor16,5,INT3 local)/2B0(local,400,v28),2C4(actor16,34,INT8local)/2B0(local,400,v30), adds SIGNED Y50 to both. Loads resources1/2 at these vectors, nullable scales via220(actor16,256), D4 to two tracking vectors. Native/provider vector extents and D4/DC meanings remain unresolved; no guessed bone identities or normalization. Other object pointers and pads remain partially initialized.
+
+770C exactframe10 setslevel128, screen RGB128/128/128 and loadsresources14/15/8 atderivedv38; exact11 logs original flash string then sameflash, withoutloads. Frame>=13 ALWAYS submits growing framed sprite248 with INTXYZscale=(frame<<7)+2432, rotation SIGNED3 all0, SIGNEDbyteRGB40, original FOURTEEN arguments; three-lane rotation/color extents unchanged. Object0/1 clear whenh30==-1, otherwise publish THREE derivedtracking lanes, including terminalframe>=40 before returning1. No finish/release, no claimed beam/summon identity.
+
+7BD8 descriptor16. Initialization saves SIGNED *out index/context BEFORE only upper count check; negatives not rejected. Invalidslot invokes shared-byte writer(ctx,7,1), returns1, leaves old object/vector. Validslot clearsbyte7 then1FC(slot,vec), loadresource6, nullableh22=220(slot,32). Update exactframe1 setsbyte7=1, thenframe>=40 return. No moving marker update or invented meaning for byte7. Callerctx first word viewed as Buf10** by helper while Ctx16 declares opaque pad0; ABI/layout ambiguity retained.
+
+7D18 three-argVOID writes (*pp)->d[i]=v, where data starts16 bytes after pointed buffer header. Unchecked signedindex and U8 narrowing retained; helper name describes indexed shared-buffer write without guessed flag ownership.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
