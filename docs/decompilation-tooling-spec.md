@@ -12702,3 +12702,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual bounce squash sprite sequence naming acceptance (BV-03/BV-08, P2):
+FF9 44d200137 adds 1 selected canonical ovl_1264c800 names. Catalog
+5,542 unit/symbol names, 345 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-bounce-squash-sprite-sequence.json and Binviz
+target/ff9-names-effect-residual-bounce-squash-sprite-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,208 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining1264C800 handler independently full-read and named by sprite positional bounce plus impact squash. Full g25/lifecycle headers bound. Original quadratic code governs evidence where old comment differs; no visual-resource identity or layout/initialization repair.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole7Cbyte lifecycle and all bounce/shake/fade arms read. Sprite UVsetup and host position publication; alternating falling/rising quadratic48*n*n phases, impact speed384*n/10, sine absolute-value squash in scaleY, up to9phase transitions then tint fade, secondary host vector shake from11, completion64. Actual positional bounce unlike earlier scale-only controllers. Preserve three-way switch matching workaround, mixed width chained stores, original partly initialized state and pointer-relative transform/host calls. No ball geometry or spell identity claim.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
