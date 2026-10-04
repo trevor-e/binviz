@@ -2908,3 +2908,40 @@ remain separate. No private ownership/type/CFG walker,new matching credit,link,
 gameplay,provider orshared workspace acceptance. Historical reports/scorer pinned;
 refresh downstream source-bound evidence fromcurrent catalog. Foreign work/index
 preserved; full-tree goal remains active.
+
+Object flash naming acceptance (BV-03/BV-08, P2): FF9 fec25c1d3
+adds 21 canonical ovl_13c24000 names. Current catalog: 3,795 unique unit/symbol
+names, 65 alias headers. All 21 complete primary bodies directly reviewed;
+all established behavioral roles named, other units pending. Evidence:
+docs/function-names-object-flashes.json and Binviz target/ff9-names-object-flashes/.
+All 21 native object pairs identical; exact affected/scored namespace21.
+Pinned strict-relocation baselines unchanged:20 exact/one partial,4,804/5,404
+code bytes,zero failures. All21 installed WASM preprocessed token comparisons
+agree. Current catalog/source/header/review/object bindings and25 isolated
+committed paths audit. Progress:3,795/5,812 named (65.3%),2,017 remaining.
+
+Names cover position events, object-offset/flash sequence, blend/spawn, four
+keyframe layouts, interpolation and event-pool helpers. Both zero-state positive
+frame handlers are retained as distinct canonical symbols. A copy suffix names
+the second literal duplicate without inventing a separate game role; their
+complete token streams were checked equal after changing only the identifier.
+Four initializer roles follow complete own-unit consumers, rather than donor
+comments. Original effect labels and selected runtime providers stay unresolved.
+
+Preserve exact n-1 range/fetch thresholds, scalar changes at0/4, swapped fade
+counters, scene offset restoration, unchecked mean-position division/scene
+counts, partial initialization, resource IDs, old-style arities, all comments,
+types/layouts/signatures, compiler flags and assignment/do/typeof wrappers.
+Blend/spawn first changes cachedY to-3000; original-position restoration is not
+established. Preserve target/current weight order, upper-only clamps, optional
+paired outputs, signed scalar/vector extension and unchecked denominators.
+Events retain64 slots/four clocks, exact start-time equality, per-target-nibble
+cursor advance, last-triplet reuse, silent full-pool drop and no automaticfree.
+
+Existing maintained naming/farm/scoring/preprocessor tools andthin adapters
+reused; BV-08 exact namespace gate enforced. No additional shared implementation
+gap found in this batch; existing proposals remain separate. No private
+ownership/type/CFG walker, new matching credit, linked image, gameplay, selected
+provider or shared workspace acceptance. Historical reports/scorer stay pinned;
+refresh downstream source-bound evidence fromcurrent catalog. Foreign work,
+index and outside-marker checkpoints preserved; full-tree goal remains active.
