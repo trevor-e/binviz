@@ -8441,3 +8441,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Five jittered trails actor zero vertical vector pulse naming acceptance (BV-03/BV-08, P2):
+FF9 5c7005d90 adds two canonical ovl_10698800 names. Catalog
+4,835 unit/symbol names, 233 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-five-jittered-trails-actor-zero-vertical-vector-pulse.json and Binviz
+target/ff9-names-five-jittered-trails-actor-zero-vertical-vector-pulse/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 312/3,828 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+77B8 unconditionally computes 0x20000000/(len*len). Selected weights: kind0 linear down, kind1 squared remainder, kind2 one minus squared elapsed, otherwise0. B4(handle,extra,weight) result discarded, no return expression. Keep overflow/division-zero/unclamped arithmetic; no synthesized INT return even though caller consumes it.
+
+78F0 descriptor168; init saves context, clears loaded-object global, table70count3. Clears sixteen words descending15..0 through w[10] declaration into the following padding: array extent/layout frontier retained, not changed to sixteen-element declaration. FIVE288-byte trail records initialize life=-index and submit110resource9. THREE handles resources11/10/6, rotation first2048/0/0, uniform scales92/80/102. TWO independent200 captures, 1F8 actor0 position,2A0 INT vector and1F4 selector. Initial target X/Z copied, targetY uninitialized until per-update200; INTposition signed-extends all captured lanes.
+
+Every update starts80(16,23,global start). Exact0 starts sequence counter1/follow1/trails36/growth16; exact8 actor/vector shift16; exact16 loadresource2 at second200 capture; exact24 holdY4; exact28 shrink16/restoreY16; exact40 loadresource1 at first200 capture and nullable h22=220(0,128); exact44 F100(ctxbytebuffer,255,255,255,255), follow0. Counterw2 is cleared in init and never armed by these events; its positionY branch remains available to external state. No invented normal activation.
+
+All active counters predecrement. w2 sets signed captured INTpos with consumed linear helperY. Growth/shrink each use THREE consumed helper returns for uniform scales, from92/80/102 to394/323/409 and then0. Shift16 conditionally pulses INTvectorXYZ using savedY tohalfY when selector>=513; actor0 Y=capturedY+consumed helper(0,-512), X/Z captured,204. Hold4 writes fixed capturedY-512. Restore16 conditionally reverses vector and actorY; zero endpoint uses FRESH1F8 and restores saved INTvector UNCONDITIONALLY, then204. No cosine shake is present in these blocks; names say vertical shift.
+
+Every update refreshes200 target, copies THREE lanes to object-follow point; nullable loaded global h30==-1 clears pointer, but1D8(global,point) runs UNCONDITIONALLY even when NULL. Follow copies target signed lanes into INTpos and can overwrite prior w2 changes, computes second rotation from target/context+84, firstX+2048/thirdX+1024 and matchingY, then secondX-=1024; poses second/third/first,268first1. No NULL guard, release or camera/provider normalization added.
+
+Trail countdown predecrements. FIVE records: life>0 predecrements, builds ELEVEN points starting at signed global80 vector. Increment=(INTposition+randomDirection-start)<<12 divided by11; emitted j0..10 means final sample10/11, not forced endpoint. Y offset used BEFORE yoff+=dy; each vertex pad=life*4 and header10/0/10. Weight life1024 for life<4, else4096, including zero-life submission. life<0 increments ONLY, reaches0 but does not spawn in same update. life0 spawns only remainingtrailcount>=5 and does not draw until next update.
+
+Spawn lifeC4(4,8), two masked angles, directionY=sin*firstscale; X/Z use ABS of that Y radius with cosine/sine of second angle. No full sphere-cosine reconstruction. Eleven offset/velocity endpoints0; nine interior signed ranges grow by vertex index (offset32+16j,velocity16+8j). Padded arrays/record words untouched. Resource12 sequence counter134 increments each update from1, not a sound/flash lifetime assertion. Returns frame>=90 AFTER every block and counter; no78/release or terminal restore added.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
