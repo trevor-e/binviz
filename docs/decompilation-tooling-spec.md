@@ -5606,3 +5606,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Matrix position and interpolation hook naming acceptance (BV-03/BV-08, P2):
+FF9 fa4be0331 adds five canonical ovl_125dc000 names. Catalog4,527 unique unit/symbol
+names,143 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-matrix-interpolation-hooks.json and
+target/ff9-names-matrix-interpolation-hooks/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+five exact,2,980/2,980 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all five sources; current catalog/source/header/object/review and9
+isolated commit paths audit. Other units remain pending.
+
+Established five-frame interpolation callbacks,fixed12 output,matrix-position
+hook sequence and captured-anchor object sequence. Preserve provider arity,
+callback signedness,unguarded division,nullablecalls,innerhook access,partial
+initialization,pads,repeatedmatrix calls and terminal ordering. Actual hook/caller
+references renamed; own-unit aliases retain canonical native/runtime identities.
+Exact game effect/provider identities unresolved. No body/type/layout/ABI claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
