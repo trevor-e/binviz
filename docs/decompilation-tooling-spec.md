@@ -8621,3 +8621,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Eight handle spinning blend actor group shift resource variant naming acceptance (BV-03/BV-08, P2):
+FF9 20fdd20fe adds two canonical ovl_105c3000 names. Catalog
+4,845 unit/symbol names, 238 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-eight-handle-spinning-blend-actor-group-shift-resource-variant.json and Binviz
+target/ff9-names-eight-handle-spinning-blend-actor-group-shift-resource-variant/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 696/2,932 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor52. Init flag0; copy actorX/Y to vectorB, captureZ, then FORCE B.Y=0 before two-word copy toA, including uninitialized B.pad; A.Y-=512 with U16 narrowing. Thus poses use signed widened B XYZ with Y0, loads use A Y-512, not capturedactorY. Table70count8. EIGHT58 resources6/4/5/3/2 with57/3D00/0/128, resources8/7 with59/3D01/0/128, and9 withfirstparameters. No provider-derived random scale unlike fb05800.
+
+Frames<24: progressframe4096/24, cos(progress>>2), rotationXYZ0/-frame32/0, XZscale=cos/10+819,YhalfXZ. Weight4*(4096-progress) selects strict>12288/>8192/>4096 blends handle0->1/1->2/2->3/3->4. THEN XZscale multiplied5>>2 forhandle7 pose, Y unchanged; THREE independent cosine calls tint. Rotation local has THREEhalfwords (not four) and INTposition/scale threewords; provider read extent remains unresolved.
+
+Frames>=24: XZ1228/Y614,posehandle4 and THREE sine tints at((frame-24)*4096/26)>>2; XZthen5/4 forhandle7 pose andTHREEseparate sine tints. Common XZ*=4/5 restores after rounding, retained despite later overwrite. Every frame240(frame,576,384,16,64,table[frame%23+1].a/.b). Do not normalize reverse scaling or negative-frame indices.
+
+Frames>=24 thenblendhandle5->6 withXZ3584/Ycos(progress>>2)/4+1024,rotationY=-frame64,weight4096-progress; THREE cosine tintsONLYhandle5 atprogress>>1. Exact16 loadresource14 atA,nullableh22=220(0,32); exact1 loadresource1,nullableh22=220(0,64). Finish>=50 AFTERall work calls78/return1, no flag mutation or release. External nonzero flag bypasses work/terminal andreturns0.
+
+7FC0 descriptor104; count fromhostbyte36 UNBOUNDED despite eight-entry arrays. Init captures1F8 position each actor; ONE sharedbase overwritten each iteration with -400-(RAND&127), final actor draw sets amplitude for all. Peractoroffset=-SIGNEDY from80(actor,0,vec). Unlike fb05800 amplitude doesnot multiply global scale. Count0 returns0 immediately without amplitude initialization; no array cap or peractor amplitude array added.
+
+Frames<32 TWOword capturedposition copy in literal secondword-first order; cachecos function pointer then U16Y+=base*cos(frame32)>>12/204. Frames>=32 copyagain, U16Y+=peractoroffset*((frame-32)*1024)>>12 then U16Y+=base*sin((frame-32)*256)>>12 as TWO separate narrowing operations. Preserve cachedfunctionpointer and provider call order, negative/overflow arithmetic andpads.
+
+Finish>=36 AFTERthe computed shift has been published to everyactor, then SECONDloop uses FRESH1F8/204 andreturns1. Fresh provider capture doesnot prove restoration to cached original position. No forcedcopyfrominit, camera writes, finish78, release or terminal backfill added. Semantic names match observed operations while original effect identity remains unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
