@@ -2716,3 +2716,33 @@ walker or tooling rewrite. No new matching credit,portable module,link,gameplay,
 provider or shared workspace acceptance. Refresh source-bound evidence from
 current catalog;historical reports/scorer stay pinned;foreign work/index and
 unrelated checkpoints preserved;full-tree review remains active.
+
+Shared UI tween naming acceptance (BV-03/BV-08, P2): FF9 a3c2e765f
+adds five canonical BOOT names;catalog3674 unique unit/symbol names,994 BOOT
+names,60 alias headers. Six selected complete BOOT bodies reviewed;one opaque
+menu-table status accessor deferred. Full BOOT/tree review remains pending.
+Evidence:docs/function-names-ui-tweens.json and Binviz target/ff9-names-ui-tweens/.
+Resident rename closure reaches48 canonical sources across ten units;all48
+complete native object pairs identical,exact unit/function manifest-scoring
+namespace48,pinned strict-relocation scores unchanged43exact/five partial,
+10664/12420 code bytes,zero failures. All48 installed WASM preprocessed token
+comparisons agree;current catalog/source/header/object and actual review/caller
+bindings audit;52 isolated committed paths agree.
+
+Names cover position tween start/step,signed-byte sum,menu finish with saved
+fade stride and literal BIOS A0/15 strcat. Preserve script wait/index/halfword
+wrap,signed delta sums,NULL axis pointers,callback with script argument before
+detach,negative length zero-result behavior,optional back-position adjustment,
+incompatible old-style declarations and all existing record layouts. BIOS entry
+keeps four-wordu32 ABI,$9/$10 selector bindings,asm barrier,literal table/number
+and host implementation ownership;repository library-map and actual formatted
+number suffix callers support strcat without replacing it with host libc.
+Menu-table status remains unnamed rather than generalized from one slot-picker
+consumer. Six source bindings describe this fresh subset,not full BOOT coverage.
+
+Maintained naming/farm/scoring/preprocessor tools and thin audit/commit adapters
+reused;BV-08 exact unit/function namespace gate enforced across the whole closure.
+No new reusable tooling gap found,no private ownership/type/CFG walker. No new
+matching credit,portable module,link,gameplay,provider or shared workspace
+acceptance. Refresh source-bound evidence from current catalog;historical reports
+and scorer stay pinned;foreign work/index/checkpoints preserved;goal remains active.
