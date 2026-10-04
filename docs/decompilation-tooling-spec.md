@@ -12567,3 +12567,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual two origin corner sequence naming acceptance (BV-03/BV-08, P2):
+FF9 6d9833bd0 adds 1 selected canonical ovl_10f2d800 names. Catalog
+5,537 unit/symbol names, 340 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 3 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-two-origin-corner-sequence.json and Binviz
+target/ff9-names-effect-residual-two-origin-corner-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,416 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining10F2D800 controller independently full-read and named by two refreshed origins interpolating toward actor-side corners. Full g18/g16/lifecycle headers bound. Explicit resource and frame behavior retained; no inferred spell identity or transplanted other-controller semantics.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole4Cbyte handler modes and all update branches read. Actor center loweredF0, two side points Xminus/plus300, two indexed host origins refreshed every frame, sinusoidal interpolation for first16frames. Two loaded objects follow interpolated endpoints, dropped h30minus1 handles cleared; frame14 loads center/corner resources, completion55. Preserve GCC2.8.1 flag, register19, empty asm and three Zword copies, original halfword views and redundant null checks. Name proved origins/corners only, no spell or resource geometry identity.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
