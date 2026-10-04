@@ -9991,3 +9991,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Nine frame path callback staged paired derived track naming acceptance (BV-03/BV-08, P2):
+FF9 470843a53 adds two canonical ovl_1134a000 names. Catalog
+4,938 unit/symbol names, 286 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-nine-frame-path-callback-staged-paired-derived-track.json and Binviz
+target/ff9-names-nine-frame-path-callback-staged-paired-derived-track/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,228/1,228 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 BC(sharedD7C20,sharedD7C28,(cur<<12)/9,signedTHREEs16pos), thenINTdstXYZ=SIGNEDposXYZ<<12 BEFOREcur>=end?-1:0. Denominator9 independent ofend, no clamp/lowerbound; terminalcurmaynotbe9, writesstilloccur/extrapolationretained. Unusedarg1/3 preserve; sharedpoints writable bycontroller, originalconstantcommentnotproof.
+
+77C8 descriptor80 FOURobjects/FIVEFOURU16positions/THREEU16target,pad/THREEU16v40,pad/THREEU16v48/tailpad. Init context,1FC(16,pos10),20C(16,pos18),200(0,0,pos20),2C4(16,23,local32bytebuf),2B0(buf,100,pos28),load7 inclNULL/nullableh22=220(16,32). Otherobjectslots notinitialized.
+
+Exact36 80(16,23,target),publishTHREEsharedstartXYZ,REFRESH20C(16,pos18),DC(pos10,pos18,300,pos30),D4(pos10,pos20,buf),DC(pos20,buf,0,sharedENDD7C28). Load11 atpos30 inclNULL,load12 atDIFFERENTglobalD7C30 inclNULL. Nullablec unguardedinner->fn=(void*)callback THENredundantnullguard/h22=220(16,128). D4(target,pos20,v48),copyONLYXYZv48->v40. Exact45 load13 atpos20 inclNULL/nullable220(0,128). EVERYt>=36 nullableb thenCASTc-to-Eff h30==-1 clear/recheck/COPYv40/v48XYZ. Return>=70 AFTERwork. Distinctborrowedvectors/uninitializedpads/providerextent/callbackreturn frontier unchanged; no backfill/78/release/innernullguard/DCliteralzero rewrite.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
