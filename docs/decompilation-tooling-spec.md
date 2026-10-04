@@ -12164,3 +12164,34 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Results residual completion popup helpers naming acceptance (BV-03/BV-08, P2):
+FF9 4ceed4a33 adds 3 selected canonical ovl_14f800 names. Catalog
+5,520 unit/symbol names, 326 scoped alias headers. 3 selected complete overlay
+bodies reviewed and bound, 3 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 7 semantic-provider body hashes bound. Evidence:
+docs/function-names-results-residual-completion-popup-helpers.json and Binviz
+target/ff9-names-results-residual-completion-popup-helpers/. 3 full native object pairs equal;
+exact affected/scored namespace 3. Pinned strict-relocation scores unchanged:
+3 exact/0 partial, 56/56 code bytes, zero failures. 3
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 7 isolated committed paths audit.
+
+All three residual14F800 bodies full-read and named. Seven complete semantic150800 providers and full results header read. Alternate overlay view retains own scoped aliases and all field/type identities. Distinguish completion request from multi-store finished setter and handle clearing from widget release.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole BYTE1F7A7A=1. Complete150800 update consumer tests stateBYTE2 to enter completion countdown; finish-updates provider sets same member. Name request completion only, not broader mark-finished procedure which clears additional fields.
+
+Whole argument signed index at50 clears obj1D8[index].p0. Full header and learned-ability queue provider identify popup slot, with release-member-handles context. It only clears handle and never closes/frees widget; preserve unvalidated signed index.
+
+Whole WORD1F7DC0=0. Full header maps state+348 to item-award popup p0; complete poll_item_awards/start_reward_screen providers show slot usage. Retain original int store view, do not replace with pointer assignment or call widget close.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
