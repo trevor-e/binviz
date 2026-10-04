@@ -11912,3 +11912,36 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Title residual timeout cursor helpers naming acceptance (BV-03/BV-08, P2):
+FF9 0b6e6ef93 adds 4 selected canonical ovl_0c7800 names. Catalog
+5,495 unit/symbol names, 318 scoped alias headers. 10 selected complete overlay
+bodies reviewed and bound, 4 named and 6 explicit full-body deferrals; remaining boot and overlay functions pending. 1 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-title-residual-timeout-cursor-helpers.json and Binviz
+target/ff9-names-title-residual-timeout-cursor-helpers/. 4 full native object pairs equal;
+exact affected/scored namespace 4. Pinned strict-relocation scores unchanged:
+4 exact/0 partial, 180/180 code bytes, zero failures. 4
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 8 isolated committed paths audit.
+
+All ten currently uncataloged title bodies fully reviewed. Four named by timer/pair-state/cursor behavior and six opaque field/hook deferrals. Shared full header preserves cursor state0/1/2without invented enum labels. Original int/byte/register/layout views retained.
+
+Full selected bodies are the evidence, not transplanted twins comments or numerical resemblance. Exact timers/masks/pair bytes/first-request latches/math/indexed getters are named; opaque field/category/callback purposes have explicit full-body hash-bound deferrals. Every distinct unit/symbol identity remains separate.
+
+Whole signedWORD+0C counter increments and resets with stateBYTE+2 when >48. Exact title block independent from intro siblings. Preserve all field offsets/type/store order and overflow behavior.
+
+Complete two-iteration OR of blockBYTE+4 and+5, U8result. Pair-state role only; do not invent buttons/player slots or boolean normalization.
+
+Whole shared workBYTE890=1. Full included header identifies cursor state with0idle/1/2states. Numericstate name deliberately avoids unproved visibility/action meaning, preserve unguarded pointer.
+
+Whole workBYTE890 changes0->2 only; current nonzero state preserved. Full header cursor-state context. No guessed transition priority or atomic/boolean semantics.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
