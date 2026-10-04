@@ -3252,3 +3252,41 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer stay pinned; refresh downstream
 source-bound evidence from the current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Wavy mesh naming acceptance (BV-03/BV-08, P2): FF9 ca32eb8b7 adds
+16 canonical ovl_10fea800 names. Catalog has 3,965 unique unit/symbol names,
+74 alias headers. All 16 complete primary bodies and g10/g19/g13 headers
+reviewed; no semantic deferrals in this unit. Evidence:
+docs/function-names-wavy-meshes.json and target/ff9-names-wavy-meshes/.
+All 16 complete native object pairs identical; exact affected/scored namespace16,
+unchanged pinned strict-relocation baselines: 11 exact/five partial, zero failures.
+Installed WASM preprocessed tokens agree for all 16 sources. Current catalog,
+review inputs, object bindings and 20 isolated commit paths audit. Progress:
+3,965/5,812 canonical primary files named (68.2%), 1,847 remaining.
+
+Names cover inline keyframes, wrapping strips, six-handle ring blending,
+keyframed crossfades, ribbon and sheet meshes, mesh-sprite scenes, asymmetric
+wave sampling, sheet attachment callback, actor offsets and scene vector tracks.
+Five small donor bodies separately pass exact token normalization using the
+existing lexer; only explicit function/global/include identities differ.
+Larger sibling handlers require own-body review; no asset/spell label inferred.
+
+Ribbon20x6 tests MAC0 after RTPT without NCLIP, despite stale depth prose.
+Sheet18x19 performs NCLIP: positive results halve only textured red/green,
+leaving blue/overlay colors unchanged. Preserve skipped-row attachment data,
+unsigned narrowed viewport check, cursor wrap16 versus18 published rows,
+source flag ignored by attachment callback, all GTE sequences, barriers/pins,
+primitive reservations, UV seams, do wrappers and unchecked capacities.
+Preserve shared ring/handle dependencies, duplicate local handle identity,
+unreachable early fade branch, exact resource times, phase-local frame reset
+with cumulative tick, partial vectors/color bytes, duplicate discarded calls,
+unsigned offset wrap and return-before-tail boundaries. No body/type/signature,
+layout/comment/compiler/matching-trick changes.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer stay pinned; refresh downstream
+source-bound evidence from the current catalog. Foreign work/index preserved;
+full-tree goal remains active.
