@@ -9349,3 +9349,35 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Eased vertical shift cosine shake host vector restore naming acceptance (BV-03/BV-08, P2):
+FF9 e10216147 adds two canonical ovl_12d8a800 names. Catalog
+4,892 unit/symbol names, 263 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-eased-vertical-shift-cosine-shake-host-vector-restore.json and Binviz
+target/ff9-names-eased-vertical-shift-cosine-shake-host-vector-restore/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 964/964 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 savedglobalcontextAPI, k=536870912/(len*len) UNCONDITIONALLYbeforekind switch/w0. Kind0 w4096-(((268435456/len)*t)>>16),kind1((k*(len-t))*(len-t))>>17,kind2 4096-(((k*t)*t)>>17,unknown0. CallsB4(handle,extra,w) withoutCreturnvalue (VOID). Mainconsumesit asINTthroughseparateTUextern; native register/result frontier preserved andverifiedobjects. No simplification toreturnweight/rawlerp, signedmulreassociation,len0guard includingunknownkind, positive-onlyrange restriction or clamp.
+
+783C descriptor16: xU16/ySIGNEDs16/zU16/partlyopaquehalfwords/hU16at10. Init savedcontext,clearTHREEglobaltimers viaforloop,1F8(0,state),loadresources1THEN2 atstate/discardBOTHreturns; no h22setup/objectpointertracking/release. hNOTinitializedexplicitly. Query/initgotozero; providerread/writeextent beyondXYZ opaque unchanged.
+
+Updatecaptureframe; exact0 armshakecount40 THENdropcount16,exact24 risecount16,exact40 FRESH1F8(0,state) then204(0,state). Afterevents dropNONZEROpredecrement/INT-consuminghelper(kind2,16,newcount,SIGNEDstatey,statey-800) storehU16; thenriseNONZEROpredecrement/helper(kind0,16,newcount,y-800,y) overwritesh. Sharedtimers/globalh producer andVOID/INTfrontier preserved, no assumptioncachedh alwaysinitialized ifevents skipped.
+
+ShakeNONZEROpredecrement thenlocaldeclaredTHREEU16v: X=stateX+(COS(frame<<6)>>7),Y=stateh+(COS(frame<<8)>>5),Z=stateZ+(SEPARATECOS(frame<<6)>>7). Call204(0,v), fourthlane/providerreadextent unresolved; no dedupthirdCOScall. Ordinarydrop16 frames0..15/rise16frames24..39/shake40frames0..39; finalcount0update stillhelper/shake. Exact40 freshread/restore occursbeforetimerchecks soexternalNONZEROtimer canoverwriteit laterthatsameupdate, no unconditionalendstate claim.
+
+Returnframe>=72 AFTERall events/timers/restore/shake; no78/backfill/extra vectorrestore/cleanup. NegativeNONZEROtimers decrementliteral andsignedy arithmetic/halfwordnarrows/order preserved. Namehostvectorrestore fromfresh1F8/204, no newlyprovedcamera/actoridentity or originalspelleffect.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
