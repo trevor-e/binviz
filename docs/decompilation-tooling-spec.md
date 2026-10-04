@@ -3368,3 +3368,42 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer stay pinned; refresh downstream
 source-bound evidence from the current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Whiteout track naming acceptance (BV-03/BV-08, P2): FF9 f7eb35e4c
+adds 15 canonical ovl_13915800 names. Catalog has 4,010 unique unit/symbol names,
+77 alias headers. All 15 complete primary bodies reviewed, including every
+scripted scene and actor sequence; no semantic deferrals in this unit.
+Evidence: docs/function-names-whiteout-tracks.json and
+target/ff9-names-whiteout-tracks/. All 15 entire native object pairs identical,
+exact affected/scored namespace15, unchanged pinned strict-relocation baselines:
+13 exact/two partial, 2,800/5,484 code bytes, zero failures. Installed WASM
+preprocessed tokens agree for all 15 sources. Current catalog/review/object
+bindings and19 isolated commit paths audit. Progress: 4,010/5,812 canonical
+primary files named (69.0%),1,802 remaining.
+
+Names cover compressed/offset position callbacks, eighteen/thirty-track object
+timelines, fading handle and actor whiteout, offset resolver, fixed-weight blend,
+integer interpolation/grayscale, pointer-backed track init/read and bounded
+host-object kind/last-index helpers. Own-unit full bodies establish names;
+larger sibling scenes reviewed independently despite prior12C0F800 similarities.
+No original effect/ability or provider claim inferred from donor comments.
+
+Preserve signed Y4/5/Z3/4 compression, unsigned offsets/narrowing, original-index
+limit after sampled clamped output, id0/negative-index hazards, partial padding
+and distinct descriptors. Preserve unused object slots4/6, actual four spawns at48,
+all resource/hook events and differing one/two-argument destroy calls. Later
+position Y is absolute-4000, not relative anchor. Crossfade window30..49 retains
+unreachable clamps and tintcounter0 unprocessed after49; no final-255 call added.
+Whiteout runs0..255 inclusive32..92 then34C/flag; later white draw repeats.
+Actor kind3 at32 and repeated last-index kind4/284 updates retain exact timing,
+unsigned halfword handles, completion after updates and no once-only latch.
+Preserve index4*word pointer grayscale destination, two-halfword initializer,
+all flags/layouts/signatures/comments/compiler choices/matching tricks.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer stay pinned; refresh downstream
+source-bound evidence from the current catalog. Foreign work/index preserved;
+full-tree goal remains active.
