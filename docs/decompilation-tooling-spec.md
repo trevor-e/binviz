@@ -2139,3 +2139,41 @@ migration, which require configured frozen namespaces, compiler inputs and
 verified outputs. Refresh downstream source-bound evidence against current
 catalog/header identities. Preserve unrelated runtime/adoption/tooling work;
 remaining scene model/primitive and other canonical functions still need review.
+
+Scene model/primitive naming acceptance (BV-03/BV-08, P2): FF9 commit
+78a6f2981 adds 28 reviewed canonical ovl_009800 names, reaching 3065 unique
+unit/symbol names and 44 alias headers. Evidence: FF9
+docs/function-names-scene-model-primitives.json and Binviz
+target/ff9-names-scene-model-primitives/. All 36 complete native objects are
+byte-identical; pinned strict-relocation original scores retain 19 exact and
+17 partial baselines, 17112/44564 exact code bytes, with no failures. All 36
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header hashes and all 40 isolated committed paths verify. No new matching
+credit, linked image/module or gameplay proof.
+
+Complete-body review of all 29 previously unnamed primaries finishes this
+canonical unit's primary review: 158/159 named, with a9860 explicitly deferred
+pending external renderer/resource helper roles. Other units remain pending.
+Reviewed roles cover static/animated bone matrices and the aim-bone variant,
+ordinary and Y-limited vertex projection, four primitive sort variants, double
+packet templates, colour passes, textured transparency/blending, plane-based
+model copy, swirl/audio transition, pause and timed splash. Nine actual semantic
+consumer/service definitions and five header inputs are pinned. Equal overlay
+addresses and donor comments do not establish selected provider resolution.
+
+BV-03 semantic corroboration examples: a9814/aa0a8 are vibration pattern bind/
+reset, despite the old sound-driver interpretation: actual boot54b78 writes
+D739b0 motor values, and boot19194 forwards that buffer to pad actuators.
+b9e4c sets only the first vertex colour in each Gouraud packet. ba190 modifies
+command bit1, despite a bit2 comment. ba0f0 narrows sums to signed16 BEFORE
+clamping. Source-colour F4 passes retain OR rather than assignment. bb714 has
+no part depth bias, uses flag-masked average depths and preserves tag-clearing
+order; bc600 reverses winding tests. Plane-transform products/shift11 are
+retained without mathematical correction. Preserve raw assembly, register
+pins, mismatched ABI declarations, out-of-count projections and matching hacks.
+
+Reused maintained naming/farm/scoring adapters introduce no private analysis
+walker. Compatibility checks remain distinct from shared workspace acceptance/
+scorer migration, which require configured frozen namespaces, compiler inputs
+and verified outputs. Refresh downstream source-bound evidence against current
+catalog/header identities. Preserve unrelated runtime/adoption/tooling changes.
