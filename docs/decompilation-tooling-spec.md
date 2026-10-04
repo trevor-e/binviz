@@ -5735,3 +5735,39 @@ naming object/token proof. No new original matching credit,linked image,
 gameplay or sharedworkspace acceptance. Refresh downstream source-bound
 evidence; historical scorer/reports stay pinned. Foreign work/index preserved;
 full-tree naming goal active.
+
+Spark and twisted tube naming acceptance (BV-03/BV-08, P2):
+FF9 5eadb9773 adds five canonical ovl_1202b800 behavioral names. Catalog4,552
+unique unit/symbol names,148 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-spark-twisted-tube.json and Binviz
+target/ff9-names-spark-twisted-tube/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged zero exact/five partial,0/16,628 code bytes,zero failures. All five
+installed WASM preprocessed token comparisons agree. Current catalog/source/
+header/object/review bindings and nine isolated committed paths audit.
+
+Names establish a20-ring textured tube,spark/debris/smoke callback,seven phase
+case inventory,and indexed host vector drift/arc/restoration. Preserve actual
+phase0 fallthrough,uninitialized nc read,second scale store through w20 again,
+unchecked indices/table accesses/nulls,partial fields,random order,narrowing,
+GTE projection/cull/packet ordering,pins/flags and terminal ordering. Readable
+identifiers propagate to declarations,calls and callback reference; own-unit
+aliases retain canonical linker/address/runtime identities. Exact game effect,
+provider contracts and complete phase reachability unresolved. No body/type/
+layout/null/ABI repair; raw .i/.o/.s neighbors excluded from canonical C scope.
+
+Existing BV-06 provider/ABI frontier (P2): actual F04BC initialization calls
+host1F8 with ONE word; its restoration and F0074 use TWO. D684 phase5 host100
+calls use FOUR words at t0/t1 and THREE by default,while other phases use FIVE.
+Selected-provider/caller inspection should expose these actual unresolved
+differences without inventing output/RGB words. Inputs are these three current
+sources,review hash bindings and unchanged object/token proof. Naming proof
+does not certify a provider signature or repair those recovered call sites.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No private ABI/type/ownership/CFG walker or
+shared implementation introduced. No new original matching credit,linked image,
+gameplay or sharedworkspace acceptance. Refresh downstream source-bound
+evidence; historical scorer/reports stay pinned. Foreign work/index preserved;
+full-tree naming goal active.
