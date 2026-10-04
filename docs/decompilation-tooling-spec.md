@@ -16191,3 +16191,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual anchor resource timeout g23 naming acceptance (BV-03/BV-08, P2):
+FF9 b35a03877 adds 1 selected canonical ovl_11df2800 names. Catalog
+5,670 unit/symbol names, 473 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-anchor-resource-timeout-g23.json and Binviz
+target/ff9-names-effect-residual-anchor-resource-timeout-g23/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 232/232 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Complete11DF2800 independently reviewed for anchor resource and timeout. Host200 supplies anchor rather than proven clearing; original scope retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole handler and complete shared header reviewed.12byte state,200(0,0)vector, resource2lookedup then loaded/stored, h22via220(0,128),finish30. Preserve indexedK&R calls, separate temporary handle, signedvector and original ordering; no zero-vector assumption from comment.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
