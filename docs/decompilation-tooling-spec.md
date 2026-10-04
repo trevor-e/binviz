@@ -6597,3 +6597,37 @@ BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained.
 No new implementation/private ownership/type/CFG walker, matching gain,
 linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
 pin historical reports/tools, preserve foreign work/index; full-tree goal active.
+
+Tracking point pair pulse naming acceptance (BV-03/BV-08, P2): FF9
+defb85958 adds four canonical ovl_10d01800 behavioral names. Catalog 4,667
+unit/symbol names, 174 scoped alias headers. All four complete own-unit bodies
+and g18/g16/g08/ff9 headers reviewed and bound, zero deferrals; other units pending.
+Evidence: docs/function-names-tracking-point-pair-pulse.json and Binviz
+target/ff9-names-tracking-point-pair-pulse/. Four complete native object pairs
+identical, exact affected/scored namespace four; unchanged pinned strict-reloc
+scores four exact, 1,592/1,592 code bytes, zero failures. Four installed WASM
+token comparisons agree; current catalog/source/header/object/review bindings
+and eight isolated committed paths audit.
+
+Names cover depth-cued Gouraud line, tagged two-point strip descriptor, fading
+resource/early point-pair pulse callback and two-model tracking/eight-frame fade.
+Line RTPT uses p0/p1/p0; AVSZ3 retains duplicated firstpoint, no invented average.
+Preserve negative-weight handling, pool reservation/GTE order and partial pads.
+Callback uses global API/job but incoming context flags, exact0 extra draw and
+signedframe<40 pulse. Controller transition is >=41 (old comment40), callback
+installation outside m1 null guard, unconditional move even after clearing m2,
+and terminal two-argument release(m1,first-vector-word). No new guards/cleanup.
+
+BV-06/P1 frontier retained: callback's INT h is passed as U16 pointer to typed
+seven-argument descriptor helper. Preserve scalar/pointer representation and
+selected provider uncertainty; no repaired ABI or inferred missing words.
+Callback VOID definition/declaration agrees here, unlike prior return conflicts.
+Definitions/declarations/helper calls/callback table references propagate;
+aliases preserve native symbols/address/runtime exports. Original effect and
+resource visual/provider identities remain unknown, no body/type repair.
+
+Maintained naming/farm/scorer/preprocessor and thin adapters reused. Existing
+BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained;
+no new implementation/private ownership/type/CFG walker, matching gain,
+linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical reports/tools, preserve foreign work/index; full-tree goal active.
