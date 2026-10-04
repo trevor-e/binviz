@@ -6527,3 +6527,38 @@ and BV-06 provider frontiers retained. No new implementation/private ownership/
 type/CFG walker, matching gain, linked-image/gameplay/workspace acceptance.
 Refresh source-bound evidence, pin historical reports/tools, preserve foreign
 work/index; full-tree naming goal active.
+
+Five phase particle breakup naming acceptance (BV-03/BV-08, P2): FF9
+4ea69e4fd adds four canonical ovl_118c3000 behavioral names. Catalog 4,659
+unit/symbol names, 172 scoped alias headers. Four full own-unit bodies and
+g17/g22/g19 headers reviewed and bound, zero deferrals; other units pending.
+Evidence: docs/function-names-five-phase-particle-breakup.json and Binviz
+target/ff9-names-five-phase-particle-breakup/. Four complete native object
+pairs identical; exact affected/scored namespace four, unchanged pinned
+strict-relocation scores two exact/two partial, 2,296/7,024 code bytes, zero
+failures. Four installed WASM token comparisons agree; current catalog,
+source/header/object/review bindings and eight isolated committed paths audit.
+
+Names cover scaled negative table offset, growing paired particle/tumbling
+fragment callback, five-phase six-initial-particle breakup controller and
+three-phase paired sprite pulse. Own-unit controller has five phases2..6,
+not its donor's seven. Preserve success-only initial count and six allocation
+attempts, four-way callback split with original reuse/failure-dependent totals,
+full word/pad copies, partial initialization, repeated trig calls and register
+pins. Transition5->6 skips band yet retains old fade for three same-call
+sprites; terminal24 returns before tail. Pulse terminal9 fetches host vector
+and computes before returning, skips draws/flag/frame tail. No body repair.
+
+BV-06/P1 representation and callback frontier retained: offset helper has
+INT definition with INT arguments but both actual VOID K&R callers pass
+pointers and discard return; meaningful INT particle callback is referenced
+through VOID declaration. These remain unresolved, no inferred provider/ABI
+admission. Original game/resource identities remain unknown. Definitions,
+declarations, helper calls and callback descriptor references propagate;
+aliases preserve canonical linker/address/runtime identities.
+
+Maintained naming/farm/scorer/preprocessor and thin adapters reused. Existing
+BV-03 reviewed-deferral prioritization and BV-06 provider proposals retained;
+no new implementation/private ownership/type/CFG walker, matching gain,
+linked-image/gameplay/workspace acceptance. Refresh source-bound evidence,
+pin historical reports/tools, preserve foreign work/index; full-tree goal active.
