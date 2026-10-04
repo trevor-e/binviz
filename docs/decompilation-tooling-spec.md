@@ -3132,3 +3132,45 @@ remain separate. No private ownership/type/CFG walker, new matching credit,
 linked image, gameplay, provider or shared workspace acceptance. Historical
 reports/scorer stay pinned; refresh downstream source-bound evidence from the
 current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Track timeline naming acceptance (BV-03/BV-08, P2): FF9 9f2befca7
+adds 17 canonical ovl_12c0f800 names. Catalog has 3,916 unique unit/symbol names,
+71 alias headers. All 17 complete primary bodies directly read, including each
+entire timeline; no semantic deferrals in this unit. Evidence:
+docs/function-names-track-timelines.json and Binviz target/ff9-names-track-timelines/.
+All 17 entire native object pairs identical, exact affected/scored namespace 17,
+unchanged pinned strict-relocation baselines: 15 exact/two partial,
+3,560/6,448 code bytes, zero failures. Installed WASM preprocessed tokens agree
+for all 17 sources. Current catalog/source/header, review/object bindings and
+21 isolated commit paths audit. Progress: 3,916/5,812 canonical primary files
+named (67.4%), 1,896 remaining. Maintained native CLI SHA256 remains
+545beb01f1e1e8fd6dccd2c2f66b80224bc152e23b12a2ebcbe1a93822644b6e.
+
+Names distinguish compressed and offset position tracks, 18-track and 30-track
+object sequences, fading handle/actor sequence, object motion with grayscale
+ramp, position blending, track access and bounded host-kind helpers. Preserve
+separate origin globals, signed Y/Z compression, unsigned halfword addition,
+upper-only clamps, unchecked IDs/indices/counts, and output before completion.
+Actual object-motion grayscale runs 0->255, despite the old 255->0 comment;
+names and review evidence follow code, source comment unchanged. Handle sequence
+fade only applies counter8..1 on frames42..49 and leaves counter0 when its block
+ends; no completion of that full fade assumed. Preserve negative grayscale,
+register2 pin, -fno-rerun-cse-after-loop, identical branches and unsigned gate.
+
+Preserve all captured/derived vectors, exact corner publication/store order,
+current int coordinates, do wrappers, typeof absolute Y=-4000 assignment,
+partial initialization, callback casts/arity, resources/frame events, host
+last-index/kind transitions and all host finish/teardown boundaries. Position
+blend captures start only at cur0, then blends cached start toward destination
+with optional wave and publishes before completion; no clamp or new provider
+semantics asserted. Original asset/spell names and selected host contracts remain
+unresolved. Only identifiers and own-unit aliases change; all other source
+tokens/comments/types/layouts/signatures/compiler choices remain stable.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer remain pinned; refresh downstream
+source-bound evidence from current catalog. Foreign work/index preserved;
+full-tree goal remains active.
