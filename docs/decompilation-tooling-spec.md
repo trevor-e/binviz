@@ -5251,3 +5251,27 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Five ribbon particle pulse naming acceptance (BV-03/BV-08, P2): FF9
+feacf0172 adds six canonical ovl_1179f800 names. Catalog4,446 unique unit/symbol
+names,128 alias headers. All six complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-five-ribbon-particle-pulse.json and
+target/ff9-names-five-ribbon-particle-pulse/. Six entire native objects identical;
+exact affected/scored namespace six,unchanged pinned strict-relocation baselines
+four exact/two partial,2,668/4,452 code bytes,zero failures. Installed WASM
+preprocessed tokens agree for all six sources; current catalog/source/header/
+object/review and10 isolated commit paths audit. Other units remain pending.
+
+Established15/3-segment builders,polyline strip,two-phase ribbon callback,
+five-attempt particle scheduler and three-phase sprite pulse. Preserve three-word
+table stepping,signed mode/index,paired samebuffer writes,pins,predecessorhalf,
+count-before-allocation includingfailures,successful-onlyrandoms,partialfields,
+mode>=2earlycompletion and pulse provider-before-terminalreturn/tailomission.
+Descriptorcallback reference renamed,canonicalnative/runtime identities stable.
+No body/type/layout/ABI repairs or originalgame/provideridentity claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
