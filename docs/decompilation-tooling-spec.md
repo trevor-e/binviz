@@ -9909,3 +9909,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Five staged load hooks saved binding three load naming acceptance (BV-03/BV-08, P2):
+FF9 f8443915b adds two canonical ovl_11dc5000 names. Catalog
+4,932 unit/symbol names, 283 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-five-staged-load-hooks-saved-binding-three-load.json and Binviz
+target/ff9-names-five-staged-load-hooks-saved-binding-three-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,236/1,236 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor44 fiveobjects/THREEsignedFOURhalfwordvectors. Init ONLYcontext/200(0,0,v14); objslots/v1C/v24 not initialized. Exact0 84(16,0,v1C),load1->obj0 inclNULL/noscale. Exact38 84(16,0,v24),load6/7/5/2 intoobj1/2/3/4 ALLbefore FOURnullable separate220(16,128) h22assignments in1/2/3/4order. THENnullableobj1 firstbytehooktable/h12=28/hC156;obj2 secondtable/same28/156;obj4 thirdtable/h12=58/hC112. No hookonobj0/3.
+
+ForEVERYframe>=38, includingexact38/terminal80, nullableobj4 h30==-1 clears/rechecks then POINTERBINDSw2C=state.v14, no XYZ copy/requery. Returncapturedframe>=80 AFTERevents/binding. Missed38 may consume uninitializedobj4, no backfill/newnullinitializer/78/release/providerextent repair.
+
+7A60 descriptor20 THREEobjectpointers+FOURsignedhalfwordvec. Init context/1FC(0,vec),load3->obj0 THEN4->obj2 inclNULL BOTHbefore nullableh22assignments0then2 separate220(0,128). obj1 untoucheduntil exact4 load21->obj1 atsamevec inclNULL/noh22. Return>=60 AFTERevent. No tracking/release/78/providerclearinference/newpads/backfill.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
