@@ -7855,3 +7855,37 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Hooked trail camera return orbit sprite rows naming acceptance (BV-03/BV-08, P2):
+FF9 31f884834 adds three canonical ovl_107dd000 names. Catalog
+4,796 unit/symbol names, 216 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-hooked-trail-camera-return-orbit-sprite-rows.json and Binviz
+target/ff9-names-hooked-trail-camera-return-orbit-sprite-rows/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+0 exact/3 partial, 0/6,008 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 nineargVOID callback:140buffer EVERYcall, frame0 extra110(resource18,vec,0,-1,0,0,0,h,0). Ordinary110same resource withrecword40,n,7168-(n<<12)/total,lastfourframes fade,flag1. Zero-totaldivide/unclampednegativeframe retained. Onlydirbyte31==1:ifglobalhandle!=0 1D8(handle,vec) MOVES not releases; copyTWOfullvecWORDS to sharedtracking. Before29 publishTHREEhalfwordsincoming directly; n29..60 BC(incoming,savedbaseline,4096-sin((n-29)<<5),local8bytes),after60 TWOwordcopybaseline, publishctxp2C+24. No bufferrelease/flag-save/init added.
+
+799C descriptor56/init savedctx/job,globalfade0, THREEstatehalfwords0 butpaduntouched, copyTWOwordsbaseline, widenTHREEpositionINTs. Resource17nullableh22=24 thentable/h12=16/hc388 andnestedp18fn=callback; repeatedouterguards do notchecknestedpointer. Resources21/5 loaded atuninitializedv24, globalmovinghandle assigned21,nullable24/16. Table70(3),handlesresource33 via58/23via18. Sharedtrackingnotinitializedhere.
+
+Phase0 secondaryweight4096,q=t4096/22,clearended3objs/writeh20 globalfade/4096/4096, spritescale(4096-q)*3/2+4096, firstfourcyanflash,>=22 phase1/frame-1 stilltail. Phase1globalfade=q=t4096/20,secondary4096-q,objecth20;>=20 switchesphase2/frame-1 releaseso30/o34 EVENNULL,clearsglobalhandle butleavesstateptrs anddrawsfullfade tail. Phase2fullglobalfade,clearendedhookedobject,exact19resource19nullable128/blueflash,terminal>=22 releaseshookedobject/return BEFOREtail. Threephase countsnormal23/21/23 updates; no78.
+
+Secondaryweighttail THREESprites31/6/4 atsharedtrackedposition usingrotation0/0/-cnt20/0. Globalfadetail twohandlesposed/tinted/268255,134resource32, f28=128aroundONE128resource22then0; FIVE128spritecalls total resource22/31/35/35/35, notoldcommentseven. Lastthree size t*4,t*12>>1,t*20>>1 withseparateorientationvectors andSIN((cnt-22)<<10/42). Common134resource34 insidefade then134resource16/cnt++. Partialvectorpad andglobalreadorderretained.
+
+8480 descriptor44/initphase/cnt0/base70,THREEzeroXYZ(no pad),resource15nullableh22=134. Phases0/1 eachframes0..7 drawtwo/threesprites and138resource11 before>=7transition. Phase0transitioncreatehandle10/blueflash; phase1yellowflash,phase2/frame-1,releaseglobalobject EVENuninitialized/null. CaptureTWOhostp0Cwords at56/60 into v0C withY-=512;v14word0copy thenY-=3072 beforeword1copy, widenTHREEv0Ccoords toINTs. Loadresources20/28/25/29/26/39 atcorrectv0C/v14 withactualnullable sizes134/198/70. Newhandle storednotposedhere.
+
+Phase2 firstsixcyanflash,angle=t32,SINweight,radiusCOS*1550>>12+256. TWOoppositeXrings each12sprite calls resource12 viaF0 then114 (TOTAL24 perupdate), basecnt41+i128 advancing341,flags/frame&15. ThenTENtablerows indexedSIGNEDlength;positive-only each j0..length-1 DCposition withrotationX1024-i2048/9,Y=(off<<4)+(j4096/len-cnt32),radius*2/3;114resource37 sizeweight+2048. off+=phaseframeperrow, allpadsunknownproviderreadfrontiers. >=32switchphase3 AFTERallemissions,phase3>=15 calls78/return BEFOREcnt++. Actualcounts8/8/33/16; no fixedtablecountinferred beyond tenrows.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
