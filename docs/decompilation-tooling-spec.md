@@ -11103,3 +11103,107 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot gte math actor command helpers naming acceptance (BV-03/BV-08, P2):
+FF9 d22db6f39 adds forty selected canonical boot names. Catalog
+5,271 unit/symbol names, 307 scoped alias headers. Forty selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-gte-math-actor-command-helpers.json and Binviz
+target/ff9-names-boot-gte-math-actor-command-helpers/. 78 full native object pairs equal;
+exact affected/scored namespace 78. Pinned strict-relocation scores unchanged:
+46 exact/32 partial, 22,416/52,484 code bytes, zero failures. 78
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 82 isolated committed paths audit.
+
+Selected complete bodies directly read; existing object/RNG provider contracts and unresolved overlay801F1A7C unchanged. Local GTE register map and opcode switch excerpts support descriptive geometry names; no new hardware/software-GTE/runtime proof. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Full body including checked_add and native/WASM macros read: LZCS(value)/LZCR, reject lz32 or0 without stores; even=lz&~1, exponent=(31-even)>>1; normalized index via masked left or signed right shift, checked index-64 then <<1, signed halfword table80070270. Store exponent FIRST then mantissa, return1. Preserve break6/trap and return-1 frontier; descriptive lookup name, no claim about original SDK identifier.
+
+All body/register declarations read: capture three input WORDs into pinned $8/$9/$10 globals, emptyasm dependency, normalize-register helper; sequential halfword narrowing output, return squared sum. Shared-tail/register ABI and asm strings unchanged.
+
+Full body: capture three WORDs in pinned register globals, emptyasm dependency, normalization core, sequential three WORD outputs, return squared sum. Preserve calling-visible registers and no argument or ABI rewrite.
+
+Full body: sign-extend three input SHORTs into U32 pinned register globals, emptyasm, normalize core, narrow three output SHORTs, return squared sum. Existing normalization zero-vector/overflow frontiers retained.
+
+Full body including checked_add/register macros: capture pinned t0/t1/t2; load IR1..3,SQR A00428, read MAC1..3, two checked additions. LZCS(sum)/LZCR, even/exponent/normalized signed-shift index, checked index-64, signed reciprocal-table halfword. NO invalid-lz guard unlike62B8C. GPF190003D with original components/IR0 reciprocal, read MACs; signed shifts into pinned globals, return sum. Preserve zero-vector/table access/trap/sign/overflow and GTE side effects.
+
+Full inline rotate_matrix and wrapper read: current rotation MVMVA486012 for three gathered columns, pipeline input reads/IR captures preserved; stores packed rotation words0/12 before final IR reads then4/8/16. In-place return m, no translation stores, no matrix-layout/alias/asm/pipeline rewrite.
+
+Load packed screen coordinates DATA12=a,14=c,13=b in that exact order; NCLIP1400006, DATA24 MAC0 signed return. Signed area convention follows local GTE map; no bounds/geometry rewrite.
+
+Full checked_add and body read: capture five m WORDs then rotation CT0..4; three gathered in-columns transformed MVMVA486012 with preserved IR capture/store interleaving. Input translation assembled from in+20 LOW16 and in+24 WORD<<16 plus in+28 WORD, transformed before out4/8 stores. Read MAC25..27 then m translation WORD20/24/28 AFTER preceding out stores; three checked adds, output translation stores, return out. Preserve overlap ordering/truncation/break6/trap, no claim about full-width translation input.
+
+Only CT26(h) projection H. All original U32 signature and native/WASM macros retained.
+
+Capture a packed XY/Z, load IR0 scale0/IR1..3, GPF198003D; read b packed XY/Z BEFORE DATA31 read. Return capture is LZCR DATA31, not CONTROL FLAG. Load scale1/b then GPL1A8003E; capture IR1/2 packed WORD0 and full IR3 WORD1 sequentially. No SDK interpolation/flag-return guess, saturation/alias/shift/pipeline rewrite.
+
+Full inline rotate helper and wrapper read: capture m five WORDs, write CT0..4, same in-place column rotation helper as632F4, return in. Preserve packed input gathers and stores before final IR reads; no translation copy/ABI change.
+
+Capture five m WORDs ->CT0..4, packed vector WORD0/1 ->DATA0/1, MVMVA486012 cvnone/sf1; read MAC25/26/27 with sequential full WORD stores, return out. Output is MAC words, not saturated short IR stores; preserve captured matrix/input ordering.
+
+Full split/body read: negative component unsigned-negated magnitude, SIGNED cast>>15 then unsigned-negated high, negative low modulo32768; positive high>>15/low&32767. Set rotation first, read input XYZ; MVMVA41E012 high (IR input,sf0,cvnone), MAC high reads; MVMVA49E012 low sf1, high<<3 before low MAC reads, wrapping U32 low+high stores. Preserve INT_MIN and arithmetic shift behavior; no algebraic simplification.
+
+U32 a/b/c each<<4 then CT21/22/23 far-color channels in order. No clamps, color conversion or inferred signed parameters.
+
+U32 a/b/c each<<4 then CT13/14/15 back-color channels in order. Preserve widths/shift/store order and all raw macros.
+
+Capture CONTROL0/2/4 rotation diagonal before input reads; load a XYZ into CT0/2/4, load bZ into DATA11 before bX/Y9/10, OP170000C unshifted cross product. MAC25/26/27 read/store each, then restore ONLY CT0/2/4. Other GTE effects remain; no full register-state restoration or pointer alias rewrite.
+
+Capture all five p WORDs before CT8..12 writes, light-matrix register map. No matrix layout/prototypes/volatile changes.
+
+Capture all five p WORDs before CT16..20 writes, color-matrix register map. Preserve raw packed WORD inputs and order.
+
+Packed V0 input DATA0/1, MVMVA480012 current rotation plus translation/sf1; three MAC word reads/stores then CONTROL31 FLAG store and return. No short IR saturation output, register snapshot or caller signature repair.
+
+Load a/b/c as V0..2 then RTPT280030; three DATA12/13/14 screen stores and CONTROL31 flags. Load fourth V0, RTPS180001; DATA14 fourth screen, DATA8 IR0 depth-cue store (not SZ3), CONTROL31 second flags, DATA19 SZ3 read; flags=f|g then signed SZ3>>2 return. Preserve all stores/GTE/pipeline/alias order, no depth-output reinterpretation.
+
+Entire switch/context body read: initialize w0,obj,cmd,flags,h2a,h28,w1c in order, cmd low8. Cases0A/45 gate and first-value difference,46 signed second-value difference,47 two-WORD equality,48 zero-value gate,0C kind flags,0D percentage,3E/49 special word operand121 returns unresolved overlay801F1A7C else byte flags,4C half-limit pair. Final context apply returns U8. All callees in selected set reviewed; no HP/MP/healing/damage or unresolved overlay/struct-offset ABI claims; exact pads/comments/prototypes retained.
+
+Compare SIGNED16 record+12 against SIGNED16 amount then unsigned HALF+12 -= amount, return0 insufficient/1 after store. Negative amounts can add and arithmetic narrows; no nonnegative guard or guessed stat identity.
+
+Context flags bit1 -> flags2 byte+11 |=20 and return0; otherwise SIGNED a>0 first-value add, SIGNED b>0 second-value add, return1. Preserve predicate call/store ordering and independent field layout versus dispatcher.
+
+Existing object_has_flags(o,41) LOW8==0 AND U16 first value+10!=0 ->1; otherwise contextflags|1 and0. Only behavioral predicate identity, no object flag-bit/provider or stat reinterpretation.
+
+Existing flags(o,1) LOW8zero AND U16 first valuezero enters second flags(o,40); LOW8zero ->1, else fresh first-valuenonzero ->1 after provider. Otherwise reject flag1/return0. Preserve apparently redundant post-provider value read; no predicate purity/contradiction simplification.
+
+Full body: rngcursor>=end ->warmup, SECOND warmup only if still>=end. Capture actor a AFTER calls, randomBYTE asINT, lo=aBYTE26, repeated byte ((r<<8)|r) modulo ((aBYTE0B+lo)>>3)+1. Advance rngcursor before context signed HALF16=lo+m,HALF12=commandBYTE5,HALF14=otherBYTE2A. Preserve two-call frontier/pointers/truncation and no exhaustion guarantee.
+
+Store factor HALF16=10 FIRST, factor HALF12=srcBYTE5, factor HALF14=0. Pads and signature preserved; no read of random table or guessed actor stat.
+
+object_has_flags(ownerWORD0,0) LOW8nonzero then SIGNED16 factor /=2 truncating toward zero. Preserve actual typedef field offsets and original int-to-pointer caller view; no provider contract rewrite.
+
+OwnerWORD8C bit2 -> SIGNED16 factor=(factor*3)>>1 narrowed. Preserve negative arithmetic right shift and exact struct pad/field addressing, no factor>=0 guard.
+
+ContextWORDC==1 and unsigned((commandWORD&F)-3)<3 selects low opcodes3..5 ->SIGNED16 factor/=2. No extra opcodes, signed shift substitution or guessed command/owner effect.
+
+Product of SIGNED16 factors is narrowed to SIGNED16 t BEFORE t>=10000 clamp9999, then first output HALF18. Negative/wrapping values retained; no widening/clamp-before-cast or damage-name guess.
+
+TargetU16+18*(targetBYTE27+commandBYTE5), divisor50 if ownerWORD8Cbit2 else100; INT quotient>9999 ->9999, signed HALF output+18. Preserve field layouts/callercasts, exact greater-than boundary and no stat-identity claim.
+
+Same truncated SIGNED16 product and >=10000 clamp as65ADC, distinct second output HALF1A due pad3. Preserve wrap before comparison/negative results and actual typedef offsets.
+
+Target first value U16+10=target U16+18 then second U16+12=target U16+1A. Read/write order preserved; descriptive saved-limit pair, no HP/MP or readboth-before-store rewrite.
+
+Capture target pointer BEFORE single warmup if cursor exhausted, random BYTE to INT, increment cursor, targetU16+10=byte%10+1. No second retry or rng/provider lifetime repair; matching signed division temporary retained.
+
+First output U16+18=target U16+18>>1; second output U16+1A=target SIGNED16+1A>>1 then narrowed. Preserve signed asymmetry/negative arithmetic shift and input-output alias order.
+
+Local six-BYTE table0,0,0,2,1,18 indexed by command kindBYTE9; existing consume_flags_each(contextWORD4,table[kind]) !=2 rejects contextflags|1. No index check/provider return reinterpretation/flag ownership change.
+
+Existing consume_flags_each(contextWORD4,commandBYTE8) !=2 ->contextflags|1. Preserve K&R declaration and exact byte field/return check; no consume-provider ABI repair.
+
+Only existing flags(actor,1) LOW8zero: unsigned HALF+10 +=INTn with narrowing BEFORE unsigned maxHALF+18 comparison/cap. Preserve wrap/negative amount and no wide-sum-first saturation rewrite.
+
+Only existing flags(actor,1) LOW8zero: SIGNED HALF+12 +=INTn narrowing BEFORE SIGNED maxHALF+1A comparison/cap. Preserve signed comparison/negative and overflow behavior, no unsigned stat reinterpretation.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
