@@ -7657,3 +7657,35 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Eased cubic actor descent handle pulse naming acceptance (BV-03/BV-08, P2):
+FF9 19b591792 adds three canonical ovl_13a33800 names. Catalog
+4,778 unit/symbol names, 210 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-eased-cubic-actor-descent-handle-pulse.json and Binviz
+target/ff9-names-eased-cubic-actor-descent-handle-pulse/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 892/3,564 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 VOID unconditionalc=0x02000000/(den*den), t0default; mode0((0x01000000/den)*num)>>16, mode1 256-(c*(den-num)^2>>17),mode2 c*num*num>>17. v=256-t,weights{t^3,6*v*t^2,6*v^2*t,v^3}>>12 appliedctrl0..3, outputTHREEU16zero thenpertermSIGNctrl*weight>>12 withnarrowingafterEACHaddition. Reverseendpointorder andcoefficient6 retained, notnormalizedstandardBezier3; no invaliddur/clamp/overflowfix.
+
+7948 ownVOIDhelper unconditionalk=0x20000000/(len*len),switchlinear/quadraticfalls literaltruncatedintegerformulas, defaultweight0; callhostB4(handle,extra,w), no declaredreturn. Mainconsumes INT return into scale/weight/spin; this unresolved caller/callee ABI mismatch retained and recorded, notrenamedasreturnsinterpolation. Also7704VOID declaredINT butreturndiscarded.
+
+7A80 descriptor184, savesctx/table70(4),zeroexactfirst16statewords,createfourhandles3/5/6/7,scales6576/5120,rotation/translation/spin0. Foursharedrecords life128/delay-1/NULL. ActorcountunsignedNO bound4;each2BC(i,-2),1F8originalvec, startX=originalX,Y+12288,Z-4096,copytoC/D,204(i,start,UNSIGNEDstartZ)THREEargs,delaystaticindex; record0DY-=256 EVENcount0. Allpads/provider extents preserved.
+
+Exact0globalpublicationcount50,50animationcount160,192threepulsecounts24,200flash32. Firstcountpredec/publishstartforall actors. Whileanimationcountpredec, clearendedptr; delay0life>0 PREDEClife128→127..0,constructfour3lane+padcontrols(start,midpoint,originalY-1024,original), cubic(mode0,128,remaininglife)→D;1D8EVENNULL,life<16nullablehalfword20=life<<8,204D thenDY-=256. Nextlife0 update setsdelay-1,fresh1F8/204,1DCptr EVENNULL withoutnullingit. Positive delays separatelypublishstart;exactdelay8load1/4atC/D nullableh22=128;delay<8changesobjhalfword20 thenpostdec. Startsnextupdateafterdelayreaches0, nobackfill.
+
+Everyupdate camera/publishedctxp2CTHREEhalfwords0/record0DY/DZ; rotations+spin+32/-spin-32 BEFOREpulse updates. 240twocallsifOR(w10,w14,w18);w10/w14notarmedhere. Pulsew18predec consumesVOIDhelper(mode0,24,count,0,4096)→two28Cmorphs/tintwindows>=17or<8. Scalepulsew1C andspinw20predecconsumeVOIDhelpermode1; poseusesprior scale/spin values. Flashw24predec emitsFOURTEENarg248 withscale=count*4+4096/RGB=count*3,THREErot0. Terminal264 AFTERallwork,no78/newrelease. Originalreturn type, read order,pins/hacks/signnarrowing unchanged.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
