@@ -2305,3 +2305,45 @@ BV-03/BV-08 shared readability acceptance remains a proposal requiring frozen
 namespace/compiler/input/output identities; this batch grants no shared workspace
 acceptance. Refresh downstream source-bound evidence from current catalog;
 preserve foreign runtime work and the historical scorer selection.
+
+World-map frame/resource naming acceptance (BV-03/BV-08, P2): FF9
+3ce2627b2 names48 canonical ovl_09b800 functions: frame initialization/update,
+script parameters, actor/event/dialogue step, resource loading and relocation,
+arena marks, texture uploads/scroll/frame sequences, walkmesh height lookup,
+GTE lighting matrices, polygon submission, marker UI, sprites and map sound.
+Total3371 unique reviewed unit/symbol names,49 alias headers. Evidence: FF9
+docs/function-names-world-frame-resources.json and Binviz
+target/ff9-names-world-frame-resources/. All60 affected complete native object
+pairs identical; unchanged pinned strict-relocation scores51exact/9partial,
+24376/35680 code bytes, no failures. All60 installed WASM preprocessed token
+comparisons agree. Current catalog/header/body snapshot/object hashes and64
+isolated committed paths verified. No new matching credit, compiled portable
+module, linked image, selected-provider, shared acceptance or gameplay proof.
+
+Bounded whole-body review64/149 primaries;48 named,15 purpose deferrals and
+one concurrent-edit exclusion,85 unreviewed. Seven full BOOT semantic inputs
+corroborate actor/event/dialogue and GTE roles. Many comments mislabel this unit
+as battle: 8024/43F0 submits sound, 83FC invokes combined actor/event/dialogue
+step, 8664 loads lighting matrices, and 93B8 uploads texture groups. 8B10 uses
+StoreImage to capture rows;8068 uses MoveImage rather than a clear. Preserve
+signed shift/division differences, wrap/narrowing, unchecked widths/indexes,
+walkmesh cache/null ordering, h[6] beyond array bounds in resource setup,
+register pins, alignment branches, compiler flags and signature mismatches.
+
+Concurrent-edit acceptance case: another session changed8574's64E88 prototype
+and call while native verification ran. Maintained source hash guard refused
+installation BEFORE any source writes. Entire8574 file was excluded; its
+canonical references and foreign changes stayed untouched. Remaining candidates
+were recompiled and verified, then committed with an isolated index. Naming
+checkpoint replacement preserved all foreign CLAUDE sections and index entries.
+
+BV-08 acceptance requirement for reusable readability verification: scoring
+must consume exactly the declared object namespace, with no stale extras from
+a previously prepared/refused batch. Two excluded8574 scratch objects remained
+after re-preparation; removed only those known owned files, reran the60-object
+proof and amended the report before acceptance. A future shared consumer should
+reject missing/extra objects and assert scoredFunctions equals the manifest,
+alongside source/compiler/header/output identities and leading asm metadata.
+Maintained farm/scoring/preprocessor adapters reused; no private analysis walker
+or tooling rewrite added. Refresh source-bound downstream evidence from current
+catalog, preserve other sessions' work and historical scorer selection.
