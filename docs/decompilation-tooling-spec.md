@@ -12621,3 +12621,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual variant path trail sequence naming acceptance (BV-03/BV-08, P2):
+FF9 0bb7bf521 adds 1 selected canonical ovl_11e35000 names. Catalog
+5,539 unit/symbol names, 342 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-variant-path-trail-sequence.json and Binviz
+target/ff9-names-effect-residual-variant-path-trail-sequence/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+0 exact/1 partial, 0/1,364 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+Whole remaining11E35000 handler independently full-read and named from variant-specific path and tracked trail sequence. Full g23/lifecycle headers bound. No spell identity, sound-provider claim or prototype repair; mode-dependent argument and original fn-indexed API retained.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole28byte handler and all three variant paths plus two phases read. Mode0 writes size; mode1 reads variant from same argument. First phase moves packed vector vertically or along opposite X/positiveZ diagonals with cosine Ydroop; per-variantECresource/2B0trail tables, tracked object drop and release, context40 around110calls, phase12 rewind. Second phase sine-derived scale through frame29. Preserve do-while0 scheduling wrapper, halfword wrapping/word copies, unchecked variant indexing, redundant nulls and numeric host slots. Do not repeat header comment claiming100calls are sounds or final curve cosine; actual calls/formulas bound.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
