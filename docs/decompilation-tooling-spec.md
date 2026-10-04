@@ -5861,3 +5861,30 @@ type/ownership/CFG walker introduced. No body/type/layout/ABI repair or new
 original matching credit,linked image,gameplay or sharedworkspace acceptance.
 Refresh downstream source-bound evidence; historical scorer/reports stay
 pinned. Foreign work/index preserved; full-tree naming goal active.
+
+Paired cosine swing naming acceptance (BV-03/BV-08, P2):
+FF9 3c5340145 adds five canonical ovl_12e72800 behavioral names. Catalog4,572
+unique unit/symbol names,152 scoped alias headers. All five complete bodies
+directly reviewed,zero semantic deferrals. Other units remain pending.
+Evidence: docs/function-names-paired-swing-hooks.json and Binviz
+target/ff9-names-paired-swing-hooks/. Five complete native object pairs
+identical; exact affected/scored namespace five; pinned strict-relocation scores
+unchanged five exact,1,384/1,384 code bytes,zero failures. All five installed WASM
+preprocessed token comparisons agree. Current catalog/source/header/object/
+review bindings and nine isolated committed paths audit.
+
+Names establish signed-radius swing callbacks,host point path with cosine-X
+offset,paired model hooks ending30 and four-object captured-position sequence
+ending40. Preserve upper-only fraction clamp,signed division (not shifts),
+radius halving fromstep4,halfword narrowing,output before return-1 threshold,
+ignored callback arguments,object guards without a nested table guard,
+partial initialization and actual resource/frame order. Readable definitions,
+declarations,calls and callback references propagate; own-unit aliases retain
+canonical linker/address/runtime identities. Original game effect/providers
+remain unresolved. No body/type/layout/ABI repair or new original matching credit.
+
+Maintained naming/farm/scorer/preprocessing interfaces and thin adapters reused;
+BV-08 exact namespace gate enforced. No new reusable tooling logic or private
+type/ownership/CFG walker introduced. No linked image,gameplay or sharedworkspace
+acceptance. Refresh source-bound evidence; historical scorer/reports pinned;
+foreign work/index preserved; full-tree naming goal active.
