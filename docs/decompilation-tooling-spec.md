@@ -5537,3 +5537,26 @@ BV-08 namespace gate enforced. No additional reusable implementation gap found.
 No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
 downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
+
+Paired object positions and handle growth fade naming acceptance (BV-03/BV-08, P2):
+FF9 e79c53334 adds five canonical ovl_100c1800 names. Catalog4,512 unique unit/symbol
+names,140 alias headers. All five complete bodies reviewed,no semantic deferrals.
+Evidence: docs/function-names-paired-object-growth-fade.json and
+target/ff9-names-paired-object-growth-fade/. Five entire native objects identical;
+exact affected/scored namespace five,unchanged pinned strict-relocation baselines
+five exact,1,812/1,812 code bytes,zero failures. Installed WASM preprocessed tokens
+agree for all five sources; current catalog/source/header/object/review and9
+isolated commit paths audit. Other units remain pending.
+
+Established position-following object pair,timed four-resource sequence,paired
+handle growth/fade,host weighted blend and scalar interpolation. Preserve
+provider arity,signed/unsigned gates,partial initialization,pads,pose-before-fade,
+countdown priority,unguarded divisor and terminal ordering. Caller references
+renamed; own-unit aliases retain canonical native/runtime identities. Exact game
+effect/provider identities unresolved. No body/type/layout/ABI/originalname claims.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional reusable implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider/sharedworkspace acceptance. Historical scorer/reports pinned; refresh
+downstream source-bound evidence. Foreign work/index preserved;full-tree goal active.
