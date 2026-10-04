@@ -9265,3 +9265,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Host position resource six two origin four staged load naming acceptance (BV-03/BV-08, P2):
+FF9 4f237442d adds two canonical ovl_135c8000 names. Catalog
+4,886 unit/symbol names, 260 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-host-position-resource-six-two-origin-four-staged-load.json and Binviz
+target/ff9-names-host-position-resource-six-two-origin-four-staged-load/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 728/728 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor12, objpointer+THREEU16position/trailingpad. Init saveEfxCtxcontext/200(16,0,pos),load6 via198/1D4/saveobj inclNULL/nullableh22=220(16,128). Othermodesreturntype>=60, no perframework/78/release/providerextent/vectorinitializer changes. Numericalselector16 treatedasunknownhostselector, nameonlyhostposition resource-load behavior.
+
+77EC descriptor40/stateFOURobjectpointers/FOURU16vec/THREEU16pa+pad/THREEU16pb+trailingpad. Init saveG30Ctxcontext/1FC(16,vec), copyONLYXYZ vecintopa thenpb; pads/fourthlanes/objectpointers NOTinitialized. Twooriginsinitiallyequals butdistinctstoredcopies remainexternallymodifiable, no consolidation/snapshot/providerreadextent repair. Query/initgotozero returns0.
+
+Updatecapturetype BEFOREswitch. Exact8 loadresource1 atpb/storeobj1,14 atpb/storeobj0,2 atpa/storeobj2; ALLTHREEloads occur BEFOREnullableh22assignments forobj1thenobj0 eachSEPARATE220(16,32). obj2getsNOh22assignment. Exact10load7 atpa/storeobj3 inclNULL, no h22assignment. Returnt>=90 AFTERevents, no78/release/backfill/nullinitializers/orderchanges/fourthlane stores. Per-object/providerborrowedlifecycle remains unresolved.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
