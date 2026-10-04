@@ -10287,3 +10287,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Two phase focus wobble light fade object release byte reset naming acceptance (BV-03/BV-08, P2):
+FF9 5665b3d72 adds two canonical ovl_11a5b000 names. Catalog
+4,958 unit/symbol names, 296 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-two-phase-focus-wobble-light-fade-object-release-byte-reset.json and Binviz
+target/ff9-names-two-phase-focus-wobble-light-fade-object-release-byte-reset/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+1 exact/1 partial, 56/1,644 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+C704 descriptor64. Init phase/counter0,copy THREE U16 globalstartXYZ->pos/context,load7 nullableh22=32 THENload1 nullable256 THENload2 nullable300 atpos,w100. Other fields uninitialized. Phase0 frame>=36 lighta=(t-36)*255/16,100(ctx.p20+4,1,a,a,a) unclamped;frame<20 sin((t<<10)/20),flag128/138(resource5,pos,t,a)/clear0;134(resource3,t) ALWAYSphase0. >=52 AFTERdraw:1CC,THREE globalend components with local U16Y-=2048,copy cXYZ/publish focusXYZ. Load4 at &a14 and load6 at b BEFORE initializing these positions, each nullable128. Then bX=endX/bY=endY-2048/w34512/w3C4096/bY-=768/phase1/bZ=endZ/w380/TWOwordcopy b->a14/a18 inclpad,jobtype=-1;counter++ even transitioning. No moving loads after position initialization.
+
+Phase1 >=53 and contextp0 BYTEb22==0 setsw381. Every update w34-=8 thenlowerclamp0; t<65 cY=globalendY-(((((sin(t<<5)<<11)>>12)+4096)>>1)-512) U16narrow;copy cXYZ->bXYZ/publish focusXYZ FIRST,then focusU16X+=cos(counter<<7)*w34>>12. t<24 light100(255-t*255/24 RGB),t<32 sprite264(ctxp20+8,-t*2,4,1,120,1,table,24,counter<<8,256,0). UNGUARDED p2C->h30==-1 setsw3C0; no null-check addition. Object-completion alone does not finish until w38 gate becomesnonzero.
+
+If w38!=0 andw3C>0 decrement64 then nullablep2C/p30 h20=w3C; else w3C0/1DC(p2C) THEN1DC(p30),phase0/return1 BEFOREcounter increment. Counter increments for every nonterminal phase1/unknownphase; no78, no p2C nullguard/initialization repair, no immediate finish merely at frame53 or h30=-1, no unconditional fading when gate0. Focus Y freezes from65 butXwobble continues withcounter/decreasingamplitude.
+
+CD38 descriptor0 only *io=0. Init stores globalcontext and clears ONLY ctx.p2C BYTE+82 (0x52); no state use/nullguard/provider call. ANY mode other than0/1 returns1 immediately, including negative values; mode0/1 returns0. Name reflects side effect and next-update completion, not a literal no-op.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
