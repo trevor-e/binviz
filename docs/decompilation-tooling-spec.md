@@ -10047,3 +10047,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Indexed orbit jitter growth late drift buffer marker naming acceptance (BV-03/BV-08, P2):
+FF9 d4fe921e9 adds two canonical ovl_1249e000 names. Catalog
+4,942 unit/symbol names, 288 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-indexed-orbit-jitter-growth-late-drift-buffer-marker.json and Binviz
+target/ff9-names-indexed-orbit-jitter-growth-late-drift-buffer-marker/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 2,176/2,176 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor96. Init signedn=*out/store/context BEFOREONLYn>=LIVEctx.p0Ccountbyte reject; negativepasses. Invalidhelper(ctx,7,1)/return1,validhelper(ctx,7,0),2D8selectors7/8/9(jobid,-1). IfsharedD7F84==0,70(table,8)/global=mode1 (notreset).84(16,0,v50),200(STOREDidx,0,v48),rotationXYZ0/scaleXYZ0/INTposition=SIGNEDv48XYZ,SEPARATEU16handles338(resources1then2,1). SIXorderedrand()% assignments dir0/1 %2, radius%400+200,angle%4096,counters%16/%16. Load3 atv50 inclNULL; no h22/padinit/globalreset.
+
+Onlyunsigned(type-30)<40 (frames30..69) movementblock; refresh200(idx,0,locals16l10),INTX/Z=SIGNEDl10XYZ plus radius*cos(angle)/4096 andSEPARATEradius*sin(angle)/4096 BEFOREradius/angleupdates. v=type-30 >=25 (55..69) Y=oldY-200-rand()%40 THENradius=oldradius+200+rand()%100, assignmentc1/c2retained; ELSE random lowbit selectsY +/-SEPARATErand()%20, radiusdirnonzero +/-rand()%20, angledirnonzero +/-rand()%256; localU16positionXYZ narrows thenD4(l10,position,localU16rot),copyONLYrotationXYZ. Exactv24(type54) U16rotationY+=2048 AFTERD4.
+
+Everymovementupdate countersPREDECREMENT; only==0 flipsdir^1 thenresetsrand()%16. Initial/resetzero becomes-1 nextupdate anddoesnotflipuntilarithmeticfrontier; no changingto<=0. IfscaleX<4096 increments ALLXYZ128 withno clamp. vparity oddhandleh5C(resource1),evenh5E(resource2),60(rot,INTposition,scale,handle). EVERYupdate outside movementtoo nullableobjecth30==-1 clears thenrecheck POINTERBINDp2C=&savedv48 (notlivequeryl10). Exact3 helper(ctx,7,1) AFTERtracking,return>=80. No backfill/78/release/paddingrepair/randomdedup/orientationrefreshinlatephase.
+
+7F70 VOIDhelper dereferenceBuf10**once/U8conversion storebuffer+16+SIGNEDunboundedindex. d[1] isnotallocatedextentproof; source-localCtx lacksfirstwordtype butK&Rctxcall retained. Negativeindex/null/alias/ownership/extent frontiers unchanged; no prototype repair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
