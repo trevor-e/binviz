@@ -3953,3 +3953,37 @@ found; existing proposals remain separate. No private ownership/type/CFG walker,
 new matching credit, linked image, gameplay, provider or shared workspace acceptance.
 Historical reports/scorer stay pinned; refresh downstream source-bound evidence
 from current catalog. Foreign work/index preserved; full-tree goal remains active.
+
+Six track offset naming acceptance (BV-03/BV-08, P2): FF9
+4870eb84b adds10 canonical ovl_11093800 names. Catalog4,206 unique unit/symbol
+names,94 alias headers; all10 complete primary bodies reviewed, no semantic
+deferrals in this unit. Evidence: docs/function-names-six-track-offset.json
+and target/ff9-names-six-track-offset/. All10 entire native object pairs
+identical, exact affected/scored namespace10, unchanged pinned strict-relocation
+baselines nine exact/one partial,944/2,352 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all10 sources; current catalog/review/source/
+header/object bindings and14 isolated commit paths audit. Progress4,206/5,812
+canonical primary files named(72.4%),1,606 remaining; full-tree goal active.
+
+Six channel wrappers, shared half-X/Z then1.2-scaled/offset position worker,
+halfword reader initialization/clamped paired-key fetch and full timed object
+handler reviewed. Names describe local consumers; no original ability/provider
+labels. Definitions/declarations/calls/callback references retain native/runtime
+identities via own-unit aliases, opaque integer hooks unchanged.
+
+Preserve wrapperunused thirdworkerarg/four-byte timerstride/eight-byte reader
+stride and incompatible historicalextern signatures. Worker staged signed
+division/narrowing/unsignedoffset/signedfixed publication stays; completion after
+publication independentclamp. Reader leavesfirsthalfword, upper-only clamp and
+empty/negative indexing stay. Handlerinit leavesobjectpointers/timercounts/seed
+points/padding untouched;6starts20..30,selectedresources/3456-byte rows and
+redundantguards stay. Standalonep24frame25 isneversteered; otherfour clearended
+thenpublishconstantXYZ, counts incrementregardlessallocation, completion90
+afterallupdates withoutnewhost78/destroy. Staleallfive comment retained.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace acceptance.
+Historical reports/scorer stay pinned; refresh downstream source-bound evidence
+from current catalog. Foreign work/index preserved; full-tree goal remains active.
