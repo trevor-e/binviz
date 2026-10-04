@@ -10787,3 +10787,153 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Boot curve controls akao command handlers naming acceptance (BV-03/BV-08, P2):
+FF9 eb00c7453 adds sixty two selected canonical boot names. Catalog
+5,172 unit/symbol names, 304 scoped alias headers. Sixty two selected complete boot
+bodies reviewed and bound, zero selected deferrals; remaining boot and overlay functions pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-boot-curve-controls-akao-command-handlers.json and Binviz
+target/ff9-names-boot-curve-controls-akao-command-handlers/. 87 full native object pairs equal;
+exact affected/scored namespace 87. Pinned strict-relocation scores unchanged:
+71 exact/16 partial, 11,140/34,816 code bytes, zero failures. 87
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 91 isolated committed paths audit.
+
+Original executable SHA256 e30e40745d079aed7071c130785fb42406d8857bdf5484a101ec9baed143ee1c; PS-X load80010000, commandtable8006F740 and three prehandler slotsFA80/FA84/FA88. Thirty command entries plus three prehandler targets recorded from original words and rechecked by audit. Sixteen existing semantic callees fully read/hash-bound; E0/E2/EC/ED/E8 map to established restart/stop handlers, C4/C5 to secondary songlevel/ramp at+5C/count+64, distinct from existing C0 volume at+50/count+58. Secondary level role remains generic rather than guessing pan/volume from stale comments. D8..DA firstsignedprehandler followed by remappedsecondsignedhandler. Emptytabletarget5C864 has no canonical C file, leftunrenamed. No shared parser/provider/ownership implementation or runtime validation added.
+
+All selected complete bodies read directly. Original command table pointers and current full dispatcher/handlers establish wrapper roles; count sentinels, missing/extra arguments and trap/store ordering retained. No prototypes, arguments, provider policies or matching constructs repaired. Every affected C source verified irrespective of selected definition count. Prior notes/caller propagation checked through current source candidates and maintained token-safe driver; full-tree naming remains active.
+
+Complete initializer: mode1/step100/value0/tabledata/lower0; U32max via pointer alias, eachrecord12bytes comparesU16+4/+6, upper=LOW16max-1 narrows; clearcol0/1allrecords thenenablebothrecord0 EVENcount0, chainedoutputs3/2/1/0zero. No tableguards, maxrepresentation cleanup or loop/call/store reorder.
+
+Full tick: modebit0absentreturn3,nulltablereturn1; onlyrunningbit1 andmodeC update. SIGNEDposition>>8, bytecurves fromrecordoffsets4/5 iffcolumnbit0 andU16recordend>=SIGNEDidx (conversion unchanged); sums0>=256clamp255,sum1>=128becomes1 (not127). Outputgateflags24bit7clear orkind5; secondpaironlykind2 andexternalEA27C(g)&FF, provider unreviewed beyond boolean result. AdvanceSIGNEDstep; HIGHbound branch then independentLOWbound branch, optionalbounce clampsposition/negatesU16step->S16setter, elsewrap; mode4clear andifnotmode8 outputsallzero/mode1+2clear. Preserve doublechecks, signedoverflow/negativeindex/unguardedtables and staleoutputs undergates.
+
+Exclusivecolumn: capturedcfg/table clearsbit0 chosenhalfword forALLrecords, thenfreshglobaltable+offset+record12; onsetsbit/outputszero/mode&FFF9/value=lo<<8,offclearsbitonly. No row/columnbounds/currenttablecache/callback or array substitution.
+
+Lowercaseglobalsdistinct: clearfouroutputs, modeU16+0/lower+2/upper+4/tableWORD+12zero; leavesstep+6/value+8 untouched;return0.
+
+SIGNED16lowerstorea0 first, mode|6 thenSIGNEDvalue=a0<<8 using FULLINTinput notstoredtruncatedlower;return0. No valueclamp/type merge.
+
+Enablingmode|6 then SIGNEDposition>>8 outside[lo,hi] resetslo<<8; disablingzerooutputs thenmode&FFF9;return0. Keepsmodeotherbits/table/step and exactstoreorder.
+
+Capturedrawtable, unsignedhalf+6offset,row12,column<<1; nonzeroa2setbit0 elseclear;return0, no exclusivecol reset/outputupdate/bounds.
+
+SIGNED16globalstep=a0 narrowing,return0; bouncecaller signednegation/narrowing unchanged.
+
+ModeU16 old&~18 ORa0&18,return0, allotherbits unchanged.
+
+INTlower/upper updatedindependently ONLYifinput>=0,eachSIGNED16narrowing; lowerthenupper, no relation/rangeguard;return0.
+
+LowercaseU16mode zeroextends intoU32out thenreturn0; pointer unguarded.
+
+Capturedlowercasetable; U16offset+6 thenrowU32*12/columnU32*2,outputbool(U16&1),return0; no tableextentchecks.
+
+LowercaseU32tableaddressword copied toU32out; no pointerload/dereference/validation;return0.
+
+LowercaseSIGNED16globalarrayindices1/2 signextend toS32x/y inthatorder;return0, no snapshot/dedup.
+
+LowercaseU16step copied toU16out,return0; preserve signedness differing fromstep setter.
+
+LowercaseSIGNEDposition>>8 intoS32out,return0; arithmeticrightshift not truncationtowardzero.
+
+Fullmagiccheck(a0),zeroonly bindsfourglobalpointers toa0+10/+210/+310/+410 inexactorder;returncheck unchanged. No implied headerextent/tablelength/providerownership or libgpu label.
+
+OnlywhenlowercaseWORD7F790==0 clearU16pending7F95A,return0. Treat playerabsence as existing pointerword representation, no dereference.
+
+IfactiveWORDmask0return0; scanbit100 through800000/stride134 frombase7E3D8, ORrecordWORD28onlyactivebits, finalresult&FFFFFF. No prematurestopwhenremainingactivezero/arraybound/cachedrecordflags.
+
+Wanted0return0 BEFOREactive0test; samebit100..800000scan, compareEXACTWORD28==wanted onactivebit,firstmatchreturn1 else0. No subset-maskinterpretation.
+
+Call existingplaysonghandler(p) BEFORE freshpWCread; WCnonzero->WC-1 else0 into809B8. Counterpurposeunresolved beyondcontrolcount; no cachedarg/precondition/intoverflow normalization.
+
+Songid0/currentU16id usesFIRSTplayer, elseonlynon-nullsecond matchingid; firstwritesvol=(input&127)<<16 THENcount0, secondcount0 THENvol; markvolumedirty(first,channels,r) extra3rd versusactualhelperviewothercalls retained. No globalpointer caching/ABI reorder.
+
+DefaultSIGNEDsteps1 iffrequeststeps0, target=(target&127)<<16; matchsongselection asvolume. SIGNEDtarget-current dividedbyFULLsteps BEFOREU16countstore/stepwordstore thenmarkdirty; negative/overflow/narrowedcount allpreserved.
+
+SIGNED16counter80A2C0,control80AC0=*U16operand<<16 thenwritepairedregisterhelper WITHextraoperandarg despiteactualVOIDnoargs; no halfword signedreinterpretation/provider repair.
+
+SIGNEDdivisorWORD0?SIGNEDWORD0:1, currentU32start80AC0, targetU16+4<<16 minusstart WRAPS U32 thenSIGNEDdivide. Division BEFOREU16count/stepstore;currentnotstored, zero sentinel1/negativecounts retained.
+
+SIGNEDdivisorWORD0?SIGNEDWORD0:1, startU16+4<<16, targetU16+8<<16 minusstart wrapthenSIGNEDdivide BEFOREcount/storestart/storestep. No immediatefirststore or target signedness change.
+
+SIGNEDbyteoperand intoS32,lowercasecount7F96E0 thenU32signedv<<16 intocontrol83154. Firstsigned control behavior, no pitch inference.
+
+CountWORD0?SIGNEDWORD0:1;currentfirstcontrol83154;SIGNEDbyte+4 convertedtoU32 before<<16 andsubtractwrap thenSIGNEDdivide BEFOREcountU16uppercase7F96E/storestep7F8E8. No divtrapguard or negativecount normalization.
+
+Count sentinel testsWHOLEWORD+4 but divisorcomesSIGNEDWORD0,notusualsamewordtest; startSIGNEDbyte+4 U32<<16 STOREDcontrol83154 BEFOREtargetbyte+8/subtractwrap/SIGNEDdivision,thencountU16uppercase7F96E/step7F8E8. Thus cantrapafterstartstore ifWORD4nonzero/WORD0zero; no sentinelrepair.
+
+SIGNEDbyteoperand convertedtoU32<<16,clear lowercasecount7F96C beforecontrol83150store. Distinctsecondsigned control.
+
+WORD0 sentinel0->1, currentsecondsignedcontrol83150,targetSIGNEDbyte+4 U32<<16 subtractwrap/SIGNEDdivide BEFOREU16uppercase7F96Ccount/storestep7F8E4. No ABI/trap/shift arithmetic repairs.
+
+SIGNED32returnstep; divisor testsWORD+4 selectsSIGNEDWORD0 else1; startSIGNEDbyte+4 convertedU32<<16 thenSIGNEDstore83150 BEFOREtarget/subtractwrap. WASMonlyexistingzero-orMIN/-1 trap BEFOREdivision/countSIGNED16/stepstores. Countsign differs pairedfirst; preserve guard/header/prototype and return value.
+
+CopyU32*value tosharedcontrol80AC4 then EXACT32records/stride134 dirtyWORD11C|3; no dirtymask extra fields/nullguard.
+
+ReadU16*value thenstore currentlowercaseplayer+6C U16; no dirtyflag/count/controlmaskupdate.
+
+IfcurrentplayerWORD1Cpendingnonzero scanbit1/stride134 andselecteddirtyWORD11C|2B13; rereadpending AFTERscan,clearcurrentpending1C thencurrentWORD4=originalpending (replace notOR),dirtyglobalWORD8|100. ALWAYSglobal831C4&~1 evenpending0; no bound/maskclamp or pointercache.
+
+IfstaticmaskWORD4pendingnonzero scanbit100/stride134 selecteddirty11C|2B13; rereadpendingAFTERscan,clearWORD4,WORD0|pending,dirty100. ALWAYS831C4&~2. No lowbitguard/finite-looprepair or replace-vsOR normalization.
+
+VOIDnoargs capturesSIGNEDhalfword80AC2,storeSIGNED16fixedMMIO1F801DB0 then1F801DB2. Callerextraargumentsunresolved, rawNONvolatilecasts retained; namepairedregister behavior, no SDKsemanticclaim.
+
+argWORD0=a0,WORD4=a1,dispatch12; discardedINTresult retained. TablehandlerAA78 readsoutWC whichdispatcher fillsfromincomingWORD4.
+
+singlearg0=a0,dispatch90 ->sharedmask/channel-dirtyhandlerC2F4.
+
+singlearg0=a0,dispatch92 ->activehalfwordhandlerC334.
+
+U32selector1/2/3 ->9B/9D/9F else99; NOargumentwrites. Dispatch99 invokes9B/9D then9F; full currenthandlers read, naming selectedsilencingpass doesnotpromote voiceownership.
+
+U32selector1/2/3 ->9A/9C/9E else98; NOargumentwrites. Dispatch98 invokes9A/9C then9E; reviewedpending-restoration handlers/mask behavior unchanged.
+
+arg0songid,arg1=level&127,dispatchC4 ->selectedsongvolumehandlerB104.
+
+arg0id,arg1FULLSIGNEDcount,arg2target&127,dispatchC5 ->B1B8; no count/targetvalidity check.
+
+arg0FULLINTvalue,dispatch70 ->B2D8readsLOWU16value. Preserve little-endian packedblock and highinputbits.
+
+arg0count,arg1FULLINTtarget,dispatch71 ->B30C targetLOWU16, countzerosentinel1.
+
+arg0count,arg1start,arg2target ALLFULLINT,dispatch72 ->B374 LOWU16fields; no masks/narrowing inwrapper.
+
+arg0=a0&255,dispatchD0 ->BEB0SIGNEDlowbyte.
+
+arg0countFULLINT,arg1target&255,dispatchD1 ->BECC.
+
+arg0countFULLINT,arg1start&255,arg2target&255,dispatchD2 ->BF34withWORD4 sentinel preserved.
+
+arg0=a0&255,dispatchD4 ->BFA8SIGNEDlowbyte.
+
+arg0countFULLINT,arg1target&255,dispatchD5 ->BFC4.
+
+arg0countFULLINT,arg1start&255,arg2target&255,dispatchD6 ->C02CwithWORD4 sentinel/WASMguardretained.
+
+arg0=a0&255,dispatchD8: indirectFA80->BEB0 THENremapD4->BFA8; bothsignedcontrols, no claim atomicity.
+
+arg0count,arg1target&255,dispatchD9: FA84->BECC thenD5->BFC4; bothsignedramps.
+
+arg0count,arg1start&255,arg2target&255,dispatchDA: FA88->BF34 thenD6->C02C. Dispatcherfirstcallback passesONEoutarg; incidentalextraargcontract unresolved; bothstartstore/trapfrontiers preserved.
+
+Magiccheck((void*)FULLINTa0)==0 onlywritesarg0pointer,arg1=(a1&255)<<8,arg2a2,dispatchE0->6127C; noextentcheck.
+
+VOIDnoargs dispatchE2->612D0, no argblockwrites/returnpropagation.
+
+arg0=(a0&255)<<8,arg1FULLINTa1,dispatchED->61B78; no header/magicguard.
+
+Magiccheck()ZEROargs despiteactualONEargpointer; rejectnonzero. Basea2zero4F100else59100; BOTHa2arms duplicateFOURstoresarg0a0,arg1bytelevel<<8,arg2base,arg3a3 thenEC->61B20. Preserve missingarg, duplicate matching branches; name doesnotclaim validmagiccheckedpointer.
+
+Argextent0return-1 BEFOREargstores/dispatch; elsearg0a0,arg1a1,dispatchE8->62290return0. Preserve negatives accepted/nonzero fullWORD; no range/extent reinterpretation.
+
+NoargswrappercallsCDvolumematrix()ZEROargs despiteactualONEu8pointer;return1 regardlessINTcallee result. Namingonlyinvoke role, no repairedmatrixcontract.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
