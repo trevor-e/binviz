@@ -3216,3 +3216,39 @@ new matching credit, linked image, gameplay, provider or shared workspace
 acceptance. Historical reports/scorer stay pinned; refresh downstream
 source-bound evidence from the current catalog. Foreign work/index preserved;
 full-tree goal remains active.
+
+Save screen state naming acceptance (BV-03/BV-08, P2): FF9 c24b64640
+adds 16 canonical ovl_112800 names. Catalog has 3,949 unique unit/symbol names,
+73 alias headers. All 16 primary bodies fully reviewed; no semantic deferrals
+in this unit. Evidence: docs/function-names-save-state.json and Binviz
+target/ff9-names-save-state/. All 16 complete native object pairs byte-identical;
+exact affected/scored namespace 16, pinned strict-relocation baseline unchanged:
+16 exact, 324/324 code bytes, zero failures. Installed WASM preprocessed tokens
+agree for all 16 sources. Current catalog, review inputs, native reference
+bindings, objects and 20 isolated commit paths audit. Progress: 3,949/5,812
+canonical primary functions named (67.9%), 1,863 remaining.
+
+Names distinguish confirmation, directory scan, message and transfer active
+getters/exchanges, widget-open callbacks, file-list and port-selector fade
+completion, timed notice opening, aborted transfer closure and raw memory-card
+operation state. Reviewed recovered save-screen consumers and callback
+registrations plus maintained Binviz native refs establish physical archive
+addresses. Native CLI, executable, archive, notes and output hashes are pinned.
+Transplant comments alone do not establish purpose. UI-control flag name stays
+bounded to the reviewed flag calculation; no guessed button or enable polarity.
+
+Canonical 112800 and 118800 share physical archive file57 addresses but retain
+unit-scoped headers. No callback D_address label rewrite or alias propagation
+into 118800. Preserve byte narrowing, old unsigned-byte returns, raw state-word
+return, mode1 message-input exception on file-list fade completion, timed-notice
+state6, transfer phase store, callback store ordering and alternate aborted
+completion path. Identical store bodies have distinct caller-established names.
+No function bodies, types, signatures, comments or matching tricks changed.
+
+Existing maintained naming/farm/scoring/preprocessor interfaces and thin adapters
+reused; BV-08 namespace gate enforced. No additional shared implementation gap
+found; existing proposals remain separate. No private ownership/type/CFG walker,
+new matching credit, linked image, gameplay, provider or shared workspace
+acceptance. Historical reports/scorer stay pinned; refresh downstream
+source-bound evidence from the current catalog. Foreign work/index preserved;
+full-tree goal remains active.
