@@ -6434,3 +6434,35 @@ thin adapters reused, BV-03 reviewed-deferral prioritization retained. No new
 implementation/private ownership/type/CFG walker, matching gain, linked-image/
 gameplay/workspace acceptance. Refresh source-bound evidence, pin historical
 reports/tools, preserve foreign work/index; full-tree naming goal active.
+
+Four ribbon mesh breakup naming acceptance (BV-03/BV-08, P2): FF9
+be13c7a46 adds four canonical ovl_12953800 behavioral names. Catalog 4,647
+unit/symbol names, 169 scoped alias headers. Four full own-unit bodies reviewed,
+zero deferrals; other units pending. Evidence:
+docs/function-names-four-ribbon-mesh-breakup.json and Binviz
+target/ff9-names-four-ribbon-mesh-breakup/. Four complete native object pairs
+identical; exact affected/scored namespace four, unchanged pinned strict-reloc
+scores two exact/two partial, 1,124/4,800 code bytes, zero failures. Four installed
+WASM token comparisons agree; source/header/catalog/object/review bindings and
+eight isolated committed paths audit.
+
+Names cover 160-triangle breakup initialization, particle/triangle update,
+sixteen-tile spiral ribbon and four-ribbon/breakup controller. Preserve centroid
+division before fixedpoint shift, signed narrowed center differences, random
+rotation order, host8 integration frontier, relative geometry before host8,
+matrix translation after host8, delay/dead/age order and partial pads. Ribbon
+reserves two GT4/fourteen FT4 packets, accepts both signs of nonzero NCLIP,
+writes colors before rejection, advances only accepted pool and links before
+fourth SXY store. Keep -fno-strength-reduce and register/wrapper compiler tricks.
+Controller X is zero, job frame differs from local ribbon counter; transition
+draws four ribbons before zero-center breakup and EIGHT companion object loads,
+despite old seven-object comment. Phase1 updates particles before completion.
+No original effect/provider identity or signature/body/layout repair claimed.
+
+Readable declarations/definitions/callers propagate; aliases retain canonical
+linker/address/runtime identities. Maintained naming/farm/scorer/preprocessor
+and thin adapters reused; existing BV-03 reviewed-deferral prioritization and
+BV-06 provider frontiers retained. No new reusable implementation/private
+ownership/type/CFG walker, original matching gain, linked-image/gameplay/workspace
+acceptance. Refresh source-bound evidence, pin historical reports/tools, preserve
+foreign work/index; full-tree naming goal active.
