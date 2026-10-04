@@ -7565,3 +7565,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Eight handle trig morph actor oscillation pulse naming acceptance (BV-03/BV-08, P2):
+FF9 bfb75ca04 adds three canonical ovl_11938000 names. Catalog
+4,770 unit/symbol names, 207 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-eight-handle-trig-morph-actor-oscillation-pulse.json and Binviz
+target/ff9-names-eight-handle-trig-morph-actor-oscillation-pulse/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+2 exact/1 partial, 1,548/3,820 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 descriptor56, w0=0,savesctx,200(0,0,a4),1FC(0,hostvec),table70(8);eight58handles resources5/2/3/4/13/7/6/8, firstfive+last flags57/15616, middlepair59/15617. k=(1F0(0)<<12)/720; ifk<1024replace1700, if>6144cap6144; no claim1F0random. Saveglobal/sharedscale. Updatesnonzero w0 return0 stalls. First t<24 cosine-size and Yrotation=-t<<5, four28C transitions using descending4096weights and strict thresholds12288/8192/4096;60last andTHREEseparatecosRGBcalls. Negativeframes allowed aswritten.
+
+From24 constantbase scale(shared*818>>12),sin phase((t-24)<<12)/26>>2;pose24/30handlesandseparateRGBsin calls. 240uses table[t%23+1] EVERYactiveupdate. Additional28Cpair28/2C starts24 withX/Z=(shared<<11)>>12,Y=(cos(q>>2)/4+682)*shared>>12,rotationY=-t<<6,weight4096-q;cosRGB(q>>1). Preserveseparatereads/calls and different scale evaluation, no combine or safe-negativeindex. Exact16 resource1nullableh22=220(0,32);exact1 resource9(nullable64). Terminal50 afterallposes/table/events then78;no release.
+
+7FE4 descriptor104, unsignedcount controls arrays8 withNO bound. For eachactor1F8 storesfullTWOword position, w44=(-400-(rand&127))*sharedscale>>12 OVERWRITTENperactor so last random value shared byALLactors. 80(i,0,tmp),offset[i]=-SIGNEDY. Update<32 startsfromcached2wordvector eachtime, adds sharedw44*cos(frame*32)>>12; >=32 adds offset*((frame-32)<<10)>>12 THEN w44*sin(phase>>2)>>12 withU16narrowaftereachaddition;204eachactor. At>=36 firstperformsoscillation/extrapolation, THEN loopsfresh1F8/204 resets andreturn1, preserving visiblecallorder. No storedoriginal substitute, per-actor amplitude fix or extra bound.
+
+82B0 descriptor16, phase/counter0;everyupdate2B8(16,1,vec) beforephase andterminal. Phase0 n*4096/3,cos/c pulse;atn>=3 phase1/frame=-1 butstilldraw. Phase1 paritywobble andq=n*4096/9,phase2/frame=-1at>=9 butstilldraw. Phase2 sine/cos amplitudes androtation1024-q/4, returns1atn>=9 BEFOREdraw/reset/counterincrement. Otherwise rotationfourhalfwords{0,0,b,0},contextw28=128,twoSEVENarg128 resources14/15 thenw28=0 (notrestoreprior),counter++ evenunknownphase defaultszeros. No78/release/frameclamp/providerfix.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
