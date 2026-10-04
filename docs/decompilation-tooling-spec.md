@@ -7753,3 +7753,39 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Camera sweep depth particle history trail naming acceptance (BV-03/BV-08, P2):
+FF9 6f07a8810 adds three canonical ovl_10a71800 names. Catalog
+4,787 unit/symbol names, 213 scoped alias headers. Three full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-camera-sweep-depth-particle-history-trail.json and Binviz
+target/ff9-names-camera-sweep-depth-particle-history-trail/. Three full native object pairs equal;
+exact affected/scored namespace three. Pinned strict-relocation scores unchanged:
+1 exact/2 partial, 340/4,792 code bytes, zero failures. Three
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and seven isolated committed paths audit.
+
+7704 VOID scatter: calculate trackingword area buf+n*4 even n<=0, loop only n>0. Each8byte SIGNED position record gets sin/cos(randangle&4095)*rand_n2(r>>2,r>>1)>>12 XY and rand()%1280-256 Z. Associated 32bit trackingword reset7F7F7F7F; record pad untouched. Tracking words used as prior projected XY by renderer, not inferred as RGBA.
+
+7858 nineargVOID flags-fno-strength-reduce/-fno-cse-skip-blocks, globalreg14/pin20. Negative fade becomes4096, reserve n*20 primitive bytes before n>0 check. RGBNULL writes THREE black bytes only; otherwise DPCS4096-fade with black farcolor. Load original context matrix then save/set GTE H, f14(INTa4,&mat) builds rotation (main supplies pointer through K&R), translation0/0/H, load newmatrix. At end restore H ONLY, not old matrix. No extra matrix restoration/pad initialization.
+
+Perparticle compute priortracking!=7F sentinel, project OLD position with RTPS BEFORE narrowing Z-=dz. dz>0/newZ<-256 wraps1024 and resets tracking; dz<0/newZ>768 wraps-512/reset. Wrap path skips projectedXY/depth/draw. Otherwise store XY/unsigned depth; sz<512 and preexisting nonsentinel allow DPCS witht=(512-sz<<12)>>9, primitiveword+12=0/+16=priortracking, code50ifmode255else52,23C length4. Always store new projectedXY to tracking on nonwrap even if not drawn. Reserved but unlinked primitives, sentinel first-frame suppression, unsigned depth filter and all unclamped arithmetic retained.
+
+7B88 descriptor72, init phase1/cnt0, scatter384/radius1024 into globalbuf. Screen halfwords160/120,0/120,200/120;70table8, eight handles resources17/4/26/12/23/24/25/15 with original selectors/modes. v14/v1C/object not initialized at init; no cleanup/typed-call fixes. Phase1 v38Y=(t<<11)/49-2048,Z=2048-(t<<11)/49, t>=8 three separate random jitter calls including rand_n(0) at8. Rotate512/0/-t64 and scale4096. Store v14Y+29/Z-70; publish ctxp2C+24, then publishedZ-=256 and +=t*900/49, Y+=384-t*900/49. Pose/tint/draw order kept.
+
+Phase1 draw384 particles H128,dz-70 before24 else-100, rotationpointer viaINTcallee, RGB32/128/255 and signed sine-basedfade. Exact2resource11 saves object nullableh22=92;>=25 redflash. Two11C resources16/14 pulse coordinates from(t&7)*60 and((t+5)%10)*60. At>=49 AFTERallwork release object evenpossibleuninitialized/null, v1C0/-320/0, publish then X+=6144/X-=4096,2CC(1,1),phase2/frame-1. Ordinary phase1 frames0..49 FIFTYupdates, not comment49.
+
+Phase2 h=((4096-(t<<12)/26)*3)/2 SIGNEDdivision; positionX0,Y=v1CY-h,Z=v1CX+h (actualXlane preserved). Uniformscale8192-2cos(t4096/104),rot512/0/-t64,v14positions;publishonly t<25. Exact7resource27nullable92. Poseh0/h1, ctxf28=512 around128resource1 then0. >=13 fourteenarg248 with partiallyinitializedSIGNED color/rot/scales. Exact0resource28 initial110, everyupdate resource28 SINscale/trail and134resource7. >=9 first124resource19 withrot;>=13 second124 resource19 NULLrot, both run. At>=24 switchphase3/frame-1 afterallwork: actual25updates0..24, not comment26.
+
+Phase3 v14Z-=64/Y+=64, resource28 trail110 withsin(t4096/24) and signed(4096-t4096/6)/2. Terminal>=6 AFTERtrail78return1 beforecnt++; ordinary0..6 sevenupdates. Default onlyincrementscnt. Original sequential context writes, separately repeatedSIN/COS calls, incompletepads, provider footprints and context-pointer signatures untouched.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
