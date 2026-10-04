@@ -5026,3 +5026,31 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Wavy band ribbons naming acceptance (BV-03/BV-08, P2): FF9
+775d14be2 adds seven canonical ovl_11f99000 names. Catalog 4,392 unique
+unit/symbol names,119 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-wavy-band-ribbons.json
+and target/ff9-names-wavy-band-ribbons/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines one exact/six partial,164/15,144 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Other units pending.
+
+Established segment-history ribbon,32x16 wavy XYgrid,44segment wavy band,
+two-phase particle callback,seven-phase band/ribbon sequence,host-particle
+wobble and lowered host-point initializer. Geometry names follow actual advancing
+X and XY coordinates; comments ring/cone/spiral/water/cloth are not accepted game
+identity claims. Preserve history count before newhead,MAC0 guard without added
+NCLIP,link before fourth-SXY/color stores,shared last-active-slot amplitude,
+cosine motion with captured XYZ before randomdrift,unchecked bytecount,partial
+vectors and seven phase transitions. Main phase0 resets localt before common
+tail; final32 releases27handles then returns before tail/count. Extra handles,
+global initialization and bounds are not repaired. Native/runtime symbols stable.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
