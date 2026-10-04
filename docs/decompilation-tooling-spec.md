@@ -4832,3 +4832,30 @@ No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
 provider or shared workspace acceptance. Historical scorer/reports pinned;
 refresh downstream source-bound evidence. Foreign work/index preserved;
 full-tree goal remains active.
+
+Scheduled ribbon pulse naming acceptance (BV-03/BV-08, P2): FF9
+df5a2f971 adds seven canonical ovl_117d7000 names. Catalog4,344 unique
+unit/symbol names,112 alias headers. All seven complete primary bodies reviewed;
+no semantic deferrals in this unit. Evidence: docs/function-names-scheduled-ribbon-pulses.json
+and target/ff9-names-scheduled-ribbon-pulses/. Seven entire native object pairs
+identical; exact affected/scored namespace seven,unchanged pinned strict-relocation
+baselines five exact/two partial,3,308/6,180 code bytes,zero failures. Installed
+WASM preprocessed tokens agree for all seven sources. Current catalog/source/
+header/object/review bindings and11 isolated commit paths audit. Others pending.
+
+Actual builders16vertices/15segments and4vertices/3segments despite oldcomments;
+INTtriples and wrapperstep55. Two-phase driver retainspairedsamebuffer draws,
+unsignedbias/frame0resources24/2,precedinghalfword transition. Scheduledemitter
+retainskindtable signednegativeindex,counts/jitterbeforeallocation,kind3samecount
+twospawns,unknownpositivekindpartialfield andINTpoolstride. Actualpulse callback
+usesa2 despite oldunusedcomment; resources26/25/29/27/28 and two-word position
+copy unchanged. Spritepulse phases3/9/9,provider/trigbeforeterminal9,flag128draw
+tail skippedoncompletion. Pins/types/pads/wrappers/data preserved,unitaliases
+retain linker/runtime identities; no originalgameeffect/provider identity.
+
+Maintained naming/farm/scoring/preprocessor interfaces and thin adapters reused;
+BV-08 namespace gate enforced. No additional shared implementation gap found.
+No private ownership/type/CFG walker,new matching credit,linked image,gameplay,
+provider or shared workspace acceptance. Historical scorer/reports pinned;
+refresh downstream source-bound evidence. Foreign work/index preserved;
+full-tree goal remains active.
