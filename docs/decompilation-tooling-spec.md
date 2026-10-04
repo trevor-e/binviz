@@ -10107,3 +10107,33 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Four phase paired handle pulse host point restore naming acceptance (BV-03/BV-08, P2):
+FF9 016c391b0 adds two canonical ovl_10815800 names. Catalog
+4,946 unit/symbol names, 290 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-four-phase-paired-handle-pulse-host-point-restore.json and Binviz
+target/ff9-names-four-phase-paired-handle-pulse-host-point-restore/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 1,816/1,816 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor56. Init context/200(0,1,v18),copyBOTHwords to a8 BEFORE20C(0,v20),DC(v18,v20,550,v18) in-place. phase0/w4=0, signedv18Y-=325;copyBOTHv20words to t28.70(table,2),TWOSEPARATE338(resource5,0) handles. PublishONLYSIGNEDXYZv18 toctx.p2C. w4unusedlater/no otherpads initialized. No replacinga8 withderivedv18 or deduphandlecreation.
+
+Update defaults scale/fade/alpha0/capturedframe. Phase0 q=(frame<<12)/7;exact0 copiesONLYXYZv18 tov10,Y-=128,Z=v18Z-64 ifSIGNEDv18Z>0 elsev10Z+64 through new_var=2;load1 nullableliteralh22=32. t28firsthalfword=-512,scale=q*3*1024>>12,alpha4096; >=7 phase1/jobframe=-1 butdrawoldphase. Phase1 q=frame<<10,t28h0=((4096-sin(q>>2))*1536>>12)-512,scale3072/alpha4096;exact3 load3 ata8 nullable32;>=4 setsphase2/jobframe=-1 thenload7/8 ata8 eachnullable32,drawoldphase.
+
+Phase2 q=(frame<<12)/6,fade4096/scale3072/alpha4096,t28h0=1024-((parity*2-1)*(sin(q>>2)>>7));exact0loads2then4 ata8 eachnullable32;>=6 phase3/jobframe=-1 thenoldsampledraw. Phase3 q=frame<<9/scale3072/alpha=sin(q>>2);>=8 calls78/return1 BEFOREdraw. Anyalpha==0 includingordinaryphase3frame0/unknownphase gotozero. OtherwiseSIGNEDv18XYZ->INTlocalpos/scaleXYZ,28C(t28,pos,scale,hnd30,hnd34,4096-fade); ifalpha<4096 then268(hnd30,1)/26C(hnd30,(alpha>>5)-128 RGB). No clamp/flag/release/backfill/alphadirection inference/newpadinit.
+
+7CAC descriptor12/THREEINTsavedposition; init context/2A0(0,state). Everyupdate captureframe/copyXYZ then s=(frame<<8)>>2,x=sin(s)<<11>>12,c=frame<<9,Y-=cos(c)*x>>12; SECONDsin(s)<<11>>12 andSECONDcos(c) product addedtoBOTHX/Z.2A4(0,offsetXYZ) FIRST, thenframe>=16 SECOND2A4(0,savedstate)/return1. Terminalstillcomputes/writesoffsetbefore restore, no dedup/earlyexit/78/release/providerextentrepair.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
