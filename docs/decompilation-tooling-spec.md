@@ -14997,3 +14997,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Effect residual ground anchor delayed pair naming acceptance (BV-03/BV-08, P2):
+FF9 2a3cddf09 adds 1 selected canonical ovl_ff88000 names. Catalog
+5,627 unit/symbol names, 430 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 2 full layout headers and 0 semantic-provider body hashes bound. Evidence:
+docs/function-names-effect-residual-ground-anchor-delayed-pair.json and Binviz
+target/ff9-names-effect-residual-ground-anchor-delayed-pair/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 432/432 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+CompleteFF88000 independently reviewed and named for delayed resource pair at ground anchor. Full g11/lifecycle bound; actual same late anchor and selective final halfword store preserved.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole24hex-byte handler all init/event/null/end arms read.84origin,200pointcopyYzero;resource8initialoriginh22via220(0,16).20resources3/9BOTHgroundanchor, onlyresource9h22via220(0,32),finish40. Preserve GCC2.8.1, untouchedfourthhalfwords, partiallatepointers and two-load-before-singlestore order. Stalecommentaboutbothh22 notusedasevidence; no copiedFB22000semantics.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
