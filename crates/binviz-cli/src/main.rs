@@ -19,6 +19,24 @@ the executable the disc boots. An original Xbox game's default.xbe opens like
 a 32-bit PE: its kernel imports named, its code followed from the entry point.
 
 COMMANDS:
+  Decompilation workspace
+    workspace <manifest.json> [--caller ID | --inventory | --blockers | --storage | --promotions | --callees | --closures | --publications | --readability | --adoption | --preflight]
+                                   Shared physical ownership, all call findings, policies and evidence
+    publish-matches <manifest.json> --publication ID [--root DIR] [--out PLAN.json] [--publish]
+                                   Recompute selected exact matches; publish only the reviewed note scope
+    adapters <manifest.json> [--policy ID] [--out PLAN.json]
+                                   Review exact typed direct-call edits; artifact root via --root
+    source-plans <manifest.json> --request REQUEST.json [--root DIR] [--out PLAN.json]
+                                   Compose immutable plans, map reviewed spans or rename one declarator
+    apply-adapters <PLAN.json> --artifact ID --input FILE --out NEW.c
+                                   Apply reviewed bytes to a separate output; refuse input drift
+    linked <module.wasm>          Actual linked exports, calls, signatures and stack operations
+    build-batch <config.json> --out REPORT.json [--python EXECUTABLE]
+                                   Configured incremental stages, bounded workers and cache diagnostics
+    campaign <config.json> --out REPORT.json [--python EXECUTABLE]
+                                   Persistent configured native/WASM runners and shared comparison
+    campaign-compare <observations.json> [--out REPORT.json]
+                                   Recompute comparisons and verify current execution evidence
   The file
     info <file> [json]             Summary, sections and segments (json: as JSON)
     layout <file> [depth]          File layout tree (default depth 2)
@@ -129,6 +147,7 @@ COMMANDS:
                                    read, killed/dead or unresolved, with instruction witnesses.
                                    Returns/calls stay unresolved without explicit reviewed policy.
     contracts <report.json> [--caller NAME] [--callee NAME] [--top N] [--json]
+    evidence <facts-or-report.json> [--root DIR] [--json]
                                    Inspect imported compiler call-contract findings: supplied
                                    arguments, actual definitions, used void results and source
                                    identities. Importing a report grants no ABI exceptions.
@@ -200,6 +219,8 @@ COMMANDS:
                                    counts by state, partial credit (each function's best percent
                                    weighted by its size), then by unit, a range a note merges
                                    counted once; json: as objdiff's report, which decomp.dev shows
+                                   --svg progress.svg: byte-weighted function treemap image;
+                                   --include-library shows library tiles (outside game totals)
     splat <file> <name> [dir] [split...]
                                    A splat config and symbol_addrs.txt (in dir, or printed)
                                    for a PS-X EXE, the code split into units at the splits
@@ -574,6 +595,389 @@ fn run(
 ) -> Result<(), String> {
     let args = &internal(args);
     let cmd = args[0].as_str();
+    if matches!(cmd, "campaign" | "campaign-compare") {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let output = take_value(&mut rest, "--out");
+        let python = take_value(&mut rest, "--python").unwrap_or("python".into());
+        if !rest.is_empty() {
+            return Err("campaign <config.json> --out REPORT.json [--python EXECUTABLE]; campaign-compare <observations.json> [--out REPORT.json]".into());
+        }
+        let input = if cmd == "campaign" {
+            let output = output.as_ref().ok_or("--out REPORT.json required")?;
+            let raw = format!("{output}.raw.json");
+            let script = include_str!("../../../tools/proof_campaign.py");
+            let _status = std::process::Command::new(python)
+                .arg("-c")
+                .arg(script)
+                .arg(&args[1])
+                .arg(&raw)
+                .status()
+                .map_err(|e| e.to_string())?;
+            raw
+        } else {
+            args[1].clone()
+        };
+        let bytes = std::fs::read(&input).map_err(|e| format!("{input}: {e}"))?;
+        let raw: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
+        let raw = if raw["format"] == "binviz-campaign-report" {
+            raw["input"].clone()
+        } else {
+            raw
+        };
+        let manifest: binviz::evidence::EvidenceManifest =
+            serde_json::from_value(raw["evidence"].clone()).map_err(|e| e.to_string())?;
+        let root = std::path::Path::new(&input)
+            .parent()
+            .unwrap_or(std::path::Path::new("."));
+        let report = binviz::campaign::audit_report(&bytes, Some(&manifest.read_artifacts(root)))?;
+        let text = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+        if let Some(path) = output {
+            std::fs::write(&path, text).map_err(|e| e.to_string())?;
+            println!(
+                "Wrote campaign comparison: {path}; {} executed pairs, {} failures, {} refusals",
+                report["executedPairs"], report["failed"], report["refused"]
+            );
+        } else {
+            println!("{text}");
+        }
+        if report["failed"].as_u64().unwrap_or(1) > 0
+            || report["refused"].as_u64().unwrap_or(1) > 0
+            || report["unexamined"].as_u64().unwrap_or(1) > 0
+            || report["observationsBound"] != true
+            || report["identityChecks"]
+                .as_array()
+                .is_none_or(|checks| checks.iter().any(|c| c["state"] != "verified"))
+        {
+            return Err(
+                "campaign has failures, refusals, unexamined cases or unverified evidence; inspect the report".into(),
+            );
+        }
+        return Ok(());
+    }
+    if cmd == "build-batch" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let output = take_value(&mut rest, "--out").ok_or("--out REPORT.json required")?;
+        let python = take_value(&mut rest, "--python").unwrap_or("python".into());
+        if !rest.is_empty() {
+            return Err("build-batch <config.json> --out REPORT.json [--python EXECUTABLE]".into());
+        }
+        let script = include_str!("../../../tools/build_batch.py");
+        let status = std::process::Command::new(python)
+            .arg("-c")
+            .arg(script)
+            .arg(&args[1])
+            .arg(&output)
+            .env("BINVIZ_ADAPTER_SHA256", binviz::evidence::sha256(script.as_bytes()))
+            .status()
+            .map_err(|e| e.to_string())?;
+        if !status.success() {
+            return Err(format!(
+                "build batch contains rejected/refused stages; inspect {output}"
+            ));
+        }
+        println!("Wrote build results: {output}");
+        return Ok(());
+    }
+    if cmd == "source-plans" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let request = take_value(&mut rest, "--request").ok_or("--request JSON-FILE required")?;
+        let output = take_value(&mut rest, "--out");
+        let root = take_value(&mut rest, "--root");
+        if !rest.is_empty() {
+            return Err("source-plans WORKSPACE --request JSON-FILE [--root DIR] [--out PLAN.json]".into());
+        }
+        let w = binviz::workspace::Workspace::parse(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)?;
+        let root = root.map(std::path::PathBuf::from).unwrap_or_else(|| {
+            std::path::Path::new(&args[1])
+                .parent()
+                .unwrap_or(std::path::Path::new("."))
+                .to_path_buf()
+        });
+        let input =
+            serde_json::from_slice(&std::fs::read(request).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        let plan = binviz::sourceplan::request(&w, &input, &w.evidence.read_artifacts(&root))?;
+        let text = serde_json::to_string_pretty(&plan).map_err(|e| e.to_string())?;
+        if let Some(path) = output {
+            std::fs::write(path, text).map_err(|e| e.to_string())?
+        } else {
+            println!("{text}")
+        };
+        return Ok(());
+    }
+    if cmd == "adapters" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let policy = take_value(&mut rest, "--policy");
+        let output = take_value(&mut rest, "--out");
+        let root = take_value(&mut rest, "--root");
+        if !rest.is_empty() {
+            return Err("adapters <workspace.json> [--root DIR] [--policy ID] [--out PLAN.json]".into());
+        }
+        let w = binviz::workspace::Workspace::parse(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)?;
+        let root = root.map(std::path::PathBuf::from).unwrap_or_else(|| {
+            std::path::Path::new(&args[1])
+                .parent()
+                .unwrap_or(std::path::Path::new("."))
+                .to_path_buf()
+        });
+        let plan = binviz::adapters::plan(
+            &w,
+            &w.evidence.read_artifacts(&root),
+            &policy.into_iter().collect::<Vec<_>>(),
+        )?;
+        let text = serde_json::to_string_pretty(&plan).map_err(|e| e.to_string())?;
+        if let Some(path) = output {
+            std::fs::write(path, text).map_err(|e| e.to_string())?;
+        } else {
+            println!("{text}");
+        }
+        return Ok(());
+    }
+    if cmd == "apply-adapters" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let artifact = take_value(&mut rest, "--artifact").ok_or("--artifact ID required")?;
+        let input = take_value(&mut rest, "--input").ok_or("--input FILE required")?;
+        let output = take_value(&mut rest, "--out").ok_or("--out FILE required")?;
+        if !rest.is_empty() {
+            return Err("apply-adapters <plan.json> --artifact ID --input FILE --out NEW-FILE".into());
+        }
+        let plan: binviz::adapters::EditPlan =
+            serde_json::from_slice(&std::fs::read(&args[1]).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        if plan.format != "binviz-edit-plan" || plan.schema_version != 1 {
+            return Err("requires binviz-edit-plan schemaVersion 1".into());
+        }
+        let candidate = plan
+            .candidates
+            .iter()
+            .find(|c| c.artifact == artifact)
+            .ok_or("unknown candidate artifact")?;
+        let input_path = std::fs::canonicalize(&input).map_err(|e| e.to_string())?;
+        if std::fs::canonicalize(&output).ok().as_ref() == Some(&input_path) {
+            return Err("candidate output must be separate from its canonical input".into());
+        }
+        let (source, already) = binviz::adapters::apply(candidate, &std::fs::read(&input).map_err(|e| e.to_string())?)?;
+        if let Ok(existing) = std::fs::read(&output) {
+            if existing == source.as_bytes() {
+                println!("Already applied: {output}");
+                return Ok(());
+            }
+            return Err("candidate output already exists with different bytes".into());
+        }
+        use std::io::Write as _;
+        let parent = std::path::Path::new(&output)
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or(std::path::Path::new("."));
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_nanos();
+        let temporary = parent.join(format!(".binviz-candidate-{}-{nonce}", std::process::id()));
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)
+            .map_err(|e| e.to_string())?;
+        let prepared = file.write_all(source.as_bytes()).and_then(|_| file.sync_all());
+        drop(file);
+        let published = prepared.and_then(|_| std::fs::hard_link(&temporary, &output));
+        let _ = std::fs::remove_file(&temporary);
+        published.map_err(|e| format!("candidate publication failed; accepted input remains unchanged: {e}"))?;
+        println!(
+            "{}: {output}; SHA-256 {}",
+            if already {
+                "Already-applied input copied"
+            } else {
+                "Wrote candidate"
+            },
+            candidate.after_sha256
+        );
+        return Ok(());
+    }
+    if cmd == "publish-matches" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let id = take_value(&mut rest, "--publication").ok_or("--publication ID required")?;
+        let root = take_value(&mut rest, "--root")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| {
+                std::path::Path::new(&args[1])
+                    .parent()
+                    .unwrap_or(std::path::Path::new("."))
+                    .to_path_buf()
+            });
+        let output = take_value(&mut rest, "--out");
+        let publish = take_flag(&mut rest, "--publish");
+        if !rest.is_empty() {
+            return Err(
+                "publish-matches <workspace.json> --publication ID [--root DIR] [--out PLAN.json] [--publish]".into(),
+            );
+        }
+        let w = binviz::workspace::Workspace::parse(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)?;
+        let r = w
+            .matching_publications
+            .iter()
+            .find(|r| r.id == id)
+            .ok_or("unknown matching publication")?;
+        let plan = if publish {
+            binviz::publication::publish(&w, r, &root)?
+        } else {
+            binviz::publication::plan(&w, r, &w.evidence.read_artifacts(&root))?
+        };
+        let text = serde_json::to_string_pretty(&plan).map_err(|e| e.to_string())?;
+        if let Some(path) = output {
+            std::fs::write(path, text).map_err(|e| e.to_string())?;
+        } else {
+            println!("{text}");
+        }
+        return Ok(());
+    }
+    if cmd == "linked" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let imports = take_flag(&mut rest, "--imports");
+        if !rest.is_empty() {
+            return Err("linked MODULE.wasm [--imports]".into());
+        }
+        let bytes = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
+        let report = binviz::linkevidence::inspect(&bytes)?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&if imports{serde_json::json!({"moduleSha256":report.sha256,"imports":report.import_inventory,"reader":"binviz-shared-wasm-reader"})}else{serde_json::json!(report)}).map_err(|e| e.to_string())?
+        );
+        return Ok(());
+    }
+    if cmd == "workspace" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let json = take_flag(&mut rest, "--json");
+        let strict = take_flag(&mut rest, "--strict");
+        let adoption = take_flag(&mut rest, "--adoption");
+        let preflight = take_flag(&mut rest, "--preflight");
+        let inventory = take_flag(&mut rest, "--inventory");
+        let blockers = take_flag(&mut rest, "--blockers");
+        let storage = take_flag(&mut rest, "--storage");
+        let promotions = take_flag(&mut rest, "--promotions");
+        let callees = take_flag(&mut rest, "--callees");
+        let closures = take_flag(&mut rest, "--closures");
+        let publication = take_flag(&mut rest, "--publications");
+        let readability = take_flag(&mut rest, "--readability");
+        let caller = take_value(&mut rest, "--caller");
+        let root = take_value(&mut rest, "--root");
+        let build = take_value(&mut rest, "--build-report");
+        if !rest.is_empty() {
+            return Err("workspace <manifest.json> [--root DIR] [--caller ID] [--inventory | --blockers | --storage | --promotions | --callees | --closures | --publications | --readability] [--build-report FILE] [--json] [--strict]".into());
+        }
+        let mut workspace = binviz::workspace::Workspace::parse(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)?;
+        if let Some(path) = build {
+            workspace.merge_build_batch(&std::fs::read(path).map_err(|e| e.to_string())?)?;
+        }
+        let root = root.map(std::path::PathBuf::from).unwrap_or_else(|| {
+            std::path::Path::new(&args[1])
+                .parent()
+                .unwrap_or(std::path::Path::new("."))
+                .to_path_buf()
+        });
+        let files = workspace.evidence.read_artifacts(&root);
+        if preflight {
+            let report = workspace.preflight(&files)?;
+            println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
+            if report["state"] != "verified" {
+                return Err("preflight found mismatched dependencies; no compiler work started".into());
+            }
+            return Ok(());
+        }
+        let report = workspace.analyze(Some(&files))?;
+        let result = if adoption {
+            serde_json::json!(report.adoption)
+        } else if closures {
+            serde_json::json!(report.proof_closures)
+        } else if publication {
+            serde_json::json!(report.matching_publications)
+        } else if readability {
+            serde_json::json!(report.readability_batches)
+        } else if callees {
+            serde_json::json!(report.callee_certificates)
+        } else if storage {
+            serde_json::json!(report.storage)
+        } else if promotions {
+            serde_json::json!(report.promotion_plans)
+        } else if inventory {
+            serde_json::json!(report.inventory)
+        } else if blockers {
+            serde_json::json!(report.blockers)
+        } else if let Some(id) = caller {
+            serde_json::json!(
+                report
+                    .callers
+                    .iter()
+                    .find(|c| c.id == id)
+                    .ok_or("unknown exact caller id")?
+            )
+        } else {
+            serde_json::json!(report)
+        };
+        if json {
+            println!("{}", serde_json::to_string_pretty(&result).map_err(|e| e.to_string())?);
+        } else {
+            println!(
+                "{} observations; {} currently rejected callers; {} unresolved caller packages",
+                report.raw_observations, report.rejected_callers, report.unresolved_callers
+            );
+            println!("{}", serde_json::to_string_pretty(&result).map_err(|e| e.to_string())?);
+        }
+        if strict
+            && (report.unresolved_callers > 0
+                || report
+                    .proof_closures
+                    .iter()
+                    .chain(&report.matching_publications)
+                    .chain(&report.readability_batches)
+                    .chain(&report.adoption)
+                    .any(|p| p["state"] == "refused"))
+        {
+            return Err(
+                "workspace contains unresolved callers or refused requested workflows; inspect the emitted reasons"
+                    .into(),
+            );
+        }
+        return Ok(());
+    }
+    if cmd == "evidence" {
+        let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+        let json = take_flag(&mut rest, "--json");
+        let root = take_value(&mut rest, "--root");
+        if !rest.is_empty() {
+            return Err("evidence <facts-or-report.json> [--root DIR] [--json]".into());
+        }
+        let bytes = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
+        let report = binviz::contracts::ContractReport::parse(&bytes)?;
+        let manifest: binviz::evidence::EvidenceManifest = serde_json::from_value(
+            report
+                .metadata
+                .get("evidence")
+                .cloned()
+                .ok_or("report has no evidence manifest; legacy observations remain unverified")?,
+        )
+        .map_err(|e| e.to_string())?;
+        let root = root.map(std::path::PathBuf::from).unwrap_or_else(|| {
+            std::path::Path::new(&args[1])
+                .parent()
+                .unwrap_or(std::path::Path::new("."))
+                .to_path_buf()
+        });
+        let checks = manifest.verify(Some(&manifest.read_artifacts(&root)))?;
+        if json {
+            println!("{}", serde_json::to_string_pretty(&checks).map_err(|e| e.to_string())?);
+        } else {
+            for check in &checks {
+                println!("{}: {:?} {}", check.id, check.state, check.reasons.join("; "));
+            }
+        }
+        if checks
+            .iter()
+            .any(|c| c.state != binviz::evidence::IdentityState::Verified)
+        {
+            return Err("evidence contains stale/missing/unsupported identities".into());
+        }
+        return Ok(());
+    }
     if cmd == "contracts" {
         let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
         let json = take_flag(&mut rest, "--json");
@@ -722,6 +1126,11 @@ fn run(
         // A notes file that --record will create may not exist yet.
         if std::path::Path::new(path).exists() || !args.iter().any(|a| a == "--record") {
             apply_notes(&mut bin, read_notes(path)?)?;
+        }
+    } else if cmd == "progress" {
+        let beside = format!("{}.binviz-notes.json", args[1]);
+        if std::path::Path::new(&beside).exists() {
+            apply_notes(&mut bin, read_notes(&beside)?)?;
         }
     }
     if let Some(path) = types {
@@ -2444,6 +2853,39 @@ fn run(
             }
         }
         "progress" => {
+            let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
+            let svg_path = take_value(&mut rest, "--svg");
+            let include_library = take_flag(&mut rest, "--include-library");
+            let width = take_value(&mut rest, "--width")
+                .map(|v| v.parse::<u32>())
+                .transpose()
+                .map_err(|e| e.to_string())?
+                .unwrap_or(1600);
+            let height = take_value(&mut rest, "--height")
+                .map(|v| v.parse::<u32>())
+                .transpose()
+                .map_err(|e| e.to_string())?
+                .unwrap_or(900);
+            if let Some(path) = svg_path {
+                if !rest.is_empty() {
+                    return Err("progress <file> --svg IMAGE.svg [--width N] [--height N] [--include-library]".into());
+                }
+                let title = std::path::Path::new(&args[1])
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy();
+                let image = bin.progress_svg(&title, width, height, include_library)?;
+                std::fs::write(&path, image).map_err(|e| format!("{path}: {e}"))?;
+                println!(
+                    "Wrote {path}: byte-weighted decompilation treemap; library excluded from game progress totals."
+                );
+                return Ok(());
+            }
+            if include_library || width != 1600 || height != 900 || !(rest.is_empty() || rest == ["json"]) {
+                return Err(
+                    "progress <file> [json | --svg IMAGE.svg [--width N] [--height N] [--include-library]]".into(),
+                );
+            }
             let report = bin.progress_report();
             if arg(2) == Some("json") {
                 println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
@@ -3619,64 +4061,31 @@ fn parse_register_command(args: &[String]) -> Result<RegisterAuditCommand, Strin
     })
 }
 fn decode_register_batch(value: serde_json::Value) -> Result<Vec<RegisterAuditRequest>, String> {
-    policy_fields(&value, &["schemaVersion", "requests"], "register batch")?;
-    if value.get("schemaVersion").and_then(serde_json::Value::as_u64) != Some(1) {
-        return Err("register batch requires schemaVersion 1".into());
-    }
-    let items = value
-        .get("requests")
-        .and_then(serde_json::Value::as_array)
-        .ok_or("register batch requires requests array")?;
-    if items.is_empty() || items.len() > 4096 {
-        return Err("register batch requires 1..4096 requests".into());
-    }
-    let mut ids = std::collections::BTreeSet::new();
-    let mut requests = Vec::new();
-    for (index, item) in items.iter().enumerate() {
-        let request = (|| {
-            policy_fields(
-                item,
-                &["id", "address", "bytes", "entry", "register", "policy"],
-                "register request",
-            )?;
-            let id = item
-                .get("id")
-                .and_then(serde_json::Value::as_str)
-                .filter(|s| !s.trim().is_empty())
-                .ok_or("request needs nonempty string id")?
-                .to_owned();
-            if !ids.insert(id.clone()) {
-                return Err(format!("duplicate request id {id}"));
-            }
-            let mut words = Vec::new();
-            for key in ["address", "bytes", "entry", "register"] {
-                let v = item.get(key).ok_or_else(|| format!("request {id} requires {key}"))?;
-                let text = if let Some(s) = v.as_str() {
-                    s.to_owned()
-                } else if let Some(n) = v.as_u64() {
-                    n.to_string()
-                } else {
-                    return Err(format!("request {id} {key} must be unsigned number or string"));
-                };
-                words.push(text);
-            }
-            let options = parse_register_audit(&words).map_err(|e| format!("request {id}: {e}"))?;
-            let policy = match item.get("policy") {
-                Some(value) => decode_register_policy(value.clone()).map_err(|e| format!("request {id}: {e}"))?,
-                None => Default::default(),
-            };
-            let policy_label = item.get("policy").map(|_| format!("inline request {id}"));
+    binviz::registeraudit::decode_batch(&value)?
+        .into_iter()
+        .map(|r| {
+            let policy_label = value["requests"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|item| item["id"].as_str() == Some(&r.id))
+                .and_then(|item| item.get("policy"))
+                .map(|_| format!("inline request {}", r.id));
             Ok(RegisterAuditRequest {
-                id,
-                options,
-                policy,
+                id: r.id,
+                options: RegisterAuditArgs {
+                    address: r.address,
+                    size: r.bytes,
+                    entry: r.entry,
+                    register: r.register,
+                    policy: None,
+                    json: true,
+                },
+                policy: r.policy,
                 policy_label,
             })
-        })()
-        .map_err(|e: String| format!("request index {index}: {e}"))?;
-        requests.push(request);
-    }
-    Ok(requests)
+        })
+        .collect()
 }
 fn parse_register_audit(args: &[String]) -> Result<RegisterAuditArgs, String> {
     if args.len() < 4 {
@@ -3741,95 +4150,8 @@ fn parse_register_audit(args: &[String]) -> Result<RegisterAuditArgs, String> {
         json,
     })
 }
-fn policy_fields(value: &serde_json::Value, allowed: &[&str], context: &str) -> Result<(), String> {
-    let object = value
-        .as_object()
-        .ok_or_else(|| format!("{context} must be an object"))?;
-    if let Some(name) = object.keys().find(|name| !allowed.contains(&name.as_str())) {
-        return Err(format!("unknown {context} field: {name}"));
-    }
-    Ok(())
-}
-fn policy_word(value: &mut serde_json::Value, context: &str) -> Result<(), String> {
-    let n = if let Some(s) = value.as_str() {
-        num(s)?
-    } else {
-        value
-            .as_u64()
-            .ok_or_else(|| format!("{context} must be an unsigned word"))?
-    };
-    let n = u32::try_from(n).map_err(|_| format!("{context} does not fit 32 bits"))?;
-    *value = serde_json::Value::from(n);
-    Ok(())
-}
-fn decode_register_policy(mut value: serde_json::Value) -> Result<binviz::mipsaudit::AuditPolicy, String> {
-    policy_fields(
-        &value,
-        &["returnUse", "callees", "indirectTargets", "maxStates"],
-        "register policy",
-    )?;
-    for name in ["callees", "indirectTargets"] {
-        let Some(map) = value.get_mut(name) else { continue };
-        let object = map
-            .as_object_mut()
-            .ok_or_else(|| format!("{name} must be an address-keyed object"))?;
-        let original = std::mem::take(object);
-        for (address, mut item) in original {
-            let target = u32::try_from(num(&address)?).map_err(|_| format!("{name} address exceeds 32 bits"))?;
-            if target & 3 != 0 {
-                return Err(format!("unaligned {name} address"));
-            }
-            if name == "callees" {
-                policy_fields(
-                    &item,
-                    &["register", "effect", "evidence", "instructionPath"],
-                    "callee summary",
-                )?;
-                if let Some(points) = item.get_mut("instructionPath") {
-                    for point in points.as_array_mut().ok_or("instructionPath must be an array")? {
-                        policy_fields(point, &["pc", "word"], "reviewed instruction")?;
-                        for key in ["pc", "word"] {
-                            policy_word(point.get_mut(key).ok_or("reviewed instruction requires pc/word")?, key)?;
-                        }
-                    }
-                }
-            } else {
-                policy_fields(&item, &["targets", "evidence"], "indirect target summary")?;
-                for target in item
-                    .get_mut("targets")
-                    .ok_or("indirect summary needs targets")?
-                    .as_array_mut()
-                    .ok_or("targets must be an array")?
-                {
-                    policy_word(target, "indirect target")?;
-                }
-            }
-            if object.insert(target.to_string(), item).is_some() {
-                return Err(format!("duplicate normalized {name} address"));
-            }
-        }
-    }
-    let policy: binviz::mipsaudit::AuditPolicy = serde_json::from_value(value).map_err(|e| e.to_string())?;
-    if policy.max_states == 0 {
-        return Err("maxStates must be positive".into());
-    }
-    for summary in policy.callees.values() {
-        if !(1..32).contains(&summary.register) || summary.evidence.trim().is_empty() {
-            return Err("callee summary needs register1..31 and reviewed evidence".into());
-        }
-        if summary.instruction_path.iter().any(|p| p.pc & 3 != 0) {
-            return Err("reviewed instruction pc is unaligned".into());
-        }
-    }
-    for targets in policy.indirect_targets.values() {
-        if targets.targets.is_empty()
-            || targets.evidence.trim().is_empty()
-            || targets.targets.iter().any(|&t| t & 3 != 0)
-        {
-            return Err("indirect summary needs nonempty aligned targets and reviewed evidence".into());
-        }
-    }
-    Ok(policy)
+fn decode_register_policy(value: serde_json::Value) -> Result<binviz::mipsaudit::AuditPolicy, String> {
+    binviz::registeraudit::decode_policy(value)
 }
 fn read_register_policy(path: Option<&str>) -> Result<binviz::mipsaudit::AuditPolicy, String> {
     let Some(path) = path else {

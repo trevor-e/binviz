@@ -20,7 +20,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::binary::Binary;
 use crate::model::{Annotation, Decomp, DecompState};
@@ -78,6 +78,8 @@ pub enum Readiness {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NextFunction {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contract_work: Option<ContractWork>,
     pub address: u64,
     /// Bytes, up to the alignment filler.
     pub size: u64,
@@ -97,6 +99,67 @@ pub struct NextFunction {
     pub attempts: u32,
     /// Its best match so far.
     pub percent: Option<f32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContractBlocker {
+    pub dependency: String,
+    pub callers: Vec<String>,
+    pub units: Vec<String>,
+    pub rejected_callers: usize,
+    pub observations: usize,
+}
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContractWork {
+    pub function: String,
+    pub caller_packages: Vec<String>,
+    pub blocked_callers: Vec<String>,
+    pub rejected_callers: usize,
+    pub raw_observations: usize,
+    pub unresolved_sites: Vec<String>,
+}
+pub fn contract_blockers(callers: &[crate::workspace::CallerPackage]) -> Vec<ContractBlocker> {
+    use std::collections::{BTreeMap, BTreeSet};
+    let mut groups: BTreeMap<String, (BTreeSet<String>, BTreeSet<String>, usize, usize)> = BTreeMap::new();
+    for caller in callers {
+        for call in caller
+            .calls
+            .iter()
+            .filter(|c| !matches!(c.state.as_str(), "clear" | "verified-and-applied"))
+        {
+            let key = call.binding.as_ref().map_or_else(
+                || format!("missing-correspondence:{}", call.call.callee),
+                |b| format!("provider:{}", b.provider),
+            );
+            let g = groups.entry(key).or_default();
+            let new = g.0.insert(caller.id.clone());
+            g.1.insert(caller.unit.clone());
+            g.2 += usize::from(new && caller.rejected);
+            g.3 += call.findings.len();
+        }
+    }
+    let mut out: Vec<_> = groups
+        .into_iter()
+        .map(
+            |(dependency, (callers, units, rejected_callers, observations))| ContractBlocker {
+                dependency,
+                callers: callers.into_iter().collect(),
+                units: units.into_iter().collect(),
+                rejected_callers,
+                observations,
+            },
+        )
+        .collect();
+    out.sort_by_key(|b| {
+        (
+            std::cmp::Reverse(b.rejected_callers),
+            std::cmp::Reverse(b.callers.len()),
+            b.dependency.clone(),
+        )
+    });
+    out
 }
 
 /// How far a decompilation has come, over the binary's own functions.
@@ -275,6 +338,85 @@ pub struct NextList {
 }
 
 impl Binary {
+    /// Extend the existing ranking and claims with a freshly verified physical
+    /// join. A project/unit is explicit; overlay addresses never merge scopes.
+    pub fn next_functions_with_workspace(
+        &self,
+        q: &NextQuery,
+        w: &crate::workspace::Workspace,
+        files: &std::collections::BTreeMap<String, Vec<u8>>,
+        unit: &str,
+    ) -> Result<NextList, String> {
+        if !w.matches_loaded_unit(self, unit)? {
+            return Err("loaded bytes/mapping do not uniquely identify the requested physical unit".into());
+        }
+        let report = w.analyze(Some(files))?;
+        let inventory = report
+            .inventory
+            .units
+            .iter()
+            .find(|u| u.unit.id == unit)
+            .ok_or("unit missing")?;
+        if inventory.state != crate::evidence::IdentityState::Verified {
+            return Err("physical unit is not currently verified".into());
+        }
+        let mut full = q.clone();
+        full.limit = usize::MAX;
+        let mut list = self.next_functions(&full);
+        for f in &mut list.functions {
+            let owned: Vec<_> = inventory
+                .functions
+                .iter()
+                .filter(|p| {
+                    !p.retired
+                        && p.state == crate::evidence::IdentityState::Verified
+                        && matches!(p.function.identity.role.as_str(), "primary" | "assembly")
+                        && crate::evidence::hex(&p.function.identity.entry).ok() == Some(f.address)
+                })
+                .collect();
+            if owned.len() != 1 {
+                continue;
+            }
+            let id = &owned[0].function.id;
+            let packages: Vec<_> = report
+                .callers
+                .iter()
+                .filter(|c| {
+                    c.calls
+                        .iter()
+                        .any(|s| s.binding.as_ref().is_some_and(|b| b.caller == *id))
+                })
+                .collect();
+            let blocker = report
+                .blockers
+                .iter()
+                .find(|b| b.dependency == format!("provider:{id}"));
+            f.contract_work = Some(ContractWork {
+                function: id.clone(),
+                caller_packages: packages.iter().map(|c| c.id.clone()).collect(),
+                blocked_callers: blocker.map_or_else(Vec::new, |b| b.callers.clone()),
+                rejected_callers: blocker.map_or(0, |b| b.rejected_callers),
+                raw_observations: packages.iter().flat_map(|c| &c.calls).map(|c| c.findings.len()).sum(),
+                unresolved_sites: packages
+                    .iter()
+                    .flat_map(|c| &c.calls)
+                    .filter(|c| !matches!(c.state.as_str(), "clear" | "verified-and-applied"))
+                    .map(|c| c.call.id.clone())
+                    .collect(),
+            });
+        }
+        // Stable sort retains the existing template/readiness/score ranking for
+        // ties and preserves its claimed, skipped and completed filters.
+        list.functions.sort_by_key(|f| {
+            (
+                f.readiness,
+                std::cmp::Reverse(f.contract_work.as_ref().map_or(0, |c| c.rejected_callers)),
+                std::cmp::Reverse(f.contract_work.as_ref().map_or(0, |c| c.blocked_callers.len())),
+            )
+        });
+        list.functions.truncate(q.limit);
+        Ok(list)
+    }
     /// Where decompiling the function starting at `address` stands, if anyone said.
     pub fn decomp_at(&self, address: u64) -> Option<&Decomp> {
         let first = self.annotations.partition_point(|a| a.address < address);
@@ -516,6 +658,7 @@ impl Binary {
                 Readiness::Hard => list.hard += 1,
             }
             list.functions.push(NextFunction {
+                contract_work: None,
                 address,
                 size,
                 instructions,

@@ -16,6 +16,7 @@ import { DwarfView } from './views/dwarf';
 import { HexView } from './views/hex';
 import { LayoutView } from './views/layout';
 import { OverviewView, importLabels, loadCodeLog } from './views/overview';
+import { ProgressView } from './views/progress';
 import { PatchView } from './views/patch';
 import { SourcesView } from './views/sources';
 import { SymbolsView } from './views/symbols';
@@ -44,6 +45,7 @@ const NAV: { view: ViewName; label: string; key: string }[] = [
   { view: 'crash', label: 'Crash', key: 'c' },
   { view: 'diff', label: 'Compare', key: 'd' },
   { view: 'overview', label: 'Overview', key: '1' },
+  { view: 'progress', label: 'Progress', key: 'r' },
   { view: 'layout', label: 'Layout', key: '2' },
   { view: 'hex', label: 'Hex', key: '3' },
   { view: 'code', label: 'Code', key: '4' },
@@ -97,6 +99,7 @@ const views: Record<ViewName, View> = {
   crash: new CrashView(),
   diff: new DiffView(),
   overview: new OverviewView(),
+  progress: new ProgressView(),
   layout: new LayoutView(),
   hex: new HexView(),
   code: new CodeView(),
@@ -183,8 +186,8 @@ document.body.appendChild(h('div', { class: 'drop-overlay' }, 'Drop a binary, a 
 function renderChrome() {
   const f = store.file;
   const pkg = store.package;
-  app.classList.toggle('empty', !f && !pkg && !store.crash);
-  landing.style.display = f || pkg || store.crash ? 'none' : 'grid';
+  app.classList.toggle('empty', !f && !pkg && !store.crash && store.view !== 'contracts');
+  landing.style.display = f || pkg || store.crash || store.view === 'contracts' ? 'none' : 'grid';
   debugBtn.toggleAttribute('disabled', !f);
   sourcesBtn.toggleAttribute('disabled', !f?.dwarf);
   palette.input.disabled = !f;
@@ -196,6 +199,7 @@ function renderChrome() {
     // A patch applied, or bytes edited.
     else if (name === 'patch') b.hidden = !store.patch;
     else if (name === 'diff') b.toggleAttribute('disabled', !f && !pkg);
+    else if (name === 'contracts') b.removeAttribute('disabled');
     else b.toggleAttribute('disabled', !f);
   }
   if (!f) {
@@ -262,6 +266,8 @@ function renderLanding() {
   choose.addEventListener('click', () => fileInput.click());
   const chooseFolder = h('button', { class: 'btn', type: 'button', title: 'Every binary in it opens, with its debug file (an .app, an .xcarchive, a build folder…)' }, 'Choose a folder');
   chooseFolder.addEventListener('click', () => packageInput.click());
+  const contracts = h('button', { class: 'btn', type: 'button' }, 'Inspect compiler call contracts');
+  contracts.addEventListener('click', () => store.setView('contracts'));
   const samples = h('div', { class: 'samples' });
   const extra: HTMLElement[] = [];
   for (const s of SAMPLES) {
@@ -279,6 +285,7 @@ function renderLanding() {
     more.remove();
   });
   samples.appendChild(more);
+  samples.appendChild(contracts);
   const repo = 'https://github.com/trevor-e/binviz';
   const link = (href: string, text: string) => h('a', { href, target: '_blank', rel: 'noopener' }, text);
   landing.replaceChildren(
@@ -370,7 +377,7 @@ store.on('crash', () => {
 });
 store.on('diff', () => renderView());
 store.on('patch', () => renderChrome());
-store.on('view', () => renderView());
+store.on('view', () => { renderChrome(); renderView(); });
 store.on('history', () => {
   back.toggleAttribute('disabled', !store.canGoBack());
   forward.toggleAttribute('disabled', !store.canGoForward());
@@ -527,7 +534,10 @@ async function applyHash() {
     const i = pkg.info.binaries.findIndex((b) => b.path === bin);
     if (i >= 0 && i !== pkg.current) await store.selectBinary(i);
   }
-  if (!store.file) return;
+  if (!store.file) {
+    if (params.get('view') === 'contracts') store.setView('contracts', 'replace');
+    return;
+  }
   let viewParam = params.get('view');
   let state = params.get('tab') ?? undefined;
   let name = params.get('name') ?? undefined;
@@ -794,7 +804,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const nav = NAV.find((n) => n.key === e.key);
-  const ready = nav && (nav.view === 'folder' ? store.package : nav.view === 'crash' ? store.crash : nav.view === 'diff' ? store.file || store.package : nav.view === 'patch' ? store.patch : store.file);
+  const ready = nav && (nav.view === 'contracts' ? true : nav.view === 'folder' ? store.package : nav.view === 'crash' ? store.crash : nav.view === 'diff' ? store.file || store.package : nav.view === 'patch' ? store.patch : store.file);
   if (nav && ready) store.setView(nav.view);
 });
 

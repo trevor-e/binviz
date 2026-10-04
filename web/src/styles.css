@@ -3853,3 +3853,11 @@ table.data td.diff-name {
 :root .contract-finding .facts { margin-top: 12px; }
 :root .contract-evidence { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
 :root .contracts-page .toolbar { flex-wrap: wrap; }
+:root .contracts-page textarea { display: block; width: 100%; min-height: 9em; margin-bottom: 10px; }
+:root dialog.card { max-width: min(700px, 90vw); background: var(--bg); color: var(--text); }
+:root dialog.card select { max-width: 100%; }
+.progress-treemap { margin-top: 16px; overflow: hidden; border-radius: 8px; background: #111b29; }
+.progress-treemap svg { display: block; width: 100%; height: auto; }
+.progress-treemap g[data-address] { cursor: pointer; }
+.progress-treemap g[data-address]:hover > rect, .progress-treemap g[data-address]:focus > rect { stroke: #fff; stroke-width: 2; }
+.progress-treemap g[data-address]:focus { outline: none; }

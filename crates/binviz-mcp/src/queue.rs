@@ -184,7 +184,14 @@ pub(crate) fn record_report(
     r
 }
 
-pub(crate) fn next_functions(o: &mut Open, args: &Value) -> Result<String, String> {
+pub(crate) fn next_functions(
+    o: &mut Open,
+    args: &Value,
+    workspace: Option<(
+        &binviz::workspace::Workspace,
+        &std::collections::BTreeMap<String, Vec<u8>>,
+    )>,
+) -> Result<String, String> {
     let within = match string(args, "within") {
         Some(range) => {
             let (lo, hi) = range.split_once("..").ok_or("within is a range of addresses: lo..hi")?;
@@ -201,7 +208,16 @@ pub(crate) fn next_functions(o: &mut Open, args: &Value) -> Result<String, Strin
         now: now(),
         claim_ttl: CLAIM_TTL,
     };
-    let list = o.bin.next_functions(&q);
+    let list = if let Some((w, files)) = workspace {
+        o.bin.next_functions_with_workspace(
+            &q,
+            w,
+            files,
+            string(args, "unit").ok_or("exact physical unit id required with project_id")?,
+        )?
+    } else {
+        o.bin.next_functions(&q)
+    };
     let p = &list.progress;
     let bin = &o.bin;
     let mut out = String::new();
@@ -281,6 +297,18 @@ pub(crate) fn next_functions(o: &mut Open, args: &Value) -> Result<String, Strin
         if f.attempts > 0 || f.state != DecompState::Todo {
             let d = bin.decomp_at(f.address).cloned().unwrap_or_default();
             let _ = write!(line, " · {}", state_text(&d));
+        }
+        if let Some(c) = &f.contract_work {
+            let _ = write!(
+                line,
+                " · {}: {} observations, {} blocked callers ({} currently rejected), {} unresolved sites; caller packages [{}]",
+                c.function,
+                c.raw_observations,
+                c.blocked_callers.len(),
+                c.rejected_callers,
+                c.unresolved_sites.len(),
+                c.caller_packages.join(", ")
+            );
         }
         let _ = writeln!(out, "{line}");
     }

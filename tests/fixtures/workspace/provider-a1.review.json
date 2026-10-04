@@ -1,0 +1,1 @@
+{"callees":[],"dependencies":["main:native"],"extent":{"bytes":"0x10","exact":true,"start":"0x80020000"},"id":"provider-a1","mode":"conservative","nativeSha256":"ec1206fa88a473274a6712f3b89b5c9d5b0ab1e2f743de8ff443ea259c9ec96a","provider":"main:provider","register":5,"reviewArtifact":"provider-a1-review"}

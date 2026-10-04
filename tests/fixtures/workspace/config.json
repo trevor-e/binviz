@@ -1,0 +1,1 @@
+{"schemaVersion":1,"compiler":"clang","target":"mipsel-none-elf","flags":["-std=gnu89"],"units":[{"id":"a","source":"caller_a.c"},{"id":"b","source":"caller_b.c"},{"id":"p","source":"provider.c"}]}

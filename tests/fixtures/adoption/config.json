@@ -1,0 +1,1 @@
+{"compiler":"/usr/bin/clang","flags":["-O0"],"schemaVersion":1,"target":"wasm32-unknown-unknown","units":[{"id":"void","source":"void.c"}]}

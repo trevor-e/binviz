@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "compiler": "clang",
+  "target": "mipsel-none-elf",
+  "flags": ["-std=gnu89", "-Wno-deprecated-non-prototype"],
+  "units": [
+    {"id": "caller", "source": "caller.c"},
+    {"id": "provider", "source": "provider.c"}
+  ]
+}

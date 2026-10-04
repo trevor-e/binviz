@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "compiler": "/usr/bin/clang", "target": "wasm32-unknown-unknown", "flags": ["-O0"], "units": [{"id": "caller", "source": "caller.c"}, {"id": "providers", "source": "providers.c"}]}

@@ -10,6 +10,21 @@ Use [the concise implementation handoff](decompilation-tooling-handoff.md) for
 delivery order and a prompt for another session; this document supplies the
 detailed records, observed cases and acceptance requirements.
 
+Follow-up adoption regressions: see the handoff section **Adoption findings:
+statement context and proof-derived explanations**. Its two retained switch-label
+void-call specimens require a maintained compiler-facts fix, exact span/declaration
+preservation, immutable old facts and dependency invalidation. Scope explanations
+must use structured certificate/audit references and distinguish physical kills,
+not-consumed/may-write summaries and explicitly discarded return boundaries.
+Reject missing transitive witnesses; do not add a private game analyzer.
+
+Further retained adoption specimens are in handoff **Adoption findings: computed
+branch targets and composed edits**. Require content-bound indirect-target
+certificate parity, branch-delay capture semantics and complete transitive
+dependencies. For multi-policy edits require one pristine validation buffer,
+explicit transformation stages and full selected-caller consumer validation;
+preserve the sr6 GPU drift rejection as a negative composition control.
+
 Start with the existing implementations and the implementation checkpoint below.
 Some compiler-fact/evidence/UI/MCP work is already present in the working tree;
 do not build competing versions. Availability of a backend is separate from
@@ -340,6 +355,17 @@ without exposing a missing function import. Show the definition, allocation
 and alias lineage; a clean function-import list cannot establish a clean link.
 Include a synthetic WASM common-array regression that refuses unresolved data
 and accepts the properly allocated definition.
+
+The rebuilt-tool adoption supplies a second concrete fixture: Clang14 leaves
+tentative asm-labelled `$8`/`$17` register declarations as undefined DATA even
+with `-fcommon`; `--allow-undefined` collapses their references to address zero.
+The genuine GPU native-instruction campaign detects corrupted saved-coordinate
+state. Explicit initialized definitions give distinct verified linked locations.
+Acceptance must retain the failing tentative specimen, detect missing required
+DATA allocation/exports and accidental required-location aliasing, and accept
+actual allocated definitions or a separately reviewed external-memory mapping.
+Function-type inspection alone currently reports no problem for the bad module;
+that observation must not establish complete link/provider closure.
 
 ## BV-04: scoped policies and paired native audits
 
@@ -1042,7 +1068,13 @@ Required follow-on slices for the existing implementation:
 The frozen local CD package at
 `ff9-decomp/build/agent-resident-providers-private/cd-boundary/review.md`
 records 143 runtime checks, 42 baseline/direct scheduler pairs and 72 scope/drift
-refusals. It is a concrete migration target, not a public game integration.
+refusals. The subsequent installable game adapter passed six acceptance cases
+and 105 scope/drift refusals and is installed in the game builder. A full
+file12 replay moved from 214 accepted/81 rejected to 215 accepted/80 rejected;
+two remaining callers now expose independent argument/printf blockers. Shared
+Binviz service-selection and campaign migration remain pending. Historical
+evidence and the current adapter are distinct inputs; do not overwrite the
+frozen baseline or infer native device-timing equivalence from these results.
 
 ### Scoped matching-record publication (2026-10-03)
 
@@ -1097,7 +1129,7 @@ counters. Default policy consumption remains conservative. Reviewed storage reco
 show object size/reservation/initialized bytes versus exact-site provider access;
 actual native SP observations and WASM stack-pointer operations are visible.
 Reviewed description identity does not prove access completeness. Complete callback
-used-return closure, mixed may-write callee certificates, external loop bounds,
+used-return closure, cross-register callee contracts, external loop bounds,
 IRQ/recursive stack upper bounds and automatic compiler allocation/lifetime
 extraction remain open explicit frontiers.
 
@@ -1107,6 +1139,15 @@ Reproduction and acceptance tests are documented in
 No legacy FF9 helper is retired, and no game-source change or matching credit is
 claimed from these synthetic demonstrations. Compare frozen game collectors before
 migration; retain the concrete gap records above as acceptance targets.
+
+The geometry mixed kill/preserve gap now has shared single-GPR certificates:
+exact current native bytes are reaudited, killed and discarded-return endpoints
+stay separate, and `not-consumed-may-write` conservatively carries the word through
+caller continuation. Current acyclic child certificates compose only with their
+full native/review dependency closure. Synthetic tests cover mixed returns,
+composition, a later caller read, stale reviews and recursive-proof refusal.
+CLI `workspace --callees`, MCP `callee_certificates` and the browser expose the
+same proofs. Cross-register/callback contracts and game migration remain open.
 
 ### Exception order and portable C transformations (2026-10-03)
 
@@ -1192,6 +1233,50 @@ failures, and source symbol identities, types, layouts and expression order are
 preserved. Source edits invalidate downstream source-bound evidence; object
 equality does not establish a new linked-image, WASM or gameplay proof.
 
+### Intrinsic identities and unrelated-header invalidation (2026-10-03)
+
+BV-01, priority P0 for complete caller explanations: the maintained compiler
+adapter excludes implicit FunctionDecl records, then fails to resolve a direct
+reference to such a declaration. The resulting extraction gap contains a
+transient Clang AST ID. In the FF9 provider-ranking batch, this is
+`__builtin_trap()` inside `asm_add`/`asm_sub`, not an unknown physical call target.
+Successful call observations still have real callee names. Local evidence is
+`ff9-decomp/build/agent-file12-provider-ranking/facts.json` and its prepared
+artifacts; the 81 failed game callers themselves have no extraction gaps.
+
+Classify compiler intrinsics explicitly, retain their stable named identities,
+target/profile and source spans, and describe traps as effects. Do not invent
+native provider addresses or erase exception behavior. Acceptance: synthetic
+overflow guards using implicit `__builtin_trap` declarations have inspectable
+intrinsic records and exception outcomes; unsupported intrinsics remain named
+gaps with concrete reasons. A transient AST ID may be diagnostic provenance,
+but cannot become a shared declaration/call identity. Extend the existing
+maintained adapter and shared compiler-facts schema; no second parser is needed.
+
+BV-03/BV-08, priority P1 for legacy collector migration: adding the unrelated
+`include/options-menu-names.h` changed the game's compiler fingerprint because
+`typed-abi.py::_fingerprint` hashes every top-level include/wasm header. Three
+CD discovery records changed only their cache key, despite identical native
+bytes, C, CPP, raw objects and actual recorded dependencies. Root reproduced
+both exact keys by including/excluding that one unused header, preserved old
+metadata and separately repeated the scope/refusal gates. Evidence is
+`ff9-decomp/build/root-file12-integration/cd-discovery-profile-transition.json`.
+
+The shared extraction/build stages should key on compiler/target, producer
+version, actual preprocessing inputs and relevant include-name resolution.
+Adding an unrelated header must reuse facts for an already prepared input and
+must not invalidate a source job that never requests that name. Adding a header
+that shadows an actually requested include still invalidates its consumers.
+Acceptance compares both cases, displays the precise reason, and measures
+compiler subprocesses as well as elapsed time. Do not relax stale-output gates;
+replace the legacy global-header key through a demonstrated migration.
+
+Exception-order acceptance additionally needs structured WASM control-flow
+witnesses. A trap block can physically follow the normal return while a guard
+branches to it before visible stores. Physical disassembly order alone cannot
+prove execution order; combine existing Binviz branch evidence with the native
+BREAK/candidate campaign's pre-exception memory comparison.
+
 Function-name acceptance must also retain a unit-scoped mapping between descriptive
 C identifiers and native symbol identities. FF9's first naming batch maps 27
 options-menu functions through an alias header and changes 41 affected sources;
@@ -1224,6 +1309,192 @@ Audio-name evidence additionally follows the original executable's hashed comman
 table through dispatch normalization to handler effects; do not infer behavior
 from opcode numbers alone. A catalog/report importer is bookkeeping until it
 independently validates the source/header/tool/recipe inputs and observations.
+
+### Follow-on implementation checkpoint (2026-10-03)
+
+The shared implementation now exposes the remaining follow-on workflows:
+`matchingPublications`, `readabilityBatches`, and `proofClosures` in the workspace,
+corresponding CLI/MCP inspections, and the Contracts report panels. Scoped notes
+publication independently recompiles no code: it requires current successful
+object producers, recomputes strict exact original-code matches and writes only
+the reviewed selection through the existing journal. Outside-scope notes retain
+their prior values without a current-validation claim.
+
+Compiler-visible build namespaces support actual complete-object readability
+acceptance; canonical prepared names/ABI and original-code scores remain fixed,
+including partial matches. Optional actual LLVM IR records storage/lifetime
+instructions with explicit unsupported extents. Named intrinsic/trap effects are
+retained in compiler facts instead of becoming unresolved physical providers.
+
+Campaign roles support baseline/candidate modules as well as native/WASM pairs.
+Exception records compare mapped trap identity and required exception-point
+checkpoint, memory/registers and selected ordered effects without fabricating a
+return. The executed fixture includes actual WASM unreachable traps and native
+BEQ/delay-slot/BREAK execution through the existing independent CPU adapter.
+An early cursor store fails both two-WASM and native/WASM comparisons.
+
+Reviewed closure claims bind actual service imports/signatures/call edges,
+shared-memory instance limits and instantiation order, exact live-memory
+restoration, scalar variadic home prefixes, missing-input candidates and finite
+callback/interrupt stack models. Actual compatible table initializers constrain
+callback targets. Dynamic or branching frames need path-sensitive evidence and
+refuse the current constant-frame profile. Cross-register child facts and reviewed
+external loop bounds reuse the original native auditor and retain all witnesses,
+byte identities, dependency scope and explicit assumptions.
+
+Acceptance/refusal evidence is in `crates/binviz/tests/{closures,publication,
+workspace,campaign}.rs`, `tests/tools/test_{compiler_facts,build_batch,campaign}.py`
+and the tracked compiler-generated acceptance fixtures. Build/campaign logs are
+under `target/`. The frozen FF9 migration comparison agrees on six native audits,
+six selected module hashes and the zero/six-word CD imports (13 checks), retaining
+the CLI/input digests in `target/ff9-shared-migration/migration-report.json`.
+This demonstrates the shared collector connections; it does not retire collectors
+or establish current source, linked/gameplay or scheduler equivalence from
+historical observations. No game checkout writes were made.
+
+### Concurrent source work and immutable runtime batches (2026-10-03)
+
+BV-03/BV-08, priority P1 for migration: runtime integration and source naming
+currently share a mutable FF9 tree. A captured 79-source file12 naming stage
+preserved all 295 prepared CPP files, plain objects, discovery CPP files and
+discovery objects at their original compiler-visible paths. Public preparation
+also reproduced all 295 unchanged CPP/object outputs. Before integration could
+finish, a later naming stage changed another 37 live sources, including an
+installed formatter caller and three preparation gates. Correct source-bound
+checks then refused the newer inputs. Repeating the whole reconciliation after
+each naming batch wastes work despite valid evidence for the captured stage.
+
+Local evidence: `ff9-decomp/build/file12-naming-transition/frozen.json`,
+`compiler-transition.json`, `discovery-transition.json` and
+`live-drift-refusal.json`; independent public preparation and selected-provider
+refreshes are in `ff9-decomp/build/root-formatter-integration/`. The selected
+BOOT refresh rebuilt 161 definitions with zero raw/LTO object changes. These
+are source-stage transition observations, not a newly linked gameplay result.
+
+Extend and consume the existing `build-batch` frozen inputs, include snapshots,
+stable compiler-visible namespaces, stage identities and promotion plans. Do
+not add another snapshot walker or generic build queue. A game-owned adapter
+must declare its complete source/header/preparation/policy/provider/tool inputs
+and run the maintained producers against that captured namespace. Keep valid
+snapshot results inspectable while separately reporting whether the live tree
+can consume them. Capture include files using the compiler's emitted dependency
+paths, including relative paths; do not silently omit them because they lack
+an absolute workspace prefix.
+
+Current connection gap: `build-batch` freezes individual inputs into stable
+slot directories and runs the configured command from that stage directory.
+FF9's maintained builder derives its root from `wasm/runtime/` and opens
+repository-relative source, policy and cache paths. Equal baseline/candidate
+slot paths therefore do not reproduce its original `/work` tree. Support a
+declared relative input layout and an explicit execution-root/mount mapping
+through the existing stage model. Reject path escapes, undeclared inputs and
+overlapping mutable mounts. A game-owned launch adapter may invoke the existing
+compiler container against a captured tree; it must not rewrite semantic
+builders or grant a copied cache record current authority without validating
+its recorded producer/input/output lineage. This layout connection is proposed;
+the existing flat-slot interface does not demonstrate full FF9 builder migration.
+
+Acceptance: naming-only edits during a batch cannot contaminate its inputs;
+historical proof records remain valid for their captured stage, while live
+publication refuses drift. A reviewed subsequent transition compares actual
+CPP, complete objects and definition ABIs before replacing exactly the affected
+identities. A semantic edit such as FF9's B7F20 pre-exception trap correction
+must remain distinguishable from an alias rename even if both match the native
+object. Preserve compiler-visible paths and ordered exception effects. Measure
+cold/warm wall time, compiler subprocesses, reused stages and refused promotions.
+
+Migration status: existing Binviz batch facilities are the starting point;
+FF9's runtime builders still use private reconciliation adapters. None has been
+retired. The formatter bundle is now installed in the game builder and its
+installed host reproduces the frozen production module and comparisons, but
+later live naming inputs remain refused. The earlier formatter paragraph's
+unintegrated status describes its historical private package. No fresh full
+file12 module, matching percentage or playable-game claim follows from this
+installation.
+
+### Native call identity versus selected linkage symbol (2026-10-03)
+
+BV-01/BV-02/BV-06, priority P1 for adapter migration: the file12 GPU integration
+cannot link a true one-word `sub_800130a4` definition alongside the retained
+twenty-word HLE alias with that same symbol. The scoped software provider needs
+a fresh linkage name while its call findings retain the original native callee,
+physical site and source spans. VSync likewise has a true one-word helper and
+a retained twenty-word resolver entry; both import `hle.VSync`, with distinct
+one-word and six-word signatures. Root's private frame candidate demonstrates
+18 actual resolver/helper frame-history pairs without replacing the legacy map.
+
+The maintained game adapter accepts a callee-keyed definition table, but lacks
+an explicit selected linkage target and a public complete parsed-reference
+inventory. The temporary GPU action therefore consumes that adapter's existing
+declaration/direct-call spans and rejects unlisted address or callback tokens.
+Evidence: `ff9-decomp/build/root-file12-gpu-current-review/` and
+`build/root-file12-frame-platform/{compiled.json,proof.json,input-basis.json}`.
+These are private configured candidates, not migrated Binviz callers.
+
+Expose native identity, provider identity, emitted linkage symbol and import
+module/field/signature separately in the shared bridge plan. Return declaration,
+direct-reference and address-reference spans with completeness and revision
+evidence; reuse maintained compiler facts instead of scanning another AST.
+Acceptance keeps the true 1/2/2 GPU helpers and one-word frame helper separate
+from the existing dispatcher entries, preserves full result words and expression
+evaluation, and refuses an unlisted token/site, conflicting helper, callback
+reference or changed prepared input. Applying a plan must report every changed
+span and actual selected definition; a global callee-name replacement is not
+equivalent to an exact caller/site binding.
+
+Rebuilt-runtime migration check (2026-10-03): the shared `CallBinding` already
+separates the original callee from the selected definition/export, and the
+adapter emits `definition.name`. Do not implement that identity split again.
+The remaining BV-06 gap is executable lowering: `workspace` can assess a
+`discarded-result` policy, but `adapters::plan` accepts only extra-word nonuse,
+scalar varargs and missing inputs, and refuses unequal result types even for an
+actually discarded result. This prevents retirement of the file12 GPU linkage
+adapter for its reviewed void-to-integer/pointer service sites.
+
+Add a plan for eligible discarded-result policies using the exact compiler call,
+selected body, native V0 correspondence and existing scope evidence. Preserve
+argument evaluation and any observable call effects. Reject consumed results,
+unreviewed conversions, stored function addresses, changed source spans and
+missing native/provider correspondence. Exercise the actual 31-site GPU fixture,
+report supported and refused sites individually, then compile/link/replay the
+candidate before declaring the private helper retired. Passing the current
+13-check register/module migration fixture does not establish this lowering.
+
+There is also no current plan path for a verified direct selected-service binding
+that needs only a different linkage name. Thirteen original VSync sites already
+supply the true single parameter and return `int`; an extra-word policy correctly
+refuses them because no extra word exists. AC5C8 supplies two words and discards
+its original declared `void` result, so it also needs the result lowering above.
+Provide an exact source-span binding action for an independently verified selected
+service/body without inventing an argument exception. Acceptance retains the
+original native identity, verifies the actual selected helper and service-chain
+execution obligations, and refuses extra/address/indirect references. Keep this
+identity-only action separate from claims about argument or result semantics.
+
+The fresh GPU inventory makes the split concrete: all 31 reviewed calls discard
+their result and supply the true formal count. Ten DrawSync calls already have
+matching `int` results; 21 additionally differ (15 DrawSync `void` to `int`, five
+StoreImage `void` to `int`, one ClearOTagR `void` to `u32 *`). All 31 need the
+direct binding representation, and those 21 also need discarded-result lowering.
+Do not use extra-word policies for any of these equal-arity calls.
+
+### Genuine void execution records (BV-07, 2026-10-03)
+
+The new shared exception campaign reproduces FF9's real B7F20 BREAK checkpoint
+without inventing a return. Ordinary executed records still require
+`returnWord`, however, while genuine item/marker C/WASM entries return `void`.
+The remaining 314 histories therefore keep their original comparator rather than
+serialize a fabricated zero. Exception support does not close this case.
+
+Add an explicit, independently compiler/linkage-verified void result profile.
+Require actual execution/return evidence and compare selected RAM, registers,
+ordered provider events and checkpoints as usual. Keep arbitrary original MIPS
+V0 available as diagnostic register state without treating it as a C return.
+Word/getter profiles must continue to require actual full return bits; refuse an
+unverified void declaration, a missing result for a word provider or any attempt
+to evade used-return checks. Exercise real void item/marker entries alongside
+word-return getters and wrong-memory/event negative controls before retiring the
+legacy comparator for additional histories.
 
 Overlay naming acceptance (BV-03/BV-08, P2): FF9 adds 86 battle-results names
 and 169 save/load and memory-card names, reaching 966 reviewed aliases. Reports:
@@ -1350,6 +1621,30 @@ features are already available; these maintained legacy farm/scorer adapters
 provide concrete compatibility fixtures, not shared workspace acceptance or a
 historical scorer migration. Preserve canonical unit/linkage identity and
 source-bound report hashes when future batches or shared adoption touch them.
+
+### Actual LoadImage compiler/ownership fixture (BV-04/BV-05)
+
+The rebuilt tool's seven frozen FF9 file12 LoadImage units retain twelve Clang
+call expressions but eleven native JALs. B8DC0 has five C expressions and four
+native calls because two control paths share800B9024. Future selected-provider
+plans must preserve this many-to-one physical correspondence and verify actual
+linked call identities; do not pair occurrences by ordinal. Concrete shared
+compiler/native/storage evidence is in `target/ff9-file12-loadimage-next/`.
+
+Canonical typedef expansion currently re-expands same-named struct tags:
+`typedef struct RECT ... RECT` produces `struct struct ... RECT *` in real Clang
+facts. This is a Binviz producer defect, not a game ABI correction. Preserve raw
+spellings and use compiler identities or tag-aware cycle-safe expansion. Require
+idempotent results for same-name typedef/tag, chained aliases, qualifiers and
+multiple pointer levels. Retain target/category/width observations and a distinct
+adapter identity; old captured reports remain unchanged.
+
+Actual storage extraction also demonstrates environment-key sensitivity: random
+Docker HOSTNAME caused seven cold misses on a repeated invocation. The game fixes
+the runner hostname and gets seven warm hits, zero AST/LLVM extraction processes,
+and identical facts, while preparation/bootstrap still execute. An optional
+narrower environment profile must declare and verify its relevant compiler inputs;
+do not discard environment hashes implicitly for speed.
 
 Shared UI/fade naming acceptance (BV-03/BV-08, P2): FF9 adds126 reviewed
 C definitions (72 options/UI/text/key-item helpers and54 fade/transition
@@ -1689,6 +1984,35 @@ evidence backlog, without adding a private walker or tooling rewrite. Legacy
 farm/scorer compatibility remains separate from shared workspace acceptance,
 which still requires configured frozen namespaces/compiler inputs/actual output.
 Refresh downstream source-bound evidence after naming.
+
+
+### Additional BV-01 acceptance: generated register-map dependencies and Windows roots
+
+Use FF9's real refused strict-subset specimen, not a fabricated caller fixture.
+The formatter generator consumes a project-wide fixed-register map through the
+maintained asmgen.pinned_registers scan of src/include. Removing unrelated source
+files changes p17 from real shared storage to a local initialized register and
+changes generated source identity. The generator refuses its reviewed source seal.
+A builder's direct DATA/name lookup returning an empty requested set does not
+remove this independent transitive dependency. Generic pipeline registration must
+bind directory-scan metadata and every contributing artifact, or bind an explicitly
+produced fixed-register inventory whose input provenance is complete. Support
+conservative dependency supersets without introducing a second private parser.
+Require actual maintained generator output and downstream compiler parity before
+accepting any narrower execution root. A pin removal/content change must invalidate
+the affected generated-code stage; a source-only matching/naming waiver is insufficient.
+Specimens: target/ff9-root-combined-strict-subset and its input/output captures;
+corrected projection/parity is separate and must not retroactively relabel failure.
+
+Long Windows configuration roots can make owned cache extraction paths exceed the
+host path limit. Preserve setup errors separately from semantic/game compilation
+results; report the offending path/phase. Provide a short workspace-owned staging
+root or handle Windows extended paths consistently across all extraction/read/write
+boundaries. Do not bypass ownership by accepting ../ cache directories and do not
+change global host registry settings. Acceptance compares the same declared bytes/
+recipe in long failing and short owned roots, preserving actual outputs, diagnostics,
+compiler-visible namespace and cache-key rationale. FF9 target/ff9-sr2 is the short
+root; setup refusals remain at target/ff9-root-combined-strict-subset-registers.
 
 Battle strip/model rendering naming acceptance (BV-03/BV-08, P2): FF9
 adds20 reviewed names (10 C definitions,10 callable assembly aliases), bringing
@@ -2101,6 +2425,41 @@ and scorer migration; shared acceptance still requires configured frozen
 namespaces, compiler inputs and verified outputs. Refresh source-bound evidence
 against current catalog identities. Preserve unrelated runtime/adoption/spec
 changes and continue purpose review of remaining canonical functions.
+
+
+### Rebuilt-tool adoption specimens: exact snapshot and span identity
+
+The adopted release545beb01f now executes shared build-batch, register-use,
+workspace callee certificates, linked inspection and original/C campaigns.
+Actual grouped replay target/ff9-sr3 accepts271/295 with24 explicit refusals;
+all8 new batch artifact identities verify. Cold152.20561s, warm0.33860s with0
+subprocesses. Frozen17-file manifest1c2455fae…1ea2a92b retains the failed final
+producer and two verified outputs. This is subsystem compilation, not playability.
+
+Two remaining repeatability gaps have concrete specimens for future work:
+
+* Snapshot assembly must distinguish supplied input artifacts from regenerated
+  completed output artifacts. ClearOTag, memcpy and Reset scopes bind discovery
+  stamps from completed producer output. An old stamp in an input tar can differ
+  while source/CPP/object bytes remain equal. Expose both artifact IDs, producer
+  stage and exact digests; require an explicit transition when replacing a member.
+  Never resolve a stale stamp by silently resealing an unrelated policy. The
+  existing build-batch graph already preserves stages/digests; the missing piece
+  is a reusable reviewed snapshot-overlay operation and declared producer scan
+  or collection closure. Keep game recipes outside the shared analyzer.
+* Call facts need explicit source-buffer identity and a mapping when compiler
+  preprocessing changes whitespace. Reset AC5C8 call facts prepared span3971:3986
+  and literal3984 refer to a different buffer than rawCPP3972:3987/literal3985.
+  Existing maintained binder establishes raw `(1)`; B69B4 spans coincide. Display
+  both buffers/stage IDs and mapped ranges, or refuse a cross-buffer rewrite.
+  Acceptance must include a removed blank line, coincident spans, changed source
+  and unmappable ranges. A blanket offset adjustment is insufficient.
+
+The sr3 workspace also retains25 stale inherited records for5 live BOOT inputs
+and their dependents. These coexist with8 verified immutable build artifacts.
+Queries/UI should clearly scope summaries to the requested stage/artifact set;
+never label the entire workspace clean because a selected build stage verifies.
+The same stale records exist in sr2. Preserve their rejection reasons.
 
 Scene render/stream/menu naming acceptance (BV-03/BV-08, P2): FF9 commit
 a03672218 adds 86 reviewed canonical ovl_009800 definitions, reaching 3037

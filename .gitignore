@@ -1,6 +1,9 @@
 /target
 /tests/fixtures/large
 node_modules
+__pycache__/
+.binviz-compiler-cache/
+/tests/fixtures/*/facts.artifacts/cache-report.json
 /web/dist
 /web/src/pkg
 *.rcgu.o

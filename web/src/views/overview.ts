@@ -41,7 +41,9 @@ export class OverviewView extends View {
     const mapping = h('div', { class: 'mapping' });
     const page = h('div', { class: 'page' });
     const rom = store.file!.summary.format === 'rom';
-    page.append(this.identity(), h('div', { class: 'grid-2' }, this.composition(), rom ? this.romCard() : this.dwarfCard()), this.fileMapCard(), this.mappingCard(mapping));
+    const progress = h('button', { class: 'btn small', type: 'button' }, 'Decompilation progress treemap');
+    progress.addEventListener('click', () => store.setView('progress'));
+    page.append(this.identity(), h('div', { class: 'card' }, h('h2', null, 'Decompilation progress'), h('p', { class: 'sub' }, 'See functions sized by code bytes and colored by their recorded status. Export a PNG or SVG to track progress.'), progress), h('div', { class: 'grid-2' }, this.composition(), rom ? this.romCard() : this.dwarfCard()), this.fileMapCard(), this.mappingCard(mapping));
     this.el.replaceChildren(page);
     void this.loadMap();
     // Measure the diagram's width only once it is in the document.

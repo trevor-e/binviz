@@ -8,7 +8,7 @@
 // game's disc, hundreds of megabytes) are read a sector at a time: their
 // folders, then the file opened.
 import init, {
-  Session, callContractsParse, crashParse, discBoot, discLayout, discPrefix, discRecords, discRoot, discSort, packageBundle, packageDiscover,
+  Session, callContractsParse, compilerFactsParse, evidenceVerify, workspaceAnalyze, workspaceMergeBuilds, adapterPlan, campaignReport, crashParse, discBoot, discLayout, discPrefix, discRecords, discRoot, discSort, packageBundle, packageDiscover,
   packageHeader, packagePlan, zipDecompressZstandard, zipFindDirectory, zipParseDirectory, zipZip64Directory,
 } from './pkg/binviz_wasm.js';
 import type { BaselineSource, BinaryHeader, BundleInfo, DebugMapObject, DebugMapReport, DiscFile, PackageBinary, PackageInfo, PackageSource, Summary } from './types';
@@ -509,6 +509,14 @@ const packageMethods: Record<string, (memory: WebAssembly.Memory, id: number, ar
   async callContractsParse(_memory, _id, args) {
     return callContractsParse(args[0] as string);
   },
+  async workspaceAnalyze(_memory, _id, args) {
+    return workspaceAnalyze(args[0] as string, args[1] ?? null);
+  },
+  async adapterPlan(_memory, _id, args) { return adapterPlan(args[0] as string, args[1], args[2]); },
+  async workspaceMergeBuilds(_memory, _id, args) { return workspaceMergeBuilds(args[0] as string, args[1] as string); },
+  async campaignReport(_memory, _id, args) { return campaignReport(args[0] as string, args[1] ?? null); },
+  async compilerFactsParse(_memory, _id, args) { return compilerFactsParse(args[0] as string); },
+  async evidenceVerify(_memory, _id, args) { return evidenceVerify(args[0] as string, args[1]); },
 
   async crashParse(_memory, _id, args) {
     const [text] = args as [string];

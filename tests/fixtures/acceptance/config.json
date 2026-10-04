@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "compiler": "/usr/bin/clang", "target": "wasm32-unknown-unknown", "flags": ["-O1"], "storageFacts": true, "units": [{"id": "p", "source": "p.c"}, {"id": "q", "source": "q.c"}]}

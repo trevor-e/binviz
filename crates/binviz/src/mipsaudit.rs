@@ -15,6 +15,7 @@
 use crate::cpu::mips::{MipsWord, ps1_gpr_effects};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
+mod bits;
 
 /// Exact contiguous original instruction extent. Words are decoded by the
 /// caller using the chosen byte order (little endian for PS1).
@@ -49,6 +50,8 @@ pub enum CalleeEffect {
     Killed,
     /// No read/kill; all paths return the register unchanged.
     Preserved,
+    /// No consumption; may overwrite or retain. Continuation keeps the word live.
+    NotConsumedMayWrite,
     Unresolved,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,16 +78,43 @@ pub struct ReviewedTargets {
     pub evidence: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LoopBound {
+    pub from: u32,
+    pub target: u32,
+    pub max_traversals: usize,
+    pub evidence: String,
+    pub native_sha256: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuditPolicy {
+    #[serde(default)]
+    pub mode: AuditMode,
+    #[serde(default = "all_bits")]
+    pub incoming_mask: u32,
     #[serde(default)]
     pub return_use: ReturnUse,
     #[serde(default)]
     pub indirect_targets: BTreeMap<u32, ReviewedTargets>,
     #[serde(default)]
     pub callees: BTreeMap<u32, CalleeSummary>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub cross_register_callees: BTreeMap<u32, Vec<CalleeSummary>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub loop_bounds: Vec<LoopBound>,
     #[serde(default = "default_state_budget")]
     pub max_states: usize,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuditMode {
+    #[default]
+    Conservative,
+    ObservableBits,
+}
+fn all_bits() -> u32 {
+    u32::MAX
 }
 fn default_state_budget() -> usize {
     16384
@@ -92,9 +122,13 @@ fn default_state_budget() -> usize {
 impl Default for AuditPolicy {
     fn default() -> Self {
         Self {
+            mode: AuditMode::Conservative,
+            incoming_mask: u32::MAX,
             return_use: ReturnUse::Unresolved,
             indirect_targets: BTreeMap::new(),
             callees: BTreeMap::new(),
+            cross_register_callees: BTreeMap::new(),
+            loop_bounds: vec![],
             max_states: 16384,
         }
     }
@@ -112,6 +146,12 @@ pub enum WitnessKind {
     Read,
     End,
     Frontier,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Endpoint {
+    Killed,
+    DiscardedReturn,
 }
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -133,6 +173,10 @@ pub struct Witness {
     pub evidence: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reviewed_instruction_path: Vec<InstructionPoint>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub bits_before: BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub endpoint: Option<Endpoint>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -170,6 +214,8 @@ struct State {
     pc: u32,
     pending_kill: bool,
     post: Option<Transfer>,
+    bits: Option<bits::Bits>,
+    bounds: Vec<usize>,
 }
 struct Node {
     state: State,
@@ -222,6 +268,12 @@ impl Auditor<'_> {
             target,
             evidence: summary.map(|s| s.evidence.clone()),
             reviewed_instruction_path: summary.map(|s| s.instruction_path.clone()).unwrap_or_default(),
+            bits_before: self.nodes[index]
+                .state
+                .bits
+                .as_ref()
+                .map_or_else(BTreeMap::new, |b| b.masks()),
+            endpoint: None,
         };
         match kind {
             WitnessKind::Read => self.report.reads.push(w),
@@ -229,7 +281,40 @@ impl Auditor<'_> {
             WitnessKind::Frontier => self.report.frontiers.push(w),
         }
     }
-    fn enqueue(&mut self, parent: usize, state: State) {
+    fn end(
+        &mut self,
+        index: usize,
+        reason: &str,
+        target: Option<u32>,
+        summary: Option<&CalleeSummary>,
+        endpoint: Endpoint,
+    ) {
+        self.witness(index, WitnessKind::End, reason, target, summary);
+        self.report.endpoints.last_mut().unwrap().endpoint = Some(endpoint);
+    }
+    fn enqueue(&mut self, parent: usize, mut state: State) {
+        state.bounds = self.nodes[parent].state.bounds.clone();
+        for (i, bound) in self.policy.loop_bounds.iter().enumerate() {
+            if self.nodes[parent].state.pc == bound.from.wrapping_add(4)
+                && state.pc == bound.target
+                && matches!(&self.nodes[parent].state.post, Some(Transfer::Flow(_)))
+            {
+                if state.bounds[i] >= bound.max_traversals {
+                    if !matches!(&self.nodes[parent].state.post,Some(Transfer::Flow(t)) if t.iter().any(|t|*t!=bound.target))
+                    {
+                        self.witness(
+                            parent,
+                            WitnessKind::Frontier,
+                            "locally forced branch contradicts reviewed loop bound",
+                            Some(bound.target),
+                            None,
+                        );
+                    }
+                    return;
+                }
+                state.bounds[i] += 1;
+            }
+        }
         if let Some(&index) = self.seen.get(&state) {
             self.nodes[parent].edges.push(index);
             return;
@@ -256,12 +341,12 @@ impl Auditor<'_> {
     }
     fn returned(&mut self, index: usize) {
         match self.policy.return_use {
-            ReturnUse::Discarded => self.witness(
+            ReturnUse::Discarded => self.end(
                 index,
-                WitnessKind::End,
                 "reviewed discarded return after delay slot; not a kill",
                 None,
                 None,
+                Endpoint::DiscardedReturn,
             ),
             ReturnUse::Consumed => self.witness(
                 index,
@@ -279,7 +364,104 @@ impl Auditor<'_> {
             ),
         }
     }
-    fn calls(&mut self, index: usize, targets: &[u32], resume: Option<u32>, pending: bool) {
+    fn calls(&mut self, index: usize, targets: &[u32], resume: Option<u32>, pending: bool, bits: Option<bits::Bits>) {
+        if bits.as_ref().is_some_and(|b| b.has_aliases(self.register)) {
+            for target in targets {
+                let mut b = bits.clone().unwrap();
+                if pending || b.non_gpr() {
+                    self.witness(
+                        index,
+                        WitnessKind::Frontier,
+                        "HI/LO or delayed-load alias requires a dedicated callee contract",
+                        Some(*target),
+                        None,
+                    );
+                    continue;
+                }
+                let summaries = self.policy.cross_register_callees.get(target);
+                let mut unresolved = false;
+                for register in b.registers() {
+                    let candidates: Vec<_> = summaries
+                        .into_iter()
+                        .flatten()
+                        .filter(|s| s.register == register && !s.evidence.trim().is_empty())
+                        .collect();
+                    if candidates.len() != 1 {
+                        self.witness(
+                            index,
+                            WitnessKind::Frontier,
+                            "cross-register callee contract incomplete or ambiguous",
+                            Some(*target),
+                            None,
+                        );
+                        unresolved = true;
+                        break;
+                    }
+                    let s = candidates[0];
+                    match s.effect {
+                        CalleeEffect::Killed => {
+                            b.kill(register);
+                        }
+                        CalleeEffect::Consumed => {
+                            self.witness(
+                                index,
+                                WitnessKind::Read,
+                                "reviewed callee consumes propagated alias",
+                                Some(*target),
+                                Some(s),
+                            );
+                            unresolved = true;
+                            break;
+                        }
+                        CalleeEffect::Unresolved => {
+                            self.witness(
+                                index,
+                                WitnessKind::Frontier,
+                                "cross-register callee component unresolved",
+                                Some(*target),
+                                Some(s),
+                            );
+                            unresolved = true;
+                            break;
+                        }
+                        CalleeEffect::Preserved | CalleeEffect::NotConsumedMayWrite => {}
+                    }
+                }
+                if unresolved {
+                    continue;
+                }
+                if b.registers().is_empty() {
+                    self.end(
+                        index,
+                        "all alias components killed by reviewed native certificates",
+                        Some(*target),
+                        None,
+                        Endpoint::Killed,
+                    )
+                } else if let Some(pc) = resume {
+                    b.forget_constants();
+                    self.enqueue(
+                        index,
+                        State {
+                            pc,
+                            pending_kill: false,
+                            post: None,
+                            bits: Some(b),
+                            bounds: vec![],
+                        },
+                    );
+                } else {
+                    self.witness(
+                        index,
+                        WitnessKind::Frontier,
+                        "tail-call alias survival requires caller return closure",
+                        Some(*target),
+                        None,
+                    );
+                }
+            }
+            return;
+        }
         for &target in targets {
             if target & 3 != 0 {
                 self.witness(
@@ -329,12 +511,12 @@ impl Auditor<'_> {
                     Some(target),
                     Some(s),
                 ),
-                CalleeEffect::Killed => self.witness(
+                CalleeEffect::Killed => self.end(
                     index,
-                    WitnessKind::End,
                     "reviewed native callee kills word before reading",
                     Some(target),
                     Some(s),
+                    Endpoint::Killed,
                 ),
                 CalleeEffect::Unresolved => self.witness(
                     index,
@@ -343,7 +525,7 @@ impl Auditor<'_> {
                     Some(target),
                     Some(s),
                 ),
-                CalleeEffect::Preserved => {
+                CalleeEffect::Preserved | CalleeEffect::NotConsumedMayWrite => {
                     if let Some(pc) = resume {
                         self.enqueue(
                             index,
@@ -351,6 +533,11 @@ impl Auditor<'_> {
                                 pc,
                                 pending_kill: false,
                                 post: None,
+                                bits: bits.clone().map(|mut b| {
+                                    b.forget_constants();
+                                    b
+                                }),
+                                bounds: vec![],
                             },
                         );
                     } else {
@@ -406,7 +593,7 @@ impl Auditor<'_> {
         }
     }
     fn execute(&mut self, index: usize) {
-        let state = self.nodes[index].state.clone();
+        let mut state = self.nodes[index].state.clone();
         let Some(word) = self.extent.word(state.pc) else {
             self.witness(
                 index,
@@ -428,7 +615,7 @@ impl Auditor<'_> {
             );
             return;
         };
-        let transfer = self.transfer(state.pc, w);
+        let mut transfer = self.transfer(state.pc, w);
         if state.post.is_some() && transfer.is_some() {
             self.witness(
                 index,
@@ -449,32 +636,61 @@ impl Auditor<'_> {
             );
             return;
         }
-        let bit = 1u32 << self.register;
-        if e.reads & bit != 0 || (!state.pending_kill && e.merge_reads & bit != 0) {
-            self.witness(
-                index,
-                WitnessKind::Read,
-                "instruction reads incoming word before write/load commit",
-                None,
-                None,
-            );
-            return;
+        let pending;
+        if let Some(b) = state.bits.as_mut() {
+            if let Some(t) = &mut transfer {
+                b.narrow_transfer(state.pc, w, t);
+            }
+            match b.execute(state.pc, w, e) {
+                bits::Effect::Consumed(reason) => {
+                    self.witness(index, WitnessKind::Read, reason, None, None);
+                    return;
+                }
+                bits::Effect::Frontier(reason) => {
+                    self.witness(index, WitnessKind::Frontier, reason, None, None);
+                    return;
+                }
+                bits::Effect::Dead => {
+                    self.end(
+                        index,
+                        "all propagated incoming bits overwritten or masked away",
+                        None,
+                        None,
+                        Endpoint::Killed,
+                    );
+                    return;
+                }
+                bits::Effect::Continue => {}
+            }
+            pending = b.pending.is_some();
+        } else {
+            let bit = 1u32 << self.register;
+            if e.reads & bit != 0 || (!state.pending_kill && e.merge_reads & bit != 0) {
+                self.witness(
+                    index,
+                    WitnessKind::Read,
+                    "instruction reads incoming word before write/load commit",
+                    None,
+                    None,
+                );
+                return;
+            }
+            if state.pending_kill || (e.write == Some(self.register) && !e.delayed_write) {
+                self.end(
+                    index,
+                    if state.pending_kill {
+                        "delayed load commits after old-value read opportunity"
+                    } else {
+                        "immediate register overwrite before any read"
+                    },
+                    None,
+                    None,
+                    Endpoint::Killed,
+                );
+                return;
+            }
+            pending = e.write == Some(self.register) && e.delayed_write;
         }
-        if state.pending_kill || (e.write == Some(self.register) && !e.delayed_write) {
-            self.witness(
-                index,
-                WitnessKind::End,
-                if state.pending_kill {
-                    "delayed load commits after old-value read opportunity"
-                } else {
-                    "immediate register overwrite before any read"
-                },
-                None,
-                None,
-            );
-            return;
-        }
-        let pending = e.write == Some(self.register) && e.delayed_write;
         if let Some(post) = state.post {
             match post {
                 Transfer::Flow(targets) => {
@@ -485,6 +701,8 @@ impl Auditor<'_> {
                                 pc,
                                 pending_kill: pending,
                                 post: None,
+                                bits: state.bits.clone(),
+                                bounds: vec![],
                             },
                         );
                     }
@@ -498,10 +716,12 @@ impl Auditor<'_> {
                                     pc,
                                     pending_kill: pending,
                                     post: None,
+                                    bits: state.bits.clone(),
+                                    bounds: vec![],
                                 },
                             );
                         } else {
-                            self.calls(index, &[pc], None, pending);
+                            self.calls(index, &[pc], None, pending, state.bits.clone());
                         }
                     }
                 }
@@ -515,10 +735,22 @@ impl Auditor<'_> {
                             None,
                         );
                     } else {
-                        self.returned(index);
+                        if state.bits.as_ref().is_some_and(|b| b.has_aliases(self.register))
+                            && self.policy.return_use == ReturnUse::Discarded
+                        {
+                            self.witness(
+                                index,
+                                WitnessKind::Frontier,
+                                "discarded original register does not establish non-use of propagated aliases",
+                                None,
+                                None,
+                            );
+                        } else {
+                            self.returned(index);
+                        }
                     }
                 }
-                Transfer::Calls { targets, resume } => self.calls(index, &targets, resume, pending),
+                Transfer::Calls { targets, resume } => self.calls(index, &targets, resume, pending, state.bits.clone()),
                 Transfer::Unknown(reason) => self.witness(index, WitnessKind::Frontier, reason, None, None),
             }
         } else {
@@ -528,6 +760,8 @@ impl Auditor<'_> {
                     pc: state.pc.wrapping_add(4),
                     pending_kill: pending,
                     post: transfer,
+                    bits: state.bits.clone(),
+                    bounds: vec![],
                 },
             );
         }
@@ -563,6 +797,12 @@ impl Auditor<'_> {
                         target: Some(self.nodes[next].state.pc),
                         evidence: None,
                         reviewed_instruction_path: vec![],
+                        endpoint: None,
+                        bits_before: self.nodes[next]
+                            .state
+                            .bits
+                            .as_ref()
+                            .map_or_else(BTreeMap::new, |b| b.masks()),
                     });
                 }
             }
@@ -586,13 +826,42 @@ pub fn audit(
             "extent must be nonempty, aligned, and fit 32-bit address space".into(),
         ));
     }
-    if !(1..32).contains(&register) || extent.word(entry).is_none() || policy.max_states == 0 {
+    if !(1..32).contains(&register)
+        || extent.word(entry).is_none()
+        || policy.max_states == 0
+        || policy.incoming_mask == 0
+    {
         return Err(AuditError("entry/register/state budget is invalid".into()));
+    }
+    let native = crate::evidence::sha256(&extent.words.iter().flat_map(|w| w.to_le_bytes()).collect::<Vec<_>>());
+    let mut edges = std::collections::BTreeSet::new();
+    for b in &policy.loop_bounds {
+        let w = extent.word(b.from).map(MipsWord);
+        if b.max_traversals == 0
+            || b.max_traversals > policy.max_states
+            || b.evidence.trim().is_empty()
+            || b.native_sha256 != native
+            || !edges.insert((b.from, b.target))
+            || w.is_none_or(|w| {
+                !matches!(w.op(), 1 | 4 | 5 | 6 | 7)
+                    || b.from
+                        .wrapping_add(4)
+                        .wrapping_add((w.simm() as i32).wrapping_mul(4) as u32)
+                        != b.target
+            })
+            || extent.word(b.target).is_none()
+        {
+            return Err(AuditError(
+                "loop bound must pin current native bytes and one actual conditional edge".into(),
+            ));
+        }
     }
     let state = State {
         pc: entry,
         pending_kill: false,
         post: None,
+        bits: (policy.mode == AuditMode::ObservableBits).then(|| bits::Bits::new(register, policy.incoming_mask)),
+        bounds: vec![0; policy.loop_bounds.len()],
     };
     let mut a = Auditor {
         extent,
@@ -684,6 +953,128 @@ impl crate::Binary {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn observable(words: &[u32], mask: u32) -> AuditReport {
+        audit(
+            ExactExtent {
+                start: 0x80010000,
+                words,
+            },
+            0x80010000,
+            5,
+            &AuditPolicy {
+                mode: AuditMode::ObservableBits,
+                incoming_mask: mask,
+                ..AuditPolicy::default()
+            },
+        )
+        .unwrap()
+    }
+    #[test]
+    fn observable_bits_follow_copies_masks_and_store_lanes() {
+        // move t0,a1; andi t0,t0,ffff; overwrite a1; sb t0,0(a0);
+        // overwrite t0; jr ra; nop. High incoming bits never reach the byte.
+        let words = [
+            0x00a04021, 0x3108ffff, 0x24050000, 0xa0880000, 0x24080000, 0x03e00008, 0,
+        ];
+        assert_eq!(observable(&words, 0xffff0000).outcome, Outcome::Dead);
+        assert_eq!(observable(&words, 0xffffffff).outcome, Outcome::Consumed);
+        let conservative = audit(
+            ExactExtent {
+                start: 0x80010000,
+                words: &words,
+            },
+            0x80010000,
+            5,
+            &AuditPolicy::default(),
+        )
+        .unwrap();
+        assert_eq!(conservative.outcome, Outcome::Consumed);
+        let r = observable(&words, 0xffff);
+        assert!(r.reads[0].bits_before.contains_key("gpr8"));
+    }
+    #[test]
+    fn observable_delay_loads_and_branch_slots_keep_old_bits() {
+        // lw a1,0(a0); sb a1,0(a0): the old incoming byte is observed.
+        assert_eq!(
+            observable(&[0x8c850000, 0xa0850000, 0x03e00008, 0], 0xff).outcome,
+            Outcome::Consumed
+        );
+        assert_eq!(
+            observable(&[0x8c850000, 0, 0xa0850000, 0x03e00008, 0], 0xff).outcome,
+            Outcome::Dead
+        );
+        // Captured branch condition remains observable before the slot kill.
+        assert_eq!(
+            observable(&[0x10a00001, 0x24050000, 0x03e00008, 0], 0xffffffff).outcome,
+            Outcome::Consumed
+        );
+    }
+    #[test]
+    fn observable_link_addresses_and_partial_load_lanes_remain_architectural() {
+        // JAL writes the actual pc+8 into RA before its slot. Bit three cannot
+        // be removed by AND with RA; bit zero can, at this exact call address.
+        let words = [0x0c008000, 0x00bf2824, 0x24050000, 0x03e00008, 0];
+        assert_eq!(observable(&words, 0x8).outcome, Outcome::Unresolved);
+        assert_eq!(observable(&words, 0x1).outcome, Outcome::Dead);
+        // Known-aligned LWR replaces every lane; offset one preserves the old
+        // high byte, which a subsequent shift/store can observe after delay.
+        let full = [0x24040000, 0x98850000, 0, 0x00052e02, 0xa0050000, 0x24050000];
+        assert_eq!(observable(&full, 0xff000000).outcome, Outcome::Dead);
+        let mut partial = full;
+        partial[1] = 0x98850001;
+        assert_eq!(observable(&partial, 0xff000000).outcome, Outcome::Consumed);
+    }
+    #[test]
+    fn exact_local_counter_closes_loop_but_mutation_and_budget_refuse() {
+        // li t0,2; dec t0; bnez t0,dec; nop; kill a1.
+        let words = [0x24080002, 0x2508ffff, 0x1500fffe, 0, 0x24050000, 0x03e00008, 0];
+        assert_eq!(observable(&words, 0xffffffff).outcome, Outcome::Dead);
+        let mut mutation = words;
+        mutation[1] = 0x25080000;
+        assert_eq!(observable(&mutation, 0xffffffff).outcome, Outcome::Unresolved);
+        let p = AuditPolicy {
+            mode: AuditMode::ObservableBits,
+            max_states: 3,
+            ..AuditPolicy::default()
+        };
+        assert_eq!(
+            audit(
+                ExactExtent {
+                    start: 0x80010000,
+                    words: &words
+                },
+                0x80010000,
+                5,
+                &p
+            )
+            .unwrap()
+            .outcome,
+            Outcome::Unresolved
+        );
+    }
+    #[test]
+    fn observable_aliases_do_not_become_discarded_register_kills() {
+        let words = [0x00a01021, 0x24050000, 0x03e00008, 0];
+        let p = AuditPolicy {
+            mode: AuditMode::ObservableBits,
+            return_use: ReturnUse::Discarded,
+            ..AuditPolicy::default()
+        };
+        assert_eq!(
+            audit(
+                ExactExtent {
+                    start: 0x80010000,
+                    words: &words
+                },
+                0x80010000,
+                5,
+                &p
+            )
+            .unwrap()
+            .outcome,
+            Outcome::Unresolved
+        );
+    }
     const BASE: u32 = 0x8001_0000;
     fn i(op: u32, rs: u32, rt: u32, imm: i32) -> u32 {
         (op << 26) | (rs << 21) | (rt << 16) | (imm as u32 & 65535)
@@ -702,6 +1093,63 @@ mod tests {
             return_use: ReturnUse::Discarded,
             ..Default::default()
         }
+    }
+    #[test]
+    fn reviewed_bounds_pin_bytes_and_remove_only_the_bounded_conditional_edge() {
+        let words = [i(5, 8, 0, -1), 0, i(9, 0, 5, 0)];
+        assert_eq!(run(&words, 5, &AuditPolicy::default()).outcome, Outcome::Unresolved);
+        let mut p = AuditPolicy::default();
+        p.loop_bounds.push(LoopBound {
+            from: BASE,
+            target: BASE,
+            max_traversals: 2,
+            evidence: "reviewed-input-loop-bound".into(),
+            native_sha256: crate::evidence::sha256(&words.iter().flat_map(|w| w.to_le_bytes()).collect::<Vec<_>>()),
+        });
+        assert_eq!(run(&words, 5, &p).outcome, Outcome::Dead);
+        p.loop_bounds[0].native_sha256 = "0".repeat(64);
+        assert!(
+            audit(
+                ExactExtent {
+                    start: BASE,
+                    words: &words
+                },
+                BASE,
+                5,
+                &p
+            )
+            .is_err()
+        );
+    }
+    #[test]
+    fn cross_register_contracts_cover_every_alias_and_do_not_kill_preserved_words() {
+        let words = [
+            0x00a04025,
+            j(3, 0x80020000),
+            0,
+            i(43, 0, 8, 0),
+            i(9, 0, 5, 0),
+            i(9, 0, 8, 0),
+        ];
+        let mut p = AuditPolicy {
+            mode: AuditMode::ObservableBits,
+            ..Default::default()
+        };
+        let summary = |register, effect| CalleeSummary {
+            register,
+            effect,
+            evidence: format!("native-{register}"),
+            instruction_path: vec![],
+        };
+        p.cross_register_callees.insert(
+            0x80020000,
+            vec![summary(5, CalleeEffect::Killed), summary(8, CalleeEffect::Killed)],
+        );
+        assert_eq!(run(&words, 5, &p).outcome, Outcome::Dead);
+        p.cross_register_callees.get_mut(&0x80020000).unwrap()[1].effect = CalleeEffect::Preserved;
+        assert_eq!(run(&words, 5, &p).outcome, Outcome::Consumed);
+        p.cross_register_callees.get_mut(&0x80020000).unwrap().pop();
+        assert_eq!(run(&words, 5, &p).outcome, Outcome::Unresolved);
     }
 
     #[test]

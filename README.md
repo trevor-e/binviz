@@ -63,7 +63,9 @@ Objective-C classes, categories, protocols and selectors back.
 
 **Builds compared and crashes explained.** Compare two binaries, or two
 folders or zips (two `.ipa` files, say): what was added, removed and grew,
-down to sections, owners and symbols. Functions are matched across builds by
+down to sections, owners and symbols. The browser's **Progress** view exports
+byte-weighted decompilation treemaps as PNG/SVG; `binviz progress <file> --svg progress.svg`
+generates the same image from the CLI ([usage](docs/progress-images.md)). Functions are matched across builds by
 name, bytes, instructions and the call graph, then lined up side by side. Drop
 an Apple crash report, an Android tombstone or a stack trace and every frame
 gets its function, source line and inlined calls from the binaries that are
@@ -189,14 +191,27 @@ npm run dev
 
 `npm run dev` builds the WASM package and starts Vite. After changing Rust
 code, run `npm run wasm`. `npm run build` produces a static site in `web/dist`.
+For faster local iteration, run `npm run wasm:debug`, then `npx vite`; keep Vite
+running for TypeScript/CSS edits and rerun `npm run wasm:debug` after Rust edits.
+Run `npm run build` for the production output when the batch is finished. Web
+builds do not rebuild the native CLI or MCP executables.
 On Windows with the GNU toolchain, building `wasm-bindgen-cli` needs
 `dlltool.exe` on `PATH` (it ships with MinGW-w64).
 
 ## The CLI
 
 ```bash
-cargo run --release -p binviz-cli -- info path/to/binary
+cargo build -p binviz-cli
+./target/debug/binviz info path/to/binary
 ```
+
+Use debug while developing Binviz itself; on Windows its filename is
+`target/debug/binviz.exe`. Rebuild after Rust changes, then reuse the executable.
+For routine inspection and decompilation work, prefer the optimized native build:
+`cargo build --release -p binviz-cli` and use `target/release/binviz` (`.exe` on
+Windows). Debug and release are separate outputs: updating one leaves the other
+unchanged. Release builds use full optimization and link-time optimization and
+take longer. See the [recommended decompilation workflow](docs/decompilation-workspaces.md#recommended-workflow).
 
 Run it with no arguments for the full command list: `info`, `layout`,
 `inspect`, `check`, `symbols`, `strings`, `search`, `disasm`, `func`, `refs`,
@@ -218,6 +233,11 @@ exceptions. See [call-contract inspection](docs/call-contracts.md).
 
 The browser's **Call contracts** view imports the same reports with exact
 caller/callee filters and expandable source, type and identity evidence.
+The maintained [Clang facts adapter](docs/compiler-facts.md) produces versioned
+observations for full-call auditing. `evidence <report.json>` verifies actual
+artifact bytes and explains stale stage dependencies. The browser offers source
+spans, identity filters and native register paths; persistent MCP sessions expose
+the same contract and register audits.
 
 `register-use <file> <address> <bytes> <entry> <register>` audits an incoming
 PS1 MIPS register word over an exact extent, with read/end/frontier instruction
@@ -229,12 +249,17 @@ See [register-use examples and policy schema](docs/register-use.md).
 ## The MCP server
 
 ```bash
-cargo build --release -p binviz-mcp
+cargo build -p binviz-mcp
 ```
 
 ```bash
-claude mcp add binviz -- /path/to/binviz/target/release/binviz-mcp
+claude mcp add binviz -- /path/to/binviz/target/debug/binviz-mcp
 ```
+
+On Windows use the absolute path to `binviz-mcp.exe`. Restart the MCP server
+after rebuilding so the client uses the new code. For an optimized installation,
+build with `--release` and configure the client to use `target/release/binviz-mcp`.
+The configured path must match the profile you rebuilt.
 
 Any MCP client works (JSON-RPC over stdio). Things to ask: *"Open
 ~/Downloads/MyApp and tell me why it's so big"*, *"Which functions use this
@@ -300,6 +325,25 @@ cargo test
 - Master System, Game Gear and PC Engine ROMs are not recognized yet.
 
 The [reference](docs/reference.md#limitations-and-ideas) has the full list.
+
+## Decompilation tooling
+
+[Decompilation workspaces](docs/decompilation-workspaces.md) join physical units,
+compiler call facts, actual linked providers, paired native audits and exact scoped
+policies. Inspect caller packages in Contracts, CLI `workspace`, or persistent MCP.
+Review typed adapter edits, storage/access extents and before/candidate promotion
+plans. [Build batches](docs/build-batches.md) reuse content-addressed stage outputs;
+[proof campaigns](docs/proof-campaigns.md) compare configured native/WASM runners.
+Scoped matching publication, readability acceptance, selected service and memory
+initialization closures, finite callback/stack models and exception comparisons
+are available through the same workspace, CLI and MCP APIs. Unknown proof paths
+remain explicit refusals. Start with the [recommended workflow and command guide](docs/decompilation-workspaces.md#recommended-workflow):
+run identity preflight first, reuse native tools and caches, and execute campaigns
+only when new behavioral evidence is needed. The [feature overlap review](docs/feature-overlap-review.md)
+records consolidation candidates and the acceptance scopes to preserve.
+
+[Progress images](docs/progress-images.md) export the built-in function treemap as
+PNG or SVG. Open **Progress** (`R`) or run `binviz progress game.exe --svg progress.svg`.
 
 ## License
 

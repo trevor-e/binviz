@@ -33,11 +33,16 @@ impl Signature {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ContractKind {
     ArgumentCount,
     VoidResult,
+    ArgumentType,
+    ReturnType,
+    MissingDefinition,
+    AmbiguousDefinition,
+    UnsupportedContract,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -79,6 +84,10 @@ pub struct ContractReport {
 
 impl ContractReport {
     pub fn parse(bytes: &[u8]) -> Result<Self, String> {
+        let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
+        if value.get("format").and_then(serde_json::Value::as_str) == Some("binviz-compiler-facts") {
+            return crate::compilerfacts::CompilerFacts::parse(bytes).map(|facts| facts.audit());
+        }
         let report: Self = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
         if report.contract_count.is_some_and(|n| n != report.contracts.len()) {
             return Err("contractCount differs from the findings array".into());
@@ -96,14 +105,34 @@ impl ContractReport {
                 return Err("finding needs caller, callee, source and actualCallCounts".into());
             }
             let consistent = match row.kind {
-                ContractKind::ArgumentCount => {
-                    !row.definition_abi.variadic
-                        && row
-                            .actual_call_counts
-                            .iter()
-                            .any(|&n| n != row.definition_abi.parameter_types.len())
+                ContractKind::ArgumentCount => row.actual_call_counts.iter().any(|&n| {
+                    if row.definition_abi.variadic {
+                        n < row.definition_abi.parameter_types.len()
+                    } else {
+                        n != row.definition_abi.parameter_types.len()
+                    }
+                }),
+                ContractKind::VoidResult => {
+                    (row.definition_abi.return_type == "void"
+                        || row
+                            .details
+                            .get("providerReturnType")
+                            .and_then(|t| t.get("category"))
+                            .and_then(serde_json::Value::as_str)
+                            == Some("void"))
+                        && !row.all_results_discarded
                 }
-                ContractKind::VoidResult => row.definition_abi.return_type == "void" && !row.all_results_discarded,
+                _ => {
+                    row.details
+                        .get("findingId")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|id| !id.is_empty())
+                        && row
+                            .details
+                            .get("reason")
+                            .and_then(serde_json::Value::as_str)
+                            .is_some_and(|s| !s.is_empty())
+                }
             };
             if !consistent {
                 return Err(format!(
@@ -146,7 +175,11 @@ impl ContractReport {
                 row.caller,
                 row.callee,
                 row.source,
-                row.declared_caller_abi.display(),
+                if row.old_style {
+                    format!("{} ()", row.declared_caller_abi.return_type)
+                } else {
+                    row.declared_caller_abi.display()
+                },
                 if row.old_style {
                     " [unspecified parameter list]"
                 } else {
@@ -158,8 +191,22 @@ impl ContractReport {
             let reason = match row.kind {
                 ContractKind::ArgumentCount => "supplied argument count differs from the definition",
                 ContractKind::VoidResult => "caller consumes a value from a void definition",
+                ContractKind::ArgumentType => "supplied argument representation differs from definition",
+                ContractKind::ReturnType => "consumed result representation differs from definition",
+                ContractKind::MissingDefinition => "no actual definition available",
+                ContractKind::AmbiguousDefinition => "multiple actual definitions require ownership resolution",
+                ContractKind::UnsupportedContract => "contract cannot be lowered by the selected profile",
             };
             let _ = writeln!(out, "  finding: {reason}");
+            if let Some(reason) = row.details.get("reason").and_then(serde_json::Value::as_str) {
+                let _ = writeln!(out, "  reason: {reason}");
+            }
+            if let Some(id) = row.details.get("findingId").and_then(serde_json::Value::as_str) {
+                let _ = writeln!(out, "  finding ID: {id}");
+            }
+            if let Some(span) = row.details.get("sourceSpan") {
+                let _ = writeln!(out, "  compiler source span: {span}");
+            }
             if let Some(shapes) = row.details.get("actualCallShapes") {
                 let _ = writeln!(out, "  reported typed call shapes: {shapes}");
             }

@@ -430,8 +430,16 @@ build` produces a static site in `web/dist` that can be hosted anywhere.
 ## The CLI
 
 ```bash
-cargo run --release -p binviz-cli -- info path/to/binary
+cargo build -p binviz-cli
+./target/debug/binviz info path/to/binary
 ```
+
+On Windows the executable is `target/debug/binviz.exe`. Use this path while
+developing Binviz and rebuild after Rust changes. For routine inspection, prefer
+`cargo build --release -p binviz-cli` and `target/release/binviz` (`.exe` on Windows). The two
+profiles are independent, and web builds do not update either native binary.
+The [recommended workflow](decompilation-workspaces.md#recommended-workflow)
+covers cached builds, campaigns, scoped publication and validation cadence.
 
 | Command | |
 |---|---|
@@ -494,12 +502,15 @@ agent opens a binary once, it stays loaded, and every question after that is
 answered from memory, in milliseconds even for a 1 GB app.
 
 ```bash
-cargo build --release -p binviz-mcp
+cargo build -p binviz-mcp
 ```
 
 ```bash
-claude mcp add binviz -- /path/to/binviz/target/release/binviz-mcp
+claude mcp add binviz -- /path/to/binviz/target/debug/binviz-mcp
 ```
+
+Use `binviz-mcp.exe` on Windows and restart the server after rebuilding. For
+optimized use, build with `--release` and configure the release executable path.
 
 Any MCP client works the same way (the server speaks JSON-RPC over stdio).
 
@@ -594,6 +605,7 @@ CLI and the MCP server:
 | `flags <file> <src\|folder> <cmd> [<flags>…] [--jobs N] [--function name] [--top N] [--json]` | `rank_builds` | A unit's builds ranked by how they match the original, best first: the CLI compiles the source with each set of flags (the command's `{src}`, `{out}` and `{flags}` filled in); over MCP, the agent compiles and passes the objects. Which flags (or compiler) a unit was built with. `--jobs N` runs N compiles at once. A folder of sources makes each file a variant (every `.c`, `.cpp`, `.cc` or `.s` in it), ranked by distance as `rank` does, `--function` for one function of them; a command with `{srcdir}` and `{outdir}` in place of `{src}` and `{out}` runs once for the whole folder and must write `<name>.o` for each `<name>.c` (the caller fans out inside it: one container call for a batch). `--record [--meta …]` puts each function's best outcome among the variants into the notes, as `match --record` does: a wave of new functions is one `flags` call, compiled in one batch, scored in one process and recorded |
 | `report <file> <json>` | `place_report` | objdiff's report placed on the binary's functions by virtual address or name; over MCP, recorded in the notes too (matched, best percent, what no longer matches) |
 | `progress <file> [json]` | `export_progress` | Where the decompilation stands, from the notes' statuses, as objdiff's report (the JSON decomp.dev reads, 64-bit numbers as strings): a unit per source file, what isn't decompiled yet in a unit of its own, library code in its own category; the totals and each unit. The text form starts with the counts by state and partial credit (each function's best percent weighted by its size, what the fuzzy percent is of), then the same per area of the image when there are several (a memory image's kernel and RAM, an executable's program, an overlay). A range a note merges (a sized note over the pieces of a function) counts once, at its size |
+| `progress <file> --svg progress.svg` | `export_progress` with `format: "svg"` | A self-contained decompilation treemap image: one tile per function, area proportional to code bytes, color from its recorded state. The browser's **Progress** view also exports PNG and SVG. See [progress images](progress-images.md) |
 | `splat <file> <name> [dir] [splits…]` | `splat_export` | A splat YAML config (header, the code segment at its load address split into units, the bytes after the last function as data, the BSS size) and `symbol_addrs.txt` naming every function and known place |
 | `splat <file> import <syms>` | `import_symbol_addrs` | A splat symbol file's names into the notes (splat's own `func_…`/`D_…` names left out) |
 | `sdk <file> <libs…> [notes]` | `identify_sdk` | Library code in the binary, found by the signatures of the libraries' functions (their code with the linker's fields masked): a PlayStation game's Psy-Q SDK (its `.LIB`/`.OBJ` files, Sony's `LNK` object format), or a Windows program's statically linked C runtime (MSVC's `.lib` archives of COFF objects, `.obj` files; ELF `.a`/`.o` too). Each function found is named, with an `sdk:` note, and marked library code so a decompilation leaves it be (its callers don't wait on it); the libraries it was linked with are counted. Import library members and objects with no machine code (compiled with `/GL` or `-flto`) are skipped, and said so. Signatures shorter than 16 bytes aren't used (they match by chance); an x86 function takes a signature's name only when it is as long as the signature, padding aside. Given several releases of the SDK side by side (a folder each), it says which release the code was built with (the one having the most of the functions found, and how many only it has), which fixes the compiler and assembler a matching decompilation needs |
@@ -955,3 +967,23 @@ cargo test
   DWARF alone, and a source map is found by its name (`.wasm.map`): named
   otherwise, a DWARF module is listed as a module of its own and a source
   map isn't paired, though either can still be attached by hand.
+
+Decompilation records: [workspaces](decompilation-workspaces.md), [incremental build batches](build-batches.md), [differential campaigns](proof-campaigns.md), [progress images](progress-images.md).
+
+Use the workspace [command guide](decompilation-workspaces.md#choosing-an-entry-point)
+to choose an inspection or acceptance operation. The [feature overlap review](feature-overlap-review.md)
+explains which interfaces share an engine and where consolidation needs migration.
+
+The adoption APIs use the same workspace evidence and parsers:
+
+| CLI | MCP | Purpose |
+| --- | --- | --- |
+| `workspace MANIFEST --preflight --json` | `workspace_preflight` | Aggregate dependency mismatches and producer owners before compiler work |
+| `workspace MANIFEST --adoption --json` | `adoption_evidence` | Reviewed SDK catalogs, immutable overlays, dependency transitions, source maps and typed import authority |
+| `source-plans MANIFEST --request REQUEST.json` | `source_plans` | Compose immutable plans, map exact spans or rename one compiler declarator |
+| `linked MODULE.wasm --imports` | Workspace linked-module evidence | Read the full ordered import inventory, type indices, signatures and module identity without modifying the module |
+
+Library-source reporting now scans targeted RCS `$Id:` records in the complete
+binary, including strings embedded in code that the general string index omits.
+It reuses the RCS parser, records file offsets and mapped addresses, bounds each
+candidate, rejects malformed/truncated records and deduplicates source identities.

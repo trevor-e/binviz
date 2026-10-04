@@ -118,6 +118,7 @@ export class Api {
   attribution(mode: AttributionMode) { return this.call<Attribution | undefined>('attribution', mode); }
   attributedRanges(mode: AttributionMode, id: number) { return this.call<AttributedRange[]>('attributedRanges', mode, id); }
   coverage(maxGaps: number) { return this.call<Coverage>('coverage', maxGaps); }
+  progressSvg(width: number, height: number, includeLibrary: boolean) { return this.call<string>('progressSvg', width, height, includeLibrary); }
   worklist(limit: number) { return this.call<Worklist>('worklist', limit); }
   coverageStrip(section: number, buckets: number) { return this.call<MapStatus[]>('coverageStrip', section, buckets); }
   coverageMap(buckets: number) { return this.call<MapStatus[]>('coverageMap', buckets); }

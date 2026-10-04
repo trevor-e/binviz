@@ -230,6 +230,57 @@ pub fn call_contracts_parse(text: &str) -> Result<JsValue, JsError> {
     to_js(&report.filtered(None, None))
 }
 
+/// Recompute work packages from actual bytes. Import alone never verifies them.
+#[wasm_bindgen(js_name = workspaceAnalyze)]
+pub fn workspace_analyze(text: &str, files: JsValue) -> Result<JsValue, JsError> {
+    let workspace = binviz::workspace::Workspace::parse(text.as_bytes()).map_err(err)?;
+    let files: Option<std::collections::BTreeMap<String, Vec<u8>>> = if files.is_null() || files.is_undefined() {
+        None
+    } else {
+        Some(serde_wasm_bindgen::from_value(files).map_err(err)?)
+    };
+    to_js(&workspace.analyze(files.as_ref()).map_err(err)?)
+}
+
+#[wasm_bindgen(js_name = adapterPlan)]
+pub fn adapter_plan(text: &str, files: JsValue, policies: JsValue) -> Result<JsValue, JsError> {
+    let w = binviz::workspace::Workspace::parse(text.as_bytes()).map_err(err)?;
+    let files: std::collections::BTreeMap<String, Vec<u8>> = serde_wasm_bindgen::from_value(files).map_err(err)?;
+    let policies: Vec<String> = serde_wasm_bindgen::from_value(policies).map_err(err)?;
+    to_js(&binviz::adapters::plan(&w, &files, &policies).map_err(err)?)
+}
+
+#[wasm_bindgen(js_name = workspaceMergeBuilds)]
+pub fn workspace_merge_builds(text: &str, batch: &str) -> Result<String, JsError> {
+    let mut w = binviz::workspace::Workspace::parse(text.as_bytes()).map_err(err)?;
+    w.merge_build_batch(batch.as_bytes()).map_err(err)?;
+    serde_json::to_string(&w).map_err(err)
+}
+
+#[wasm_bindgen(js_name = campaignReport)]
+pub fn campaign_report(text: &str, files: JsValue) -> Result<JsValue, JsError> {
+    let files: Option<std::collections::BTreeMap<String, Vec<u8>>> = if files.is_null() || files.is_undefined() {
+        None
+    } else {
+        Some(serde_wasm_bindgen::from_value(files).map_err(err)?)
+    };
+    to_js(&binviz::campaign::audit_report(text.as_bytes(), files.as_ref()).map_err(err)?)
+}
+
+/// Bytes supplied by the browser, keyed by artifact ID; no claimed digests trusted.
+#[wasm_bindgen(js_name = evidenceVerify)]
+pub fn evidence_verify(manifest: &str, files: JsValue) -> Result<JsValue, JsError> {
+    let manifest: binviz::evidence::EvidenceManifest = serde_json::from_str(manifest).map_err(err)?;
+    let files: std::collections::BTreeMap<String, Vec<u8>> = serde_wasm_bindgen::from_value(files).map_err(err)?;
+    to_js(&manifest.verify(Some(&files)).map_err(err)?)
+}
+
+/// Full validated compiler facts remain available separately from findings.
+#[wasm_bindgen(js_name = compilerFactsParse)]
+pub fn compiler_facts_parse(text: &str) -> Result<JsValue, JsError> {
+    to_js(&binviz::compilerfacts::CompilerFacts::parse(text.as_bytes()).map_err(err)?)
+}
+
 /// A crash report read from text (Apple .crash or .ips, an Android
 /// tombstone, a stack trace), or null if the text is none of those.
 #[wasm_bindgen(js_name = crashParse)]
@@ -304,6 +355,12 @@ fn crash_candidates(info: &binviz::package::PackageInfo) -> Vec<binviz::crash::C
 
 #[wasm_bindgen]
 impl Session {
+    #[wasm_bindgen(js_name = registerUseBatch)]
+    pub fn register_use_batch(&self, text: &str) -> Result<JsValue, JsError> {
+        let bin = self.binary.as_ref().ok_or_else(|| JsError::new("no binary open"))?;
+        let batch = serde_json::from_str(text).map_err(err)?;
+        to_js(&binviz::registeraudit::run_batch(bin, &batch).map_err(err)?)
+    }
     #[wasm_bindgen(constructor)]
     pub fn new() -> Session {
         Session::default()
@@ -896,6 +953,14 @@ impl Session {
         Ok(self.bin()?.data().to_vec())
     }
 
+    /// Navigation requires both loaded bytes and their physical mapping. Equal
+    /// overlay addresses alone cannot select a unit.
+    #[wasm_bindgen(js_name = workspaceUnitMatches)]
+    pub fn workspace_unit_matches(&self, text: &str, unit: &str) -> Result<bool, JsError> {
+        let w = binviz::workspace::Workspace::parse(text.as_bytes()).map_err(err)?;
+        w.matches_loaded_unit(self.bin()?, unit).map_err(err)
+    }
+
     pub fn summary(&self) -> Result<JsValue, JsError> {
         to_js(self.bin()?.summary())
     }
@@ -1149,6 +1214,13 @@ impl Session {
     /// Reverse-engineering coverage of the code and data sections.
     pub fn coverage(&self, max_gaps: u32) -> Result<JsValue, JsError> {
         to_js(&self.bin()?.coverage(max_gaps))
+    }
+
+    #[wasm_bindgen(js_name = progressSvg)]
+    pub fn progress_svg(&self, width: u32, height: u32, include_library: bool) -> Result<String, JsError> {
+        self.bin()?
+            .progress_svg(&self.name, width, height, include_library)
+            .map_err(err)
     }
 
     /// The unnamed functions to look at next (see `Binary::worklist`).

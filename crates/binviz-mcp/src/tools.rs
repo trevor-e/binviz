@@ -54,6 +54,9 @@ pub struct Server {
     pub(crate) open: Vec<Open>,
     pub(crate) current: Option<usize>,
     pub(crate) packages: Vec<crate::folders::OpenPackage>,
+    pub(crate) contracts: std::collections::BTreeMap<String, binviz::contracts::ContractReport>,
+    workspaces: std::collections::BTreeMap<String, (binviz::workspace::Workspace, Option<PathBuf>)>,
+    campaigns: std::collections::BTreeMap<String, (Vec<u8>, Option<PathBuf>)>,
 }
 
 // --- Tool definitions --------------------------------------------------------
@@ -72,8 +75,29 @@ fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&s
             | "size_diff"
             | "diff_functions"
             | "list_disc_files"
+            | "workspace_preflight"
+            | "adoption_evidence"
+            | "source_plans"
             | "extract_disc_file"
             | "find_code_blobs"
+            | "call_contracts"
+            | "compiler_facts"
+            | "verify_evidence"
+            | "workspace_import"
+            | "unit_inventory"
+            | "caller_package"
+            | "contract_blockers"
+            | "paired_register_audits"
+            | "explain_policy"
+            | "plan_adapters"
+            | "proof_campaign"
+            | "storage_evidence"
+            | "promotion_plan"
+            | "callee_certificates"
+            | "proof_closures"
+            | "matching_publications"
+            | "readability_batches"
+            | "publish_matches"
     ) {
         props["binary"] = binary_param();
     }
@@ -89,6 +113,190 @@ fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&s
 pub fn definitions() -> Vec<Value> {
     let address = |what: &str| json!({ "type": "string", "description": format!("{what}: 0x401000 (or 401000), a symbol name, name+0x10, or @0x200 for a file offset.") });
     vec![
+        tool(
+            "workspace_preflight",
+            "Preflight frozen dependencies",
+            "Report all identity mismatches, historical/current hashes and producer owners before any compiler work.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &["project_id"],
+            true,
+        ),
+        tool(
+            "adoption_evidence",
+            "Inspect adoption evidence",
+            "Verify SDK catalog joins, immutable snapshot overlays, exact dependency transitions and source maps.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &["project_id"],
+            true,
+        ),
+        tool(
+            "source_plans",
+            "Compose or map compiler source plans",
+            "Compose plans against one immutable buffer, map exact reviewed byte spans or rename individual compiler declarators. Returns a plan for review.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"},"request":{"type":"object"}}),
+            &["project_id", "request"],
+            true,
+        ),
+        tool(
+            "proof_closures",
+            "Inspect linked proof closures",
+            "Verify selected service chains, shared initialization, callback targets, stack bounds and reviewed call lowerings.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &["project_id"],
+            true,
+        ),
+        tool(
+            "matching_publications",
+            "Plan scoped matching publication",
+            "Recompute selected native objects and inspect exact note changes.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &["project_id"],
+            true,
+        ),
+        tool(
+            "readability_batches",
+            "Inspect readability acceptance",
+            "Check compiler-visible paths, full objects and original-code scores.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &["project_id"],
+            true,
+        ),
+        tool(
+            "publish_matches",
+            "Publish scoped matching notes",
+            "Recompute exact reviewed publication and write selected note changes; refuse drift.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"},"publication":{"type":"string"}}),
+            &["project_id", "publication"],
+            false,
+        ),
+        tool(
+            "callee_certificates",
+            "Inspect native callee certificates",
+            "Recompute reviewed, exact-extent single-GPR no-consumption certificates. Show killed versus discarded-return endpoints, conservative may-write continuation, dependency composition and stale/unknown/recursive refusals. No implicit ABI clobbers.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "proof_campaign",
+            "Inspect differential campaign",
+            "Import/reinspect configured native/WASM execution observations. Recompute full-word, RAM, ordered trace and bounded-local-object diffs; show first failure, actual executed pairs, explicit frontiers and current artifact identities. This read-only tool does not execute runners or accept imported passed labels.",
+            json!({"report":{"type":"string"},"report_file":{"type":"string"},"report_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "plan_adapters",
+            "Plan reviewed call adapters",
+            "Recompute eligibility and emit exact before/after prepared-C edits with dependencies. Preserves supplied expressions once, leaves callback/address references unchanged, refuses drift/unlisted sites/unsupported representations. Does not write source or count a policy as applied.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"},"policies":{"type":"array","items":{"type":"string"}}}),
+            &[],
+            true,
+        ),
+        tool(
+            "storage_evidence",
+            "Inspect storage and access extents",
+            "Describe native SP/frame observations, actual linked WASM stack operations, reviewed object sizes and initialized bytes versus exact selected-provider access. Content verification does not establish closure completeness; unresolved dynamic/IRQ/callback paths retain frontiers.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "promotion_plan",
+            "Review evidence promotion",
+            "Inspect exact accepted/candidate artifact transitions, independently verified producer stages, pinned recipes and dependent consumers. Plans preserve historical artifacts and do not publish or approve policies.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "workspace_import",
+            "Import decompilation workspace",
+            "Import a strict versioned physical/compiler/build manifest; retain it by project_id. A local manifest defaults its artifact root to its directory. Queries rehash current bytes; inline imports without root remain unverified. Complete JSON is never truncated.",
+            json!({"manifest":{"type":"string"},"manifest_file":{"type":"string"},"build_report_file":{"type":"string"},"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "unit_inventory",
+            "Verify physical ownership",
+            "Inspect exact analysis and matching extents, distinct overlay contexts, fragments, gaps, aliases and unresolved collisions in a retained workspace.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "caller_package",
+            "Inspect complete caller",
+            "Return every call observation, selected physical provider, actual linked instruction/signature, original call/slot, scoped decisions, witnesses, extraction gaps and current build outcomes. caller is the exact compiler definition id.",
+            json!({"project_id":{"type":"string"},"caller":{"type":"string"},"root":{"type":"string"}}),
+            &["caller"],
+            true,
+        ),
+        tool(
+            "contract_blockers",
+            "Rank caller blockers",
+            "Rank remaining physical-provider dependencies by distinct currently rejected and unresolved callers; retain raw observations separately from applied decisions. This does not grant claims or policies.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "paired_register_audits",
+            "Inspect paired word audits",
+            "Inspect independent provider incoming-word and caller post-call witnesses at an exact compiler call id. No ABI clobber or discarded-result kill is assumed.",
+            json!({"project_id":{"type":"string"},"call":{"type":"string"},"root":{"type":"string"}}),
+            &["call"],
+            true,
+        ),
+        tool(
+            "explain_policy",
+            "Explain scoped policy",
+            "Inspect current eligibility/refusal/application per exact caller/site, including stale dependencies, scope/count drift, conflicts and runtime-guard frontiers.",
+            json!({"project_id":{"type":"string"},"policy":{"type":"string"},"root":{"type":"string"}}),
+            &["policy"],
+            true,
+        ),
+        tool(
+            "call_contracts",
+            "Inspect call contracts",
+            "Import a legacy report or versioned Clang facts without a binary; audit every extracted call and retain it by report_id for later exact caller/callee queries. Imports start unverified. JSON is never truncated.",
+            json!({"report": {"type":"string"}, "report_file":{"type":"string"}, "report_id":{"type":"string"}, "caller":{"type":"string"}, "callee":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "compiler_facts",
+            "Inspect compiler facts",
+            "Read and validate versioned compiler observations (definitions, direct calls, references and extraction gaps). Optional report_id retains the all-call audit for call_contracts. This does not execute a compiler.",
+            json!({"report":{"type":"string"}, "report_file":{"type":"string"}, "report_id":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "verify_evidence",
+            "Verify evidence identities",
+            "Hash actual local artifacts and validate their stage dependencies. Reports stale/missing identities with reasons. Verification does not establish native behavior or authorize ABI policies.",
+            json!({"report":{"type":"string"}, "report_file":{"type":"string"}, "report_id":{"type":"string"}, "root":{"type":"string", "description":"Artifact path root; defaults to the report_file directory. Required for inline/session reports."}}),
+            &[],
+            true,
+        ),
+        tool(
+            "register_use",
+            "Audit a PS1 register",
+            "Audit a single exact PS1 extent in the loaded binary with the shared conservative core. Unknown calls/returns remain unresolved. Policies are supplied assertions, not verified proofs.",
+            json!({"request":{"type":"object", "description":"id, address, bytes, entry, register and optional policy, using the register-use batch request schema."}}),
+            &["request"],
+            true,
+        ),
+        tool(
+            "register_use_batch",
+            "Audit PS1 registers in a batch",
+            "Run schemaVersion 1 register-use requests against the loaded binary once. Preserves IDs, per-request policies and instruction witnesses. Invalid inputs refuse the batch.",
+            json!({"batch":{"type":"object"}}),
+            &["batch"],
+            true,
+        ),
         tool(
             "open_binary",
             "Open a binary",
@@ -685,9 +893,13 @@ pub fn definitions() -> Vec<Value> {
         tool(
             "export_progress",
             "Export decompilation progress",
-            "Writes where the decompilation stands (each function's status in the notes: matched, nonmatching with its best percent, library, not decompiled) as objdiff's report JSON, the format decomp.dev reads: a unit per source file the notes record, functions not decompiled yet in a unit of their own, library code in its own category. Returns the totals and each unit.",
+            "Writes where the decompilation stands from the notes. Default JSON is objdiff's report for decomp.dev. format svg writes a self-contained treemap image: function tiles sized by bytes, colored by status, grouped by source/section. Exact matched game bytes determine progress; library code is excluded from those totals.",
             json!({
                 "path": { "type": "string", "description": "Where to write the report JSON (report.json)." },
+                "format": { "type": "string", "enum": ["json", "svg"], "description": "Default json; svg generates a treemap image." },
+                "width": { "type": "integer", "minimum": 640, "maximum": 8192, "description": "SVG width, default 1600." },
+                "height": { "type": "integer", "minimum": 360, "maximum": 8192, "description": "SVG height, default 900." },
+                "include_library": { "type": "boolean", "description": "Show library tiles in SVG, default false." },
             }),
             &["path"],
             false,
@@ -838,6 +1050,8 @@ pub fn definitions() -> Vec<Value> {
             json!({
                 "count": { "type": "integer", "description": "How many to list (default 10, max 200)." },
                 "within": { "type": "string", "description": "Only functions starting in this range of addresses: lo..hi (a source file's, say)." },
+                "project_id":{"type":"string","description":"Optional retained workspace for current physical/compiler contract joins. Requires unit."},
+                "unit":{"type":"string","description":"Exact physical unit id in the workspace; loaded bytes and mapping must match uniquely."},
                 "claim": { "type": "boolean", "description": "Claim the first function listed (in progress, for agent)." },
                 "agent": { "type": "string", "description": "Your name, for claims (default \"agent\")." },
                 "include": { "type": "string", "enum": ["claimed", "skipped", "all"], "description": "Also list what others have claimed, what was set aside, or both." },
@@ -1021,8 +1235,229 @@ pub(crate) fn address_of(bin: &Binary, text: &str) -> Result<u64, String> {
 // --- Dispatch ----------------------------------------------------------------------
 
 impl Server {
+    fn workspace_tool(&mut self, name: &str, args: &Value) -> Result<String, String> {
+        let id = string(args, "project_id").unwrap_or("current").to_owned();
+        if name == "workspace_import" {
+            let inline = string(args, "manifest");
+            let file = string(args, "manifest_file");
+            if inline.is_some() == file.is_some() {
+                return Err("provide exactly one manifest or manifest_file".into());
+            }
+            let bytes = if let Some(text) = inline {
+                text.as_bytes().to_vec()
+            } else {
+                std::fs::read(file.unwrap()).map_err(|e| e.to_string())?
+            };
+            let workspace = binviz::workspace::Workspace::parse(&bytes)?;
+            let mut workspace = workspace;
+            if let Some(path) = string(args, "build_report_file") {
+                workspace.merge_build_batch(&std::fs::read(path).map_err(|e| e.to_string())?)?;
+            }
+            let root = string(args, "root")
+                .map(PathBuf::from)
+                .or_else(|| file.map(|p| Path::new(p).parent().unwrap_or(Path::new(".")).to_path_buf()));
+            self.workspaces.insert(id.clone(), (workspace, root));
+        }
+        let (workspace, saved_root) = self
+            .workspaces
+            .get(&id)
+            .ok_or("no retained workspace; use workspace_import first")?;
+        let root = string(args, "root").map(PathBuf::from).or_else(|| saved_root.clone());
+        if name == "publish_matches" {
+            let request = workspace
+                .matching_publications
+                .iter()
+                .find(|r| Some(r.id.as_str()) == string(args, "publication"))
+                .ok_or("unknown publication id")?;
+            let plan =
+                binviz::publication::publish(workspace, request, root.as_ref().ok_or("artifact root required")?)?;
+            return serde_json::to_string(&plan).map_err(|e| e.to_string());
+        }
+        let files = root.map(|r| workspace.evidence.read_artifacts(&r));
+        if name == "workspace_preflight" {
+            return serde_json::to_string(&workspace.preflight(files.as_ref().ok_or("artifact root required")?)?)
+                .map_err(|e| e.to_string());
+        }
+        if name == "source_plans" {
+            let plan = binviz::sourceplan::request(
+                workspace,
+                args.get("request").ok_or("source plan request required")?,
+                files.as_ref().ok_or("artifact root required")?,
+            )?;
+            return serde_json::to_string(&plan).map_err(|e| e.to_string());
+        }
+        if name == "plan_adapters" {
+            let policies: Vec<String> = serde_json::from_value(args.get("policies").cloned().unwrap_or(json!([])))
+                .map_err(|e| e.to_string())?;
+            let plan = binviz::adapters::plan(
+                workspace,
+                files.as_ref().ok_or("artifact root required to plan edits")?,
+                &policies,
+            )?;
+            return serde_json::to_string(&plan).map_err(|e| e.to_string());
+        }
+        let report = workspace.analyze(files.as_ref())?;
+        let result = match name {
+            "workspace_import" => json!(report),
+            "adoption_evidence" => json!(report.adoption),
+            "storage_evidence" => json!(report.storage),
+            "promotion_plan" => json!(report.promotion_plans),
+            "callee_certificates" => json!(report.callee_certificates),
+            "proof_closures" => json!(report.proof_closures),
+            "matching_publications" => json!(report.matching_publications),
+            "readability_batches" => json!(report.readability_batches),
+            "unit_inventory" => json!(report.inventory),
+            "contract_blockers" => {
+                json!({"blockers":report.blockers,"rawObservations":report.raw_observations,"rejectedCallers":report.rejected_callers,"unresolvedCallers":report.unresolved_callers})
+            }
+            "caller_package" => json!(
+                report
+                    .callers
+                    .iter()
+                    .find(|c| Some(c.id.as_str()) == string(args, "caller"))
+                    .ok_or("unknown exact compiler caller id")?
+            ),
+            "paired_register_audits" => {
+                let call = report
+                    .callers
+                    .iter()
+                    .flat_map(|c| &c.calls)
+                    .find(|c| Some(c.call.id.as_str()) == string(args, "call"))
+                    .ok_or("unknown exact call id")?;
+                json!({"call":call.call.id,"state":call.state,"reasons":call.reasons,"audits":call.audits,"originalInstructions":call.original_instructions})
+            }
+            "explain_policy" => {
+                let policy = string(args, "policy").ok_or("policy id required")?;
+                if !workspace.policies.iter().any(|p| p.id == policy) {
+                    return Err("unknown policy id".into());
+                }
+                json!({"policy":workspace.policies.iter().find(|p|p.id==policy),"decisions":report.callers.iter().flat_map(|c|c.calls.iter().flat_map(move |site|site.policies.iter().filter(move |p|p.policy==policy).map(move |p|json!({"caller":c.id,"call":site.call.id,"decision":p})))).collect::<Vec<_>>()})
+            }
+            _ => return Err("unknown workspace operation".into()),
+        };
+        serde_json::to_string(&result).map_err(|e| e.to_string())
+    }
+    fn contract_tool(&mut self, name: &str, args: &Value) -> Result<String, String> {
+        let text = string(args, "report");
+        let file = string(args, "report_file");
+        if text.is_some() && file.is_some() {
+            return Err("provide report or report_file, not both".into());
+        }
+        let bytes = if let Some(text) = text {
+            Some(text.as_bytes().to_vec())
+        } else if let Some(file) = file {
+            Some(std::fs::read(file).map_err(|e| format!("{file}: {e}"))?)
+        } else {
+            None
+        };
+        let id = string(args, "report_id").unwrap_or("current").to_owned();
+        if name == "compiler_facts" {
+            let facts = binviz::compilerfacts::CompilerFacts::parse(
+                bytes
+                    .as_deref()
+                    .ok_or("compiler_facts requires report or report_file")?,
+            )?;
+            self.contracts.insert(id, facts.audit());
+            return serde_json::to_string(&facts).map_err(|e| e.to_string());
+        }
+        let report = if let Some(bytes) = bytes {
+            binviz::contracts::ContractReport::parse(&bytes)?
+        } else {
+            self.contracts
+                .get(&id)
+                .cloned()
+                .ok_or("no retained report; supply report or report_file")?
+        };
+        if name == "verify_evidence" {
+            let manifest: binviz::evidence::EvidenceManifest = serde_json::from_value(
+                report
+                    .metadata
+                    .get("evidence")
+                    .cloned()
+                    .ok_or("legacy report has no evidence manifest")?,
+            )
+            .map_err(|e| e.to_string())?;
+            let root = if let Some(root) = string(args, "root") {
+                PathBuf::from(root)
+            } else if let Some(file) = file {
+                Path::new(file).parent().unwrap_or(Path::new(".")).to_path_buf()
+            } else {
+                return Err("root is required for inline or retained reports".into());
+            };
+            let checks = manifest.verify(Some(&manifest.read_artifacts(&root)))?;
+            return serde_json::to_string(&checks).map_err(|e| e.to_string());
+        }
+        self.contracts.insert(id, report.clone());
+        serde_json::to_string(&report.filtered(string(args, "caller"), string(args, "callee")))
+            .map_err(|e| e.to_string())
+    }
+
     pub fn call(&mut self, name: &str, args: &Value) -> Result<String, String> {
         match name {
+            "proof_campaign" => {
+                let id = string(args, "report_id").unwrap_or("current").to_owned();
+                if string(args, "report").is_some() && string(args, "report_file").is_some() {
+                    return Err("provide report or report_file".into());
+                }
+                let imported = if let Some(text) = string(args, "report") {
+                    Some((text.as_bytes().to_vec(), string(args, "root").map(PathBuf::from)))
+                } else if let Some(path) = string(args, "report_file") {
+                    Some((
+                        std::fs::read(path).map_err(|e| e.to_string())?,
+                        Some(
+                            string(args, "root")
+                                .map(PathBuf::from)
+                                .unwrap_or_else(|| Path::new(path).parent().unwrap_or(Path::new(".")).to_path_buf()),
+                        ),
+                    ))
+                } else {
+                    None
+                };
+                if let Some((bytes, root)) = imported {
+                    let raw: Value = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
+                    let raw = if raw["format"] == "binviz-campaign-report" {
+                        raw["input"].clone()
+                    } else {
+                        raw
+                    };
+                    binviz::campaign::audit_report(&serde_json::to_vec(&raw).map_err(|e| e.to_string())?, None)?;
+                    self.campaigns.insert(id.clone(), (bytes, root));
+                }
+                let (bytes, root) = self.campaigns.get(&id).ok_or("supply report or report_file first")?;
+                let raw: Value = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
+                let raw = if raw["format"] == "binviz-campaign-report" {
+                    raw["input"].clone()
+                } else {
+                    raw
+                };
+                let manifest: binviz::evidence::EvidenceManifest =
+                    serde_json::from_value(raw["evidence"].clone()).map_err(|e| e.to_string())?;
+                let root = string(args, "root").map(PathBuf::from).or_else(|| root.clone());
+                let files = root.map(|r| manifest.read_artifacts(&r));
+                let report = binviz::campaign::audit_report(
+                    &serde_json::to_vec(&raw).map_err(|e| e.to_string())?,
+                    files.as_ref(),
+                )?;
+                serde_json::to_string(&report).map_err(|e| e.to_string())
+            }
+            "workspace_import"
+            | "workspace_preflight"
+            | "adoption_evidence"
+            | "source_plans"
+            | "unit_inventory"
+            | "caller_package"
+            | "contract_blockers"
+            | "paired_register_audits"
+            | "explain_policy"
+            | "plan_adapters"
+            | "storage_evidence"
+            | "promotion_plan"
+            | "callee_certificates"
+            | "proof_closures"
+            | "matching_publications"
+            | "readability_batches"
+            | "publish_matches" => self.workspace_tool(name, args),
+            "call_contracts" | "compiler_facts" | "verify_evidence" => self.contract_tool(name, args),
             "open_binary" => self.open_binary(args),
             "list_binaries" => Ok(self.list_binaries()),
             "close_binary" => self.close_binary(args),
@@ -1036,9 +1471,36 @@ impl Server {
             "decomp_context" => self.decomp_context(args).map(finish),
             "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
+                let workspace_context = if name == "next_functions" {
+                    string(args, "project_id")
+                        .map(|id| -> Result<_, String> {
+                            let (w, root) = self.workspaces.get(id).ok_or("unknown retained workspace")?;
+                            let root = root.as_ref().ok_or("workspace needs a local artifact root")?;
+                            Ok((w.clone(), w.evidence.read_artifacts(root)))
+                        })
+                        .transpose()?
+                } else {
+                    None
+                };
                 let o = self.get(args)?;
                 let text = match name {
                     "binary_summary" => summary(o),
+                    "register_use" => {
+                        let request = args.get("request").ok_or("request required")?;
+                        let r = binviz::registeraudit::decode_request(request)?;
+                        let report = o
+                            .bin
+                            .audit_ps1_register(r.address, r.bytes, r.entry, r.register, &r.policy)
+                            .map_err(|e| e.to_string())?;
+                        return serde_json::to_string(&report).map_err(|e| e.to_string());
+                    }
+                    "register_use_batch" => {
+                        return serde_json::to_string(&binviz::registeraudit::run_batch(
+                            &o.bin,
+                            args.get("batch").ok_or("batch required")?,
+                        )?)
+                        .map_err(|e| e.to_string());
+                    }
                     "size_report" => size_report(o, args),
                     "search" => search(o, args)?,
                     "inspect" => inspect(o, args)?,
@@ -1052,7 +1514,9 @@ impl Server {
                     "annotate" => annotate(o, args)?,
                     "remove_annotation" => remove_annotation(o, args)?,
                     "list_annotations" => list_annotations(o, args),
-                    "next_functions" => crate::queue::next_functions(o, args)?,
+                    "next_functions" => {
+                        crate::queue::next_functions(o, args, workspace_context.as_ref().map(|(w, f)| (w, f)))?
+                    }
                     "mark" => crate::queue::mark(o, args)?,
                     "similar_functions" => crate::queue::similar_functions(o, args)?,
                     "store_record" => crate::store::record(o, args)?,
@@ -3327,6 +3791,35 @@ fn locate(o: &Open, args: &Value) -> Result<String, String> {
 
 fn export_progress(o: &Open, args: &Value) -> Result<String, String> {
     let path = string(args, "path").ok_or("path is required")?;
+    match string(args, "format").unwrap_or("json") {
+        "svg" => {
+            let dimension = |key: &str, default: u32| -> Result<u32, String> {
+                match args.get(key) {
+                    None => Ok(default),
+                    Some(v) => v
+                        .as_u64()
+                        .and_then(|n| u32::try_from(n).ok())
+                        .ok_or_else(|| format!("{key} must be an unsigned integer")),
+                }
+            };
+            let include_library = match args.get("include_library") {
+                None => false,
+                Some(v) => v.as_bool().ok_or("include_library must be boolean")?,
+            };
+            let svg = o.bin.progress_svg(
+                &o.label,
+                dimension("width", 1600)?,
+                dimension("height", 900)?,
+                include_library,
+            )?;
+            std::fs::write(path, svg).map_err(|e| format!("{path}: {e}"))?;
+            return Ok(format!(
+                "Wrote {path}: byte-weighted decompilation treemap; library excluded from game progress totals."
+            ));
+        }
+        "json" => {}
+        _ => return Err("format must be json or svg".into()),
+    }
     let report = o.bin.progress_report();
     let text = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     std::fs::write(path, text).map_err(|e| format!("{path}: {e}"))?;

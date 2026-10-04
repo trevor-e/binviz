@@ -23,3 +23,4 @@ flate2.workspace = true
 ruzstd.workspace = true
 serde_json.workspace = true
 pdb.workspace = true
+sha2 = "0.11"

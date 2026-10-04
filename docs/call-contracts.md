@@ -37,7 +37,8 @@ count. The adapter's scope is displayed verbatim in text.
 
 ## Browser inspection
 
-Open a binary in binviz, select **Call contracts**, then **Import compiler
+Select **Inspect compiler call contracts** on the landing page, or open a binary
+and select **Call contracts**, then **Import compiler
 report**. The browser uses the same Rust report reader as the CLI. Filter by
 exact caller/callee names and expand a finding to see its declarations,
 definition and full reported evidence. Uncached callers and report metadata
@@ -50,6 +51,11 @@ Native register dataflow is now in the shared library and batched CLI
 [register-use](register-use.md). Clang remains the compiler-specific type
 adapter. Further work can attach verified source/assembly locations to graph
 edges and bind imported reports to immutable input identities.
+
+Versioned Clang facts, complete direct-call auditing, artifact verification,
+source spans, MCP queries and browser register paths are described in
+[compiler facts and evidence lineage](compiler-facts.md). Legacy imports remain
+compatible and unverified unless they supply an explicit artifact manifest.
 
 Validation: library tests cover contradictory count/result reports, exact-name
 filtering, retained uncached callers and retained adapter metadata. The CLI is

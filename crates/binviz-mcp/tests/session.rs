@@ -78,6 +78,136 @@ impl Drop for Session {
     }
 }
 
+#[test]
+fn physical_workspaces_are_retained_and_all_views_share_exact_ids() {
+    let mut s = Session::start();
+    let raw = include_str!("../../../tests/fixtures/workspace/workspace.json");
+    let report: Value =
+        serde_json::from_str(&s.ok("workspace_import", json!({"manifest":raw,"project_id":"physical"}))).unwrap();
+    assert_eq!(report["callers"].as_array().unwrap().len(), 2);
+    assert_eq!(report["rawObservations"], 2);
+    let caller = report["callers"][0]["id"].clone();
+    let call = report["callers"][0]["calls"][0]["call"]["id"].clone();
+    let package: Value =
+        serde_json::from_str(&s.ok("caller_package", json!({"project_id":"physical","caller":caller}))).unwrap();
+    assert_eq!(package["calls"][0]["call"]["id"], call);
+    let audits: Value =
+        serde_json::from_str(&s.ok("paired_register_audits", json!({"project_id":"physical","call":call}))).unwrap();
+    assert_eq!(audits["state"], "unresolved");
+    let storage: Value = serde_json::from_str(&s.ok("storage_evidence", json!({"project_id":"physical"}))).unwrap();
+    assert_eq!(storage["closureComplete"], false);
+    assert_eq!(s.ok("promotion_plan", json!({"project_id":"physical"})), "[]");
+    let callee: Value = serde_json::from_str(&s.ok("callee_certificates", json!({"project_id":"physical"}))).unwrap();
+    assert_eq!(callee[0]["state"], "refused");
+    assert_eq!(callee[0]["provider"], "main:provider");
+    assert!(
+        s.call("workspace_import", json!({"manifest":"{}","project_id":"physical"}))
+            .1
+    );
+    assert!(
+        s.ok("contract_blockers", json!({"project_id":"physical"}))
+            .contains("main:provider")
+    );
+    let tools = s.request("tools/list", json!({}));
+    for name in [
+        "storage_evidence",
+        "promotion_plan",
+        "proof_campaign",
+        "callee_certificates",
+        "adoption_evidence",
+        "workspace_preflight",
+        "source_plans",
+    ] {
+        let tool = tools["result"]["tools"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|t| t["name"] == name)
+            .unwrap();
+        assert!(tool["inputSchema"]["properties"].get("binary").is_none());
+    }
+}
+
+#[test]
+fn proof_campaign_recomputes_labels_and_failed_import_preserves_previous_report() {
+    let mut s = Session::start();
+    let execution = json!({"status":"executed","instructions":1,"returnWord":"0x8001","ram":[],"registers":{},"events":[],"checkpoints":{},"coverage":["observed"]});
+    let input = json!({"format":"binviz-campaign","schemaVersion":1,"evidence":{"artifacts":[],"stages":[]},"requested":1,"unexamined":0,"comparison":{"returnMask":"0xffffffff","ram":[],"registers":[],"eventKinds":[],"requiredCheckpoints":[],"expectedFrontiers":[]},"cases":[{"id":"case","native":execution,"wasm":execution,"passed":false}]});
+    let report: Value = serde_json::from_str(&s.ok(
+        "proof_campaign",
+        json!({"report":input.to_string(),"report_id":"proof"}),
+    ))
+    .unwrap();
+    assert_eq!(report["executedPairs"], 1);
+    assert_eq!(report["failed"], 0);
+    assert_eq!(report["observationsBound"], false);
+    assert!(s.call("proof_campaign", json!({"report":"{}","report_id":"proof"})).1);
+    let retained: Value = serde_json::from_str(&s.ok("proof_campaign", json!({"report_id":"proof"}))).unwrap();
+    assert_eq!(retained["executedPairs"], 1);
+}
+
+#[test]
+fn compiler_reports_are_retained_without_a_binary_and_failures_preserve_them() {
+    let mut s = Session::start();
+    let raw = include_str!("../../../tests/fixtures/contracts/facts.json");
+    let facts: Value =
+        serde_json::from_str(&s.ok("compiler_facts", json!({"report":raw,"report_id":"synthetic"}))).unwrap();
+    assert_eq!(facts["calls"].as_array().unwrap().len(), 11);
+    let report: Value =
+        serde_json::from_str(&s.ok("call_contracts", json!({"report_id":"synthetic", "callee":"no_result"}))).unwrap();
+    assert_eq!(report["contracts"].as_array().unwrap().len(), 2);
+    assert_eq!(report["contracts"][0]["kind"], "void-result");
+    assert_eq!(report["contracts"][0]["identityState"], "unverified");
+    let (_, error) = s.call("call_contracts", json!({"report":"{}","report_id":"synthetic"}));
+    assert!(error);
+    let retained: Value = serde_json::from_str(&s.ok("call_contracts", json!({"report_id":"synthetic"}))).unwrap();
+    assert_eq!(retained["contracts"].as_array().unwrap().len(), 6);
+    let checks: Value = serde_json::from_str(&s.ok(
+        "verify_evidence",
+        json!({"report_id":"synthetic","root":"path-that-does-not-exist"}),
+    ))
+    .unwrap();
+    assert!(checks.as_array().unwrap().iter().any(|c| c["state"] == "missing"));
+}
+
+#[test]
+fn register_audits_reuse_loaded_binary_and_per_request_policies() {
+    let path = std::env::temp_dir().join(format!("binviz-audit-{}.bin", std::process::id()));
+    std::fs::write(
+        &path,
+        [0x03e00008u32, 0]
+            .iter()
+            .flat_map(|w| w.to_le_bytes())
+            .collect::<Vec<_>>(),
+    )
+    .unwrap();
+    let mut s = Session::start();
+    s.ok("open_binary", json!({"path":path, "overlay_at":"0x80010000"}));
+    let request = json!({"id":"incoming","address":"0x80010000","bytes":8,"entry":"0x80010000","register":"a2"});
+    let result: Value = serde_json::from_str(&s.ok("register_use", json!({"request":request}))).unwrap();
+    assert_eq!(result["outcome"], "unresolved");
+    let mut reviewed = request.clone();
+    reviewed["id"] = json!("reviewed");
+    reviewed["policy"] = json!({"returnUse":"discarded"});
+    let batch: Value = serde_json::from_str(&s.ok(
+        "register_use_batch",
+        json!({"batch":{"schemaVersion":1,"requests":[request.clone(),reviewed]}}),
+    ))
+    .unwrap();
+    assert_eq!(batch["requests"][0]["report"]["outcome"], "unresolved");
+    assert_eq!(batch["requests"][1]["report"]["outcome"], "dead");
+    assert_eq!(
+        batch["requests"][1]["report"]["endpoints"][0]["path"][1]["delaySlot"],
+        true
+    );
+    let (_, error) = s.call(
+        "register_use_batch",
+        json!({"batch":{"schemaVersion":1,"requests":[request.clone(),request]}}),
+    );
+    assert!(error);
+    std::fs::remove_file(path).unwrap();
+}
+
 /// A private copy of a fixture, so notes files land in a temp dir.
 fn fixture_copy(name: &str) -> PathBuf {
     fixture_copy_for(name, "")
@@ -411,6 +541,25 @@ fn agents_work_through_a_decompilation() {
         json!({ "at": "clamp_health", "state": "matched", "source": "src/stats.c" }),
     );
     assert!(health.contains("likely the same C: clamp_ammo"), "{health}");
+    // The same recorded statuses are available as a built-in progress image.
+    let image = dir.join("progress.svg");
+    let exported = s.ok(
+        "export_progress",
+        json!({ "path": image, "format": "svg", "width": 1000, "height": 600 }),
+    );
+    assert!(exported.contains("Wrote"), "{exported}");
+    let svg = std::fs::read_to_string(&image).unwrap();
+    assert!(
+        svg.contains("width=\"1000\"") && svg.contains("fatal") && svg.contains("data-state=\"matched\" data-bytes=")
+    );
+    assert!(svg.contains("data-state=\"attempted\" data-bytes="));
+    let (_, error) = s.call("export_progress", json!({ "path": image, "format": "svg", "width": 0 }));
+    assert!(error);
+    assert_eq!(
+        std::fs::read_to_string(&image).unwrap(),
+        svg,
+        "invalid export must not overwrite an image"
+    );
     let next = s.ok("next_functions", json!({ "count": 1 }));
     assert!(
         next.contains("clamp_ammo") && next.contains("like a done one"),

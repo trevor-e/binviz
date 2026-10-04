@@ -16,6 +16,8 @@ use crate::binary::Binary;
 pub struct LibrarySource {
     /// Where the string is.
     pub address: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<u64>,
     /// `sys.c`.
     pub file: String,
     /// `1.140`.
@@ -29,23 +31,42 @@ pub struct LibrarySource {
 /// The parts of an RCS `$Id: file,v rev yyyy/mm/dd hh:mm:ss author state … $`.
 pub fn parse_id(text: &str) -> Option<LibrarySource> {
     let start = text.find("$Id: ")?;
-    let body = text[start + 5..].trim_end_matches(['$', ' ', '\0']);
+    let tail = &text[start + 5..];
+    let body = &tail[..tail.find('$')?];
     let mut words = body.split_whitespace();
     let file = words.next()?.strip_suffix(",v")?;
     let revision = words.next()?;
     let date = words.next()?;
-    let _time = words.next()?;
-    let author = words.next().unwrap_or("");
+    let time = words.next()?;
+    let author = words.next()?;
     let ok = revision
         .split('.')
         .all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()));
     let mut ymd = date.split('/');
     let (y, m, d) = (ymd.next()?, ymd.next()?, ymd.next()?);
-    if !ok || y.len() != 4 || !(y.bytes().chain(m.bytes()).chain(d.bytes())).all(|b| b.is_ascii_digit()) {
+    let hms: Vec<_> = time.split(':').collect();
+    if !ok
+        || file.is_empty()
+        || y.len() != 4
+        || m.len() != 2
+        || d.len() != 2
+        || ymd.next().is_some()
+        || !(y.bytes().chain(m.bytes()).chain(d.bytes())).all(|b| b.is_ascii_digit())
+        || !(1..=12).contains(&m.parse::<u32>().ok()?)
+        || !(1..=31).contains(&d.parse::<u32>().ok()?)
+        || hms.len() != 3
+        || hms
+            .iter()
+            .any(|n| n.len() != 2 || !n.bytes().all(|b| b.is_ascii_digit()))
+        || hms[0].parse::<u32>().ok()? > 23
+        || hms[1].parse::<u32>().ok()? > 59
+        || hms[2].parse::<u32>().ok()? > 60
+    {
         return None;
     }
     Some(LibrarySource {
         address: None,
+        offset: None,
         file: file.rsplit('/').next().unwrap_or(file).to_string(),
         revision: revision.to_string(),
         date: format!("{y}-{m}-{d}"),
@@ -56,18 +77,28 @@ pub fn parse_id(text: &str) -> Option<LibrarySource> {
 impl Binary {
     /// The source files the code was built from that say so, in address order.
     pub fn library_sources(&self) -> Vec<LibrarySource> {
-        let page = self.strings("$Id:", 0, 100_000);
-        let mut out: Vec<LibrarySource> = page
-            .strings
-            .iter()
-            .filter_map(|s| {
-                let mut id = parse_id(&s.text)?;
-                id.address = s.address;
-                Some(id)
-            })
-            .collect();
-        out.sort_by(|a, b| (a.address, &a.file).cmp(&(b.address, &b.file)));
-        out.dedup_by(|a, b| a.file == b.file && a.revision == b.revision && a.date == b.date);
+        let mut seen = std::collections::BTreeSet::new();
+        let mut out = Vec::new();
+        for offset in memchr::memmem::find_iter(self.data(), b"$Id: ") {
+            let tail = &self.data()[offset..self.data().len().min(offset.saturating_add(512))];
+            let Some(end) = tail[5..].iter().position(|b| *b == b'$').map(|n| n + 6) else {
+                continue;
+            };
+            let Ok(text) = std::str::from_utf8(&tail[..end]) else {
+                continue;
+            };
+            if !text.bytes().all(|b| b.is_ascii_graphic() || b == b' ') {
+                continue;
+            }
+            let Some(mut id) = parse_id(text) else { continue };
+            if !seen.insert((id.file.clone(), id.revision.clone(), id.date.clone())) {
+                continue;
+            }
+            id.offset = Some(offset as u64);
+            id.address = self.offset_to_address(offset as u64);
+            out.push(id);
+        }
+        out.sort_by(|a, b| (a.address, a.offset, &a.file).cmp(&(b.address, b.offset, &b.file)));
         out
     }
 }
@@ -110,5 +141,20 @@ mod tests {
         assert!(parse_id("$Id$").is_none());
         assert!(parse_id("$Id: not rcs at all").is_none());
         assert!(parse_id("$Id: a.c,v x.y 1998/01/12 07:52:27 me Exp $").is_none());
+    }
+    #[test]
+    fn targeted_scan_keeps_code_embedded_ids_and_refuses_truncation() {
+        let id = b"$Id: sys.c,v 1.140 1998/01/12 07:52:27 noda Exp $";
+        let mut raw = vec![0u8; 0x100];
+        raw.extend(id);
+        raw.extend([0, 0xff, 0]);
+        raw.extend(id);
+        raw.extend(b"$Id: bad.c,v 1.2 1998/01/12 00:00:00 n Exp");
+        let bin = Binary::parse_psx_overlay(raw, 0x80010000, None).unwrap();
+        let sources = bin.library_sources();
+        assert_eq!(sources.len(), 1);
+        assert_eq!(sources[0].offset, Some(0x100));
+        assert_eq!(sources[0].address, Some(0x80010100));
+        assert!(parse_id("$Id: x.c,v 1.2 1998/01/12 00:00:00 n Exp").is_none());
     }
 }

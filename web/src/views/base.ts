@@ -24,7 +24,7 @@ export abstract class View {
   }
 
   get visible(): boolean {
-    return store.view === this.name && store.file !== null;
+    return store.view === this.name && (store.file !== null || this.name === 'contracts');
   }
 
   show() {
