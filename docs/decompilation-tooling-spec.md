@@ -9101,3 +9101,31 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Slot selected short two stage load buffer marker naming acceptance (BV-03/BV-08, P2):
+FF9 848662d75 adds two canonical ovl_131d3000 names. Catalog
+4,874 unit/symbol names, 254 scoped alias headers. Two full own-unit
+bodies reviewed and bound, zero deferrals; other units pending. Included headers
+and any reused prior header-review report hashes bound. Evidence:
+docs/function-names-slot-selected-short-two-stage-load-buffer-marker.json and Binviz
+target/ff9-names-slot-selected-short-two-stage-load-buffer-marker/. Two full native object pairs equal;
+exact affected/scored namespace two. Pinned strict-relocation scores unchanged:
+2 exact/0 partial, 516/516 code bytes, zero failures. Two
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and six isolated committed paths audit.
+
+7704 descriptor20; initstate.slot=*out/savecontextbeforevalidation. InvalidONLYslot>=ctx.info.countbyte, helper(ctx,7,1)/return1; no lowerboundguard, negative remainsvalid. Validhelper(ctx,7,0),2D8 selectors6/7/8(job.id,-1),1FC(slot,fourhalfwordposition),load1/storea, nullableh22=220(slot,32). Thisvariants selectors6/7/8/resources1/2 differ from11437000, not normalized. Stateb remainsuninitializeduntilscheduledload.
+
+Updatecapturesjobtype; exact15 loadsresource2 atSAMEsavedpos/storeb inclNULL/nullableh22=220(slot,32), unlikeother128scale variant. Exact10callhelper(ctx,7,1). Returnt>=40 AFTEReventchecks; loadcheckBEFOREmarkercheckinactualsource. No78/release/restore/missedframebackfill/vectorinitializer or datachange. Invalidinitreturns1 separatelyfromordinaryinit/query0.
+
+78F4 VOIDhelper dereferencesBuf10** once, storesconvertedU8value atindirectbuffer+16+SIGNEDunboundedindex. d[1]extent/inheritedcontextfirstword-as-pointer/nullandnegativeindex/frontiers unresolved. MainCtxIfirst12bytesopaque whileK&RallowsCtxI*passed toBuf10**helper; preserve mismatch rather than invent typedcontext/header/providerABI. Sharedbuffer marker7value0/1 meaning observedonlyaswrites, no alleged allocation/resourcelifetime fix.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Original
+effect/resource/provider identities unresolved. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
