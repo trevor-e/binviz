@@ -12351,3 +12351,30 @@ No new tooling implementation/private ownership/type/CFG walker, matching gain,
 provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
 bound evidence, pin historical tools/reports and preserve foreign work/index;
 full-tree naming goal active.
+
+Mesh residual textured polygon tail naming acceptance (BV-03/BV-08, P2):
+FF9 9094d7405 adds 1 selected canonical ovl_04e800 names. Catalog
+5,529 unit/symbol names, 332 scoped alias headers. 1 selected complete primary
+bodies reviewed and bound, 1 named and 0 explicit full-body deferrals; remaining boot and overlay functions pending. 0 full layout headers and 1 semantic-provider body hashes bound. Evidence:
+docs/function-names-mesh-residual-textured-polygon-tail.json and Binviz
+target/ff9-names-mesh-residual-textured-polygon-tail/. 1 full native object pairs equal;
+exact affected/scored namespace 1. Pinned strict-relocation scores unchanged:
+1 exact/0 partial, 980/980 code bytes, zero failures. 1
+installed WASM token comparisons agree; current source/header/catalog/object/
+review bindings and 5 isolated committed paths audit.
+
+All remaining04E800 primary continuation fully reviewed and named by textured polygon emission behavior. CompleteCEED4 entry binds scratchpad/OT/UV inputs and saved frame. Original raw literals/branch words/cross-file continuations untouched; readable name labels the public fragment, not a repaired callable ABI.
+
+Complete selected bodies and bound semantic providers support each name; no transplanted template semantic transfer. Every unit/symbol identity, field width, index rule, callback and provider declaration remains separate and unchanged.
+
+Whole raw271line continuation independently read along with completeCEED4 entry. Public fragment starts in quad emission path, follows textured triangle loop, clips/writes colors/UVs/tag links/OT entries and restores original saved registers/frame. It is an internal continuation, not an independent ordinary C ABI. Preserve every raw branch word, absolute continuation address, GTE/MMIO-register operation, instruction/delay slot and literal; add alias include only.
+
+Definitions, declarations and applicable direct calls/callback references
+propagate; scoped aliases preserve linker/address/runtime identities. Opaque kind/progress/callback roles explicitly deferred and original
+provider imports/register inputs/callback/type mismatches retained. All types/layouts/bodies/pads/
+flags stay. Maintained naming/farm/scorer/preprocessor and thin adapters reused;
+existing BV-03 reviewed deferral prioritization/BV-06 provider proposals retained.
+No new tooling implementation/private ownership/type/CFG walker, matching gain,
+provider admission, linked-image/gameplay/workspace acceptance. Refresh source-
+bound evidence, pin historical tools/reports and preserve foreign work/index;
+full-tree naming goal active.
