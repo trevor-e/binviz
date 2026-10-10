@@ -83,6 +83,7 @@ Use the workspace as the joined view; standalone reports help diagnose one input
 | --- | --- | --- |
 | Check stale inputs | `workspace --preflight --json` | Producer owners identify what to regenerate |
 | Select work or diagnose a caller | `workspace --blockers` / `--caller ID` | `--inventory` for physical ownership; `--callees` for certificates |
+| Find a focused follow-up | `workspace --next-actions --json` | Add `--caller ID`; inspect evidence pointers in the complete workspace report |
 | Inspect compiler observations alone | `contracts FACTS.json` | Workspace joins selected providers, native audits and policies |
 | Inspect actual linked ABI | `linked MODULE.wasm` | `--imports` narrows the report; adoption `import-inventory` also verifies reviewed host authority |
 | Prepare source edits | `adapters WORKSPACE` | `source-plans` composes/maps/renames; `apply-adapters` writes the reviewed candidate |
@@ -186,6 +187,25 @@ MCP uses the same records:
 Queries rehash current local artifacts. Inline imports without an artifact root
 remain unverified. Reports are not truncated and malformed imports preserve the
 previous retained workspace. Browser/WASM and native interfaces use shared core.
+
+`workspace_next_actions` and CLI `--next-actions` derive a summary from those
+current findings, starting with identity/ownership prerequisites and reusing the
+existing dependency ranking for caller work. Each action names its reason, exact
+subject and JSON pointers into the complete workspace report (`workspace_report`
+over MCP), plus CLI argument
+arrays and an MCP follow-up. MCP preserves the retained `project_id` and artifact
+root; CLI resolves its manifest path and root. `--caller ID` retains global
+prerequisites. The Contracts view applies the same caller/unit filters.
+Focused CLI/MCP queries show ten actions by default with `totalActions` and
+`omittedActions`; use CLI `--limit N` or MCP `limit` (0..1000) to change the
+presentation bound. The complete workspace report retains every action. No
+recommendation limit changes the underlying analysis or strict exit behavior.
+
+Follow-ups only inspect or plan. `review` means no outstanding findings in this
+workspace view, not whole-program equivalence or authorization to apply/publish.
+The existing strict exit and distinct matching/readability/adoption scopes remain
+unchanged. The [routing skill](../skills/binviz/SKILL.md) and MCP `binviz_workflow`
+prompt describe how to use these entry points for concrete tasks.
 
 ## Reviewable direct-call bridges
 

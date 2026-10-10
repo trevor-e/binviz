@@ -26,6 +26,7 @@
 
 pub mod adapters;
 pub mod adoption;
+pub mod analysisobservation;
 mod asm;
 mod binary;
 pub mod blobs;
@@ -51,6 +52,7 @@ pub mod fieldrefs;
 mod fields;
 pub mod fndiff;
 pub mod globals;
+pub mod guidance;
 mod inspect;
 pub mod inventory;
 mod layout;

@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/allkern/psxe",
+  "revision": "8459c63ed78c703f46e3c51daa65a2fdf96d02e6",
+  "license": "MIT",
+  "upstreamSourceSha256": "a115d221ed6caada14023c76b9d301da7c94de5b6bc698c80cabb29d5aa9f29e",
+  "licenseSha256": "0096f5966d05e1f222a7f337961f2136b8b9e03554fd51e2b899e5352898197f",
+  "derivedSourceSha256": "9a7c00daa04891a69d50871a4cd65c7a2b0c2a4406dcc3858f2cc31bef6c06fd",
+  "unchangedSections": {
+    "zagzig": "dc7643f963eb49b5391d49ce25957e25d555b1514638a288866b694074c7bf35",
+    "real_idct": "a60650ed8cd117a89d0a7ae7ffd02524cbd41e0794b0563b2fba598797d6e53b",
+    "yuv_to_rgb": "3ec2dbf50264ece4c5d4c6137ba230e726b8647d1cedc1853b8b35982d7deedf"
+  },
+  "reference": "https://github.com/psx-spx/psx-spx.github.io/blob/master/docs/ps1/cpu/mdec/macroblockdecodermdec.md",
+  "siliconParityVerified": false,
+  "sdkMatchingCredit": 0,
+  "preparerSha256": "91e37b85227f2cd12782e2755877a240d4f3967845652e284eee07d376a76e8c"
+}

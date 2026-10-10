@@ -1,0 +1,6 @@
+# Runtime provenance and proof receipts bind these files by exact SHA256.
+# Preserve their reviewed bytes across platforms, including vendored licenses.
+tools/runtime/** -text whitespace=cr-at-eol
+tools/tests/** -text whitespace=cr-at-eol
+# This derived source retains upstream whitespace as part of its provenance.
+tools/runtime/mdec_decoder.c whitespace=cr-at-eol,-blank-at-eol

@@ -18,6 +18,47 @@ fn fixture() -> (Workspace, BTreeMap<String, Vec<u8>>) {
     files.insert("compiler".into(), bytes);
     (w, files)
 }
+
+#[test]
+fn next_actions_keep_evidence_and_acceptance_scopes_when_inputs_drift() {
+    let (w, mut files) = fixture();
+    let report = w.analyze(Some(&files)).unwrap();
+    let value = serde_json::to_value(&report).unwrap();
+    assert_eq!(report.next_actions.state, "needs-attention");
+    let review = report
+        .next_actions
+        .actions
+        .iter()
+        .find(|a| a.kind == "review-adapters")
+        .unwrap();
+    assert_eq!(review.mcp.tool, "plan_adapters");
+    assert_eq!(review.cli[0], "adapters");
+    for action in &report.next_actions.actions {
+        for pointer in &action.evidence {
+            assert!(value.pointer(pointer).is_some(), "{pointer}");
+        }
+    }
+    let caller = &report.callers[0].id;
+    let selected = report.next_actions.for_caller(caller);
+    assert!(
+        selected
+            .actions
+            .iter()
+            .all(|a| a.caller.as_deref().is_none_or(|id| id == caller))
+    );
+    assert!(selected.actions.iter().any(|a| a.caller.is_none()));
+    files.get_mut("a:prepared").unwrap().push(0);
+    let stale = w.analyze(Some(&files)).unwrap();
+    assert_eq!(stale.next_actions.actions[0].kind, "verify-identity");
+    assert!(
+        !stale
+            .next_actions
+            .actions
+            .iter()
+            .any(|a| a.kind == "review-adapters" && a.caller.as_deref() == Some(caller))
+    );
+    assert!(stale.raw_observations >= report.raw_observations);
+}
 fn replace(w: &mut Workspace, files: &mut BTreeMap<String, Vec<u8>>, id: &str, bytes: Vec<u8>) {
     w.evidence.artifacts.iter_mut().find(|a| a.id == id).unwrap().sha256 = sha256(&bytes);
     files.insert(id.into(), bytes);

@@ -33,6 +33,7 @@ interface WorkCall {
 interface WorkCaller { id: string; name: string; unit: string; sourceSpan: Span; calls: WorkCall[]; builds: unknown[]; rejected: boolean; addressReferences: unknown[]; extractionGaps: unknown[]; intrinsics: unknown[] }
 interface StorageWork { objects: { description: { id: string }; identityState: string; accesses: { access: { object: string }; state: string; objectBytes: string; reservedBytes: string }[] }[]; native: unknown[]; linked: unknown[]; closureComplete: boolean }
 interface WorkReport {
+  nextActions: { state: string; summary: string; actions: { kind: string; subject: string; caller?: string; unit?: string; reason: string; evidence: string[]; cli: string[]; mcp: { tool: string; arguments: unknown } }[] };
   callers: WorkCaller[]; inventory: { units: { unit: { id: string; context: string; loadAddress: string; memberSize: string }; state: string; reasons: string[]; functions: { function: { id: string; identity: { unit: string } } }[]; gaps: unknown[] }[]; collisions: unknown[]; identityChecks: Check[] };
   contractReport: Report; blockers: { dependency: string; callers: string[]; rejectedCallers: number; observations: number }[];
   modules: Record<string, unknown>; layoutChecks: unknown[]; storage: StorageWork; promotionPlans: unknown[]; calleeCertificates: unknown[]; proofClosures: unknown[]; matchingPublications: unknown[]; readabilityBatches: unknown[]; adoption: unknown[]; callCoverage: unknown; rawObservations: number; rejectedCallers: number; unresolvedCallers: number;
@@ -402,6 +403,12 @@ export class ContractsView extends View {
         h('p', null, a.reasons.join('; ')), ...panels, full('Complete audit and assumptions', a));
     };
     this.results.replaceChildren(
+      h('section', { class: 'card' }, h('h3', null, 'Next actions'),
+        h('p', null, report.nextActions.summary),
+        ...report.nextActions.actions.filter(a => (!this.caller || !a.caller || a.caller === this.caller) && (!this.unit || !a.unit || a.unit === this.unit)).slice(0, 10).map(a =>
+          h('details', null, h('summary', null, `${a.kind}: ${a.subject}`), h('p', null, a.reason),
+            full('Evidence locations', a.evidence), full('CLI arguments', a.cli), full('MCP follow-up', a.mcp))),
+        full('Complete next-action report (first 10 shown above)', report.nextActions)),
       h('details', { class: 'card' }, h('summary', null, `Physical ownership · ${report.inventory.units.length} units · ${report.inventory.collisions.length} collisions`),
         ...report.inventory.units.map(u => h('details', null, h('summary', { class: 'mono' }, `${u.unit.id} · ${u.state} · ${u.unit.context} · ${u.unit.loadAddress} + ${u.unit.memberSize}`),
           h('p', null, u.reasons.join('; ')), full('Analysis extents, matching extents and aliases', u.functions), full('Gaps and data exclusions', u.gaps))), full('Ownership collisions and decisions', report.inventory.collisions)),

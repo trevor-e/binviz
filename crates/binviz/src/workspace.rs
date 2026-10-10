@@ -166,6 +166,8 @@ pub struct WorkspaceReport {
     pub readability_batches: Vec<Value>,
     pub call_coverage: Value,
     pub adoption: Vec<Value>,
+    #[serde(default)]
+    pub next_actions: crate::guidance::NextActions,
 }
 
 fn artifact_equal<T: Serialize>(files: &BTreeMap<String, Vec<u8>>, id: &str, record: &T) -> bool {
@@ -1128,9 +1130,11 @@ impl Workspace {
             readability_batches: crate::readability::plans(self, &files),
             call_coverage,
             adoption: vec![],
+            next_actions: Default::default(),
         };
         report.storage = crate::storage::describe(self, &files, &report)?;
         report.adoption = crate::adoption::inspect(self, &report, &files)?;
+        report.next_actions = crate::guidance::next_actions(&report);
         Ok(report)
     }
 }

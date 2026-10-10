@@ -267,6 +267,25 @@ error string, and how are they reached from main?"*, *"What haven't we looked
 at yet?"*. The [reference](docs/reference.md#agents-mcp-server) lists every
 tool.
 
+The bundled [binviz routing skill](skills/binviz/SKILL.md) selects focused queries
+for function analysis, matching, caller diagnosis and candidate verification. MCP
+clients can request the `binviz_workflow` prompt with a concrete `goal`; the server
+also supplies task routing in its initialization instructions. The skill can be
+installed in an agent's skill directory when filesystem discovery is preferred;
+resolve its documentation links against this binviz checkout. The repository
+does not change client configuration automatically.
+
+`binviz workspace workspace.json --next-actions --json` and MCP
+`workspace_next_actions` return ordered reasons, evidence locations and structured
+CLI/MCP follow-ups. The Contracts view displays the same report. Add `--caller ID`
+to retain global prerequisites while focusing on one caller. Recommendations
+inspect or plan work; existing acceptance rules still apply.
+
+Optional [provider observations](docs/provider-observations.md) import normalized
+pseudocode/dataflow with exact artifact and native-byte identities through CLI
+`analysis` or MCP `analysis_observations`. They remain advisory; no Ghidra runtime
+dependency or native matching credit is introduced.
+
 ## The library
 
 ```rust

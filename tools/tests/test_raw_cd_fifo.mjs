@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {createRawCdFifo} from '../runtime/raw_cd_fifo.mjs';
+import {createRaw2352SectorSource} from '../runtime/raw_cd_source.mjs';
+
+const bytes=Uint8Array.from({length:2352*3},(_,i)=>(i*13+(i>>>8))&255);
+let reads=0,owner=true;
+const source=createRaw2352SectorSource({size:bytes.length,identitySha256:'a'.repeat(64),read:(o,n)=>{reads++;return bytes.subarray(o,o+n);}});
+const options={source,range:{sourceSize:source.size,sourceIdentitySha256:source.identitySha256,firstLba:1,sectorCount:2},assertContext:()=>assert(owner,'inactive owner')};
+const fifo=createRawCdFifo(options);assert(Object.isFrozen(fifo));
+let refusals=0;
+const rejected=(fn,message)=>{const before=fifo.snapshot(),count=reads;assert.throws(fn,message);assert.deepEqual(fifo.snapshot(),before);assert.equal(reads,count);refusals++;};
+rejected(()=>fifo.beginSector(0),/ordered physical/);
+rejected(()=>fifo.beginSector(3),/ordered physical/);
+rejected(()=>fifo.readWords(3),/outside ready/);
+owner=false;rejected(()=>fifo.beginSector(1),/inactive owner/);owner=true;
+fifo.beginSector(1);assert.equal(reads,1);rejected(()=>fifo.beginSector(1),/still active/);
+const expected=bytes.slice(2352+12,2352*2);bytes.fill(0,2352,2352*2);
+assert.deepEqual(fifo.readWords(3),expected.subarray(0,12));
+for(const words of [0,-1,0.5,586,Infinity,NaN,2**32])rejected(()=>fifo.readWords(words),/word bounds/);
+owner=false;rejected(()=>fifo.readWords(512),/inactive owner/);owner=true;
+const payload=fifo.readWords(512);assert.deepEqual(payload,expected.subarray(12,2060));payload.fill(0);
+rejected(()=>fifo.finishSector(2336),/callback consumption/);
+assert.deepEqual(fifo.finishSector(2060),{lba:1,consumedBytes:2060,discardedBytes:280});
+rejected(()=>fifo.finishSector(2060),/outside ready/);rejected(()=>fifo.beginSector(1),/ordered physical/);
+fifo.beginSector(2);assert.deepEqual(fifo.readWords(585),bytes.slice(2352*2+12));
+assert.deepEqual(fifo.finishSector(2340),{lba:2,consumedBytes:2340,discardedBytes:0});
+rejected(()=>fifo.beginSector(3),/ordered physical/);
+assert.equal(fifo.snapshot().sectors,2);
+// Pause cancels the ready sector without inventing a FIFO transfer.
+const cancelled=createRawCdFifo(options);cancelled.beginSector(1);assert.equal(cancelled.finishSector(0).discardedBytes,2340);
+for(const range of [{...options.range,sourceIdentitySha256:'b'.repeat(64)},{...options.range,firstLba:-1},{...options.range,sectorCount:3}])assert.throws(()=>createRawCdFifo({...options,range}));
+const broken=Object.freeze({...source,read2340:()=>new Uint8Array(2048)}),terminal=createRawCdFifo({...options,source:broken});
+assert.throws(()=>terminal.beginSector(1),/exact physical2340/);assert.equal(terminal.snapshot().failed,true);assert.equal(terminal.snapshot().sectors,0);
+assert.throws(()=>terminal.beginSector(1),/terminal source failure/);
+console.log(JSON.stringify({ok:true,refusalsBeforeCursorOrSourceEffects:refusals,stableSectorBytes:true,pauseWithoutConsumption:true,sourceFailureTerminal:true}));

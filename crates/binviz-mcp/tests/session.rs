@@ -88,6 +88,118 @@ impl Drop for Session {
 }
 
 #[test]
+fn workflow_routes_retained_workspaces_and_preserves_global_prerequisites() {
+    let mut s = Session::start();
+    let raw = include_str!("../../../tests/fixtures/workspace/workspace.json");
+    let full: Value =
+        serde_json::from_str(&s.ok("workspace_import", json!({"manifest":raw,"project_id":"routing"}))).unwrap();
+    let caller = full["callers"][0]["id"].as_str().unwrap();
+    assert_eq!(
+        serde_json::from_str::<Value>(&s.ok("workspace_report", json!({"project_id":"routing"}))).unwrap(),
+        full
+    );
+    let summary: Value =
+        serde_json::from_str(&s.ok("workspace_next_actions", json!({"project_id":"routing","limit":0}))).unwrap();
+    assert_eq!(summary["actions"], json!([]));
+    assert_eq!(summary["omittedActions"], summary["totalActions"]);
+    assert_eq!(summary["state"], "needs-attention");
+    for limit in [json!(-1), json!(1001), json!("10")] {
+        assert!(
+            s.call("workspace_next_actions", json!({"project_id":"routing","limit":limit}))
+                .1
+        );
+    }
+    let follow: Value = serde_json::from_str(&s.ok(
+        "workspace_next_actions",
+        json!({"project_id":"routing","caller":caller}),
+    ))
+    .unwrap();
+    assert_eq!(follow["state"], "needs-attention");
+    for action in follow["actions"].as_array().unwrap() {
+        assert_eq!(action["mcp"]["arguments"]["project_id"], "routing");
+        assert!(action["caller"].is_null() || action["caller"] == caller);
+        for p in action["evidence"].as_array().unwrap() {
+            assert!(full.pointer(p.as_str().unwrap()).is_some());
+        }
+        let tool = action["mcp"]["tool"].as_str().unwrap();
+        // All follow-ups exist; identity verification deliberately needs bytes.
+        let catalog = s.request("tools/list", json!({}));
+        assert!(
+            catalog["result"]["tools"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|t| t["name"] == tool)
+        );
+    }
+    assert!(
+        s.call(
+            "workspace_next_actions",
+            json!({"project_id":"routing","caller":"missing"})
+        )
+        .1
+    );
+    let prompt = s.request(
+        "prompts/get",
+        json!({"name":"binviz_workflow","arguments":{"goal":"Diagnose the retained routing workspace"}}),
+    );
+    assert!(
+        prompt["result"]["messages"][0]["content"]["text"]
+            .as_str()
+            .unwrap()
+            .contains("workspace_next_actions")
+    );
+}
+
+#[test]
+fn optional_observations_are_atomic_deduplicated_and_released_with_the_binary() {
+    let mut s = Session::start();
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/bin/tiny-elf-x64");
+    s.ok("open_binary", json!({"path":path}));
+    let binary = binviz::Binary::parse(std::fs::read(&path).unwrap()).unwrap();
+    let entry = binary.summary().entry.unwrap();
+    let offset = binary.address_to_offset(entry).unwrap() as usize;
+    let mut observation = json!({
+        "format":"binviz-analysis-observation","schemaVersion":1,
+        "provider":{"name":"test-ghidra","version":"test","profileSha256":binviz::evidence::sha256(b"profile")},
+        "targetSha256":binviz::evidence::sha256(binary.data()),"architecture":binary.summary().arch,"addressSpace":"default",
+        "entry":format!("{entry:#x}"),"start":format!("{entry:#x}"),"bytes":"0x1",
+        "nativeSha256":binviz::evidence::sha256(&binary.data()[offset..offset+1]),
+        "pseudocode":"TEST_PROVIDER_PSEUDOCODE","dataflow":null,"evidenceIds":[],"unknowns":["not executed"]
+    });
+    let imported = s.ok("analysis_observations", json!({"report":observation.to_string()}));
+    assert_eq!(
+        serde_json::from_str::<Value>(&imported)
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        s.ok("analysis_observations", json!({"report":observation.to_string()})),
+        imported
+    );
+    assert_eq!(
+        s.ok("analysis_observations", json!({"at":format!("{entry:#x}")})),
+        imported
+    );
+    assert!(
+        s.ok("decomp_context", json!({"at":format!("{entry:#x}")}))
+            .contains("TEST_PROVIDER_PSEUDOCODE")
+    );
+    observation["targetSha256"] = json!(binviz::evidence::sha256(b"different target"));
+    assert!(
+        s.call("analysis_observations", json!({"report":observation.to_string()}))
+            .1
+    );
+    assert_eq!(s.ok("analysis_observations", json!({})), imported);
+    s.ok("close_binary", json!({}));
+    s.ok("open_binary", json!({"path":path}));
+    assert_eq!(s.ok("analysis_observations", json!({})), "[]");
+}
+
+#[test]
 fn physical_workspaces_are_retained_and_all_views_share_exact_ids() {
     let mut s = Session::start();
     let raw = include_str!("../../../tests/fixtures/workspace/workspace.json");

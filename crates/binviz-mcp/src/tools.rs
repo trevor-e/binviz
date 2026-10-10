@@ -9,7 +9,8 @@ use serde_json::{Value, json};
 
 use crate::notes;
 
-pub const INSTRUCTIONS: &str = "binviz explains ELF, Mach-O, PE, XBE and WebAssembly binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
+pub const INSTRUCTIONS: &str = "Route by task: explain a function with function_info/decomp_context; improve a compiled match with match_function/match_project; diagnose a workspace with workspace_import then workspace_next_actions (a binary session is unnecessary). Follow the returned evidence pointers and read-only CLI/MCP queries before preparing candidates. Optional analysis_observations accepts provider pseudocode/dataflow tied to exact target and native bytes, with no proof or matching credit. The binviz_workflow prompt provides the bundled routing skill. \
+binviz explains ELF, Mach-O, PE, XBE and WebAssembly binaries down to every byte, maps code back to source through DWARF, and keeps binaries loaded between calls, so exploring a large file stays fast. \
 Start with open_binary (a path; universal binaries pick arm64 unless you pass member). A folder or a zip (an .ipa, an .xcarchive, an .app, a build folder; zips inside it too) opens every binary inside at once — Mach-O, ELF or PE: an app, its frameworks and extensions, libraries — each under its own id, paired with its debug file (a dSYM, an ELF .debug file, a PDB) by UUID, build ID or the name the binary records; folder_summary then shows the whole folder: sizes by kind of content, each binary and its debug file, the largest and duplicate files, and (analyze: true) code owners across all binaries. Then: binary_summary for the overview, size_report to see where the bytes go (sections, largest functions, and owners: Swift modules, Objective-C classes, C++ namespaces, C prefixes), search for anything (names, strings, addresses, byte patterns like `48 8b ?? 05`, \"exact text\", file.c:42), inspect to learn what is at an address or file offset, disassemble a function, list_symbols / list_strings to page through tables, hexdump for raw bytes. \
 Addresses: 0x401000 (or 401000), a symbol, name+0x10, @0x200 for a file offset, and for banked ROMs bank:address (03:C000; $80:8000 on the SNES). To follow code: function_info gives a function's callers, callees, strings and data at a glance; callers / callees list call sites; call_graph draws the neighbourhood; call_path finds a chain of calls from one function to another; xrefs lists every reference to an address (calls, reads, writes, address-taken, pointers stored in data — e.g. who uses a string or a global). The reference index is built on first use (about a second per 100 MB of code). Calls through import stubs, PLT entries and GOT/IAT slots show the imported function's name. \
 For DWARF: dwarf_units lists compilation units; dwarf_search finds DIEs by name; dwarf_dies lists a unit's DIEs by tag (functions, variables, types, DW_TAG_...); dwarf_die shows one DIE with all its attributes, where it is declared (with the source line when the file exists here), the lines its code came from, a struct's layout with padding, and its children; dwarf_at gives the inlined call stack, scopes and variables (with where each lives) at an address; dwarf_check lists everything in the DWARF that can't be read or doesn't add up — use it first on a customer's binary whose debug info seems wrong. DIEs are named by .debug_info offset (0x1a2b, as llvm-dwarfdump prints them), by unit:offset (3:0x44), or by name. c_header writes the types (all, or those named with what they need) and the functions' prototypes as a C header whose layout checks itself when compiled, from DWARF or a PDB; struct_field says which member of a structure an offset is ([esi+0x21c] with esi an edict_t *: edict_t.enemy). \
@@ -57,6 +58,7 @@ pub struct Server {
     pub(crate) contracts: std::collections::BTreeMap<String, binviz::contracts::ContractReport>,
     workspaces: std::collections::BTreeMap<String, (binviz::workspace::Workspace, Option<PathBuf>)>,
     campaigns: std::collections::BTreeMap<String, (Vec<u8>, Option<PathBuf>)>,
+    analysis_observations: std::collections::BTreeMap<String, Vec<Vec<u8>>>,
 }
 
 // --- Tool definitions --------------------------------------------------------
@@ -76,6 +78,8 @@ fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&s
             | "diff_functions"
             | "list_disc_files"
             | "workspace_preflight"
+            | "workspace_next_actions"
+            | "workspace_report"
             | "adoption_evidence"
             | "source_plans"
             | "extract_disc_file"
@@ -113,6 +117,30 @@ fn tool(name: &str, title: &str, description: &str, props: Value, required: &[&s
 pub fn definitions() -> Vec<Value> {
     let address = |what: &str| json!({ "type": "string", "description": format!("{what}: 0x401000 (or 401000), a symbol name, name+0x10, or @0x200 for a file offset.") });
     vec![
+        tool(
+            "workspace_report",
+            "Inspect the retained workspace report",
+            "Recompute the complete retained workspace report and its evidence without reimporting a manifest. JSON pointers from workspace_next_actions resolve into this report.",
+            json!({"project_id":{"type":"string"},"root":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "analysis_observations",
+            "Inspect optional provider observations",
+            "Import optional normalized pseudocode/dataflow with report or report_file, or query retained observations. Verifies target, architecture, address space and exact native bytes on every query. Optional at filters by exact entry. Rejected imports preserve prior state. Provider authenticity is not established; no proof, notes or matching credit is granted.",
+            json!({"report":{"type":"string"},"report_file":{"type":"string"},"at":{"type":"string"}}),
+            &[],
+            true,
+        ),
+        tool(
+            "workspace_next_actions",
+            "Find the next workspace action",
+            "Recompute ordered read-only follow-ups from current workspace findings. Returns reasons, JSON pointers into the complete report, CLI argument arrays and MCP calls. Optional caller retains global prerequisites. No acceptance or matching credit is granted.",
+            json!({"project_id":{"type":"string"},"caller":{"type":"string"},"root":{"type":"string"},"limit":{"type":"integer","minimum":0,"maximum":1000,"description":"Default 10. Omitted action counts are explicit; workspace_report retains all findings."}}),
+            &[],
+            true,
+        ),
         tool(
             "workspace_preflight",
             "Preflight frozen dependencies",
@@ -1296,9 +1324,35 @@ impl Server {
             )?;
             return serde_json::to_string(&plan).map_err(|e| e.to_string());
         }
-        let report = workspace.analyze(files.as_ref())?;
+        let mut report = workspace.analyze(files.as_ref())?;
+        for action in &mut report.next_actions.actions {
+            action.mcp.arguments["project_id"] = json!(id);
+            if let Some(root) = string(args, "root").map(PathBuf::from).or_else(|| saved_root.clone()) {
+                action.mcp.arguments["root"] = json!(root);
+            }
+        }
         let result = match name {
-            "workspace_import" => json!(report),
+            "workspace_import" | "workspace_report" => json!(report),
+            "workspace_next_actions" => {
+                let actions = if let Some(caller) = string(args, "caller") {
+                    if !report.callers.iter().any(|c| c.id == caller) {
+                        return Err("unknown exact caller id".into());
+                    }
+                    report.next_actions.for_caller(caller)
+                } else {
+                    report.next_actions.clone()
+                };
+                let limit = args
+                    .get("limit")
+                    .map(|v| {
+                        v.as_u64()
+                            .filter(|n| *n <= 1000)
+                            .ok_or("limit must be an integer from 0 to 1000")
+                    })
+                    .transpose()?
+                    .unwrap_or(10);
+                json!(actions.limited(limit as usize))
+            }
             "adoption_evidence" => json!(report.adoption),
             "storage_evidence" => json!(report.storage),
             "promotion_plan" => json!(report.promotion_plans),
@@ -1308,7 +1362,7 @@ impl Server {
             "readability_batches" => json!(report.readability_batches),
             "unit_inventory" => json!(report.inventory),
             "contract_blockers" => {
-                json!({"blockers":report.blockers,"rawObservations":report.raw_observations,"rejectedCallers":report.rejected_callers,"unresolvedCallers":report.unresolved_callers})
+                json!({"blockers":report.blockers,"rawObservations":report.raw_observations,"rejectedCallers":report.rejected_callers,"unresolvedCallers":report.unresolved_callers,"nextActions":report.next_actions})
             }
             "caller_package" => json!(
                 report
@@ -1442,6 +1496,8 @@ impl Server {
             }
             "workspace_import"
             | "workspace_preflight"
+            | "workspace_next_actions"
+            | "workspace_report"
             | "adoption_evidence"
             | "source_plans"
             | "unit_inventory"
@@ -1469,6 +1525,7 @@ impl Server {
             "extract_disc_file" => self.extract_disc_file(args).map(finish),
             "find_code_blobs" => self.find_code_blobs(args).map(finish),
             "decomp_context" => self.decomp_context(args).map(finish),
+            "analysis_observations" => self.analysis_observations(args),
             "search" if string(args, "binary") == Some("all") => self.search_all(args).map(finish),
             _ => {
                 let workspace_context = if name == "next_functions" {
@@ -1604,6 +1661,48 @@ impl Server {
     }
 
     /// `decomp_context`: with worked examples from the other open binaries `examples_from` names.
+    fn analysis_observations(&mut self, args: &Value) -> Result<String, String> {
+        if string(args, "report").is_some() && string(args, "report_file").is_some() {
+            return Err("provide report or report_file, not both".into());
+        }
+        let i = self.index(args)?;
+        let o = &self.open[i];
+        let at = string(args, "at").map(|at| address_of(&o.bin, at)).transpose()?;
+        let incoming = if let Some(text) = string(args, "report") {
+            Some(text.as_bytes().to_vec())
+        } else if let Some(path) = string(args, "report_file") {
+            Some(std::fs::read(path).map_err(|e| e.to_string())?)
+        } else {
+            None
+        };
+        if let Some(bytes) = &incoming {
+            let report = binviz::analysisobservation::inspect(&o.bin, bytes)?;
+            if at.is_some_and(|at| binviz::evidence::hex(&report.observation.entry).ok() != Some(at)) {
+                return Err("observation entry differs from requested at".into());
+            }
+        }
+        // Reinspect existing state before mutating it, including changed address mappings.
+        let existing = self.analysis_observations.get(&o.id).cloned().unwrap_or_default();
+        let mut all = existing;
+        if let Some(bytes) = incoming {
+            if !all.contains(&bytes) {
+                all.push(bytes);
+            }
+        }
+        let reports = all
+            .iter()
+            .map(|bytes| binviz::analysisobservation::inspect(&o.bin, bytes))
+            .collect::<Result<Vec<_>, _>>()?;
+        let filtered: Vec<_> = reports
+            .into_iter()
+            .filter(|r| at.is_none_or(|at| binviz::evidence::hex(&r.observation.entry).ok() == Some(at)))
+            .collect();
+        let out = serde_json::to_string(&filtered).map_err(|e| e.to_string())?;
+        self.analysis_observations.insert(o.id.clone(), all);
+        Ok(out)
+    }
+
+    /// Existing native context remains authoritative; imported provider text is advisory.
     fn decomp_context(&mut self, args: &Value) -> Result<String, String> {
         let mut siblings = Vec::new();
         for want in args
@@ -1634,6 +1733,14 @@ impl Server {
             .ok_or("not in a function")?;
         out.push_str(&c.describe());
         out.push_str(&crate::store::context_section(o, c.address));
+        for bytes in self.analysis_observations.get(&o.id).into_iter().flatten() {
+            let report = binviz::analysisobservation::inspect(&o.bin, bytes)?;
+            if binviz::evidence::hex(&report.observation.entry)? == c.address {
+                out.push_str("\nOptional provider observation (advisory; no native proof or matching credit):\n");
+                out.push_str(&serde_json::to_string(&report).map_err(|e| e.to_string())?);
+                out.push('\n');
+            }
+        }
         Ok(out)
     }
 
@@ -1895,6 +2002,7 @@ impl Server {
             }
         }
         self.open.remove(i);
+        self.analysis_observations.remove(&id);
         self.current = if self.open.is_empty() {
             None
         } else {
@@ -5167,13 +5275,25 @@ pub fn prompts() -> Value {
             { "name": "goal", "description": "When to stop, or what to look into (default: 80% of the functions named, or none left to name).", "required": false },
             { "name": "shard", "description": "k/n when n agents share the work: this one takes the k-th part.", "required": false }
         ]
+    }, {
+        "name": "binviz_workflow",
+        "title": "Route a binviz investigation",
+        "description": "Use the bundled routing skill for function analysis, matching, workspace diagnosis or scoped candidate verification.",
+        "arguments": [{"name":"goal","description":"The concrete investigation or change to perform.","required":true}]
     }])
 }
 
 /// A prompt, filled in with its arguments.
 pub fn prompt(name: &str, args: &Value) -> Result<Value, String> {
+    if name == "binviz_workflow" {
+        let goal = string(args, "goal").ok_or("goal is required")?;
+        return Ok(json!({
+            "description":"Route a binviz investigation",
+            "messages":[{"role":"user","content":{"type":"text","text":format!("{}\n\nRequested work: {goal}", include_str!("../../../skills/binviz/SKILL.md"))}}]
+        }));
+    }
     if name != "map_binary" {
-        return Err(format!("no prompt {name:?}; there is map_binary"));
+        return Err(format!("no prompt {name:?}; available: map_binary, binviz_workflow"));
     }
     let path = string(args, "path").ok_or("path is required")?;
     let goal =

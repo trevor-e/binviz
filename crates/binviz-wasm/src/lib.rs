@@ -953,6 +953,11 @@ impl Session {
         Ok(self.bin()?.data().to_vec())
     }
 
+    #[wasm_bindgen(js_name = inspectAnalysisObservation)]
+    pub fn inspect_analysis_observation(&self, text: &str) -> Result<JsValue, JsError> {
+        to_js(&binviz::analysisobservation::inspect(self.bin()?, text.as_bytes()).map_err(err)?)
+    }
+
     /// Navigation requires both loaded bytes and their physical mapping. Equal
     /// overlay addresses alone cannot select a unit.
     #[wasm_bindgen(js_name = workspaceUnitMatches)]

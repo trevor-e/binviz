@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createRaw2352SectorSource} from '../runtime/raw_cd_source.mjs';
+const bytes=Uint8Array.from({length:4704},(_,i)=>(i*17+(i>>>8))&255),reads=[];
+const source=createRaw2352SectorSource({size:bytes.length,identitySha256:'a'.repeat(64),read:(o,n)=>{reads.push([o,n]);return bytes.subarray(o,o+n);}});
+const raw=source.read2352(1),data=source.read2340(1);
+assert.equal(Object.isFrozen(source),true);assert.deepEqual(reads,[[2352,2352],[2352,2352]]);
+assert.deepEqual(raw,bytes.slice(2352));assert.deepEqual(data,bytes.slice(2364));assert.equal(data.length,2340);
+const last=raw[2351];bytes[4703]^=255;assert.equal(raw[2351],last);assert.equal(data[2339],last);
+for(const lba of [-1,2,0.5,NaN,Infinity])assert.throws(()=>source.read2340(lba),/physical sector bounds/);
+assert.equal(reads.length,2);
+assert.throws(()=>createRaw2352SectorSource({size:2048,read:()=>bytes,identitySha256:'a'.repeat(64)}),/whole2352/);
+assert.throws(()=>createRaw2352SectorSource({size:2352,read:()=>bytes,identitySha256:'unknown'}),/identity/);
+const short=createRaw2352SectorSource({size:2352,read:()=>new Uint8Array(2048),identitySha256:'a'.repeat(64)});
+assert.throws(()=>short.read2340(0),/exact2352/);
+console.log(JSON.stringify({ok:true,full2340WindowPreserved:true,independentReturnedBytes:true,invalidReadsRejectedBeforeSource:true}));

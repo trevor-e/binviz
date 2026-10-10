@@ -101,6 +101,89 @@ pub struct ModuleReport {
     pub data_symbols: Vec<serde_json::Value>,
     pub import_inventory: Vec<serde_json::Value>,
 }
+/// Permit bounded growth of a defined funcref table without rebuilding code.
+/// Reuse the shared reader and preserve every byte except the existing maximum.
+/// Keeping its encoding width also preserves all file offsets and debug data.
+pub fn expand_table_maximum(bytes: &[u8], expected_sha256: &str, maximum: u32) -> Result<(Vec<u8>, serde_json::Value), String> {
+    if sha256(bytes) != expected_sha256 {
+        return Err("table expansion input SHA256 differs from reviewed module".into());
+    }
+    let m = Module::parse(bytes).map_err(|e| e.to_string())?;
+    if !m.problems.is_empty() || m.tables.len() != 1 || m.tables[0].import.is_some() {
+        return Err("table expansion requires exactly one valid defined table".into());
+    }
+    let t = &m.tables[0];
+    let mut r = crate::wasm::read::Reader::new(bytes, t.entry.start, t.entry.end);
+    if r.u8() != Some(0x70) || r.u8() != Some(1) {
+        return Err("table expansion requires plain funcref with a 32-bit maximum".into());
+    }
+    let min = r.u32().ok_or("missing table minimum")?;
+    let start = r.pos() as usize;
+    let old = r.u32().ok_or("missing table maximum")?;
+    let end = r.pos() as usize;
+    if !r.is_empty() || old < min || maximum <= old {
+        return Err("table maximum must increase, preserving its valid minimum".into());
+    }
+    let mut v = maximum;
+    let mut encoding = Vec::new();
+    loop {
+        let b = (v & 127) as u8;
+        v >>= 7;
+        encoding.push(b | if v == 0 { 0 } else { 128 });
+        if v == 0 { break; }
+    }
+    if encoding.len() != end - start {
+        return Err("table maximum encoding width would shift file offsets; relink instead".into());
+    }
+    let mut out = bytes.to_vec();
+    out[start..end].copy_from_slice(&encoding);
+    let after = Module::parse(&out).map_err(|e| e.to_string())?;
+    if !after.problems.is_empty() || after.tables.len() != 1 || after.tables[0].limits.min != u64::from(min)
+        || after.tables[0].limits.max != Some(u64::from(maximum)) {
+        return Err("expanded table failed shared-reader verification".into());
+    }
+    // This byte-level witness includes code, every other section and all offsets.
+    if bytes[..start] != out[..start] || bytes[end..] != out[end..] {
+        return Err("table expansion changed bytes outside its maximum".into());
+    }
+    let proof = serde_json::json!({"format":"binviz-table-maximum-expansion","schemaVersion":1,
+        "beforeSha256":expected_sha256,"afterSha256":sha256(&out),"tableIndex":0,
+        "minimum":min,"beforeMaximum":old,"afterMaximum":maximum,
+        "changedEncodingRange":{"start":start,"end":end},"fileBytes":bytes.len(),
+        "allOtherBytesEqual":true,"allFileOffsetsPreserved":true,
+        "reader":"binviz-shared-wasm-reader"});
+    Ok((out, proof))
+}
+
+#[cfg(test)]
+mod table_expansion_tests {
+    use super::*;
+    // Real module encoding with a two-byte maximum and a trailing custom section.
+    const FIXED: &[u8] = b"\0asm\x01\0\0\0\x04\x07\x01\x70\x01\x80\x01\x80\x01\x00\x02\x01x";
+    #[test]
+    fn bounded_growth_preserves_all_other_bytes_and_offsets() {
+        let (out,p)=expand_table_maximum(FIXED,&sha256(FIXED),192).unwrap();
+        assert_eq!(out.len(),FIXED.len());
+        assert_eq!(&out[..15],&FIXED[..15]);
+        assert_eq!(&out[17..],&FIXED[17..]);
+        assert_eq!(&out[15..17],&[0xc0,0x01]);
+        assert_eq!(p["beforeMaximum"],128);
+        assert_eq!(p["afterMaximum"],192);
+        assert_eq!(p["allOtherBytesEqual"],true);
+    }
+    #[test]
+    fn refuses_wrong_identity_no_growth_and_offset_shift() {
+        for (sha,max) in [("wrong".to_owned(),192),(sha256(FIXED),128),(sha256(FIXED),127),(sha256(FIXED),16384)] {
+            assert!(expand_table_maximum(FIXED,&sha,max).is_err());
+        }
+        // No bounded maximum, externref, table64 and corrupt size are refused.
+        for (offset,value) in [(12,0),(11,0x6f),(12,5),(9,20)] {
+            let mut bad=FIXED.to_vec();bad[offset]=value;
+            assert!(expand_table_maximum(&bad,&sha256(&bad),192).is_err());
+        }
+        assert!(expand_table_maximum(b"\0asm\x01\0\0\0",&sha256(b"\0asm\x01\0\0\0"),192).is_err());
+    }
+}
 pub fn inspect(bytes: &[u8]) -> Result<ModuleReport, String> {
     let m = Module::parse(bytes).map_err(|e| e.to_string())?;
     let import_inventory=m.imports.iter().enumerate().map(|(ordinal,i)|{

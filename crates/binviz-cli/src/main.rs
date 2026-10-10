@@ -20,7 +20,7 @@ a 32-bit PE: its kernel imports named, its code followed from the entry point.
 
 COMMANDS:
   Decompilation workspace
-    workspace <manifest.json> [--caller ID | --inventory | --blockers | --storage | --promotions | --callees | --closures | --publications | --readability | --adoption | --preflight]
+    workspace <manifest.json> [--caller ID | --inventory | --blockers | --next-actions | --storage | --promotions | --callees | --closures | --publications | --readability | --adoption | --preflight]
                                    Shared physical ownership, all call findings, policies and evidence
     publish-matches <manifest.json> --publication ID [--root DIR] [--out PLAN.json] [--publish]
                                    Recompute selected exact matches; publish only the reviewed note scope
@@ -31,6 +31,8 @@ COMMANDS:
     apply-adapters <PLAN.json> --artifact ID --input FILE --out NEW.c
                                    Apply reviewed bytes to a separate output; refuse input drift
     linked <module.wasm>          Actual linked exports, calls, signatures and stack operations
+      --table-maximum N --expect-sha256 SHA --output NEW.wasm
+                                   Expand one defined table's bound; preserve all other bytes and offsets
     build-batch <config.json> --out REPORT.json [--python EXECUTABLE]
                                    Configured incremental stages, bounded workers and cache diagnostics
     campaign <config.json> --out REPORT.json [--python EXECUTABLE]
@@ -51,6 +53,8 @@ COMMANDS:
                                    overlays): each run of MIPS code with where it loads,
                                    worked out from its own calls and pointers
   Names and code
+    analysis <file> <observation.json>
+                                   Verify optional provider pseudocode/dataflow against exact target bytes
     symbols <file> [filter]        Symbols, optionally filtered by name
     strings <file> [filter]        Printable strings in the data sections
     search <file> <query> [kind]   Search addresses, offsets (@0x..), names, byte
@@ -833,10 +837,30 @@ fn run(
     if cmd == "linked" {
         let mut rest: Vec<&str> = args[2..].iter().map(String::as_str).collect();
         let imports = take_flag(&mut rest, "--imports");
+        let table_maximum = take_value(&mut rest, "--table-maximum");
+        let expected = take_value(&mut rest, "--expect-sha256");
+        let output = take_value(&mut rest, "--output");
         if !rest.is_empty() {
-            return Err("linked MODULE.wasm [--imports]".into());
+            return Err("linked MODULE.wasm [--imports | --table-maximum N --expect-sha256 SHA --output NEW.wasm]".into());
         }
         let bytes = std::fs::read(&args[1]).map_err(|e| e.to_string())?;
+        if let Some(maximum) = table_maximum {
+            if imports { return Err("table expansion and --imports are separate operations".into()); }
+            let expected = expected.ok_or("table expansion requires --expect-sha256")?;
+            let output = output.ok_or("table expansion requires --output")?;
+            if std::path::Path::new(&output) == std::path::Path::new(&args[1]) {
+                return Err("table expansion output must be a separate artifact".into());
+            }
+            let (expanded, proof) = binviz::linkevidence::expand_table_maximum(&bytes, &expected, maximum.parse().map_err(|_|"table maximum must be u32")?)?;
+            use std::io::Write;
+            let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(output).map_err(|e|e.to_string())?;
+            file.write_all(&expanded).map_err(|e|e.to_string())?;
+            println!("{}",serde_json::to_string_pretty(&proof).map_err(|e|e.to_string())?);
+            return Ok(());
+        }
+        if expected.is_some() || output.is_some() {
+            return Err("--expect-sha256 and --output require --table-maximum".into());
+        }
         let report = binviz::linkevidence::inspect(&bytes)?;
         println!(
             "{}",
@@ -852,6 +876,15 @@ fn run(
         let preflight = take_flag(&mut rest, "--preflight");
         let inventory = take_flag(&mut rest, "--inventory");
         let blockers = take_flag(&mut rest, "--blockers");
+        let next_actions = take_flag(&mut rest, "--next-actions");
+        let action_limit = take_value(&mut rest, "--limit");
+        if action_limit.is_some() && !next_actions {
+            return Err("workspace --limit requires --next-actions".into());
+        }
+        let action_limit = action_limit
+            .map(|n| n.parse::<usize>().map_err(|e| e.to_string()))
+            .transpose()?
+            .unwrap_or(10);
         let storage = take_flag(&mut rest, "--storage");
         let promotions = take_flag(&mut rest, "--promotions");
         let callees = take_flag(&mut rest, "--callees");
@@ -884,7 +917,47 @@ fn run(
             return Ok(());
         }
         let report = workspace.analyze(Some(&files))?;
-        let result = if adoption {
+        let mut guidance = report.next_actions.clone();
+        if next_actions {
+            if let Some(id) = caller.as_deref() {
+                if !report.callers.iter().any(|c| c.id == id) {
+                    return Err("unknown exact caller id".into());
+                }
+                guidance = guidance.for_caller(id);
+            }
+            guidance = guidance.limited(action_limit);
+            for action in &mut guidance.actions {
+                for arg in &mut action.cli {
+                    if arg == "<manifest>" {
+                        *arg = args[1].clone();
+                    }
+                }
+                action
+                    .cli
+                    .extend(["--root".into(), root.to_string_lossy().into_owned()]);
+            }
+        }
+        if next_actions && !json {
+            println!("{}", guidance.summary);
+            for action in &guidance.actions {
+                println!("\n{}: {}\n{}", action.kind, action.subject, action.reason);
+                println!("Evidence: {}", action.evidence.join(", "));
+                println!(
+                    "CLI argv: {}",
+                    serde_json::to_string(&action.cli).map_err(|e| e.to_string())?
+                );
+                println!("MCP: {} {}", action.mcp.tool, action.mcp.arguments);
+            }
+            if guidance.omitted_actions > 0 {
+                println!(
+                    "\n{} additional follow-ups in the complete workspace report; use --limit N to show more.",
+                    guidance.omitted_actions
+                );
+            }
+        }
+        let result = if next_actions {
+            serde_json::json!(guidance)
+        } else if adoption {
             serde_json::json!(report.adoption)
         } else if closures {
             serde_json::json!(report.proof_closures)
@@ -915,7 +988,7 @@ fn run(
         };
         if json {
             println!("{}", serde_json::to_string_pretty(&result).map_err(|e| e.to_string())?);
-        } else {
+        } else if !next_actions {
             println!(
                 "{} observations; {} currently rejected callers; {} unresolved caller packages",
                 report.raw_observations, report.rejected_callers, report.unresolved_callers
@@ -1140,6 +1213,14 @@ fn run(
     let bin = bin;
     let arg = |i: usize| args.get(i).map(String::as_str);
     match cmd {
+        "analysis" => {
+            let path = arg(2).ok_or("analysis <binary> <observation.json>")?;
+            if arg(3).is_some() {
+                return Err("analysis <binary> <observation.json>".into());
+            }
+            let report = binviz::analysisobservation::inspect(&bin, &std::fs::read(path).map_err(|e| e.to_string())?)?;
+            println!("{}", serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
+        }
         "info" => info(&bin),
         "layout" => {
             let depth = arg(2).map(num).transpose()?.unwrap_or(2) as usize;
